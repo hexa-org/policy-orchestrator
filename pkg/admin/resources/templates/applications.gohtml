@@ -1,0 +1,24 @@
+{{- template "base" .}}
+{{- define "main"}}
+    <div class="card">
+        <h1>Applications</h1>
+        <table>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Provider</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{- range index .Map "applications"}}
+                <tr>
+                    <td>{{.Name}}</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            {{- end}}
+            </tbody>
+        </table>
+    </div>
+{{- end}}

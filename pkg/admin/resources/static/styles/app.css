@@ -1,0 +1,195 @@
+:root {
+    --black: #22242C;
+    --dark-orange: #fd9800;
+    --orange: #ffca4b;
+    --light-orange: #ffe072;
+    --gray: #8E8EA1;
+    --medium-gray: #BDBDBD;
+    --light-gray: #EAEAEA;
+    --lighter-gray: #F5F5F5;
+}
+
+html {
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+*, *:before, *:after {
+    box-sizing: inherit;
+}
+
+body {
+    font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--black);
+    background-color: var(--lighter-gray);
+    min-height: 100vh;
+    min-width: 80rem;
+    display: flex;
+    flex-direction: column;
+}
+
+h1 {
+    font-size: 1.5rem;
+    margin-bottom: .75rem;
+}
+
+h2 {
+    font-size: 1.25rem;
+    margin-bottom: .5rem;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.flex {
+    display: flex;
+}
+
+.top-bar {
+    width: 100%;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 3.75rem;
+}
+
+.top-bar h1, .top-bar h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0;
+}
+
+.top-nav {
+    color: var(--dark-orange);
+}
+
+.top-nav h2 {
+    color: var(--gray);
+}
+
+.gray {
+    color: var(--gray);
+}
+
+.hexa-title {
+    height: 1.75rem;
+    line-height: 1.75rem;
+    padding-left: 5.5rem;
+    background-image: url("/images/hexa.svg");
+    background-repeat: no-repeat;
+    background-position: left center;
+    background-size: contain;
+}
+
+header.top-bar {
+    background-color: var(--dark-orange);
+    color: white;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+header .menu {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+main {
+    display: flex;
+    flex: 1;
+}
+
+main .side-nav {
+    width: 16rem;
+    padding: 2rem 1rem;
+}
+
+.side-nav hr {
+    border: none;
+    border-top: 1px solid var(--light-gray);
+}
+
+.side-nav li h2 {
+    font-size: .9rem;
+    font-weight: 600;;
+}
+
+.side-nav li {
+    height: 2.4rem;
+    display: flex;
+    align-items: center;
+    margin: 1px 0;
+    padding: 0 .75rem;
+}
+
+.side-nav li:hover, .side-nav li.active {
+    background-color: var(--light-gray);
+    color: var(--dark-orange);
+}
+
+.no-hover {
+    pointer-events: none;
+}
+
+.content {
+    flex: 1;
+    padding: 2rem;
+    overflow-x: auto;
+}
+
+.card {
+    background-color: white;
+    padding-top: 1rem;
+    margin-bottom: 2rem;
+    border-radius: .25rem;
+}
+
+.card h1 {
+    margin: 0 1rem 1rem 1rem;
+}
+
+.card h2 {
+    margin: 0 1rem 1rem 1rem;
+}
+
+table {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+thead {
+    color: var(--gray);
+    font-size: .9rem;
+}
+
+tbody {
+    color: var(--gray);
+}
+
+table a {
+    color: var(--dark-orange);
+}
+
+table.padded {
+    margin-left: 1rem;
+    width: 60%;
+}
+
+tr {
+    border-bottom: 1px solid var(--light-gray);
+}
+
+tr.no-border {
+    border-bottom: none;
+}
+
+th, td {
+    padding: .75rem 1rem;
+    text-align: left;
+}
+
+td.first {
+    width: 25rem;
+}

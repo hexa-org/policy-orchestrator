@@ -1,0 +1,41 @@
+services:
+  hexa-orchestrator:
+    image: hexa
+    container_name: hexa-orchestrator
+    ports:
+      - "8885:8885"
+    command: orchestrator
+    environment:
+      ORCHESTRATOR_HOSTPORT: hexa-orchestrator:8885
+      ORCHESTRATOR_KEY: "${ORCHESTRATOR_KEY}"
+
+  hexa-admin:
+    image: hexa
+    container_name: hexa-admin
+    ports:
+      - "8884:8884"
+    command: admin
+    environment:
+      ORCHESTRATOR_URL: http://hexa-orchestrator:8885
+      ORCHESTRATOR_KEY: "${ORCHESTRATOR_KEY}"
+
+  demo-app:
+    image: hexa
+    container_name: hexa-demo
+    ports:
+      - "8886:8886"
+    command: demo
+    environment:
+      PORT: 8886
+      OPA_SERVER_URL: http://opa-agent:8887/v1/data/authz/allow
+
+  opa-agent:
+    image: openpolicyagent/opa
+    container_name: opa-server
+    ports:
+      - "8887:8887"
+    command: run --server --addr :8887 -c /home/config/config.yaml
+    environment:
+      HEXA_DEMO_URL: "http://hexa-demo:8886"
+    volumes:
+      - "./opa-server/config:/home/config:ro"

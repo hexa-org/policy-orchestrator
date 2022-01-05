@@ -1,0 +1,14 @@
+services:
+  - name: test
+    url: ${HEXA_DEMO_URL}
+bundles:
+  authz:
+    service: test
+    resource: bundles/bundle.tar.gz
+    persist: true
+    polling:
+      min_delay_seconds: 10
+      max_delay_seconds: 30
+
+decision_logs:
+  console: true

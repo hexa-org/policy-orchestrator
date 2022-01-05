@@ -1,0 +1,21 @@
+{{- template "base" .}}
+{{- define "main"}}
+    <div class="card">
+        <h1>Hexa Policy Orchestrator Status</h1>
+        <table>
+            <thead>
+            <tr>
+                <th>API Endpoint</th>
+                <th>Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                {{- $s := index .Map "status"}}
+                <td>{{$s.URL}}</td>
+                <td>{{$s.Status}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+{{- end}}

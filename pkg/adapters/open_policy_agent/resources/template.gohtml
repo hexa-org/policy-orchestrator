@@ -1,0 +1,10 @@
+package authz
+import future.keywords.in
+default allow = false
+{{- range index .}}
+allow {
+    input.method = "{{- .Action}}"
+    input.path in [{{- range $j, $resource := .Object.Resources}}{{if ne $j 0}}, {{end}}"{{$resource}}"{{- end}}]
+    input.principals[_] in [{{- range $k, $user := .Subject.AuthenticatedUsers}}{{if ne $k 0}}, {{end}}"{{$user}}"{{- end}}]
+}
+{{- end}}

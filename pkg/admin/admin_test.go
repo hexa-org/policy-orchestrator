@@ -1,0 +1,26 @@
+package admin_test
+
+import (
+	"github.com/stretchr/testify/assert"
+	"hexa/pkg/admin"
+	admin_test "hexa/pkg/admin/test"
+	"hexa/pkg/web_support"
+	"log"
+	"net/http"
+	"testing"
+)
+
+func TestAdminHandlers(t *testing.T) {
+	handlers := admin.LoadHandlers("localhost:8885", new(admin_test.MockClient))
+	server := web_support.Create("localhost:8883", handlers, web_support.Options{})
+	go web_support.Start(server)
+	web_support.WaitForHealthy(server)
+
+	resp, err := http.Get("http://localhost:8883/health")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	web_support.Stop(server)
+}

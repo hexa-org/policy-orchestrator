@@ -1,0 +1,58 @@
+[
+  {
+    "object": {
+      "resources": [
+        "/"
+      ]
+    },
+    "subject": {
+      "authenticated_users": [
+        "allusers"
+      ]
+    },
+    "action": "GET",
+    "version": "0.1"
+  },
+  {
+    "object": {
+      "resources": [
+        "/sales", "/marketing"
+      ]
+    },
+    "subject": {
+      "authenticated_users": [
+        "sales@", "marketing@"
+      ]
+    },
+    "action": "GET",
+    "version": "0.1"
+  },
+  {
+    "object": {
+      "resources": [
+        "/accounting"
+      ]
+    },
+    "subject": {
+      "authenticated_users": [
+        "accounting@"
+      ]
+    },
+    "action": "GET",
+    "version": "0.1"
+  },
+  {
+    "object": {
+      "resources": [
+        "/humanresources"
+      ]
+    },
+    "subject": {
+      "authenticated_users": [
+        "humanresources@"
+      ]
+    },
+    "action": "GET",
+    "version": "0.1"
+  }
+]

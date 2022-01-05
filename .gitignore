@@ -1,0 +1,4 @@
+*.idea
+.env*
+.DS_Store
+.opa
