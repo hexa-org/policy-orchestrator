@@ -43,14 +43,14 @@ docker-compose up
 
 ## Maintainers
 
-* [Hexa project maintainers](maintainers.md)
+* [Hexa project maintainers](MAINTAINERS.md)
 
 ## Roadmap
 
-* [Current roadmap](roadmap.md)
+* [Current roadmap](ROADMAP.md)
 
 ## Contributing
 
-* [Information for contributors](contributing.md)
-* [Additional development information](development.md) 
-* [Our of conduct statement](code_of_conduct.md)
+* [Information for contributors](CONTRIBUTING.md)
+* [Additional development information](DEVELOPMENT.md) 
+* [Our of conduct statement](CODE_OF_CONDUCT.md)

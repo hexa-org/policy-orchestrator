@@ -1,5 +1,3 @@
-![hexa-logo](docs/img/hexa-logo.svg)
-
 # Development 
 
 Clone or download the codebase from GitHub to your local machine and install the following prerequisites.
