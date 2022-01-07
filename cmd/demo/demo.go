@@ -3,8 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"hexa/cmd/demo/support"
-	"hexa/pkg/opa_support"
+	"hexa/cmd/demo/opa_support"
 	"hexa/pkg/web_support"
 	"log"
 	"net/http"
@@ -49,7 +48,7 @@ func unauthorized(writer http.ResponseWriter, _ *http.Request) {
 
 func download(writer http.ResponseWriter, _ *http.Request) {
 	_, file, _, _ := runtime.Caller(0)
-	support.Compress(writer, filepath.Join(file, "../resources/bundles/bundle"))
+	opa_support.Compress(writer, filepath.Join(file, "../resources/bundles/bundle"))
 }
 
 func loadHandlers(opa *opa_support.OpaSupport) func(router *mux.Router) {

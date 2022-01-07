@@ -15,7 +15,7 @@ type HTTPClient interface {
 
 type OpaSupport struct {
 	client HTTPClient
-	url string
+	url    string
 }
 
 func NewOpaSupport(client HTTPClient, url string) (*OpaSupport, error) {

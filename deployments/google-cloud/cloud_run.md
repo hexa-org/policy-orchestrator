@@ -1,6 +1,6 @@
 # Deploy Hexa Policy Orchestration to GCP
 
-## GCP Project Setup
+## Google Cloud Project Setup
 
 ```bash
 gcloud auth login
