@@ -51,6 +51,7 @@ docker-compose up
 
 ## Contributing
 
-* [Information for contributors](CONTRIBUTING.md)
+[Join the Hexa community](https://hexaorchestration.org/preview/#join) to stay up-to-date with the project and contribute.
+
 * [Additional development information](DEVELOPMENT.md) 
 * [Our of conduct statement](CODE_OF_CONDUCT.md)
