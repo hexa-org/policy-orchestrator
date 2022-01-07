@@ -15,7 +15,7 @@ git clone git@github.com:hexa-org/almostopen.git
 Install via [Homebrew Formulae](https://formulae.brew.sh)
 
 ```bash
-brew install go pack opa docker docker-compose
+brew install go buildpacks/tap/pack opa docker docker-compose
 ```
 
 ## Run the tests
