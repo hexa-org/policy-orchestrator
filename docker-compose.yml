@@ -38,4 +38,4 @@ services:
     environment:
       HEXA_DEMO_URL: "http://hexa-demo:8886"
     volumes:
-      - "./opa-server/config:/home/config:ro"
+      - "./deployments/google-cloud/opa-server/config:/home/config:ro"
