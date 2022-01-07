@@ -2,96 +2,102 @@
 
 ## Google Cloud Project Setup
 
-1.  Log in to Google Cloud.
+Log in to Google Cloud.
 
-    ```bash
-    gcloud auth login
-    ```
+```bash
+gcloud auth login
+```
 
-1.  Create .env_<environment>.sh file to store environment variables. 
+Create .env_<environment>.sh file to store environment variables.
 
-    ```bash
-    export GCP_PROJECT_NAME=<gcp project name>
-    export GCP_PROJECT_FOLDER=<gcp project folder>
-    export GCP_PROJECT_ID=<gcp project id>
-    export GCP_PROJECT_REGION=<gcp region>
-    export GCP_BILLING_ACCOUNT=<billing account id>
-    ```
+```bash
+export GCP_PROJECT_NAME=<gcp project name>
+export GCP_PROJECT_FOLDER=<gcp project folder>
+export GCP_PROJECT_ID=<gcp project id>
+export GCP_PROJECT_REGION=<gcp region>
+export GCP_BILLING_ACCOUNT=<billing account id>
+```
 
-1.  Source the env file
-    ```bash
-    source .env_<environment>.sh
-    ```
+Source the env file
 
-1.  Create a GCP project.
+```bash
+source .env_<environment>.sh
+```
 
-    ```bash
-    gcloud projects create ${GCP_PROJECT_ID} \
-      --name ${GCP_PROJECT_NAME} \
-      --folder=${GCP_PROJECT_FOLDER} \
-      --quiet
-    ```
+Create a GCP project.
 
-1.  View the newly created project.
+```bash
+gcloud projects create ${GCP_PROJECT_ID} \
+  --name ${GCP_PROJECT_NAME} \
+  --folder=${GCP_PROJECT_FOLDER} \
+  --quiet
+```
 
-    ```bash
-    gcloud projects list
-    ```
+View the newly created project.
 
-1.  Configure the Google Cloud CLI to use your new project.
+```bash
+gcloud projects list
+```
 
-    ```bash
-    gcloud config set project ${GCP_PROJECT_ID}
-    ```
+Configure the Google Cloud CLI to use your new project.
 
-1.  Ensure billing is enabled.
+```bash
+gcloud config set project ${GCP_PROJECT_ID}
+```
 
-    ```bash
-    gcloud services enable cloudbilling.googleapis.com
-    gcloud alpha billing projects link ${GCP_PROJECT_ID} --billing-account ${GCP_BILLING_ACCOUNT}
-    ```
+Ensure billing is enabled.
 
-1.  Enable other supporting APIs.
+```bash
+gcloud services enable cloudbilling.googleapis.com
+gcloud alpha billing projects link ${GCP_PROJECT_ID} --billing-account ${GCP_BILLING_ACCOUNT}
+```
 
-    ```bash
-    gcloud services enable cloudbuild.googleapis.com
-    gcloud services enable run.googleapis.com
-    gcloud services enable compute.googleapis.com
-    gcloud services enable vpcaccess.googleapis.com
-    ```
+Enable other supporting APIs.
+
+```bash
+gcloud services enable cloudbuild.googleapis.com
+gcloud services enable run.googleapis.com
+gcloud services enable compute.googleapis.com
+gcloud services enable vpcaccess.googleapis.com
+```
 
 ## Deploy via Cloud Run
 
-1.  Build Image via Cloud Build
+Build Image via Cloud Build
 
-    ```bash
-    gcloud builds submit --pack image=gcr.io/${GCP_PROJECT_ID}/${GCP_PROJECT_NAME}:tag1,builder=heroku/buildpacks:20
-    ```
+```bash
+gcloud builds submit --pack image=gcr.io/${GCP_PROJECT_ID}/${GCP_PROJECT_NAME}:tag1,builder=heroku/buildpacks:20
+```
 
-1.  Deploy Hexa Policy Admin and Policy Orchestrator.
+Deploy Hexa Policy Admin.
 
-    ```bash
-    gcloud run deploy ${GCP_PROJECT_NAME}-policy-admin \
-      --command="admin" \
-      --region=${GCP_PROJECT_REGION} \
-      --image=gcr.io/${GCP_PROJECT_ID}/${GCP_PROJECT_NAME}:tag1
-    
-    gcloud run deploy ${GCP_PROJECT_NAME}-policy-orchestrator \
-      --command="orchestrator" \
-      --region=${GCP_PROJECT_REGION} \
-      --image=gcr.io/${GCP_PROJECT_ID}/${GCP_PROJECT_NAME}:tag1 \
-      --ingress internal 
-    ```
+```bash
+gcloud run deploy ${GCP_PROJECT_NAME}-policy-admin \
+  --command="admin" \
+  --region=${GCP_PROJECT_REGION} \
+  --image=gcr.io/${GCP_PROJECT_ID}/${GCP_PROJECT_NAME}:tag1
+```
 
-    Both web and api server are packed within the same docker image.
+Deploy Hexa Policy Orchestrator.
+
+```bash
+gcloud run deploy ${GCP_PROJECT_NAME}-policy-orchestrator \
+  --command="orchestrator" \
+  --region=${GCP_PROJECT_REGION} \
+  --image=gcr.io/${GCP_PROJECT_ID}/${GCP_PROJECT_NAME}:tag1 \
+  --ingress internal 
+```
+
+Both web and api server are packed within the same docker image.
 
 ### Set up networking
 
-The Policy Admin app will be accessible via the internet but the Policy Orchestrator will not be.
-To achieve this, we have [restricted ingress](https://cloud.google.com/run/docs/securing/ingress) to the Policy
-Orchestrator app by deploying it with the `--ingress internal`.
+The Policy Admin app will be accessible via the internet but the Policy Orchestrator will not be. To achieve this, we
+have [restricted ingress](https://cloud.google.com/run/docs/securing/ingress) to the Policy Orchestrator app by
+deploying it with the `--ingress internal`.
 
 To allow the Policy Admin app to communicate with the Policy Orchestrator, first create a new VPC network connector
+
 ```bash
 gcloud compute networks vpc-access connectors create hexa-vpc \
   --network default \
@@ -108,33 +114,33 @@ gcloud run services update hexa-policy-admin \
   --vpc-egress all-traffic
 ``` 
 
-### Deploy Demo App and OPA Server 
+### Deploy Demo App and OPA Server
 
-1. Deploy demo app.
+Deploy demo app.
 
-    ```bash
-    gcloud run deploy ${GCP_PROJECT_NAME}-demo --command="demo" --region=${GCP_PROJECT_REGION} --image=gcr.io/${GCP_PROJECT_ID}/${GCP_PROJECT_NAME}:tag1
-    ```
+ ```bash
+ gcloud run deploy ${GCP_PROJECT_NAME}-demo --command="demo" --region=${GCP_PROJECT_REGION} --image=gcr.io/${GCP_PROJECT_ID}/${GCP_PROJECT_NAME}:tag1
+ ```
 
-1.  Build OPA Agent with configuration via Docker.
+Build OPA Agent with configuration via Docker.
 
-    ```bash
-    cd opa-server
-    docker pull openpolicyagent/opa:latest
-    docker build --build-arg GCP_PROJECT_ID=${GCP_PROJECT_ID} -t ${GCP_PROJECT_NAME}-opa-server:latest .
-    docker tag ${GCP_PROJECT_NAME}-opa-server:latest gcr.io/${GCP_PROJECT_ID}/hexa-opa-server:latest
-    docker push gcr.io/${GCP_PROJECT_ID}/hexa-opa-server:latest
-    ```
+```bash
+cd opa-server
+docker pull openpolicyagent/opa:latest
+docker build --build-arg GCP_PROJECT_ID=${GCP_PROJECT_ID} -t ${GCP_PROJECT_NAME}-opa-server:latest .
+docker tag ${GCP_PROJECT_NAME}-opa-server:latest gcr.io/${GCP_PROJECT_ID}/hexa-opa-server:latest
+docker push gcr.io/${GCP_PROJECT_ID}/hexa-opa-server:latest
+```
 
-1.  Deploy via Cloud Run
+Deploy via Cloud Run
 
-    ```bash
-    gcloud beta run deploy ${GCP_PROJECT_NAME}-opa-server --region=${GCP_PROJECT_REGION} --image=gcr.io/${GCP_PROJECT_ID}/opa-server:latest \
-      --port=8887 --args='--server,--addr,0.0.0.0:8887,--config-file,/config.yaml'
-    ```
+```bash
+gcloud beta run deploy ${GCP_PROJECT_NAME}-opa-server --region=${GCP_PROJECT_REGION} --image=gcr.io/${GCP_PROJECT_ID}/opa-server:latest \
+  --port=8887 --args='--server,--addr,0.0.0.0:8887,--config-file,/config.yaml'
+```
 
-1.  Update the `hexa-opa-server` application environment variable with the `HEXA_DEMO_URL`.
-    For example `https://<hexa-demo-url>`.
+Update the `hexa-opa-server` application environment variable with the `HEXA_DEMO_URL`. For
+example `https://<hexa-demo-url>`.
 
-1.  Update the `hexa-demo` application environment variable with the `OPA_SERVER_URL`. 
-    For example `https://<opa-server-url>/v1/data/authz/allow`.
+Update the `hexa-demo` application environment variable with the `OPA_SERVER_URL`. For
+example `https://<opa-server-url>/v1/data/authz/allow`.
