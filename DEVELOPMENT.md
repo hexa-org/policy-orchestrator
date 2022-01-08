@@ -6,6 +6,7 @@ Clone or download the codebase from GitHub to your local machine and install the
 * [Pack](https://buildpacks.io)
 * [Docker Desktop](https://www.docker.com/products/docker-desktop)
 * [Open policy agent](https://www.openpolicyagent.org)
+* [golang-migrate](https://github.com/golang-migrate/migrate)
 
 ```bash
 cd ~/workspace
@@ -15,7 +16,7 @@ git clone git@github.com:hexa-org/almostopen.git
 Install via [Homebrew Formulae](https://formulae.brew.sh)
 
 ```bash
-brew install go buildpacks/tap/pack opa docker docker-compose
+brew install go buildpacks/tap/pack opa docker docker-compose golang-migrate
 ```
 
 ## Run the tests
