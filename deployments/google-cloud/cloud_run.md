@@ -1,4 +1,4 @@
-# Deploy Hexa Policy Orchestration to GCP
+# Deploy to Google Cloud
 
 ## Google Cloud Project Setup
 
@@ -8,23 +8,28 @@ Log in to Google Cloud.
 gcloud auth login
 ```
 
-Create .env_<environment>.sh file to store environment variables.
+Create a `.env_google_cloud.sh` file to store your google cloud environment variables.
 
 ```bash
 export GCP_PROJECT_NAME=<gcp project name>
-export GCP_PROJECT_FOLDER=<gcp project folder>
 export GCP_PROJECT_ID=<gcp project id>
 export GCP_PROJECT_REGION=<gcp region>
 export GCP_BILLING_ACCOUNT=<billing account id>
 ```
 
-Source the env file
+A project folder may also be needed.
 
 ```bash
-source .env_<environment>.sh
+export GCP_PROJECT_FOLDER=<gcp project folder>
 ```
 
-Create a GCP project.
+Source the `.env_google_cloud.sh` file.
+
+```bash
+source .env_google_cloud.sh
+```
+
+Create a new GCP project.
 
 ```bash
 gcloud projects create ${GCP_PROJECT_ID} \
@@ -36,7 +41,7 @@ gcloud projects create ${GCP_PROJECT_ID} \
 View the newly created project.
 
 ```bash
-gcloud projects list
+gcloud projects describe ${GCP_PROJECT_ID}
 ```
 
 Configure the Google Cloud CLI to use your new project.
@@ -61,7 +66,7 @@ gcloud services enable compute.googleapis.com
 gcloud services enable vpcaccess.googleapis.com
 ```
 
-## Deploy via Cloud Run
+## Build via Cloud Build
 
 Build Image via Cloud Build
 
@@ -69,63 +74,19 @@ Build Image via Cloud Build
 gcloud builds submit --pack image=gcr.io/${GCP_PROJECT_ID}/${GCP_PROJECT_NAME}:tag1,builder=heroku/buildpacks:20
 ```
 
-Deploy Hexa Policy Admin.
+## Deploy via Cloud Run
 
-```bash
-gcloud run deploy ${GCP_PROJECT_NAME}-policy-admin \
-  --command="admin" \
-  --region=${GCP_PROJECT_REGION} \
-  --image=gcr.io/${GCP_PROJECT_ID}/${GCP_PROJECT_NAME}:tag1
-```
-
-Deploy Hexa Policy Orchestrator.
-
-```bash
-gcloud run deploy ${GCP_PROJECT_NAME}-policy-orchestrator \
-  --command="orchestrator" \
-  --region=${GCP_PROJECT_REGION} \
-  --image=gcr.io/${GCP_PROJECT_ID}/${GCP_PROJECT_NAME}:tag1 \
-  --ingress internal 
-```
-
-Both web and api server are packed within the same docker image.
-
-### Set up networking
-
-The Policy Admin app will be accessible via the internet but the Policy Orchestrator will not be. To achieve this, we
-have [restricted ingress](https://cloud.google.com/run/docs/securing/ingress) to the Policy Orchestrator app by
-deploying it with the `--ingress internal`.
-
-To allow the Policy Admin app to communicate with the Policy Orchestrator, first create a new VPC network connector
-
-```bash
-gcloud compute networks vpc-access connectors create hexa-vpc \
-  --network default \
-  --region ${GCP_PROJECT_REGION} \
-  --range 10.8.0.0/28 
-```
-
-Then bind the VPC network connector to the Policy Admin app and configure egress.
-
-```bash
-gcloud run services update hexa-policy-admin \
-  --region ${GCP_PROJECT_REGION} \
-  --vpc-connector hexa-vpc \
-  --vpc-egress all-traffic
-``` 
-
-### Deploy Demo App and OPA Server
-
-Deploy demo app.
+Deploy the demo application.
 
  ```bash
- gcloud run deploy ${GCP_PROJECT_NAME}-demo --command="demo" --region=${GCP_PROJECT_REGION} --image=gcr.io/${GCP_PROJECT_ID}/${GCP_PROJECT_NAME}:tag1
+gcloud run deploy ${GCP_PROJECT_NAME}-demo --command="demo" --allow-unauthenticated --region=${GCP_PROJECT_REGION} --image=gcr.io/${GCP_PROJECT_ID}/${GCP_PROJECT_NAME}:tag1
  ```
 
-Build OPA Agent with configuration via Docker.
+Build an OPA server with configuration via Docker.
+
+From the `./deployments/google-cloud/opa-server` directory run the below commands.
 
 ```bash
-cd opa-server
 docker pull openpolicyagent/opa:latest
 docker build --build-arg GCP_PROJECT_ID=${GCP_PROJECT_ID} -t ${GCP_PROJECT_NAME}-opa-server:latest .
 docker tag ${GCP_PROJECT_NAME}-opa-server:latest gcr.io/${GCP_PROJECT_ID}/hexa-opa-server:latest
@@ -135,12 +96,25 @@ docker push gcr.io/${GCP_PROJECT_ID}/hexa-opa-server:latest
 Deploy via Cloud Run
 
 ```bash
-gcloud beta run deploy ${GCP_PROJECT_NAME}-opa-server --region=${GCP_PROJECT_REGION} --image=gcr.io/${GCP_PROJECT_ID}/opa-server:latest \
+gcloud beta run deploy ${GCP_PROJECT_NAME}-opa-server --allow-unauthenticated \
+  --region=${GCP_PROJECT_REGION} --image=gcr.io/${GCP_PROJECT_ID}/hexa-opa-server:latest \
   --port=8887 --args='--server,--addr,0.0.0.0:8887,--config-file,/config.yaml'
 ```
 
-Update the `hexa-opa-server` application environment variable with the `HEXA_DEMO_URL`. For
-example `https://<hexa-demo-url>`.
+Edit and deploy a new revision of the demo application with the `OPA_SERVER_URL` environment variable.
 
-Update the `hexa-demo` application environment variable with the `OPA_SERVER_URL`. For
-example `https://<opa-server-url>/v1/data/authz/allow`.
+```bash
+gcloud run services update ${GCP_PROJECT_NAME}-demo --region=${GCP_PROJECT_REGION} \
+  --update-env-vars OPA_SERVER_URL='https://<opa-server-url>/v1/data/authz/allow'
+```
+
+Edit and deploy a new revision of the opa-server application with the `HEXA_DEMO_URL` environment variable.
+
+```bash
+gcloud run services update ${GCP_PROJECT_NAME}-demo --region=${GCP_PROJECT_REGION} \
+  --update-env-vars HEXA_DEMO_URL='https://<hexa-demo-url>'
+```
+
+For orchestrating policy, you'll need to set up Google's Identity Aware Proxy. For Cloud Run, you'll need a load balancer
+and backend resource. See this [gcloud reference](https://cloud.google.com/load-balancing/docs/https/setup-global-ext-https-serverless#gcloud_1) 
+for more information.
