@@ -35,10 +35,29 @@ policy orchestrator server, and demo application.
 pack build hexa --builder heroku/buildpacks:20
 ```
 
+We'll be using postgresql and need to execute the below shell scripts from docker-compose.
+
+```bash
+chmod 775 ./databases/docker_support/initdb.d/create-databases.sh
+chmod 775 ./databases/docker_support/migrate-databases.sh
+```
+
 Run all three applications with docker compose.
 
 ```bash
 docker-compose up
+```
+
+Cleaning up. Remove all docker containers and volumes.
+
+```bash
+docker rm -f $(docker ps -a -q) 
+```
+
+Remove the local postgres database files.
+
+```bash
+rm -rf .postgres
 ```
 
 ## Maintainers

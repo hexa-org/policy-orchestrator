@@ -29,6 +29,28 @@ services:
       PORT: 8886
       OPA_SERVER_URL: http://opa-agent:8887/v1/data/authz/allow
 
+  postgresql:
+    image: postgres
+    container_name: postgresql
+    restart: always
+    environment:
+      POSTGRES_USER: postgresql
+      POSTGRES_PASSWORD: postgresql
+    volumes:
+      - ".postgres:/var/lib/postgresql/data"
+      - "./databases/docker_support/initdb.d:/docker-entrypoint-initdb.d/:ro"
+
+  migrate:
+    image: migrate/migrate
+    container_name: migrate
+    entrypoint: ""
+    command: "/bin/sh /home/databases/docker_support/migrate-databases.sh"
+    volumes:
+      - "./databases/orchestrator:/home/databases/orchestrator:ro"
+      - "./databases/docker_support:/home/databases/docker_support:ro"
+    depends_on:
+      - postgresql
+
   opa-agent:
     image: openpolicyagent/opa
     container_name: opa-server
