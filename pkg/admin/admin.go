@@ -8,23 +8,27 @@ import (
 type Client interface {
 	Health(url string) (string, error)
 	Applications(url string) ([]Application, error)
+	Integrations(url string) ([]Integration, error)
+	CreateIntegration(url string, provider string, key []byte) error
+	DeleteIntegration(url string) error
 }
 
-///
-
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/discovery", 301)
+	http.Redirect(w, r, "/discovery", http.StatusPermanentRedirect)
 }
 
 func LoadHandlers(orchestratorUrl string, client Client) func(router *mux.Router) {
 	apps := NewApplicationsHandler(orchestratorUrl, client)
-	integrations := NewIntegrationsHandler()
+	integrations := NewIntegrationsHandler(orchestratorUrl, client)
 	status := NewStatusHandler(orchestratorUrl, client)
 
 	return func(router *mux.Router) {
 		router.HandleFunc("/", IndexHandler).Methods("GET")
 		router.HandleFunc("/applications", apps.ApplicationsHandler).Methods("GET")
-		router.HandleFunc("/discovery", integrations.IntegrationsHandler).Methods("GET")
+		router.HandleFunc("/integrations", integrations.List).Methods("GET")
+		router.HandleFunc("/integrations/new", integrations.New).Methods("GET")
+		router.HandleFunc("/integrations", integrations.Create).Methods("POST")
+		router.HandleFunc("/integrations/{id}", integrations.Delete).Methods("POST")
 		router.HandleFunc("/status", status.StatusHandler).Methods("GET")
 
 		fileServer := http.FileServer(http.Dir("pkg/admin/resources/static"))

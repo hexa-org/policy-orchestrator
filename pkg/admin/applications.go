@@ -3,7 +3,6 @@ package admin
 import (
 	"fmt"
 	"hexa/pkg/web_support"
-	"log"
 	"net/http"
 )
 
@@ -13,7 +12,7 @@ type Application struct {
 
 type applicationsHandler struct {
 	orchestratorUrl string
-	client           Client
+	client          Client
 }
 
 func NewApplicationsHandler(orchestratorUrl string, client Client) applicationsHandler {
@@ -23,10 +22,6 @@ func NewApplicationsHandler(orchestratorUrl string, client Client) applicationsH
 func (p applicationsHandler) ApplicationsHandler(w http.ResponseWriter, r *http.Request) {
 	url := fmt.Sprintf("%v/applications", p.orchestratorUrl)
 	applications, _ := p.client.Applications(url)
-	model := web_support.Model{Map: map[string]interface{}{"applications" : applications}}
-	err := web_support.ModelAndView(w, "applications", model)
-	if err != nil {
-		log.Println(err)
-		return
-	}
+	model := web_support.Model{Map: map[string]interface{}{"resource": "applications", "applications": applications}}
+	_ = web_support.ModelAndView(w, "applications", model)
 }

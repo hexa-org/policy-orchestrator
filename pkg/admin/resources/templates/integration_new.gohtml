@@ -1,0 +1,21 @@
+{{- template "base" .}}
+{{- define "main"}}
+    <div class="card">
+        <h1>Install Cloud Provider</h1>
+        <form name="integration" action="/integrations" method="post" enctype="multipart/form-data">
+            <input type="hidden" value="Google Cloud" name="provider"/>
+            <h2 class="gcp-title">Google Cloud Platform</h2>
+            <fieldset class="flex">
+                <p>
+                    Add a GCP service account project by uploading the project's private key file.
+                </p>
+                <label class="file">
+                    Choose a private key file
+                    <input type="file" name="key"/>
+                </label>
+            </fieldset>
+
+            <input type="submit" value="Install Cloud Provider" class="button"/>
+        </form>
+    </div>
+{{- end}}

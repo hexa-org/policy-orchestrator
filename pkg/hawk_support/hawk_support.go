@@ -3,12 +3,13 @@ package hawk_support
 import (
 	"fmt"
 	"github.com/hiyosi/hawk"
-	"log"
+	"io"
 	"net/http"
 	"time"
 )
 
 type HTTPClient interface {
+	Get(url string) (resp *http.Response, err error)
 	Do(req *http.Request) (*http.Response, error)
 }
 
@@ -50,7 +51,26 @@ func HawkMiddleware(next http.HandlerFunc, credentialStore hawk.CredentialStore,
 	}
 }
 
-func HawkGet(client HTTPClient, id string, key string, uri string) (*http.Response, error) {
+func HawkGet(client HTTPClient, id string, key string, url string) (*http.Response, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	authorize(req, id, key, url, "GET")
+	return client.Do(req)
+}
+
+func HawkPost(client HTTPClient, id string, key string, url string, body io.Reader) (*http.Response, error) {
+	req, err := http.NewRequest("POST", url, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	authorize(req, id, key, url, "POST")
+	return client.Do(req)
+}
+
+func authorize(req *http.Request, id string, key string, url string, method string)  {
 	c := hawk.NewClient(
 		&hawk.Credential{
 			ID:  id,
@@ -62,15 +82,6 @@ func HawkGet(client HTTPClient, id string, key string, uri string) (*http.Respon
 			Nonce:     "nonce",
 		},
 	)
-	header, _ := c.Header("GET", uri)
-	req, err := http.NewRequest("GET", uri, nil)
-	if err != nil {
-		log.Printf("Request failed '%v'", err)
-	}
+	header, _ := c.Header(method, url)
 	req.Header.Set("authorization", header)
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Printf("Found hawk response error %v\n", err)
-	}
-	return resp, err
 }

@@ -1,13 +1,15 @@
 package admin_test
 
 import (
-	"github.com/gorilla/mux"
+	"bytes"
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"hexa/pkg/admin"
+	"hexa/pkg/admin/test"
 	"hexa/pkg/web_support"
 	"io"
-	"log"
+	"mime/multipart"
 	"net/http"
 	"path/filepath"
 	"runtime"
@@ -17,6 +19,7 @@ import (
 type IntegrationsSuite struct {
 	suite.Suite
 	server *http.Server
+	client *admin_test.MockClient
 }
 
 func TestIntegrations(t *testing.T) {
@@ -27,11 +30,11 @@ func (suite *IntegrationsSuite) SetupTest() {
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../../../pkg/admin/resources")
 
-	handler := admin.NewIntegrationsHandler()
-	suite.server = web_support.Create("localhost:8883", func(router *mux.Router) {
-		router.HandleFunc("/discovery", handler.IntegrationsHandler).Methods("GET")
-	}, web_support.Options{ResourceDirectory: resourcesDirectory})
-
+	suite.client = new(admin_test.MockClient)
+	suite.server = web_support.Create(
+		"localhost:8883",
+		admin.LoadHandlers("http://noop", suite.client),
+		web_support.Options{ResourceDirectory: resourcesDirectory})
 	go web_support.Start(suite.server)
 	web_support.WaitForHealthy(suite.server)
 }
@@ -42,11 +45,59 @@ func (suite *IntegrationsSuite) TearDownTest() {
 
 ///
 
-func (suite *IntegrationsSuite) TestIntegrations() {
-	resp, err := http.Get("http://localhost:8883/discovery")
-	if err != nil {
-		log.Fatalln(err)
-	}
+func (suite *IntegrationsSuite) TestListIntegrations() {
+	resp := suite.must(http.Get("http://localhost:8883/integrations"))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Discovery")
+}
+
+func (suite *IntegrationsSuite) TestNewIntegration() {
+	resp := suite.must(http.Get("http://localhost:8883/integrations/new"))
+	body, _ := io.ReadAll(resp.Body)
+	assert.Contains(suite.T(), string(body), "Install Cloud Provider")
+}
+
+func (suite *IntegrationsSuite) TestCreateIntegration() {
+	suite.client.On("CreateIntegration", "http://noop/integrations").Return()
+	buf, contentType := suite.multipartForm()
+	resp := suite.must(http.Post("http://localhost:8883/integrations", contentType, buf))
+	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
+}
+
+func (suite *IntegrationsSuite) TestCreateIntegration_with_error() {
+	suite.client.On("CreateIntegration", "http://noop/integrations").Return(errors.New(""))
+	buf, contentType := suite.multipartForm()
+	resp := suite.must(http.Post("http://localhost:8883/integrations", contentType, buf))
+	assert.Equal(suite.T(), http.StatusInternalServerError, resp.StatusCode)
+}
+
+func (suite *IntegrationsSuite) TestDeleteIntegration() {
+	suite.client.On("DeleteIntegration", "http://noop/integrations/101").Return()
+	resp := suite.must(http.Post("http://localhost:8883/integrations/101", "", nil))
+	body, _ := io.ReadAll(resp.Body)
+	assert.Contains(suite.T(), string(body), "Discovery")
+}
+
+func (suite *IntegrationsSuite) TestDeleteIntegration_with_error() {
+	suite.client.On("DeleteIntegration", "http://noop/integrations/101").Return(errors.New(""))
+	resp := suite.must(http.Post("http://localhost:8883/integrations/101", "", nil))
+	assert.Equal(suite.T(), http.StatusInternalServerError, resp.StatusCode)
+}
+
+///
+
+func (suite *IntegrationsSuite) must(resp *http.Response, _ error) *http.Response {
+	return resp
+}
+
+func (suite *IntegrationsSuite) multipartForm() (*bytes.Buffer, string) {
+	buf := new(bytes.Buffer)
+	writer := multipart.NewWriter(buf)
+	provider, _ := writer.CreateFormField("provider")
+	_, _ = provider.Write([]byte("google cloud"))
+	file, _ := writer.CreateFormFile("key", "aKey.json")
+	_, _ = file.Write([]byte("aKey"))
+	contentType := writer.FormDataContentType()
+	_ = writer.Close()
+	return buf, contentType
 }

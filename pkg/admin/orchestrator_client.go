@@ -1,8 +1,8 @@
 package admin
 
 import (
+	"bytes"
 	"encoding/json"
-	"fmt"
 	"hexa/pkg/hawk_support"
 	"io"
 	"log"
@@ -16,7 +16,7 @@ type HTTPClient interface {
 
 type orchestratorClient struct {
 	client HTTPClient
-	key string
+	key    string
 }
 
 func NewOrchestratorClient(client HTTPClient, key string) Client {
@@ -52,7 +52,7 @@ func (c orchestratorClient) Applications(url string) (applications []Application
 	body := resp.Body
 	err = json.NewDecoder(body).Decode(&jsonResponse)
 	if err != nil {
-		fmt.Printf("unable to parse customer json: %s\n", err.Error())
+		log.Printf("unable to parse customer json: %s\n", err.Error())
 		return applications, err
 	}
 
@@ -61,4 +61,47 @@ func (c orchestratorClient) Applications(url string) (applications []Application
 	}
 
 	return applications, nil
+}
+
+type integrationList struct {
+	Integrations []integration `json:"integrations"`
+}
+
+type integration struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Provider string `json:"provider"`
+	Key      []byte `json:"key"`
+}
+
+func (c orchestratorClient) Integrations(url string) (integrations []Integration, err error) {
+	resp, err := hawk_support.HawkGet(c.client, "anId", c.key, url)
+	if err != nil {
+		return integrations, err
+	}
+
+	var jsonResponse integrationList
+	body := resp.Body
+	err = json.NewDecoder(body).Decode(&jsonResponse)
+	if err != nil {
+		return integrations, err
+	}
+
+	for _, in := range jsonResponse.Integrations {
+		integrations = append(integrations, Integration{in.ID, in.Name, in.Provider, []byte(in.Key)})
+	}
+
+	return integrations, nil
+}
+
+func (c orchestratorClient) CreateIntegration(url string, provider string, key []byte) error {
+	integration := integration{Name: "aName", Provider: provider, Key: key} // todo - replace with project name in key
+	marshal, _ := json.Marshal(integration)
+	_, err := hawk_support.HawkPost(c.client, "anId", c.key, url, bytes.NewReader(marshal))
+	return err
+}
+
+func (c orchestratorClient) DeleteIntegration(url string) error {
+	_, err := hawk_support.HawkGet(c.client, "anId", c.key, url)
+	return err
 }

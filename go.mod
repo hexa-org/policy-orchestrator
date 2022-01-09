@@ -8,6 +8,7 @@ require (
 	github.com/alecthomas/participle/v2 v2.0.0-alpha7
 	github.com/gorilla/mux v1.8.0
 	github.com/hiyosi/hawk v1.0.0
+	github.com/lib/pq v1.10.4
 	github.com/stretchr/testify v1.7.0
 )
 

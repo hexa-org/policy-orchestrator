@@ -1,4 +1,6 @@
 {{- template "base" .}}
 {{- define "main"}}
 success!
+{{- $resource := index .Map "resource"}}
+{{ capitalize $resource }}
 {{- end}}

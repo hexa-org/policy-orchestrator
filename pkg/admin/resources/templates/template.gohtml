@@ -1,4 +1,5 @@
 {{- define "base"}}
+    {{- $resource := index .Map "resource"}}
     <!doctype html>
     <html lang="en">
     <head>
@@ -21,8 +22,11 @@
     <header class="top-bar">
         <div class="menu">
             <img src="/images/menu_white.svg" alt="menu">
-            <h1></h1>
+            <h1>{{ capitalize $resource }}</h1>
         </div>
+        {{- if (eq $resource "integrations") }}
+            <a href="/integrations/new"><img src="/images/add_white.svg" alt="add"></a>
+        {{end}}
     </header>
     <main>
         <div class="side-nav">
@@ -33,7 +37,7 @@
             </ul>
             <ul>
                 <li>
-                    <a href="/discovery">
+                    <a href="/integrations">
                         Discovery
                     </a>
                 </li>

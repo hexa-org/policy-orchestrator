@@ -8,7 +8,8 @@ import (
 )
 
 func TestApp(t *testing.T) {
-	app := App("aKey", "localhost:8883", "localhost:8883")
+	app := App("aKey", "localhost:8883", "localhost:8883",
+		"postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
 	go func() {
 		web_support.Start(app)
 	}()
