@@ -5,7 +5,6 @@ import (
 	"hexa/pkg/admin"
 	admin_test "hexa/pkg/admin/test"
 	"hexa/pkg/web_support"
-	"log"
 	"net/http"
 	"testing"
 )
@@ -16,11 +15,16 @@ func TestAdminHandlers(t *testing.T) {
 	go web_support.Start(server)
 	web_support.WaitForHealthy(server)
 
-	resp, err := http.Get("http://localhost:8883/health")
-	if err != nil {
-		log.Fatalln(err)
-	}
+	resp, _ := http.Get("http://localhost:8883/health")
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	noFollowClient := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	redirect, _ := noFollowClient.Get("http://localhost:8883")
+	assert.Equal(t, http.StatusPermanentRedirect, redirect.StatusCode)
 
 	web_support.Stop(server)
 }

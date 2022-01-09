@@ -1,0 +1,29 @@
+{{- template "base" .}}
+{{- define "main"}}
+    <div class="card">
+        <h1>Discovery</h1>
+        <table>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Provider</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {{- range index .Map "integrations"}}
+                <tr>
+                    <td>{{.Name}}</td>
+                    <td>{{.Provider}}</td>
+                    <td>
+                        <form action="integrations/{{.ID}}"
+                              onsubmit="confirm('Are you sure?')" method="post" class="delete-form">
+                            <input type="submit" class="delete-link" value="[delete]">
+                        </form>
+                    </td>
+                </tr>
+            {{- end}}
+            </tbody>
+        </table>
+    </div>
+{{- end}}

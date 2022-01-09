@@ -50,9 +50,10 @@ func TestModelAndView(t *testing.T) {
 	web_support.Create("localhost:8883", func(x *mux.Router) {}, options)
 	writer := &httptest.ResponseRecorder{Body: new(bytes.Buffer)}
 
-	_ = web_support.ModelAndView(writer, "test", web_support.Model{})
+	_ = web_support.ModelAndView(writer, "test", web_support.Model{Map: map[string]interface{}{"resource": "resource"}})
 	body, _ := io.ReadAll(writer.Body)
 	assert.Contains(t, string(body), "success!")
+	assert.Contains(t, string(body), "Resource")
 
 	err := web_support.ModelAndView(&httptest.ResponseRecorder{}, "bad", web_support.Model{})
 	assert.Contains(t, err.Error(), "can't evaluate field Ba")

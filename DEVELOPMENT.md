@@ -19,6 +19,24 @@ Install via [Homebrew Formulae](https://formulae.brew.sh)
 brew install go buildpacks/tap/pack opa docker docker-compose golang-migrate
 ```
 
+## Run the migration
+
+Install postgresql via homebrew.
+
+Create a test database.
+
+```bash
+create database orchestrator_test;
+create user orchestrator with password 'orchestrator';
+grant all privileges on database orchestrator_test to orchestrator;
+```
+
+Run the migrations.
+
+```bash
+migrate -verbose -path ./databases/orchestrator -database "postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable" up
+```
+
 ## Run the tests
 
 Ensure the test suite passes.
@@ -34,6 +52,8 @@ go clean -testcache
 ```
 
 ### Run the applications
+
+Create a development database similar to test.
 
 Source the `.env_development` file.
 

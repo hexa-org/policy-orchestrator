@@ -1,7 +1,6 @@
 package admin_test
 
 import (
-	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"hexa/pkg/admin"
@@ -18,6 +17,7 @@ import (
 type ApplicationsSuite struct {
 	suite.Suite
 	server *http.Server
+	client *admin_test.MockClient
 }
 
 func TestApplications(t *testing.T) {
@@ -28,11 +28,11 @@ func (suite *ApplicationsSuite) SetupTest() {
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../../../pkg/admin/resources")
 
-	handler := admin.NewApplicationsHandler("http://noop", new(admin_test.MockClient))
-	suite.server = web_support.Create("localhost:8883", func(router *mux.Router) {
-		router.HandleFunc("/applications", handler.ApplicationsHandler).Methods("GET")
-	}, web_support.Options{ResourceDirectory: resourcesDirectory})
-
+	suite.client = new(admin_test.MockClient)
+	suite.server = web_support.Create(
+		"localhost:8883",
+		admin.LoadHandlers("http://noop", suite.client),
+		web_support.Options{ResourceDirectory: resourcesDirectory})
 	go web_support.Start(suite.server)
 	web_support.WaitForHealthy(suite.server)
 }
@@ -44,6 +44,16 @@ func (suite *ApplicationsSuite) TearDownTest() {
 ///
 
 func (suite *ApplicationsSuite) TestApplications() {
+	resp, err := http.Get("http://localhost:8883/applications")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	body, _ := io.ReadAll(resp.Body)
+	assert.Contains(suite.T(), string(body), "Applications")
+	assert.Contains(suite.T(), string(body), "anApp")
+}
+
+func (suite *ApplicationsSuite) TestApplications_bad_template() {
 	resp, err := http.Get("http://localhost:8883/applications")
 	if err != nil {
 		log.Fatalln(err)

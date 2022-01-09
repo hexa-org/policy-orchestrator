@@ -2,7 +2,9 @@ package admin_test
 
 import (
 	"bytes"
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"hexa/pkg/admin"
@@ -15,6 +17,7 @@ import (
 type MockClient struct {
 	mock.Mock
 	response []byte
+	status   int
 	err      error
 }
 
@@ -46,11 +49,77 @@ func TestOrchestratorClient_NotHealthy(t *testing.T) {
 	assert.Equal(t, "{\"status\": \"fail\"}", resp)
 }
 
-func TestOrchestratorClient_ApplicationsApplications(t *testing.T) {
+func TestOrchestratorClient_Applications(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = []byte("{\"applications\":[{\"name\":\"anApp\"}]}")
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 
 	resp, _ := client.Applications("localhost:8883/applications")
 	assert.Equal(t, []admin.Application{{Name: "anApp"}}, resp)
+}
+
+func TestOrchestratorClient_Applications_bad_get(t *testing.T) {
+	mockClient := new(MockClient)
+	mockClient.err = errors.New("oops")
+	client := admin.NewOrchestratorClient(mockClient, "aKey")
+
+	_, err := client.Applications("localhost:8883/applications")
+	assert.Error(t, err)
+}
+
+func TestOrchestratorClient_Applications_bad_json(t *testing.T) {
+	mockClient := new(MockClient)
+	mockClient.response = []byte("{\"_applications\":[}")
+	client := admin.NewOrchestratorClient(mockClient, "aKey")
+
+	resp, err := client.Applications("localhost:8883/applications")
+	assert.Error(t, err)
+	assert.Equal(t, []admin.Application(nil), resp)
+}
+
+func TestOrchestratorClient_Integrations(t *testing.T) {
+	mockClient := new(MockClient)
+	key := base64.StdEncoding.EncodeToString([]byte("anotherKey"))
+	mockClient.response = []byte(fmt.Sprintf("{\"integrations\":[{\"provider\":\"google\", \"key\":\"%s\"}]}", key))
+	client := admin.NewOrchestratorClient(mockClient, "aKey")
+
+	resp, _ := client.Integrations("localhost:8883/applications")
+	assert.Equal(t, []admin.Integration{{Provider: "google", Key: []byte("anotherKey")}}, resp)
+}
+
+func TestOrchestratorClient_Integrations_bad_get(t *testing.T) {
+	mockClient := new(MockClient)
+	mockClient.err = errors.New("oops")
+	client := admin.NewOrchestratorClient(mockClient, "aKey")
+
+	_, err := client.Integrations("localhost:8883/integrations")
+	assert.Error(t, err)
+}
+
+func TestOrchestratorClient_Integrations_bad_json(t *testing.T) {
+	mockClient := new(MockClient)
+	mockClient.response = []byte(fmt.Sprintf("{\"_integrations\":[}"))
+	client := admin.NewOrchestratorClient(mockClient, "aKey")
+
+	resp, err := client.Integrations("localhost:8883/integrations")
+	assert.Error(t, err)
+	assert.Equal(t, []admin.Integration(nil), resp)
+}
+
+func TestOrchestratorClient_CreateIntegrations(t *testing.T) {
+	mockClient := new(MockClient)
+	mockClient.status = http.StatusCreated
+	client := admin.NewOrchestratorClient(mockClient, "aKey")
+
+	err := client.CreateIntegration("localhost:8883/integrations", "", []byte{})
+	assert.NoError(t, err)
+}
+
+func TestOrchestratorClient_DeleteIntegrations(t *testing.T) {
+	mockClient := new(MockClient)
+	mockClient.status = http.StatusOK
+	client := admin.NewOrchestratorClient(mockClient, "aKey")
+
+	err := client.DeleteIntegration("localhost:8883/integrations/101")
+	assert.NoError(t, err)
 }

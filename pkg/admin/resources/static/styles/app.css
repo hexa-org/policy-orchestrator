@@ -47,6 +47,134 @@ a {
     display: flex;
 }
 
+.gray {
+    color: var(--gray);
+}
+
+form {
+    width: 100%;
+    padding: .75rem 1rem;
+    text-align: left;
+}
+
+form p {
+    padding-top: 1rem;
+}
+
+.button {
+    border-radius: 2px;
+    padding: .8rem;
+    margin-top: 1rem;
+
+    background: var(--dark-orange);
+    color: white;
+    cursor: pointer;
+    border: none;
+    font-size: inherit;
+
+    display: inline-block;
+    line-height: 1rem;
+    vertical-align: top;
+}
+
+.button.secondary {
+    color: var(--medium-gray);
+    background-color: var(--light-gray);
+}
+
+.button:active {
+    position: relative;
+    top: 1px;
+}
+
+label {
+    width: 100%;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+label.file {
+    padding-left: .4rem;
+    padding-top: 1rem;
+    color: var(--dark-orange);
+    cursor: pointer;
+    width: 14rem;
+}
+
+label.file:active {
+    position: relative;
+    top: 1px;
+}
+
+label.text {
+    padding-left: .4rem;
+    padding-top: 1rem;
+    cursor: pointer;
+}
+
+input[type=text] {
+    margin: 0.5rem;
+    padding: 0.25rem;
+    font-size: inherit;
+    width: 20rem;
+}
+
+input[type=file] {
+    visibility: hidden;
+    position: absolute;
+}
+
+table {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+thead {
+    color: var(--gray);
+    font-size: .9rem;
+}
+
+.heading {
+    margin-top: 1rem;
+    color: var(--black);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.heading th {
+    padding-top: 1rem;
+}
+
+tbody {
+    color: var(--gray);
+}
+
+table a {
+    color: var(--dark-orange);
+}
+
+table.padded {
+    margin-left: 1rem;
+    width: 60%;
+}
+
+tr {
+    border-bottom: 1px solid var(--light-gray);
+}
+
+tr.no-border {
+    border-bottom: none;
+}
+
+th, td {
+    padding: .75rem 1rem;
+    text-align: left;
+}
+
+td.first {
+    width: 25rem;
+}
+
 .top-bar {
     width: 100%;
     padding: 0 1rem;
@@ -66,10 +194,6 @@ a {
 }
 
 .top-nav h2 {
-    color: var(--gray);
-}
-
-.gray {
     color: var(--gray);
 }
 
@@ -106,33 +230,6 @@ main .side-nav {
     padding: 2rem 1rem;
 }
 
-.side-nav hr {
-    border: none;
-    border-top: 1px solid var(--light-gray);
-}
-
-.side-nav li h2 {
-    font-size: .9rem;
-    font-weight: 600;;
-}
-
-.side-nav li {
-    height: 2.4rem;
-    display: flex;
-    align-items: center;
-    margin: 1px 0;
-    padding: 0 .75rem;
-}
-
-.side-nav li:hover, .side-nav li.active {
-    background-color: var(--light-gray);
-    color: var(--dark-orange);
-}
-
-.no-hover {
-    pointer-events: none;
-}
-
 .content {
     flex: 1;
     padding: 2rem;
@@ -154,42 +251,55 @@ main .side-nav {
     margin: 0 1rem 1rem 1rem;
 }
 
-table {
-    width: 100%;
-    margin-bottom: 1rem;
+.side-nav hr {
+    border: none;
+    border-top: 1px solid var(--light-gray);
 }
 
-thead {
-    color: var(--gray);
+.no-hover {
+    pointer-events: none;
+}
+
+.side-nav li h2 {
     font-size: .9rem;
+    font-weight: 600;;
 }
 
-tbody {
-    color: var(--gray);
+.side-nav li {
+    height: 2.4rem;
+    display: flex;
+    align-items: center;
+    margin: 1px 0;
+    padding: 0 .75rem;
 }
 
-table a {
+.side-nav li:hover, .side-nav li.active {
+    background-color: var(--light-gray);
     color: var(--dark-orange);
 }
 
-table.padded {
-    margin-left: 1rem;
-    width: 60%;
+textarea {
+    color: var(--gray);
+    font-size: 0.8rem;
+    font-family: monospace;
+    border: none;
+    border-left: 1.5rem solid var(--light-gray);
+
+    line-height: 1.4rem;
+
+    width: 100%;
+    height: 30rem;
 }
 
-tr {
-    border-bottom: 1px solid var(--light-gray);
+.delete-link {
+    display: inline;
+    border: none;
+    background: none;
+    font: inherit;
+    color: var(--dark-orange);
+    cursor: pointer;
 }
 
-tr.no-border {
-    border-bottom: none;
-}
-
-th, td {
-    padding: .75rem 1rem;
-    text-align: left;
-}
-
-td.first {
-    width: 25rem;
+.delete-form {
+    padding: 0;
 }

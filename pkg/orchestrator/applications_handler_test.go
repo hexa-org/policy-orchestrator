@@ -3,8 +3,8 @@ package orchestrator_test
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+	"hexa/pkg/database_support"
 	"hexa/pkg/hawk_support"
 	"hexa/pkg/orchestrator"
 	"hexa/pkg/web_support"
@@ -15,11 +15,12 @@ import (
 )
 
 func setup(key string) func(t *testing.T) {
-	store := hawk_support.NewCredentialStore(key)
-	handler := orchestrator.NewApplicationsHandler()
-	server := web_support.Create("localhost:8883", func(router *mux.Router) {
-		router.HandleFunc("/applications", hawk_support.HawkMiddleware(handler.Applications, store, "localhost:8883")).Methods("GET")
-	}, web_support.Options{})
+	db, _ := database_support.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
+
+	server := web_support.Create(
+		"localhost:8883",
+		orchestrator.LoadHandlers(hawk_support.NewCredentialStore(key), "localhost:8883", db),
+		web_support.Options{})
 
 	go web_support.Start(server)
 	web_support.WaitForHealthy(server)
