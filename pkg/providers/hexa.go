@@ -1,4 +1,4 @@
-package adapters
+package providers
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"io"
 )
 
-type Adapter interface {
+type Service interface {
 	WritePolicies(policies []Policy, destination io.Writer) error
 	ReadPolicies(source io.Reader) ([]Policy, error)
 }

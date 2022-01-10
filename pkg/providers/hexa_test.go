@@ -1,10 +1,10 @@
-package adapters_test
+package providers_test
 
 import (
 	"bytes"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
-	"hexa/pkg/adapters"
+	"hexa/pkg/providers"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -17,10 +17,10 @@ func TestEncoding(t *testing.T) {
 	jsonFile, _ := os.Open(filepath.Join(file, "../test/policy.json"))
 	jsonBytes, _ := ioutil.ReadAll(jsonFile)
 
-	policies, _ := adapters.Decode(jsonBytes)
+	policies, _ := providers.Decode(jsonBytes)
 	assert.Equal(t, 4, len(policies))
 
-	policiesBytes, _ := adapters.Encode([]adapters.Policy{policies[0]})
+	policiesBytes, _ := providers.Encode([]providers.Policy{policies[0]})
 
 	expected := `
 [
