@@ -2,7 +2,8 @@
 
 ## Install Google Cloud SDK
 
-Install the Google Cloud SDK CLI following (these instructions)[https://cloud.google.com/sdk/docs/install].
+Install the Google Cloud SDK CLI following (these instructions)[https://cloud.google.com/sdk/docs/install] or with 
+(Homebrew)[https://formulae.brew.sh/cask/google-cloud-sdk].
 
 ## Google Cloud Project Setup
 
