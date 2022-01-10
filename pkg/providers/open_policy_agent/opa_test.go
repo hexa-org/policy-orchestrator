@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	"hexa/pkg/adapters"
-	"hexa/pkg/adapters/open_policy_agent"
+	"hexa/pkg/providers"
+	"hexa/pkg/providers/open_policy_agent"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -18,13 +18,13 @@ func TestWrite(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	jsonFile, _ := os.Open(filepath.Join(file, "../../test/policy.json"))
 	jsonBytes, _ := ioutil.ReadAll(jsonFile)
-	policies, _ := adapters.Decode(jsonBytes)
+	policies, _ := providers.Decode(jsonBytes)
 
 	resourcesDirectory := filepath.Join(file, "../resources")
-	adapter := open_policy_agent.NewOpaAdapter(resourcesDirectory)
+	service := open_policy_agent.NewOpaService(resourcesDirectory)
 
 	actualRegoBytes := new(strings.Builder)
-	_ = adapter.WritePolicies(policies, actualRegoBytes)
+	_ = service.WritePolicies(policies, actualRegoBytes)
 
 	regoFile, _ := os.Open(filepath.Join(resourcesDirectory, fmt.Sprintf("./bundles/bundle/policy.rego")))
 	regoBytes, _ := ioutil.ReadAll(regoFile)
@@ -35,10 +35,10 @@ func TestWrite(t *testing.T) {
 func TestWriteEmpty(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../resources")
-	adapter := open_policy_agent.NewOpaAdapter(resourcesDirectory)
+	service := open_policy_agent.NewOpaService(resourcesDirectory)
 
 	actualRegoBytes := new(strings.Builder)
-	_ = adapter.WritePolicies([]adapters.Policy{}, actualRegoBytes)
+	_ = service.WritePolicies([]providers.Policy{}, actualRegoBytes)
 
 	assert.Equal(t, "package authz\nimport future.keywords.in\ndefault allow = false", actualRegoBytes.String())
 }
@@ -46,13 +46,13 @@ func TestWriteEmpty(t *testing.T) {
 func TestRead(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../resources")
-	adapter := open_policy_agent.NewOpaAdapter(resourcesDirectory)
+	service := open_policy_agent.NewOpaService(resourcesDirectory)
 
 	regoFile, _ := os.Open(filepath.Join(resourcesDirectory, fmt.Sprintf("./bundles/bundle/policy.rego")))
 	regoBytes, _ := ioutil.ReadAll(regoFile)
 	reader := bytes.NewReader(regoBytes)
 
-	policies, _ := adapter.ReadPolicies(reader)
+	policies, _ := service.ReadPolicies(reader)
 	assert.Equal(t, 4, len(policies))
 	assert.Equal(t, "GET", policies[0].Action)
 	assert.Equal(t, []string{"/"}, policies[0].Object.Resources)
@@ -62,24 +62,24 @@ func TestRead(t *testing.T) {
 func TestRead_failed(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../resources")
-	adapter := open_policy_agent.NewOpaAdapter(resourcesDirectory)
+	service := open_policy_agent.NewOpaService(resourcesDirectory)
 
 	reader := bytes.NewReader([]byte(""))
-	_, err := adapter.ReadPolicies(reader)
+	_, err := service.ReadPolicies(reader)
 	assert.Contains(t, err.Error(), "unexpected token")
 }
 
 func TestReadWrite(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../resources")
-	adapter := open_policy_agent.NewOpaAdapter(resourcesDirectory)
+	service := open_policy_agent.NewOpaService(resourcesDirectory)
 
 	regoFile, _ := os.Open(filepath.Join(resourcesDirectory, fmt.Sprintf("./bundles/bundle/policy.rego")))
 	regoBytes, _ := ioutil.ReadAll(regoFile)
-	policies, _ := adapter.ReadPolicies(bytes.NewReader(regoBytes))
+	policies, _ := service.ReadPolicies(bytes.NewReader(regoBytes))
 
 	actualRegoBytes := new(strings.Builder)
-	_ = adapter.WritePolicies(policies, actualRegoBytes)
+	_ = service.WritePolicies(policies, actualRegoBytes)
 
 	assert.Equal(t, string(regoBytes), actualRegoBytes.String())
 }
