@@ -2,7 +2,7 @@ package provider
 
 type Provider interface {
 	Name() string
-	DiscoveryApplications(IntegrationInfo) []ApplicationInfo
+	DiscoverApplications(IntegrationInfo) []ApplicationInfo
 }
 
 type IntegrationInfo struct {

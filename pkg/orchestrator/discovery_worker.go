@@ -16,7 +16,7 @@ func (n *DiscoveryWorker) Run(work interface{}) error {
 
 		for _, record := range work.([]IntegrationRecord) {
 			log.Printf("Finding applications for integration provider %s.", p.Name())
-			applications := p.DiscoveryApplications(provider.IntegrationInfo{Name: record.Provider, Key: record.Key})
+			applications := p.DiscoverApplications(provider.IntegrationInfo{Name: record.Provider, Key: record.Key})
 
 			log.Printf("Found %d applications for integration provider %s.", len(applications), p.Name())
 		}

@@ -12,7 +12,7 @@ func (g GoogleProvider) Name() string {
 	return "google cloud"
 }
 
-func (g GoogleProvider) DiscoveryApplications(info provider.IntegrationInfo) (apps []provider.ApplicationInfo) {
+func (g GoogleProvider) DiscoverApplications(info provider.IntegrationInfo) (apps []provider.ApplicationInfo) {
 	if strings.EqualFold(info.Name, g.Name()) {
 		found := []provider.ApplicationInfo{{"appEngine"}, {"cloudRun"}, {"kubernetes"}}
 		apps = append(apps, found...)

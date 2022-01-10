@@ -11,7 +11,7 @@ func TestDiscovery(t *testing.T) {
 	providers := []provider.Provider{google_cloud.GoogleProvider{}}
 	for _, p := range providers {
 		info := provider.IntegrationInfo{Name: "google cloud", Key: []byte("aKey")}
-		assert.Equal(t, 3, len(p.DiscoveryApplications(info)))
+		assert.Equal(t, 3, len(p.DiscoverApplications(info)))
 		assert.Equal(t, "google cloud", p.Name())
 	}
 }
@@ -20,7 +20,7 @@ func TestDiscovery_ignores_case(t *testing.T) {
 	providers := []provider.Provider{google_cloud.GoogleProvider{}}
 	for _, p := range providers {
 		info := provider.IntegrationInfo{Name: "Google Cloud", Key: []byte("aKey")}
-		assert.Equal(t, 3, len(p.DiscoveryApplications(info)))
+		assert.Equal(t, 3, len(p.DiscoverApplications(info)))
 		assert.Equal(t, "google cloud", p.Name())
 	}
 }
@@ -29,6 +29,6 @@ func TestNoDiscovery(t *testing.T) {
 	providers := []provider.Provider{google_cloud.GoogleProvider{}}
 	for _, p := range providers {
 		info := provider.IntegrationInfo{Name: "not google cloud", Key: []byte("aKey")}
-		assert.Equal(t, 0, len(p.DiscoveryApplications(info)))
+		assert.Equal(t, 0, len(p.DiscoverApplications(info)))
 	}
 }

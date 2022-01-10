@@ -12,7 +12,7 @@ func (n *NoopDiscovery) Name() string {
 	return "noop"
 }
 
-func (n *NoopDiscovery) DiscoveryApplications(info provider.IntegrationInfo) (apps []provider.ApplicationInfo) {
+func (n *NoopDiscovery) DiscoverApplications(info provider.IntegrationInfo) (apps []provider.ApplicationInfo) {
 	if info.Name == n.Name() {
 		found := []provider.ApplicationInfo{{"appEngine"}, {"cloudRun"}, {"kubernetes"}}
 		apps = append(apps, found...)
