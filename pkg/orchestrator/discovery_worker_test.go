@@ -73,5 +73,5 @@ func TestWorkflow_bad_find(t *testing.T) {
 	}
 	scheduler.Stop()
 
-	assert.Equal(t, finder.NotCompleted, 1)
+	assert.True(t, finder.NotCompleted > 0)
 }
