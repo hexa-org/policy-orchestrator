@@ -19,6 +19,7 @@ type Integration struct {
 
 type IntegrationsHandler struct {
 	gateway IntegrationsDataGateway
+	worker DiscoveryWorker
 }
 
 func (handler IntegrationsHandler) List(w http.ResponseWriter, r *http.Request) {
@@ -40,6 +41,8 @@ func (handler IntegrationsHandler) Create(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+	find, err := handler.gateway.Find()
+	_ = handler.worker.Run(find)
 	w.WriteHeader(http.StatusCreated)
 }
 

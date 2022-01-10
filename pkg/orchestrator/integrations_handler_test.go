@@ -13,6 +13,7 @@ import (
 	"hexa/pkg/hawk_support"
 	"hexa/pkg/orchestrator"
 	"hexa/pkg/web_support"
+	"hexa/pkg/workflow_support"
 	"net/http"
 	"testing"
 )
@@ -21,6 +22,7 @@ type HandlerSuite struct {
 	suite.Suite
 	db      *sql.DB
 	server  *http.Server
+	scheduler *workflow_support.WorkScheduler
 	key     string
 	gateway orchestrator.IntegrationsDataGateway
 }
@@ -37,7 +39,8 @@ func (suite *HandlerSuite) SetupTest() {
 	hash := sha256.Sum256([]byte("aKey"))
 	suite.key = hex.EncodeToString(hash[:])
 
-	handlers, _ := orchestrator.LoadHandlers(hawk_support.NewCredentialStore(suite.key), "localhost:8883", suite.db)
+	handlers, scheduler := orchestrator.LoadHandlers(hawk_support.NewCredentialStore(suite.key), "localhost:8883", suite.db)
+	suite.scheduler = scheduler
 	suite.server = web_support.Create("localhost:8883", handlers, web_support.Options{})
 
 	go web_support.Start(suite.server)
