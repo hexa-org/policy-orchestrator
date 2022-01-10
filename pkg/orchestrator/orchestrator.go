@@ -9,12 +9,15 @@ import (
 )
 
 func LoadHandlers(store hawk.CredentialStore, hostPort string, database *sql.DB) (func(router *mux.Router), *workflow_support.WorkScheduler) {
-	applicationsHandler := ApplicationsHandler{}
-	gateway := IntegrationsDataGateway{database}
-	integrationsHandler := IntegrationsHandler{gateway}
+	applicationsGateway := ApplicationsDataGateway{database}
+	integrationsGateway := IntegrationsDataGateway{database}
 
-	worker := DiscoveryWorker{}
-	finder := DiscoveryWorkFinder{Gateway: gateway}
+	worker := DiscoveryWorker{applicationsGateway}
+	finder := DiscoveryWorkFinder{Gateway: integrationsGateway}
+
+	applicationsHandler := ApplicationsHandler{applicationsGateway}
+	integrationsHandler := IntegrationsHandler{integrationsGateway, worker}
+
 	list := []workflow_support.Worker{&worker}
 	scheduler := &workflow_support.WorkScheduler{Finder: &finder, Workers: list, Delay: 60_000}
 

@@ -13,7 +13,9 @@ type Application struct {
 	Name string `json:"name"`
 }
 
-type ApplicationsHandler struct{}
+type ApplicationsHandler struct{
+	gateway ApplicationsDataGateway
+}
 
 func (handler ApplicationsHandler) List(w http.ResponseWriter, r *http.Request) {
 	data, _ := json.Marshal(Applications{[]Application{{"anApp"}}})

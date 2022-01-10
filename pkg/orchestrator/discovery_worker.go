@@ -3,6 +3,7 @@ package orchestrator
 import "log"
 
 type DiscoveryWorker struct {
+	Gateway ApplicationsDataGateway
 }
 
 func (n *DiscoveryWorker) Run(work interface{}) error {
