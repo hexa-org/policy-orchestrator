@@ -5,6 +5,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"hexa/pkg/database_support"
 	"hexa/pkg/orchestrator"
+	"hexa/pkg/orchestrator/provider"
+	"hexa/pkg/orchestrator/test"
 	"hexa/pkg/workflow_support"
 	"testing"
 	"time"
@@ -19,9 +21,10 @@ func setUp() orchestrator.IntegrationsDataGateway {
 
 func TestWorkflow(t *testing.T) {
 	gateway := setUp()
-	_, _ = gateway.Create("aName", "google cloud", []byte("aKey"))
+	_, _ = gateway.Create("aName", "noop", []byte("aKey"))
 
-	worker := orchestrator.DiscoveryWorker{}
+	discovery := orchestrator_test.NoopDiscovery{}
+	worker := orchestrator.DiscoveryWorker{Providers: []provider.Provider{&discovery}}
 	finder := orchestrator.DiscoveryWorkFinder{Gateway: gateway}
 	list := []workflow_support.Worker{&worker}
 	scheduler := workflow_support.WorkScheduler{Finder: &finder, Workers: list, Delay: 50}
@@ -31,7 +34,8 @@ func TestWorkflow(t *testing.T) {
 	}
 	scheduler.Stop()
 
-	assert.Equal(t, finder.Completed, 1)
+	assert.Equal(t, 1, finder.Completed)
+	assert.True(t, discovery.Discovered > 2)
 }
 
 func TestWorkflow_empty(t *testing.T) {
