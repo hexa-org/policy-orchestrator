@@ -1,5 +1,9 @@
 # Deploy to Google Cloud
 
+## Install Google Cloud SDK
+
+Install the Google Cloud SDK CLI following (these instructions)[https://cloud.google.com/sdk/docs/install].
+
 ## Google Cloud Project Setup
 
 Log in to Google Cloud.
@@ -93,7 +97,7 @@ docker tag ${GCP_PROJECT_NAME}-opa-server:latest gcr.io/${GCP_PROJECT_ID}/hexa-o
 docker push gcr.io/${GCP_PROJECT_ID}/hexa-opa-server:latest
 ```
 
-Deploy via Cloud Run
+Deploy via Cloud Run.
 
 ```bash
 gcloud beta run deploy ${GCP_PROJECT_NAME}-opa-server --allow-unauthenticated \
