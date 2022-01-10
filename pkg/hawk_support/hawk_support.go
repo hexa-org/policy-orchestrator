@@ -70,7 +70,7 @@ func HawkPost(client HTTPClient, id string, key string, url string, body io.Read
 	return client.Do(req)
 }
 
-func authorize(req *http.Request, id string, key string, url string, method string)  {
+func authorize(req *http.Request, id string, key string, url string, method string) {
 	c := hawk.NewClient(
 		&hawk.Credential{
 			ID:  id,

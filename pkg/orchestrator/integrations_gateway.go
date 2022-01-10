@@ -43,7 +43,7 @@ func (gateway IntegrationsDataGateway) Find() ([]IntegrationRecord, error) {
 	return records, nil
 }
 
-func (gateway IntegrationsDataGateway) Delete(id string) (error) {
+func (gateway IntegrationsDataGateway) Delete(id string) error {
 	_, err := gateway.DB.Exec(`delete from integrations where id=$1`, id)
 	return err
 }
