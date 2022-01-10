@@ -52,6 +52,8 @@ Cleaning up. Remove all docker containers and volumes.
 
 ```bash
 docker rm -f $(docker ps -a -q) 
+docker volume rm -f $(docker volume ls -q)
+docker system prune -a -f 
 ```
 
 Remove the local postgres database files.

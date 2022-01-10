@@ -19,9 +19,9 @@ import (
 
 type HandlerSuite struct {
 	suite.Suite
-	db *sql.DB
-	server *http.Server
-	key string
+	db      *sql.DB
+	server  *http.Server
+	key     string
 	gateway orchestrator.IntegrationsDataGateway
 }
 
@@ -37,10 +37,8 @@ func (suite *HandlerSuite) SetupTest() {
 	hash := sha256.Sum256([]byte("aKey"))
 	suite.key = hex.EncodeToString(hash[:])
 
-	suite.server = web_support.Create(
-		"localhost:8883",
-		orchestrator.LoadHandlers(hawk_support.NewCredentialStore(suite.key), "localhost:8883", suite.db),
-		web_support.Options{})
+	handlers, _ := orchestrator.LoadHandlers(hawk_support.NewCredentialStore(suite.key), "localhost:8883", suite.db)
+	suite.server = web_support.Create("localhost:8883", handlers, web_support.Options{})
 
 	go web_support.Start(suite.server)
 	web_support.WaitForHealthy(suite.server)
@@ -54,7 +52,7 @@ func (suite *HandlerSuite) TearDownTest() {
 func (suite *HandlerSuite) TestList() {
 	_, _ = suite.gateway.Create("aName", "google cloud", []byte("aKey"))
 
-	resp, _ := hawk_support.HawkGet(&http.Client{},"anId", suite.key, "http://localhost:8883/integrations")
+	resp, _ := hawk_support.HawkGet(&http.Client{}, "anId", suite.key, "http://localhost:8883/integrations")
 	var jsonResponse orchestrator.Integrations
 	_ = json.NewDecoder(resp.Body).Decode(&jsonResponse)
 
@@ -67,7 +65,7 @@ func (suite *HandlerSuite) TestList() {
 func (suite *HandlerSuite) TestCreate() {
 	integration := orchestrator.Integration{Name: "aName", Provider: "google cloud", Key: []byte("aKey")}
 	marshal, _ := json.Marshal(integration)
-	_, _ = hawk_support.HawkPost(&http.Client{},"anId", suite.key, "http://localhost:8883/integrations", bytes.NewReader(marshal))
+	_, _ = hawk_support.HawkPost(&http.Client{}, "anId", suite.key, "http://localhost:8883/integrations", bytes.NewReader(marshal))
 
 	all, _ := suite.gateway.Find()
 	assert.Equal(suite.T(), 1, len(all))
@@ -78,7 +76,7 @@ func (suite *HandlerSuite) TestCreate() {
 
 func (suite *HandlerSuite) TestDelete() {
 	id, _ := suite.gateway.Create("aName", "google cloud", []byte("aKey"))
-	resp, _ := hawk_support.HawkGet(&http.Client{},"anId", suite.key, fmt.Sprintf("http://localhost:8883/integrations/%s", id))
+	resp, _ := hawk_support.HawkGet(&http.Client{}, "anId", suite.key, fmt.Sprintf("http://localhost:8883/integrations/%s", id))
 	assert.Equal(suite.T(), resp.StatusCode, http.StatusOK)
 
 	all, _ := suite.gateway.Find()
