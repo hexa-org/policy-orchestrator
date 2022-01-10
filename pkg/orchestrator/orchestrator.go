@@ -5,6 +5,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hiyosi/hawk"
 	"hexa/pkg/hawk_support"
+	"hexa/pkg/orchestrator/provider"
+	"hexa/pkg/providers/google_cloud"
 	"hexa/pkg/workflow_support"
 )
 
@@ -12,7 +14,7 @@ func LoadHandlers(store hawk.CredentialStore, hostPort string, database *sql.DB)
 	applicationsGateway := ApplicationsDataGateway{database}
 	integrationsGateway := IntegrationsDataGateway{database}
 
-	worker := DiscoveryWorker{applicationsGateway}
+	worker := DiscoveryWorker{[]provider.Provider{&google_cloud.GoogleProvider{}}, applicationsGateway}
 	finder := DiscoveryWorkFinder{Gateway: integrationsGateway}
 
 	applicationsHandler := ApplicationsHandler{applicationsGateway}

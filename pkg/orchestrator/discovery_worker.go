@@ -1,14 +1,25 @@
 package orchestrator
 
-import "log"
+import (
+	"hexa/pkg/orchestrator/provider"
+	"log"
+)
 
 type DiscoveryWorker struct {
-	Gateway ApplicationsDataGateway
+	Providers []provider.Provider
+	Gateway   ApplicationsDataGateway
 }
 
 func (n *DiscoveryWorker) Run(work interface{}) error {
-	for _, record := range work.([]IntegrationRecord) {
-		log.Printf("Finding applications for integration provider %s.", record.Provider)
+	for _, p := range n.Providers {
+		log.Printf("Found discovery provider %s.", p.Name())
+
+		for _, record := range work.([]IntegrationRecord) {
+			log.Printf("Finding applications for integration provider %s.", p.Name())
+			applications := p.DiscoveryApplications(provider.IntegrationInfo{Name: record.Provider, Key: record.Key})
+
+			log.Printf("Found %d applications for integration provider %s.", len(applications), p.Name())
+		}
 	}
 	return nil
 }
