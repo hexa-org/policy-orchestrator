@@ -12,19 +12,20 @@ import (
 	"time"
 )
 
-func setUp() orchestrator.IntegrationsDataGateway {
+func setUp() (orchestrator.IntegrationsDataGateway, orchestrator.ApplicationsDataGateway) {
 	db, _ := database_support.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
 	_, _ = db.Exec("delete from integrations;")
 	gateway := orchestrator.IntegrationsDataGateway{DB: db}
-	return gateway
+	appGateway := orchestrator.ApplicationsDataGateway{DB: db}
+	return gateway, appGateway
 }
 
 func TestWorkflow(t *testing.T) {
-	gateway := setUp()
+	gateway, appGateway := setUp()
 	_, _ = gateway.Create("aName", "noop", []byte("aKey"))
 
 	discovery := orchestrator_test.NoopDiscovery{}
-	worker := orchestrator.DiscoveryWorker{Providers: []provider.Provider{&discovery}}
+	worker := orchestrator.DiscoveryWorker{Providers: []provider.Provider{&discovery}, Gateway: appGateway}
 	finder := orchestrator.DiscoveryWorkFinder{Gateway: gateway}
 	list := []workflow_support.Worker{&worker}
 	scheduler := workflow_support.WorkScheduler{Finder: &finder, Workers: list, Delay: 50}
@@ -34,12 +35,14 @@ func TestWorkflow(t *testing.T) {
 	}
 	scheduler.Stop()
 
+	find, _ := appGateway.Find()
+	assert.Equal(t, 3, len(find))
 	assert.True(t, finder.Completed > 0)
 	assert.True(t, discovery.Discovered > 2)
 }
 
 func TestWorkflow_empty(t *testing.T) {
-	gateway := setUp()
+	gateway, _ := setUp()
 
 	worker := orchestrator.DiscoveryWorker{}
 	finder := orchestrator.DiscoveryWorkFinder{Gateway: gateway}
@@ -60,7 +63,7 @@ func (n *ErroneousWorker) Run(interface{}) error {
 }
 
 func TestWorkflow_bad_find(t *testing.T) {
-	gateway := setUp()
+	gateway, _ := setUp()
 	_, _ = gateway.Create("aName", "google cloud", []byte("aKey"))
 
 	worker := ErroneousWorker{}

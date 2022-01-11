@@ -50,15 +50,7 @@ func (suite *ApplicationsSuite) TestApplications() {
 	}
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Applications")
-	assert.Contains(suite.T(), string(body), "anApp")
-}
-
-func (suite *ApplicationsSuite) TestApplications_bad_template() {
-	resp, err := http.Get("http://localhost:8883/applications")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	body, _ := io.ReadAll(resp.Body)
-	assert.Contains(suite.T(), string(body), "Applications")
-	assert.Contains(suite.T(), string(body), "anApp")
+	assert.Contains(suite.T(), string(body), "anObjectId")
+	assert.Contains(suite.T(), string(body), "aName")
+	assert.Contains(suite.T(), string(body), "aDescription")
 }

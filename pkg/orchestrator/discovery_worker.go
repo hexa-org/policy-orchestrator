@@ -20,6 +20,12 @@ func (n *DiscoveryWorker) Run(work interface{}) error {
 			applications := p.DiscoverApplications(provider.IntegrationInfo{Name: record.Provider, Key: record.Key})
 
 			log.Printf("Found %d applications for integration provider %s.", len(applications), p.Name())
+			for _, app := range applications {
+				_, err := n.Gateway.Create(record.ID, app.ID, app.Name, app.Description)
+				if err != nil {
+					log.Printf(err.Error())
+				}
+			}
 		}
 	}
 	return nil
