@@ -3,6 +3,7 @@ package orchestrator
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"log"
 	"net/http"
 )
 
@@ -19,11 +20,14 @@ type Integration struct {
 
 type IntegrationsHandler struct {
 	gateway IntegrationsDataGateway
-	worker DiscoveryWorker
+	worker  DiscoveryWorker
 }
 
 func (handler IntegrationsHandler) List(w http.ResponseWriter, r *http.Request) {
-	records, _ := handler.gateway.Find()
+	records, err := handler.gateway.Find()
+	if err != nil {
+		log.Println(err)
+	}
 	var list Integrations
 	for _, rec := range records {
 		list.Integrations = append(list.Integrations, Integration{rec.ID, rec.Name, rec.Provider, rec.Key})
@@ -31,7 +35,10 @@ func (handler IntegrationsHandler) List(w http.ResponseWriter, r *http.Request) 
 	data, _ := json.Marshal(list)
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data)
+	_, err = w.Write(data)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func (handler IntegrationsHandler) Create(w http.ResponseWriter, r *http.Request) {

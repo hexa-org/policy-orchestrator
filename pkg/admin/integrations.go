@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"hexa/pkg/web_support"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -26,7 +27,10 @@ func NewIntegrationsHandler(orchestratorUrl string, client Client) integrationsH
 
 func (i integrationsHandler) List(w http.ResponseWriter, r *http.Request) {
 	url := fmt.Sprintf("%v/integrations", i.orchestratorUrl)
-	integrations, _ := i.client.Integrations(url)
+	integrations, err := i.client.Integrations(url)
+	if err != nil {
+		log.Println(err)
+	}
 	model := web_support.Model{Map: map[string]interface{}{"resource": "integrations", "integrations": integrations}}
 	_ = web_support.ModelAndView(w, "integrations", model)
 }

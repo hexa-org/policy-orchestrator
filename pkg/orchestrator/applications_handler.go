@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -21,7 +22,10 @@ type ApplicationsHandler struct {
 }
 
 func (handler ApplicationsHandler) List(w http.ResponseWriter, r *http.Request) {
-	records, _ := handler.gateway.Find()
+	records, err := handler.gateway.Find()
+	if err != nil {
+		log.Println(err)
+	}
 	var list Applications
 	for _, rec := range records {
 		list.Applications = append(list.Applications, Application{rec.ID, rec.ObjectId, rec.Name, rec.Description})
@@ -29,5 +33,8 @@ func (handler ApplicationsHandler) List(w http.ResponseWriter, r *http.Request) 
 	data, _ := json.Marshal(list)
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data)
+	_, err = w.Write(data)
+	if err != nil {
+		log.Println(err)
+	}
 }

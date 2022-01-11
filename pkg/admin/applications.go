@@ -3,6 +3,7 @@ package admin
 import (
 	"fmt"
 	"hexa/pkg/web_support"
+	"log"
 	"net/http"
 )
 
@@ -25,7 +26,10 @@ func NewApplicationsHandler(orchestratorUrl string, client Client) applicationsH
 
 func (p applicationsHandler) List(w http.ResponseWriter, r *http.Request) {
 	url := fmt.Sprintf("%v/applications", p.orchestratorUrl)
-	applications, _ := p.client.Applications(url)
+	applications, err := p.client.Applications(url)
+	if err != nil {
+		log.Println(err)
+	}
 	model := web_support.Model{Map: map[string]interface{}{"resource": "applications", "applications": applications}}
 	_ = web_support.ModelAndView(w, "applications", model)
 }

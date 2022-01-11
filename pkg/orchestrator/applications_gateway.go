@@ -18,7 +18,10 @@ type ApplicationsDataGateway struct {
 }
 
 func (gateway ApplicationsDataGateway) Create(integrationId string, objectId string, name string, description string) (string, error) {
-	existing, _ := gateway.FindByObjectId(objectId)
+	existing, err := gateway.FindByObjectId(objectId)
+	if err != nil {
+		log.Println(err)
+	}
 	if len(existing) > 0 {
 		log.Println("Found existing application record.")
 		return existing[0].ID, nil
@@ -31,21 +34,20 @@ func (gateway ApplicationsDataGateway) Create(integrationId string, objectId str
 }
 
 func (gateway ApplicationsDataGateway) Find() ([]ApplicationRecord, error) {
-	query := "select id, integration_id, object_id, name, description from applications"
-	rows, err := gateway.DB.Query(query)
-	return gateway.mapRecords(err, rows)
+	sql := "select id, integration_id, object_id, name, description from applications"
+	return gateway.mapRecords(gateway.DB.Query(sql))
 }
 
 func (gateway ApplicationsDataGateway) FindByObjectId(objectId string) (records []ApplicationRecord, err error) {
-	query := "select id, integration_id, object_id, name, description from applications where object_id=$1"
-	rows, err := gateway.DB.Query(query, objectId)
-	return gateway.mapRecords(err, rows)
+	sql := "select id, integration_id, object_id, name, description from applications where object_id=$1"
+	return gateway.mapRecords(gateway.DB.Query(sql, objectId))
 }
 
 ///
 
-func (gateway ApplicationsDataGateway) mapRecords(err error, rows *sql.Rows) ([]ApplicationRecord, error) {
+func (gateway ApplicationsDataGateway) mapRecords(rows *sql.Rows, err error) ([]ApplicationRecord, error) {
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	defer func(rows *sql.Rows) {
@@ -57,6 +59,7 @@ func (gateway ApplicationsDataGateway) mapRecords(err error, rows *sql.Rows) ([]
 		var record ApplicationRecord
 		err := rows.Scan(&record.ID, &record.IntegreationId, &record.ObjectId, &record.Name, &record.Description)
 		if err != nil {
+			log.Println(err)
 			return nil, err
 		}
 		records = append(records, record)
