@@ -24,7 +24,7 @@ func LoadHandlers(orchestratorUrl string, client Client) func(router *mux.Router
 
 	return func(router *mux.Router) {
 		router.HandleFunc("/", IndexHandler).Methods("GET")
-		router.HandleFunc("/applications", apps.ApplicationsHandler).Methods("GET")
+		router.HandleFunc("/applications", apps.List).Methods("GET")
 		router.HandleFunc("/integrations", integrations.List).Methods("GET")
 		router.HandleFunc("/integrations/new", integrations.New).Methods("GET")
 		router.HandleFunc("/integrations", integrations.Create).Methods("POST")

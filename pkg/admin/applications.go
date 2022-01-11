@@ -7,7 +7,11 @@ import (
 )
 
 type Application struct {
-	Name string
+	ID            string
+	IntegrationId string
+	ObjectId      string
+	Name          string
+	Description   string
 }
 
 type applicationsHandler struct {
@@ -19,7 +23,7 @@ func NewApplicationsHandler(orchestratorUrl string, client Client) applicationsH
 	return applicationsHandler{orchestratorUrl, client}
 }
 
-func (p applicationsHandler) ApplicationsHandler(w http.ResponseWriter, r *http.Request) {
+func (p applicationsHandler) List(w http.ResponseWriter, r *http.Request) {
 	url := fmt.Sprintf("%v/applications", p.orchestratorUrl)
 	applications, _ := p.client.Applications(url)
 	model := web_support.Model{Map: map[string]interface{}{"resource": "applications", "applications": applications}}

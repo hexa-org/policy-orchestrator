@@ -34,7 +34,7 @@ func (c *GoogleClient) GetBackendApplications() (apps []provider.ApplicationInfo
 		log.Println("Unable to find google cloud backend services.")
 		return apps, err
 	}
-	log.Printf("Google cloud response %s\n", get.Status)
+	log.Printf("Google cloud response %s.\n", get.Status)
 	var backend backends
 	err = json.NewDecoder(get.Body).Decode(&backend)
 	if err != nil {

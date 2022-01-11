@@ -30,7 +30,7 @@ func (m *MockClient) DeleteIntegration(url string) error {
 }
 
 func (m *MockClient) Applications(url string) ([]admin.Application, error) {
-	return []admin.Application{{"anApp"}}, nil
+	return []admin.Application{{"anId", "anIntegrationId", "anObjectId", "aName", "aDescription"}}, nil
 }
 
 func (m *MockClient) Health(url string) (string, error) {

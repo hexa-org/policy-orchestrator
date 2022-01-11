@@ -5,17 +5,17 @@
         <table>
             <thead>
             <tr>
+                <th>ObjectId</th>
                 <th>Name</th>
                 <th>Description</th>
-                <th>Provider</th>
             </tr>
             </thead>
             <tbody>
             {{- range index .Map "applications"}}
                 <tr>
+                    <td>{{.ObjectId}}</td>
                     <td>{{.Name}}</td>
-                    <td></td>
-                    <td></td>
+                    <td>{{.Description}}</td>
                 </tr>
             {{- end}}
             </tbody>

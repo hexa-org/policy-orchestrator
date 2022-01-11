@@ -38,7 +38,11 @@ type applicationList struct {
 }
 
 type application struct {
-	Name string `json:"name"`
+	ID            string `json:"id"`
+	IntegrationId string `json:"integration_id"`
+	ObjectId      string `json:"object_id"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
 }
 
 func (c orchestratorClient) Applications(url string) (applications []Application, err error) {
@@ -57,7 +61,12 @@ func (c orchestratorClient) Applications(url string) (applications []Application
 	}
 
 	for _, app := range jsonResponse.Applications {
-		applications = append(applications, Application{app.Name})
+		applications = append(applications, Application{
+			app.ID,
+			app.IntegrationId,
+			app.ObjectId,
+			app.Name,
+			app.Description})
 	}
 
 	return applications, nil
