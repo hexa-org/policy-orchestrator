@@ -34,7 +34,7 @@ func TestWorkflow(t *testing.T) {
 	}
 	scheduler.Stop()
 
-	assert.Equal(t, 1, finder.Completed)
+	assert.True(t, finder.Completed > 0)
 	assert.True(t, discovery.Discovered > 2)
 }
 

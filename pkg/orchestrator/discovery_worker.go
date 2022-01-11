@@ -11,6 +11,7 @@ type DiscoveryWorker struct {
 }
 
 func (n *DiscoveryWorker) Run(work interface{}) error {
+	// todo - explore just in time provider creation
 	for _, p := range n.Providers {
 		log.Printf("Found discovery provider %s.", p.Name())
 

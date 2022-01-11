@@ -14,7 +14,7 @@ func (n *NoopDiscovery) Name() string {
 
 func (n *NoopDiscovery) DiscoverApplications(info provider.IntegrationInfo) (apps []provider.ApplicationInfo) {
 	if info.Name == n.Name() {
-		found := []provider.ApplicationInfo{{"appEngine"}, {"cloudRun"}, {"kubernetes"}}
+		found := []provider.ApplicationInfo{{Name: "appEngine"}, {Name: "cloudRun"}, {Name: "kubernetes"}}
 		apps = append(apps, found...)
 		n.Discovered = n.Discovered + 3
 	}
