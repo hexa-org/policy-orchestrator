@@ -7,11 +7,13 @@ type Provider interface {
 
 type IntegrationInfo struct {
 	Name string
-	Key []byte
+	Key  []byte
 }
 
 type ApplicationInfo struct {
-	Name string
+	ID          string
+	Name        string
+	Description string
 }
 
 type PolicyInfo struct {

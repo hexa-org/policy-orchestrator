@@ -14,7 +14,8 @@ func LoadHandlers(store hawk.CredentialStore, hostPort string, database *sql.DB)
 	applicationsGateway := ApplicationsDataGateway{database}
 	integrationsGateway := IntegrationsDataGateway{database}
 
-	worker := DiscoveryWorker{[]provider.Provider{&google_cloud.GoogleProvider{}}, applicationsGateway}
+	googleProvider := &google_cloud.GoogleProvider{}
+	worker := DiscoveryWorker{[]provider.Provider{googleProvider}, applicationsGateway}
 	finder := DiscoveryWorkFinder{Gateway: integrationsGateway}
 
 	applicationsHandler := ApplicationsHandler{applicationsGateway}
