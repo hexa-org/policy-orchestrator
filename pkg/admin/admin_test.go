@@ -25,6 +25,7 @@ func TestAdminHandlers(t *testing.T) {
 	}
 	redirect, _ := noFollowClient.Get("http://localhost:8883")
 	assert.Equal(t, http.StatusPermanentRedirect, redirect.StatusCode)
+	assert.Equal(t, string(redirect.Header["Location"][0]), "/integrations")
 
 	web_support.Stop(server)
 }

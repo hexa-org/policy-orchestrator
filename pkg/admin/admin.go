@@ -14,7 +14,7 @@ type Client interface {
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/discovery", http.StatusPermanentRedirect)
+	http.Redirect(w, r, "/integrations", http.StatusPermanentRedirect)
 }
 
 func LoadHandlers(orchestratorUrl string, client Client) func(router *mux.Router) {
