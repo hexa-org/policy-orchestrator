@@ -71,6 +71,15 @@ func (suite *IntegrationsSuite) TestCreateIntegration_with_error() {
 	assert.Equal(suite.T(), http.StatusInternalServerError, resp.StatusCode)
 }
 
+func (suite *IntegrationsSuite) TestCreateIntegration_missing_key_file() {
+	suite.client.On("CreateIntegration", "http://noop/integrations").Return(errors.New(""))
+	buff, contentType := suite.multipartFormMissingFile()
+	resp := suite.must(http.Post("http://localhost:8883/integrations", contentType, buff))
+	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
+	all, _ := io.ReadAll(resp.Body)
+	assert.Contains(suite.T(), string(all), "Something went wrong. Missing key file.")
+}
+
 func (suite *IntegrationsSuite) TestDeleteIntegration() {
 	suite.client.On("DeleteIntegration", "http://noop/integrations/101").Return()
 	resp := suite.must(http.Post("http://localhost:8883/integrations/101", "", nil))
@@ -88,6 +97,16 @@ func (suite *IntegrationsSuite) TestDeleteIntegration_with_error() {
 
 func (suite *IntegrationsSuite) must(resp *http.Response, _ error) *http.Response {
 	return resp
+}
+
+func (suite *IntegrationsSuite) multipartFormMissingFile() (*bytes.Buffer, string) {
+	buf := new(bytes.Buffer)
+	writer := multipart.NewWriter(buf)
+	provider, _ := writer.CreateFormField("provider")
+	_, _ = provider.Write([]byte("google cloud"))
+	contentType := writer.FormDataContentType()
+	_ = writer.Close()
+	return buf, contentType
 }
 
 func (suite *IntegrationsSuite) multipartForm() (*bytes.Buffer, string) {

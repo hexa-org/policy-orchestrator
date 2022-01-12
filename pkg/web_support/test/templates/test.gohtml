@@ -1,6 +1,12 @@
 {{- template "base" .}}
 {{- define "main"}}
-success!
-{{- $resource := index .Map "resource"}}
-{{ capitalize $resource }}
+    success!
+    {{- $resource := index .Map "resource"}}
+    {{ capitalize $resource }}
+    {{- if (contains $resource "res") }}
+        contains
+    {{- end}}
+    {{- if not (contains $resource "nope") }}
+        nope
+    {{- end}}
 {{- end}}

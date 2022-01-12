@@ -33,6 +33,10 @@ func ModelAndView(w http.ResponseWriter, view string, data Model) error {
 		"capitalize": func(s string) string {
 			return strings.Title(s)
 		},
+		"contains": func(s string, t string) bool {
+			contains := strings.Contains(s, t)
+			return contains
+		},
 	}).ParseFiles(views...)).Execute(w, data)
 	if err != nil {
 		log.Printf("Unable to execute golang html templates.")

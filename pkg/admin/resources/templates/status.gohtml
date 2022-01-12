@@ -6,14 +6,20 @@
             <thead>
             <tr>
                 <th>API Endpoint</th>
+                <th>URL</th>
                 <th>Status</th>
             </tr>
             </thead>
             <tbody>
             <tr>
                 {{- $s := index .Map "status"}}
-                <td>{{$s.URL}}</td>
-                <td>{{$s.Status}}</td>
+                <td>Policy Orchestrator</td>
+                <td><a href="{{$s.URL}}" target="_blank">{{$s.URL}}</a></td>
+                {{- if (contains $s.Status "pass") }}
+                    <td><a class="status green"></a></td>
+                {{- else}}
+                    <td><a class="status orange"></a></td>
+                {{end}}
             </tr>
             </tbody>
         </table>

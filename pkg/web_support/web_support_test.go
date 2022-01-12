@@ -54,6 +54,8 @@ func TestModelAndView(t *testing.T) {
 	body, _ := io.ReadAll(writer.Body)
 	assert.Contains(t, string(body), "success!")
 	assert.Contains(t, string(body), "Resource")
+	assert.Contains(t, string(body), "contains")
+	assert.Contains(t, string(body), "nope")
 
 	err := web_support.ModelAndView(&httptest.ResponseRecorder{}, "bad", web_support.Model{})
 	assert.Contains(t, err.Error(), "can't evaluate field Ba")

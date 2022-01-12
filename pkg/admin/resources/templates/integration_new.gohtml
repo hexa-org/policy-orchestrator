@@ -1,6 +1,7 @@
 {{- template "base" .}}
 {{- define "main"}}
     <div class="card">
+        {{- $m := index .Map "message"}}
         <h1>Install Cloud Provider</h1>
         <form name="integration" action="/integrations" method="post" enctype="multipart/form-data">
             <input type="hidden" value="Google Cloud" name="provider"/>
@@ -16,6 +17,9 @@
             </fieldset>
 
             <input type="submit" value="Install Cloud Provider" class="button"/>
+            {{- if $m}}
+                <div class="message">Something went wrong. {{$m}}</div>
+            {{- end }}
         </form>
     </div>
 {{- end}}
