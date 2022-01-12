@@ -54,11 +54,10 @@ func (ws *WorkScheduler) checkForWork(worker Worker) {
 	finder := ws.Finder.(WorkFinder)
 	log.Printf("Checking for work.\n")
 
-	for _, task := range finder.FindRequested() {
+	for _, t := range finder.FindRequested() {
 		log.Printf("Found work.\n")
 
-		task := task
-		go func() {
+		go func(task interface{}) {
 			err := worker.Run(task)
 			if err != nil {
 				log.Printf("oops. %v\n", err)
@@ -67,7 +66,7 @@ func (ws *WorkScheduler) checkForWork(worker Worker) {
 			}
 			log.Printf("Completed work.\n")
 			finder.MarkCompleted(task)
-		}()
+		}(t)
 	}
 }
 
