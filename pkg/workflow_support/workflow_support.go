@@ -24,28 +24,27 @@ type WorkScheduler struct {
 	done   chan bool
 }
 
-func (w *WorkScheduler) Start() {
+func (ws *WorkScheduler) Start() {
 	log.Printf("Starting the scheduler.\n")
-	w.ticker = *time.NewTicker(time.Duration(w.Delay) * time.Millisecond)
-	w.done = make(chan bool)
-	for _, worker := range w.Workers {
-		worker := worker
-		go func() {
+	ws.ticker = *time.NewTicker(time.Duration(ws.Delay) * time.Millisecond)
+	ws.done = make(chan bool)
+	for _, w := range ws.Workers {
+		go func(worker Worker) {
 			for {
 				select {
-				case <-w.done:
+				case <-ws.done:
 					return
-				case _ = <-w.ticker.C:
+				case <-ws.ticker.C:
 					log.Printf("Scheduling work.\n")
-					w.checkForWork(worker)
+					ws.checkForWork(worker)
 				}
 			}
-		}()
+		}(w)
 	}
 }
 
-func (w *WorkScheduler) checkForWork(worker Worker) {
-	finder := w.Finder.(WorkFinder)
+func (ws *WorkScheduler) checkForWork(worker Worker) {
+	finder := ws.Finder.(WorkFinder)
 	log.Printf("Checking for work.\n")
 
 	for _, task := range finder.FindRequested() {
@@ -65,8 +64,8 @@ func (w *WorkScheduler) checkForWork(worker Worker) {
 	}
 }
 
-func (w *WorkScheduler) Stop() {
-	w.ticker.Stop()
-	w.done <- true
+func (ws *WorkScheduler) Stop() {
+	ws.ticker.Stop()
+	ws.done <- true
 	log.Printf("Scheduler stopped.\n")
 }
