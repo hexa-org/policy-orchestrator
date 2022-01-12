@@ -1,6 +1,7 @@
 package admin_test
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"hexa/pkg/admin"
@@ -45,6 +46,19 @@ func (suite *ApplicationsSuite) TearDownTest() {
 
 func (suite *ApplicationsSuite) TestApplications() {
 	resp, err := http.Get("http://localhost:8883/applications")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	body, _ := io.ReadAll(resp.Body)
+	assert.Contains(suite.T(), string(body), "Applications")
+	assert.Contains(suite.T(), string(body), "anObjectId")
+	assert.Contains(suite.T(), string(body), "aName")
+	assert.Contains(suite.T(), string(body), "aDescription")
+}
+
+func (suite *ApplicationsSuite) TestApplication() {
+	identifier := "anId"
+	resp, err := http.Get(fmt.Sprintf("http://localhost:8883/applications/%s", identifier))
 	if err != nil {
 		log.Fatalln(err)
 	}

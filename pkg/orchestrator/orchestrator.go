@@ -26,6 +26,7 @@ func LoadHandlers(store hawk.CredentialStore, hostPort string, database *sql.DB)
 
 	return func(router *mux.Router) {
 		router.HandleFunc("/applications", hawk_support.HawkMiddleware(applicationsHandler.List, store, hostPort)).Methods("GET")
+		router.HandleFunc("/applications/{id}", hawk_support.HawkMiddleware(applicationsHandler.Show, store, hostPort)).Methods("GET")
 		router.HandleFunc("/integrations", hawk_support.HawkMiddleware(integrationsHandler.List, store, hostPort)).Methods("GET")
 		router.HandleFunc("/integrations", hawk_support.HawkMiddleware(integrationsHandler.Create, store, hostPort)).Methods("POST")
 		router.HandleFunc("/integrations/{id}", hawk_support.HawkMiddleware(integrationsHandler.Delete, store, hostPort)).Methods("GET")

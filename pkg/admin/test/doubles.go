@@ -33,6 +33,10 @@ func (m *MockClient) Applications(url string) ([]admin.Application, error) {
 	return []admin.Application{{"anId", "anIntegrationId", "anObjectId", "aName", "aDescription"}}, nil
 }
 
+func (m *MockClient) Application(url string) (admin.Application, error) {
+	return admin.Application{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription"}, nil
+}
+
 func (m *MockClient) Health(url string) (string, error) {
 	return "{\"status\":\"pass\"}", nil
 }
