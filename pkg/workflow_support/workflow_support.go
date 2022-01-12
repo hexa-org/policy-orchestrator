@@ -23,10 +23,18 @@ type WorkScheduler struct {
 	done chan bool
 }
 
+func NewScheduler(finder interface{}, workers []Worker, delay int64) WorkScheduler {
+	return WorkScheduler{
+		Finder:  finder,
+		Workers: workers,
+		Delay:   delay,
+		done:    make(chan bool),
+	}
+}
+
 func (ws *WorkScheduler) Start() {
 	log.Printf("Starting the scheduler.\n")
-	ticker := *time.NewTicker(time.Duration(ws.Delay) * time.Millisecond)
-	ws.done = make(chan bool)
+	ticker := time.NewTicker(time.Duration(ws.Delay) * time.Millisecond)
 	for _, w := range ws.Workers {
 		go func(worker Worker) {
 			for {

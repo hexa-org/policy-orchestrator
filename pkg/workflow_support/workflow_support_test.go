@@ -54,7 +54,7 @@ func TestWorkflow(t *testing.T) {
 	var finder NoopWorkFinder
 
 	list := []workflow_support.Worker{&worker}
-	scheduler := workflow_support.WorkScheduler{Finder: &finder, Workers: list, Delay: 50}
+	scheduler := workflow_support.NewScheduler(&finder, list, 50)
 	scheduler.Start()
 
 	for finder.completed < 3 {
@@ -69,7 +69,7 @@ func TestErroneousWorkflow(t *testing.T) {
 	var finder NoopWorkFinder
 
 	list := []workflow_support.Worker{&worker}
-	scheduler := workflow_support.WorkScheduler{Finder: &finder, Workers: list, Delay: 50}
+	scheduler := workflow_support.NewScheduler(&finder, list, 50)
 	scheduler.Start()
 
 	for finder.notcompleted < 3 {
