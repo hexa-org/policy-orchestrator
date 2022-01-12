@@ -20,13 +20,12 @@ type WorkScheduler struct {
 	Workers []Worker
 	Delay   int64
 
-	ticker time.Ticker
-	done   chan bool
+	done chan bool
 }
 
 func (ws *WorkScheduler) Start() {
 	log.Printf("Starting the scheduler.\n")
-	ws.ticker = *time.NewTicker(time.Duration(ws.Delay) * time.Millisecond)
+	ticker := *time.NewTicker(time.Duration(ws.Delay) * time.Millisecond)
 	ws.done = make(chan bool)
 	for _, w := range ws.Workers {
 		go func(worker Worker) {
@@ -34,7 +33,7 @@ func (ws *WorkScheduler) Start() {
 				select {
 				case <-ws.done:
 					return
-				case <-ws.ticker.C:
+				case <-ticker.C:
 					log.Printf("Scheduling work.\n")
 					ws.checkForWork(worker)
 				}
@@ -65,7 +64,6 @@ func (ws *WorkScheduler) checkForWork(worker Worker) {
 }
 
 func (ws *WorkScheduler) Stop() {
-	ws.ticker.Stop()
 	ws.done <- true
 	log.Printf("Scheduler stopped.\n")
 }
