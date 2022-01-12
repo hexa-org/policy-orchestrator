@@ -8,6 +8,7 @@ import (
 type Client interface {
 	Health(url string) (string, error)
 	Applications(url string) ([]Application, error)
+	Application(url string) (Application, error)
 	Integrations(url string) ([]Integration, error)
 	CreateIntegration(url string, provider string, key []byte) error
 	DeleteIntegration(url string) error
@@ -25,6 +26,7 @@ func LoadHandlers(orchestratorUrl string, client Client) func(router *mux.Router
 	return func(router *mux.Router) {
 		router.HandleFunc("/", IndexHandler).Methods("GET")
 		router.HandleFunc("/applications", apps.List).Methods("GET")
+		router.HandleFunc("/applications/{id}", apps.Show).Methods("GET")
 		router.HandleFunc("/integrations", integrations.List).Methods("GET")
 		router.HandleFunc("/integrations/new", integrations.New).Methods("GET")
 		router.HandleFunc("/integrations", integrations.Create).Methods("POST")

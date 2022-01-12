@@ -2,6 +2,7 @@ package admin
 
 import (
 	"fmt"
+	"github.com/gorilla/mux"
 	"hexa/pkg/web_support"
 	"log"
 	"net/http"
@@ -32,4 +33,15 @@ func (p applicationsHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 	model := web_support.Model{Map: map[string]interface{}{"resource": "applications", "applications": applications}}
 	_ = web_support.ModelAndView(w, "applications", model)
+}
+
+func (p applicationsHandler) Show(w http.ResponseWriter, r *http.Request) {
+	identifier := mux.Vars(r)["id"]
+	url := fmt.Sprintf("%v/applications/%s", p.orchestratorUrl, identifier)
+	app, err := p.client.Application(url)
+	if err != nil {
+		log.Println(err)
+	}
+	model := web_support.Model{Map: map[string]interface{}{"resource": "applications", "application": app}}
+	_ = web_support.ModelAndView(w, "applications_show", model)
 }

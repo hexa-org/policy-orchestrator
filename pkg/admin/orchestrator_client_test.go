@@ -77,6 +77,25 @@ func TestOrchestratorClient_Applications_bad_json(t *testing.T) {
 	assert.Equal(t, []admin.Application(nil), resp)
 }
 
+func TestOrchestratorClient_Application(t *testing.T) {
+	mockClient := new(MockClient)
+	mockClient.response = []byte("{\"id\":\"anId\", \"integration_id\":\"anIntegrationId\", \"object_id\":\"anObjectId\", \"name\":\"anApp\", \"description\":\"aDescription\"}}")
+	client := admin.NewOrchestratorClient(mockClient, "aKey")
+
+	resp, _ := client.Application("localhost:8883/applications/anId")
+	assert.Equal(t, admin.Application{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "anApp", Description: "aDescription"}, resp)
+}
+
+func TestOrchestratorClient_Application_bad_json(t *testing.T) {
+	mockClient := new(MockClient)
+	mockClient.response = []byte("_{\"_id\":\"anId\"}}")
+	client := admin.NewOrchestratorClient(mockClient, "aKey")
+
+	_, err := client.Application("localhost:8883/applications/anId")
+	assert.Error(t, err)
+}
+
+
 func TestOrchestratorClient_Integrations(t *testing.T) {
 	mockClient := new(MockClient)
 	key := base64.StdEncoding.EncodeToString([]byte("anotherKey"))

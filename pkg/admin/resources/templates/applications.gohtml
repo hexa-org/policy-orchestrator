@@ -13,7 +13,7 @@
             <tbody>
             {{- range index .Map "applications"}}
                 <tr>
-                    <td>{{.ObjectId}}</td>
+                    <td><a href="/applications/{{.ID}}">{{.ObjectId}}</a></td>
                     <td>{{.Name}}</td>
                     <td>{{.Description}}</td>
                 </tr>

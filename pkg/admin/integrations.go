@@ -37,7 +37,7 @@ func (i integrationsHandler) List(w http.ResponseWriter, r *http.Request) {
 
 func (i integrationsHandler) New(w http.ResponseWriter, r *http.Request) {
 	model := web_support.Model{Map: map[string]interface{}{"resource": "integrations"}}
-	_ = web_support.ModelAndView(w, "integration_new", model)
+	_ = web_support.ModelAndView(w, "integrations_new", model)
 }
 
 func (i integrationsHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -54,7 +54,7 @@ func (i integrationsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Missing key file %s.\n", err.Error())
 		model := web_support.Model{Map: map[string]interface{}{"resource": "integrations", "message": "Missing key file."}}
-		_ = web_support.ModelAndView(w, "integration_new", model)
+		_ = web_support.ModelAndView(w, "integrations_new", model)
 		return
 	}
 

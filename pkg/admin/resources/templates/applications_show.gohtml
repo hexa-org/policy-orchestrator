@@ -1,0 +1,50 @@
+{{- template "base" .}}
+{{- define "main"}}
+    <div class="card">
+        <h1>Application</h1>
+        <table>
+            <thead>
+            <tr>
+                <th>ObjectId</th>
+                <th>Name</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{- $app := index .Map "application"}}
+            <tr>
+                <td>{{$app.ObjectId}}</td>
+                <td>{{$app.Name}}</td>
+                <td>{{$app.Description}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="card">
+        <h1>Policy Details</h1>
+        <table>
+            <thead>
+            <tr>
+            </tr>
+            </thead>
+        </table>
+    </div>
+    <div class="card">
+        <h2>IDQL Policy</h2>
+        <table>
+            <thead>
+            <tr>
+            </tr>
+            </thead>
+        </table>
+    </div>
+    <div class="card">
+        <h2>Google Policy</h2>
+        <table>
+            <thead>
+            <tr>
+            </tr>
+            </thead>
+        </table>
+    </div>
+{{- end}}

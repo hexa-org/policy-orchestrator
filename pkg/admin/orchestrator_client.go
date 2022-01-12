@@ -72,6 +72,22 @@ func (c orchestratorClient) Applications(url string) (applications []Application
 	return applications, nil
 }
 
+func (c orchestratorClient) Application(url string) (Application, error) {
+	resp, err := hawk_support.HawkGet(c.client, "anId", c.key, url)
+	if err != nil {
+		return Application{}, err
+	}
+
+	var jsonResponse application
+	body := resp.Body
+	err = json.NewDecoder(body).Decode(&jsonResponse)
+	if err != nil {
+		return Application{}, err
+	}
+	app := Application{jsonResponse.ID, jsonResponse.IntegrationId, jsonResponse.ObjectId, jsonResponse.Name, jsonResponse.Description}
+	return app, nil
+}
+
 type integrationList struct {
 	Integrations []integration `json:"integrations"`
 }
