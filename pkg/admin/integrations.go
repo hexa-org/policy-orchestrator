@@ -52,6 +52,9 @@ func (i integrationsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	provider := r.FormValue("provider")
 	file, _, err := r.FormFile("key")
 	if err != nil {
+		log.Printf("Missing key file %s.\n", err.Error())
+		model := web_support.Model{Map: map[string]interface{}{"resource": "integrations", "message": "Missing key file."}}
+		_ = web_support.ModelAndView(w, "integration_new", model)
 		return
 	}
 

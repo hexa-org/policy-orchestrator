@@ -7,6 +7,7 @@
     --medium-gray: #BDBDBD;
     --light-gray: #EAEAEA;
     --lighter-gray: #F5F5F5;
+    --red: #7B1FA2;
 }
 
 html {
@@ -302,4 +303,35 @@ textarea {
 
 .delete-form {
     padding: 0;
+}
+
+.status {
+    border-radius: 15px;
+    display: inline-block;
+    height: 15px;
+    position: relative;
+    width: 15px;
+}
+
+.status::after {
+    bottom: 1.5px;
+    color: #fff;
+    content: '✓';
+    display: inline-block;
+    position: relative;
+    text-align: center;
+    width: 15px;
+}
+
+.green {
+    background-color: #0da960;
+}
+
+.orange {
+    background-color: var(--dark-orange);
+}
+
+.message {
+    color: var(--red);
+    margin: 1rem 1rem 1rem 0;
 }
