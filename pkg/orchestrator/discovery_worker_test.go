@@ -28,7 +28,7 @@ func TestWorkflow(t *testing.T) {
 	worker := orchestrator.DiscoveryWorker{Providers: []provider.Provider{&discovery}, Gateway: appGateway}
 	finder := orchestrator.DiscoveryWorkFinder{Gateway: gateway}
 	list := []workflow_support.Worker{&worker}
-	scheduler := workflow_support.WorkScheduler{Finder: &finder, Workers: list, Delay: 50}
+	scheduler := workflow_support.NewScheduler(&finder, list, 50)
 	scheduler.Start()
 	for finder.Completed < 1 {
 		time.Sleep(time.Duration(50) * time.Millisecond)
@@ -47,7 +47,7 @@ func TestWorkflow_empty(t *testing.T) {
 	worker := orchestrator.DiscoveryWorker{}
 	finder := orchestrator.DiscoveryWorkFinder{Gateway: gateway}
 	list := []workflow_support.Worker{&worker}
-	scheduler := workflow_support.WorkScheduler{Finder: &finder, Workers: list, Delay: 50}
+	scheduler := workflow_support.NewScheduler(&finder, list, 50)
 	scheduler.Start()
 	time.Sleep(time.Duration(50) * time.Millisecond)
 	scheduler.Stop()
@@ -69,7 +69,7 @@ func TestWorkflow_bad_find(t *testing.T) {
 	worker := ErroneousWorker{}
 	finder := orchestrator.DiscoveryWorkFinder{Gateway: gateway}
 	list := []workflow_support.Worker{&worker}
-	scheduler := workflow_support.WorkScheduler{Finder: &finder, Workers: list, Delay: 50}
+	scheduler := workflow_support.NewScheduler(&finder, list, 50)
 	scheduler.Start()
 	for finder.NotCompleted < 1 {
 		time.Sleep(time.Duration(50) * time.Millisecond)

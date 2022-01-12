@@ -22,12 +22,12 @@ func LoadHandlers(store hawk.CredentialStore, hostPort string, database *sql.DB)
 	integrationsHandler := IntegrationsHandler{integrationsGateway, worker}
 
 	list := []workflow_support.Worker{&worker}
-	scheduler := &workflow_support.WorkScheduler{Finder: &finder, Workers: list, Delay: 60_000}
+	scheduler := workflow_support.NewScheduler(&finder, list, 60_000)
 
 	return func(router *mux.Router) {
 		router.HandleFunc("/applications", hawk_support.HawkMiddleware(applicationsHandler.List, store, hostPort)).Methods("GET")
 		router.HandleFunc("/integrations", hawk_support.HawkMiddleware(integrationsHandler.List, store, hostPort)).Methods("GET")
 		router.HandleFunc("/integrations", hawk_support.HawkMiddleware(integrationsHandler.Create, store, hostPort)).Methods("POST")
 		router.HandleFunc("/integrations/{id}", hawk_support.HawkMiddleware(integrationsHandler.Delete, store, hostPort)).Methods("GET")
-	}, scheduler
+	}, &scheduler
 }
