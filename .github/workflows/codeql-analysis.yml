@@ -1,5 +1,7 @@
 name: "CodeQL"
-on: push
+on:
+  push:
+    branches: [ main ]
 jobs:
   analyze:
     name: Analyze
