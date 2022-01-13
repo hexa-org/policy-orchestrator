@@ -1,10 +1,10 @@
 package google_cloud_test
 
 import (
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
+	"github.com/hexa-org/policy-orchestrator/pkg/providers/google_cloud"
+	"github.com/hexa-org/policy-orchestrator/pkg/providers/google_cloud/test"
 	"github.com/stretchr/testify/assert"
-	"hexa/pkg/orchestrator/provider"
-	"hexa/pkg/providers/google_cloud"
-	"hexa/pkg/providers/google_cloud/test"
 	"io/ioutil"
 	"path/filepath"
 	"runtime"

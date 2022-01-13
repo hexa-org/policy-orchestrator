@@ -2,12 +2,12 @@ package orchestrator_test
 
 import (
 	"errors"
+	"github.com/hexa-org/policy-orchestrator/pkg/database_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/workflow_support"
 	"github.com/stretchr/testify/assert"
-	"hexa/pkg/database_support"
-	"hexa/pkg/orchestrator"
-	"hexa/pkg/orchestrator/provider"
-	"hexa/pkg/orchestrator/test"
-	"hexa/pkg/workflow_support"
 	"testing"
 	"time"
 )

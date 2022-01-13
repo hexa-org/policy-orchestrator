@@ -2,10 +2,10 @@ package orchestrator_test
 
 import (
 	"database/sql"
+	"github.com/hexa-org/policy-orchestrator/pkg/database_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"hexa/pkg/database_support"
-	"hexa/pkg/orchestrator"
 	"testing"
 )
 

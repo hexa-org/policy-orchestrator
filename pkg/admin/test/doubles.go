@@ -1,8 +1,8 @@
 package admin_test
 
 import (
+	"github.com/hexa-org/policy-orchestrator/pkg/admin"
 	"github.com/stretchr/testify/mock"
-	"hexa/pkg/admin"
 )
 
 type MockClient struct {

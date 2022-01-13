@@ -5,9 +5,9 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/hexa-org/policy-orchestrator/pkg/admin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"hexa/pkg/admin"
 	"io/ioutil"
 	"net/http"
 
@@ -94,7 +94,6 @@ func TestOrchestratorClient_Application_bad_json(t *testing.T) {
 	_, err := client.Application("localhost:8883/applications/anId")
 	assert.Error(t, err)
 }
-
 
 func TestOrchestratorClient_Integrations(t *testing.T) {
 	mockClient := new(MockClient)

@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"hexa/pkg/admin"
-	"hexa/pkg/web_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/admin"
+	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
 	"log"
 	"net/http"
 	"os"

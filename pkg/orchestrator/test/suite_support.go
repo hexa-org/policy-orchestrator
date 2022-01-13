@@ -4,11 +4,11 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
-	"hexa/pkg/database_support"
-	"hexa/pkg/hawk_support"
-	"hexa/pkg/orchestrator"
-	"hexa/pkg/web_support"
-	"hexa/pkg/workflow_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/database_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/hawk_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/workflow_support"
 	"net/http"
 )
 

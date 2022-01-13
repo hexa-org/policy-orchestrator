@@ -3,11 +3,11 @@ package orchestrator
 import (
 	"database/sql"
 	"github.com/gorilla/mux"
+	"github.com/hexa-org/policy-orchestrator/pkg/hawk_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
+	"github.com/hexa-org/policy-orchestrator/pkg/providers/google_cloud"
+	"github.com/hexa-org/policy-orchestrator/pkg/workflow_support"
 	"github.com/hiyosi/hawk"
-	"hexa/pkg/hawk_support"
-	"hexa/pkg/orchestrator/provider"
-	"hexa/pkg/providers/google_cloud"
-	"hexa/pkg/workflow_support"
 )
 
 func LoadHandlers(store hawk.CredentialStore, hostPort string, database *sql.DB) (func(router *mux.Router), *workflow_support.WorkScheduler) {

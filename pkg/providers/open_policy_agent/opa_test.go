@@ -3,9 +3,9 @@ package open_policy_agent_test
 import (
 	"bytes"
 	"fmt"
+	"github.com/hexa-org/policy-orchestrator/pkg/providers"
+	"github.com/hexa-org/policy-orchestrator/pkg/providers/open_policy_agent"
 	"github.com/stretchr/testify/assert"
-	"hexa/pkg/providers"
-	"hexa/pkg/providers/open_policy_agent"
 	"io/ioutil"
 	"os"
 	"path/filepath"

@@ -1,9 +1,9 @@
 package provider_test
 
 import (
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
 	"github.com/stretchr/testify/assert"
-	"hexa/pkg/orchestrator/provider"
-	"hexa/pkg/orchestrator/test"
 	"testing"
 )
 

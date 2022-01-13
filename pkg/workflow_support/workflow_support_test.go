@@ -2,8 +2,8 @@ package workflow_support_test
 
 import (
 	"errors"
+	"github.com/hexa-org/policy-orchestrator/pkg/workflow_support"
 	"github.com/stretchr/testify/assert"
-	"hexa/pkg/workflow_support"
 	"log"
 	"testing"
 )

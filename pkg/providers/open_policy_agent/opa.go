@@ -3,7 +3,7 @@ package open_policy_agent
 import (
 	"fmt"
 	"github.com/alecthomas/participle/v2"
-	"hexa/pkg/providers"
+	"github.com/hexa-org/policy-orchestrator/pkg/providers"
 	"html/template"
 	"io"
 	"path/filepath"
