@@ -3,8 +3,8 @@ package providers_test
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/hexa-org/policy-orchestrator/pkg/providers"
 	"github.com/stretchr/testify/assert"
-	"hexa/pkg/providers"
 	"io/ioutil"
 	"os"
 	"path/filepath"

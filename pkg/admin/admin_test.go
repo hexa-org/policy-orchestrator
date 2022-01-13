@@ -1,10 +1,10 @@
 package admin_test
 
 import (
+	"github.com/hexa-org/policy-orchestrator/pkg/admin"
+	"github.com/hexa-org/policy-orchestrator/pkg/admin/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
 	"github.com/stretchr/testify/assert"
-	"hexa/pkg/admin"
-	admin_test "hexa/pkg/admin/test"
-	"hexa/pkg/web_support"
 	"net/http"
 	"testing"
 )

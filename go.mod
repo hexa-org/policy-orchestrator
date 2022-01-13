@@ -1,4 +1,4 @@
-module hexa
+module github.com/hexa-org/policy-orchestrator
 
 go 1.17
 

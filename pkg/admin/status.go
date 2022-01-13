@@ -2,7 +2,7 @@ package admin
 
 import (
 	"fmt"
-	"hexa/pkg/web_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
 	"net/http"
 )
 

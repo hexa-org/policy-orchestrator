@@ -3,10 +3,10 @@ package opa_support_test
 import (
 	"bytes"
 	"github.com/gorilla/mux"
+	"github.com/hexa-org/policy-orchestrator/cmd/demo/opa_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"hexa/cmd/demo/opa_support"
-	"hexa/pkg/web_support"
 	"io"
 	"io/ioutil"
 	"log"

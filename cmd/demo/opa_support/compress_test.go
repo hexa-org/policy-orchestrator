@@ -1,9 +1,9 @@
 package opa_support_test
 
 import (
+	"github.com/hexa-org/policy-orchestrator/cmd/demo/opa_support"
 	"github.com/stretchr/testify/assert"
 	http2 "github.com/stretchr/testify/http"
-	"hexa/cmd/demo/opa_support"
 	"path/filepath"
 	"runtime"
 	"testing"

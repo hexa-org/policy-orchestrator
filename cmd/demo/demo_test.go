@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"hexa/pkg/web_support"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"

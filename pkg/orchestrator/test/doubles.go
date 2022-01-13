@@ -1,7 +1,7 @@
 package orchestrator_test
 
 import (
-	"hexa/pkg/orchestrator/provider"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 )
 
 type NoopDiscovery struct {

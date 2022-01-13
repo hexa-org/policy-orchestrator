@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"google.golang.org/api/option"
 	"google.golang.org/api/transport/http"
-	"hexa/pkg/orchestrator/provider"
 	"strings"
 )
 

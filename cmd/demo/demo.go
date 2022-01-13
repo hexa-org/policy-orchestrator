@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"hexa/cmd/demo/opa_support"
-	"hexa/pkg/web_support"
+	"github.com/hexa-org/policy-orchestrator/cmd/demo/opa_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
 	"log"
 	"net/http"
 	"os"

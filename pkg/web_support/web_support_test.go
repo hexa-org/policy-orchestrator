@@ -3,8 +3,8 @@ package web_support_test
 import (
 	"bytes"
 	"github.com/gorilla/mux"
+	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
 	"github.com/stretchr/testify/assert"
-	"hexa/pkg/web_support"
 	"io"
 	"log"
 	"net/http"

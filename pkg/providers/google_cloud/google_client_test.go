@@ -2,9 +2,9 @@ package google_cloud_test
 
 import (
 	"errors"
+	"github.com/hexa-org/policy-orchestrator/pkg/providers/google_cloud"
+	"github.com/hexa-org/policy-orchestrator/pkg/providers/google_cloud/test"
 	"github.com/stretchr/testify/assert"
-	"hexa/pkg/providers/google_cloud"
-	google_cloud_test "hexa/pkg/providers/google_cloud/test"
 	"testing"
 )
 

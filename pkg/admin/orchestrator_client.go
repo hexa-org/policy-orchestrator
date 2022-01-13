@@ -3,7 +3,7 @@ package admin
 import (
 	"bytes"
 	"encoding/json"
-	"hexa/pkg/hawk_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/hawk_support"
 	"io"
 	"log"
 	"net/http"
