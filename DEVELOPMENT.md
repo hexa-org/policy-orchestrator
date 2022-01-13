@@ -10,7 +10,7 @@ Clone or download the codebase from GitHub to your local machine and install the
 
 ```bash
 cd ~/workspace
-git clone git@github.com:hexa-org/almostopen.git
+git clone git@github.com:hexa-org/policy-orchestrator.git
 ```
 
 Install via [Homebrew Formulae](https://formulae.brew.sh)
