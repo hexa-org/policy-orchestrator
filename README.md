@@ -1,10 +1,10 @@
-![hexa-logo](docs/img/hexa-logo.svg) 
+![hexa-logo](docs/img/hexa-logo.svg)
 
 # Hexa Policy Orchestrator
 
-[![Build results](https://github.com/hexa-org/almostopen/workflows/build/badge.svg)](https://github.com/hexa-org/almostopen/actions)
+[![Build results](https://github.com/hexa-org/policy-orchestrator/workflows/build/badge.svg)](https://github.com/hexa-org/policy-orchestrator/actions)
 
-Hexa is the open-source, standards-based policy orchestration software for multi-cloud and hybrid businesses. 
+Hexa is the open-source, standards-based policy orchestration software for multi-cloud and hybrid businesses.
 
 The Hexa project contains three applications.
 * Policy Administrator web application
@@ -25,7 +25,7 @@ Clone or download the codebase from GitHub to your local machine and install the
 
 ```bash
 cd /home/user/workspace/
-git clone git@github.com:hexa-org/almostopen.git
+git clone git@github.com:hexa-org/policy-orchestrator.git
 ```
 
 Build a Hexa image with Pack. The newly created image will contain the policy administrator web application,
@@ -51,9 +51,9 @@ docker-compose up
 Cleaning up. Remove all docker containers and volumes.
 
 ```bash
-docker rm -f $(docker ps -a -q) 
+docker rm -f $(docker ps -a -q)
 docker volume rm -f $(docker volume ls -q)
-docker system prune -a -f 
+docker system prune -a -f
 ```
 
 Remove the local postgres database files.
@@ -74,5 +74,5 @@ rm -rf .postgres
 
 [Join the Hexa community](https://hexaorchestration.org/preview/#join) to stay up-to-date with the project and contribute.
 
-* [Additional development information](DEVELOPMENT.md) 
+* [Additional development information](DEVELOPMENT.md)
 * [Our of conduct statement](CODE_OF_CONDUCT.md)
