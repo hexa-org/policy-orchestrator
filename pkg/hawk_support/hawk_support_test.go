@@ -60,6 +60,15 @@ func TestGet_fails(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 }
 
+func TestGet_bad_url(t *testing.T) {
+	key := getKey()
+	teardownTestCase := setup(key)
+	defer teardownTestCase(t)
+
+	_, err := hawk_support.HawkGet(&http.Client{}, "anId", key, "httq://localhost")
+	assert.Error(t, err)
+}
+
 func TestPost(t *testing.T) {
 	key := getKey()
 	teardownTestCase := setup(key)

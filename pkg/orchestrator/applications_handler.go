@@ -3,7 +3,6 @@ package orchestrator
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"log"
 	"net/http"
 )
 
@@ -37,9 +36,6 @@ func (handler ApplicationsHandler) List(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(data)
-	if err != nil {
-		log.Println(err)
-	}
 }
 
 func (handler ApplicationsHandler) Show(w http.ResponseWriter, r *http.Request) {
@@ -54,7 +50,4 @@ func (handler ApplicationsHandler) Show(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(data)
-	if err != nil {
-		log.Println(err)
-	}
 }

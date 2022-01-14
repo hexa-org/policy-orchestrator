@@ -6,9 +6,5 @@ import (
 )
 
 func Open(url string) (*sql.DB, error) {
-	db, err := sql.Open("postgres", url)
-	if err != nil {
-		panic(err)
-	}
-	return db, err
+	return sql.Open("postgres", url)
 }

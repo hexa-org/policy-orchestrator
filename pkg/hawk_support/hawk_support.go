@@ -52,19 +52,13 @@ func HawkMiddleware(next http.HandlerFunc, credentialStore hawk.CredentialStore,
 }
 
 func HawkGet(client HTTPClient, id string, key string, url string) (*http.Response, error) {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
+	req, _ := http.NewRequest("GET", url, nil)
 	authorize(req, id, key, url, "GET")
 	return client.Do(req)
 }
 
 func HawkPost(client HTTPClient, id string, key string, url string, body io.Reader) (*http.Response, error) {
-	req, err := http.NewRequest("POST", url, body)
-	if err != nil {
-		return nil, err
-	}
+	req, _ := http.NewRequest("POST", url, body)
 	req.Header.Set("Content-Type", "application/json")
 	authorize(req, id, key, url, "POST")
 	return client.Do(req)
