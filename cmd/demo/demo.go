@@ -6,6 +6,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/cmd/demo/opa_support"
 	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -64,7 +65,7 @@ func loadHandlers(opa *opa_support.OpaSupport) func(router *mux.Router) {
 	}
 }
 
-func newApp() *http.Server {
+func newApp() (*http.Server, net.Listener) {
 	addr := "0.0.0.0:8886"
 	if found := os.Getenv("PORT"); found != "" {
 		addr = fmt.Sprintf("0.0.0.0:%v", found)
@@ -79,8 +80,8 @@ func newApp() *http.Server {
 
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../../../cmd/demo/resources")
-
-	return App(&http.Client{}, opaUrl, addr, resourcesDirectory)
+	listener, _ := net.Listen("tcp", addr)
+	return App(&http.Client{}, opaUrl, listener.Addr().String(), resourcesDirectory), listener
 }
 
 func main() {

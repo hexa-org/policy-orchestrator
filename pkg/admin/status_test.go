@@ -1,6 +1,7 @@
 package admin_test
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin/test"
@@ -9,6 +10,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"path/filepath"
 	"runtime"
@@ -29,11 +31,12 @@ func (suite *StatusSuite) SetupTest() {
 	resourcesDirectory := filepath.Join(file, "../../../pkg/admin/resources")
 
 	handler := admin.NewStatusHandler("http://noop", new(admin_test.MockClient))
-	suite.server = web_support.Create("localhost:8883", func(router *mux.Router) {
+	listener, _ := net.Listen("tcp", "localhost:0")
+	suite.server = web_support.Create(listener.Addr().String(), func(router *mux.Router) {
 		router.HandleFunc("/status", handler.StatusHandler).Methods("GET")
 	}, web_support.Options{ResourceDirectory: resourcesDirectory})
 
-	go web_support.Start(suite.server)
+	go web_support.Start(suite.server, listener)
 	web_support.WaitForHealthy(suite.server)
 }
 
@@ -44,7 +47,7 @@ func (suite *StatusSuite) TearDownTest() {
 ///
 
 func (suite *StatusSuite) TestStatus() {
-	resp, err := http.Get("http://localhost:8883/status")
+	resp, err := http.Get(fmt.Sprintf("http://%s/status", suite.server.Addr))
 	if err != nil {
 		log.Fatalln(err)
 	}

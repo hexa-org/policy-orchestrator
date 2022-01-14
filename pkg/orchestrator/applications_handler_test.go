@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"log"
+	"net"
 	"net/http"
 	"testing"
 )
@@ -24,8 +25,9 @@ func TestApplicationsHandler(t *testing.T) {
 }
 
 func (suite *ApplicationsHandlerSuite) SetupTest() {
-	suite.fields.Setup()
-	go web_support.Start(suite.fields.Server)
+	listener, _ := net.Listen("tcp", "localhost:0")
+	suite.fields.Setup(listener.Addr().String())
+	go web_support.Start(suite.fields.Server, listener)
 	web_support.WaitForHealthy(suite.fields.Server)
 }
 
@@ -43,7 +45,7 @@ func (suite *ApplicationsHandlerSuite) TestList() {
 	_ = suite.fields.DB.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
 		integrationTestId, "anObjectId", "aName", "aDescription").Scan(&applicationTestId)
 
-	resp, err := hawk_support.HawkGet(&http.Client{}, "anId", suite.fields.Key, "http://localhost:8883/applications")
+	resp, err := hawk_support.HawkGet(&http.Client{}, "anId", suite.fields.Key, fmt.Sprintf("http://%s/applications", suite.fields.Server.Addr))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -66,7 +68,7 @@ func (suite *ApplicationsHandlerSuite) TestShow() {
 	_ = suite.fields.DB.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
 		integrationTestId, "anObjectId", "aName", "aDescription").Scan(&applicationTestId)
 
-	resp, err := hawk_support.HawkGet(&http.Client{}, "anId", suite.fields.Key, fmt.Sprintf("http://localhost:8883/applications/%s", applicationTestId))
+	resp, err := hawk_support.HawkGet(&http.Client{}, "anId", suite.fields.Key, fmt.Sprintf("http://%s/applications/%s", suite.fields.Server.Addr, applicationTestId))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -80,6 +82,6 @@ func (suite *ApplicationsHandlerSuite) TestShow() {
 }
 
 func (suite *ApplicationsHandlerSuite) TestShow_identifier() {
-	resp, _ := hawk_support.HawkGet(&http.Client{}, "anId", suite.fields.Key, "http://localhost:8883/applications/oops")
+	resp, _ := hawk_support.HawkGet(&http.Client{}, "anId", suite.fields.Key, fmt.Sprintf("http://%s/applications/oops", suite.fields.Server.Addr))
 	assert.Equal(suite.T(), http.StatusInternalServerError, resp.StatusCode)
 }

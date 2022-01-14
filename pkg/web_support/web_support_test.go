@@ -2,11 +2,12 @@ package web_support_test
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
 	"github.com/stretchr/testify/assert"
 	"io"
-	"log"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -15,15 +16,13 @@ import (
 )
 
 func TestHealth(t *testing.T) {
-	server := web_support.Create("localhost:8883", func(x *mux.Router) {}, web_support.Options{})
-	go web_support.Start(server)
+	listener, _ := net.Listen("tcp", "localhost:0")
+	server := web_support.Create(listener.Addr().String(), func(x *mux.Router) {}, web_support.Options{})
+	go web_support.Start(server, listener)
 
 	web_support.WaitForHealthy(server)
 
-	resp, err := http.Get("http://localhost:8883/health")
-	if err != nil {
-		log.Fatalln(err)
-	}
+	resp, _ := http.Get(fmt.Sprintf("http://%s/health", server.Addr))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, "{\"status\":\"pass\"}", string(body))
 
@@ -31,12 +30,13 @@ func TestHealth(t *testing.T) {
 }
 
 func TestWaitForHealth(t *testing.T) {
-	server := web_support.Create("localhost:8883", func(x *mux.Router) {}, web_support.Options{})
+	listener, _ := net.Listen("tcp", "localhost:0")
+	server := web_support.Create(listener.Addr().String(), func(x *mux.Router) {}, web_support.Options{})
 
-	go web_support.Start(server)
+	go web_support.Start(server, listener)
 	web_support.WaitForHealthy(server)
 
-	resp, _ := http.Get("http://localhost:8883/health")
+	resp, _ := http.Get(fmt.Sprintf("http://%s/health", server.Addr))
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	web_support.Stop(server)
@@ -47,7 +47,8 @@ func TestModelAndView(t *testing.T) {
 	resourcesDirectory := filepath.Join(file, "../../../pkg/web_support/test")
 	options := web_support.Options{ResourceDirectory: resourcesDirectory}
 
-	web_support.Create("localhost:8883", func(x *mux.Router) {}, options)
+	listener, _ := net.Listen("tcp", "localhost:0")
+	web_support.Create(listener.Addr().String(), func(x *mux.Router) {}, options)
 	writer := &httptest.ResponseRecorder{Body: new(bytes.Buffer)}
 
 	_ = web_support.ModelAndView(writer, "test", web_support.Model{Map: map[string]interface{}{"resource": "resource"}})

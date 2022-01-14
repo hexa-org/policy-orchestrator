@@ -5,6 +5,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/admin"
 	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -18,7 +19,7 @@ func App(resourcesDirectory string, addr string, orchestratorUrl string, orchest
 	return web_support.Create(addr, handlers, options)
 }
 
-func newApp() *http.Server {
+func newApp() (*http.Server, net.Listener) {
 	addr := "0.0.0.0:8884"
 	if found := os.Getenv("PORT"); found != "" {
 		addr = fmt.Sprintf("0.0.0.0:%v", found)
@@ -29,9 +30,8 @@ func newApp() *http.Server {
 	orchestratorKey := os.Getenv("ORCHESTRATOR_KEY")
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../../../pkg/admin/resources")
-
-	server := App(resourcesDirectory, addr, orchestratorUrl, orchestratorKey)
-	return server
+	listener, _ := net.Listen("tcp", addr)
+	return App(resourcesDirectory, listener.Addr().String(), orchestratorUrl, orchestratorKey), listener
 }
 
 func main() {

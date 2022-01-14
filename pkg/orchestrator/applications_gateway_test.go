@@ -45,7 +45,7 @@ func (suite *ApplicationGatewaySuite) TestCreate() {
 func (suite *ApplicationGatewaySuite) TestFind() {
 	_, _ = suite.gateway.Create(suite.integrationTestId, "anObjectId", "aName", "aDescription")
 	all, _ := suite.gateway.Find()
-	assert.Equal(suite.T(), suite.integrationTestId, all[0].IntegreationId)
+	assert.Equal(suite.T(), suite.integrationTestId, all[0].IntegrationId)
 	assert.Equal(suite.T(), "anObjectId", all[0].ObjectId)
 	assert.Equal(suite.T(), "aName", all[0].Name)
 	assert.Equal(suite.T(), "aDescription", all[0].Description)
@@ -69,7 +69,7 @@ func (suite *ApplicationGatewaySuite) TestIgnoresDuplicates() {
 func (suite *ApplicationGatewaySuite) TestFindById() {
 	id, _ := suite.gateway.Create(suite.integrationTestId, "anObjectId", "aName", "aDescription")
 	found, _ := suite.gateway.FindById(id)
-	assert.Equal(suite.T(), suite.integrationTestId, found.IntegreationId)
+	assert.Equal(suite.T(), suite.integrationTestId, found.IntegrationId)
 	assert.Equal(suite.T(), "anObjectId", found.ObjectId)
 	assert.Equal(suite.T(), "aName", found.Name)
 	assert.Equal(suite.T(), "aDescription", found.Description)

@@ -3,6 +3,7 @@ package opa_support_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/cmd/demo/opa_support"
 	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
@@ -11,6 +12,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"testing"
 )
@@ -73,7 +75,7 @@ func TestMiddleware(t *testing.T) {
 	mockClient.response = []byte("{\"result\":true}")
 	err, server := setup(mockClient)
 
-	resp, err := http.Get("http://localhost:8883/")
+	resp, err := http.Get(fmt.Sprintf("http://%s/", server.Addr))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -89,7 +91,7 @@ func TestMiddlewareNotAllowed(t *testing.T) {
 	mockClient.response = []byte("{\"result\":false}")
 	err, server := setup(mockClient)
 
-	resp, err := http.Get("http://localhost:8883/")
+	resp, err := http.Get(fmt.Sprintf("http://%s/", server.Addr))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -107,11 +109,12 @@ func setup(mockClient *MockClient) (error, *http.Server) {
 		w.WriteHeader(http.StatusUnauthorized)
 	})
 
-	server := web_support.Create("localhost:8883", func(router *mux.Router) {
+	listener, _ := net.Listen("tcp", "localhost:0")
+	server := web_support.Create(listener.Addr().String(), func(router *mux.Router) {
 		router.HandleFunc("/", handler).Methods("GET")
 	}, web_support.Options{})
 
-	go web_support.Start(server)
+	go web_support.Start(server, listener)
 
 	web_support.WaitForHealthy(server)
 	return err, server

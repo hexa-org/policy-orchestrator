@@ -8,6 +8,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
 	"github.com/hexa-org/policy-orchestrator/pkg/workflow_support"
 	"log"
+	"net"
 	"net/http"
 	"os"
 )
@@ -19,7 +20,7 @@ func App(key string, addr string, hostPort string, dbUrl string) (*http.Server, 
 	return web_support.Create(addr, handlers, web_support.Options{}), scheduler
 }
 
-func newApp() (*http.Server, *workflow_support.WorkScheduler) {
+func newApp() (*http.Server, net.Listener, *workflow_support.WorkScheduler) {
 	addr := "0.0.0.0:8885"
 	if found := os.Getenv("PORT"); found != "" {
 		addr = fmt.Sprintf("0.0.0.0:%v", found)
@@ -29,12 +30,13 @@ func newApp() (*http.Server, *workflow_support.WorkScheduler) {
 	dbUrl := os.Getenv("POSTGRESQL_URL")
 	key := os.Getenv("ORCHESTRATOR_KEY")
 	hostPort := os.Getenv("ORCHESTRATOR_HOSTPORT")
-	app, scheduler := App(key, addr, hostPort, dbUrl)
-	return app, scheduler
+	listener, _ := net.Listen("tcp", addr)
+	app, scheduler := App(key, listener.Addr().String(), hostPort, dbUrl)
+	return app, listener, scheduler
 }
 
 func main() {
-	app, scheduler := newApp()
+	app, listener, scheduler := newApp()
 	scheduler.Start()
-	web_support.Start(app)
+	web_support.Start(app, listener)
 }

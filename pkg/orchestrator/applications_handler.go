@@ -30,7 +30,7 @@ func (handler ApplicationsHandler) List(w http.ResponseWriter, r *http.Request) 
 	}
 	var list Applications
 	for _, rec := range records {
-		list.Applications = append(list.Applications, Application{rec.ID, rec.IntegreationId, rec.ObjectId, rec.Name, rec.Description})
+		list.Applications = append(list.Applications, Application{rec.ID, rec.IntegrationId, rec.ObjectId, rec.Name, rec.Description})
 	}
 	data, _ := json.Marshal(list)
 	w.Header().Set("content-type", "application/json")
@@ -45,7 +45,7 @@ func (handler ApplicationsHandler) Show(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	app := Application{record.ID, record.IntegreationId, record.ObjectId, record.Name, record.Description}
+	app := Application{record.ID, record.IntegrationId, record.ObjectId, record.Name, record.Description}
 	data, _ := json.Marshal(app)
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

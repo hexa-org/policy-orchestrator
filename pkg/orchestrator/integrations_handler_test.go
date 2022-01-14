@@ -10,6 +10,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"net"
 	"net/http"
 	"testing"
 )
@@ -24,8 +25,9 @@ func TestIntegrationsHandler(t *testing.T) {
 }
 
 func (suite *HandlerSuite) SetupTest() {
-	suite.fields.Setup()
-	go web_support.Start(suite.fields.Server)
+	listener, _ := net.Listen("tcp", "localhost:0")
+	suite.fields.Setup(listener.Addr().String())
+	go web_support.Start(suite.fields.Server, listener)
 	web_support.WaitForHealthy(suite.fields.Server)
 }
 
@@ -36,7 +38,7 @@ func (suite *HandlerSuite) TearDownTest() {
 
 func (suite *HandlerSuite) TestList() {
 	_, _ = suite.fields.Gateway.Create("aName", "google cloud", []byte("aKey"))
-	resp, _ := hawk_support.HawkGet(&http.Client{}, "anId", suite.fields.Key, "http://localhost:8883/integrations")
+	resp, _ := hawk_support.HawkGet(&http.Client{}, "anId", suite.fields.Key, fmt.Sprintf("http://%s/integrations", suite.fields.Server.Addr))
 	var jsonResponse orchestrator.Integrations
 	_ = json.NewDecoder(resp.Body).Decode(&jsonResponse)
 
@@ -49,7 +51,7 @@ func (suite *HandlerSuite) TestList() {
 func (suite *HandlerSuite) TestCreate_fails() {
 	integration := orchestrator.Integration{Name: "aName", Provider: "google cloud", Key: []byte("aKey")}
 	marshal, _ := json.Marshal(integration)
-	_, _ = hawk_support.HawkPost(&http.Client{}, "anId", suite.fields.Key, "http://localhost:8883/integrations", bytes.NewReader(marshal))
+	_, _ = hawk_support.HawkPost(&http.Client{}, "anId", suite.fields.Key, fmt.Sprintf("http://%s/integrations", suite.fields.Server.Addr), bytes.NewReader(marshal))
 
 	all, _ := suite.fields.Gateway.Find()
 	assert.Equal(suite.T(), 1, len(all))
@@ -60,7 +62,7 @@ func (suite *HandlerSuite) TestCreate_fails() {
 
 func (suite *HandlerSuite) TestDelete() {
 	id, _ := suite.fields.Gateway.Create("aName", "google cloud", []byte("aKey"))
-	resp, _ := hawk_support.HawkGet(&http.Client{}, "anId", suite.fields.Key, fmt.Sprintf("http://localhost:8883/integrations/%s", id))
+	resp, _ := hawk_support.HawkGet(&http.Client{}, "anId", suite.fields.Key, fmt.Sprintf("http://%s/integrations/%s", suite.fields.Server.Addr, id))
 	assert.Equal(suite.T(), resp.StatusCode, http.StatusOK)
 
 	all, _ := suite.fields.Gateway.Find()
@@ -69,6 +71,6 @@ func (suite *HandlerSuite) TestDelete() {
 
 func (suite *HandlerSuite) TestDelete_bad_id() {
 	_, _ = suite.fields.Gateway.Create("aName", "google cloud", []byte("aKey"))
-	resp, _ := hawk_support.HawkGet(&http.Client{}, "anId", suite.fields.Key, fmt.Sprintf("http://localhost:8883/integrations/%s", "0000"))
+	resp, _ := hawk_support.HawkGet(&http.Client{}, "anId", suite.fields.Key, fmt.Sprintf("http://%s/integrations/%s", suite.fields.Server.Addr, "0000"))
 	assert.Equal(suite.T(), resp.StatusCode, http.StatusInternalServerError)
 }
