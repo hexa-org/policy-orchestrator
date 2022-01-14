@@ -6,11 +6,11 @@ import (
 )
 
 type ApplicationRecord struct {
-	ID             string
-	IntegreationId string
-	ObjectId       string
-	Name           string
-	Description    string
+	ID            string
+	IntegrationId string
+	ObjectId      string
+	Name          string
+	Description   string
 }
 
 type ApplicationsDataGateway struct {
@@ -43,7 +43,7 @@ func (gateway ApplicationsDataGateway) Find() ([]ApplicationRecord, error) {
 	var records []ApplicationRecord
 	for rows.Next() {
 		var record ApplicationRecord
-		err := rows.Scan(&record.ID, &record.IntegreationId, &record.ObjectId, &record.Name, &record.Description)
+		err := rows.Scan(&record.ID, &record.IntegrationId, &record.ObjectId, &record.Name, &record.Description)
 		if err != nil {
 			log.Println(err)
 			return nil, err
@@ -66,6 +66,6 @@ func (gateway ApplicationsDataGateway) FindById(id string) (records ApplicationR
 func (gateway ApplicationsDataGateway) queryRow(sql string, id string) (ApplicationRecord, error) {
 	row := gateway.DB.QueryRow(sql, id)
 	var record ApplicationRecord
-	err := row.Scan(&record.ID, &record.IntegreationId, &record.ObjectId, &record.Name, &record.Description)
+	err := row.Scan(&record.ID, &record.IntegrationId, &record.ObjectId, &record.Name, &record.Description)
 	return record, err
 }

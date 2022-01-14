@@ -3,6 +3,7 @@ package admin_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
@@ -10,6 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"io"
 	"mime/multipart"
+	"net"
 	"net/http"
 	"path/filepath"
 	"runtime"
@@ -30,12 +32,13 @@ func (suite *IntegrationsSuite) SetupTest() {
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../../../pkg/admin/resources")
 
+	listener, _ := net.Listen("tcp", "localhost:0")
 	suite.client = new(admin_test.MockClient)
 	suite.server = web_support.Create(
-		"localhost:8883",
+		listener.Addr().String(),
 		admin.LoadHandlers("http://noop", suite.client),
 		web_support.Options{ResourceDirectory: resourcesDirectory})
-	go web_support.Start(suite.server)
+	go web_support.Start(suite.server, listener)
 	web_support.WaitForHealthy(suite.server)
 }
 
@@ -46,20 +49,20 @@ func (suite *IntegrationsSuite) TearDownTest() {
 ///
 
 func (suite *IntegrationsSuite) TestListIntegrations() {
-	resp := suite.must(http.Get("http://localhost:8883/integrations"))
+	resp := suite.must(http.Get(fmt.Sprintf("http://%s/integrations", suite.server.Addr)))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Discovery")
 }
 
 func (suite *IntegrationsSuite) TestListIntegrations_with_error() {
 	suite.client.Err = errors.New("oops")
-	resp, _ := http.Get("http://localhost:8883/integrations")
+	resp, _ := http.Get(fmt.Sprintf("http://%s/integrations", suite.server.Addr))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Something went wrong.")
 }
 
 func (suite *IntegrationsSuite) TestNewIntegration() {
-	resp := suite.must(http.Get("http://localhost:8883/integrations/new"))
+	resp := suite.must(http.Get(fmt.Sprintf("http://%s/integrations/new", suite.server.Addr)))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Install Cloud Provider")
 }
@@ -67,21 +70,21 @@ func (suite *IntegrationsSuite) TestNewIntegration() {
 func (suite *IntegrationsSuite) TestCreateIntegration() {
 	suite.client.On("CreateIntegration", "http://noop/integrations").Return()
 	buf, contentType := suite.multipartForm()
-	resp := suite.must(http.Post("http://localhost:8883/integrations", contentType, buf))
+	resp := suite.must(http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf))
 	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
 }
 
 func (suite *IntegrationsSuite) TestCreateIntegration_with_error() {
 	suite.client.On("CreateIntegration", "http://noop/integrations").Return(errors.New(""))
 	buf, contentType := suite.multipartForm()
-	resp := suite.must(http.Post("http://localhost:8883/integrations", contentType, buf))
+	resp := suite.must(http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf))
 	assert.Equal(suite.T(), http.StatusInternalServerError, resp.StatusCode)
 }
 
 func (suite *IntegrationsSuite) TestCreateIntegration_missing_key_file() {
 	suite.client.On("CreateIntegration", "http://noop/integrations").Return(errors.New(""))
 	buff, contentType := suite.multipartFormMissingFile()
-	resp := suite.must(http.Post("http://localhost:8883/integrations", contentType, buff))
+	resp := suite.must(http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buff))
 	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
 	all, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(all), "Something went wrong. Missing key file.")
@@ -89,14 +92,14 @@ func (suite *IntegrationsSuite) TestCreateIntegration_missing_key_file() {
 
 func (suite *IntegrationsSuite) TestDeleteIntegration() {
 	suite.client.On("DeleteIntegration", "http://noop/integrations/101").Return()
-	resp := suite.must(http.Post("http://localhost:8883/integrations/101", "", nil))
+	resp := suite.must(http.Post(fmt.Sprintf("http://%s/integrations/101", suite.server.Addr), "", nil))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Discovery")
 }
 
 func (suite *IntegrationsSuite) TestDeleteIntegration_with_error() {
 	suite.client.On("DeleteIntegration", "http://noop/integrations/101").Return(errors.New(""))
-	resp := suite.must(http.Post("http://localhost:8883/integrations/101", "", nil))
+	resp := suite.must(http.Post(fmt.Sprintf("http://%s/integrations/101", suite.server.Addr), "", nil))
 	assert.Equal(suite.T(), http.StatusInternalServerError, resp.StatusCode)
 }
 

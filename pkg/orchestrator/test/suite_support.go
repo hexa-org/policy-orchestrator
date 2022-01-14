@@ -20,7 +20,7 @@ type SuiteFields struct {
 	Gateway   orchestrator.IntegrationsDataGateway
 }
 
-func (fields *SuiteFields) Setup() {
+func (fields *SuiteFields) Setup(addr string) {
 	fields.DB, _ = database_support.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
 	fields.Gateway = orchestrator.IntegrationsDataGateway{DB: fields.DB}
 	_, _ = fields.DB.Exec("delete from applications;")
@@ -29,7 +29,7 @@ func (fields *SuiteFields) Setup() {
 	hash := sha256.Sum256([]byte("aKey"))
 	fields.Key = hex.EncodeToString(hash[:])
 
-	handlers, scheduler := orchestrator.LoadHandlers(hawk_support.NewCredentialStore(fields.Key), "localhost:8883", fields.DB)
+	handlers, scheduler := orchestrator.LoadHandlers(hawk_support.NewCredentialStore(fields.Key), addr, fields.DB)
 	fields.Scheduler = scheduler
-	fields.Server = web_support.Create("localhost:8883", handlers, web_support.Options{})
+	fields.Server = web_support.Create(addr, handlers, web_support.Options{})
 }

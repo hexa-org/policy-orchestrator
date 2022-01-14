@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"path/filepath"
 	"runtime"
@@ -30,12 +31,13 @@ func (suite *ApplicationsSuite) SetupTest() {
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../../../pkg/admin/resources")
 
+	listener, _ := net.Listen("tcp", "localhost:0")
 	suite.client = new(admin_test.MockClient)
 	suite.server = web_support.Create(
-		"localhost:8883",
+		listener.Addr().String(),
 		admin.LoadHandlers("http://noop", suite.client),
 		web_support.Options{ResourceDirectory: resourcesDirectory})
-	go web_support.Start(suite.server)
+	go web_support.Start(suite.server, listener)
 	web_support.WaitForHealthy(suite.server)
 }
 
@@ -46,7 +48,7 @@ func (suite *ApplicationsSuite) TearDownTest() {
 ///
 
 func (suite *ApplicationsSuite) TestApplications() {
-	resp, err := http.Get("http://localhost:8883/applications")
+	resp, err := http.Get(fmt.Sprintf("http://%s/applications", suite.server.Addr))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -59,14 +61,14 @@ func (suite *ApplicationsSuite) TestApplications() {
 
 func (suite *ApplicationsSuite) TestApplications_with_error() {
 	suite.client.Err = errors.New("oops")
-	resp, _ := http.Get("http://localhost:8883/applications")
+	resp, _ := http.Get(fmt.Sprintf("http://%s/applications", suite.server.Addr))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Something went wrong.")
 }
 
 func (suite *ApplicationsSuite) TestApplication() {
 	identifier := "anId"
-	resp, _ := http.Get(fmt.Sprintf("http://localhost:8883/applications/%s", identifier))
+	resp, _ := http.Get(fmt.Sprintf("http://%s/applications/%s", suite.server.Addr, identifier))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Applications")
 	assert.Contains(suite.T(), string(body), "anObjectId")
@@ -76,7 +78,7 @@ func (suite *ApplicationsSuite) TestApplication() {
 
 func (suite *ApplicationsSuite) TestApplication_with_error() {
 	suite.client.Err = errors.New("oops")
-	resp, _ := http.Get("http://localhost:8883/applications/000")
+	resp, _ := http.Get(fmt.Sprintf("http://%s/applications/000", suite.server.Addr))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Something went wrong.")
 }

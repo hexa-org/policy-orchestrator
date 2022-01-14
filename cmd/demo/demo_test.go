@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -26,21 +28,17 @@ func TestApp(t *testing.T) {
 	client := new(MockClient)
 	client.response = "{\"result\":true}"
 	app := setup(client)
-	assert.Equal(t, http.StatusOK, must("http://localhost:8883/health").StatusCode)
-	assert.Equal(t, http.StatusOK, must("http://localhost:8883/").StatusCode)
-	assert.Equal(t, http.StatusOK, must("http://localhost:8883/sales").StatusCode)
-	assert.Equal(t, http.StatusOK, must("http://localhost:8883/accounting").StatusCode)
-	assert.Equal(t, http.StatusOK, must("http://localhost:8883/humanresources").StatusCode)
+	assert.Equal(t, http.StatusOK, must(fmt.Sprintf("http://%s/health", app.Addr)).StatusCode)
+	assert.Equal(t, http.StatusOK, must(fmt.Sprintf("http://%s/", app.Addr)).StatusCode)
+	assert.Equal(t, http.StatusOK, must(fmt.Sprintf("http://%s/sales", app.Addr)).StatusCode)
+	assert.Equal(t, http.StatusOK, must(fmt.Sprintf("http://%s/accounting", app.Addr)).StatusCode)
+	assert.Equal(t, http.StatusOK, must(fmt.Sprintf("http://%s/humanresources", app.Addr)).StatusCode)
 	web_support.Stop(app)
 }
 
-func TestConfig(t *testing.T) {
-	newApp()
-}
-
 func TestConfigWithPort(t *testing.T) {
-	_ = os.Setenv("PORT", "8883")
-	_ = os.Setenv("OPA_SERVER_URL", "http://0.0.0.0:8887/v1/data/authz/allow")
+	_ = os.Setenv("PORT", "0")
+	_ = os.Setenv("OPA_SERVER_URL", "http://localhost:8887/v1/data/authz/allow")
 	newApp()
 }
 
@@ -48,16 +46,17 @@ func TestApp_unauthorized(t *testing.T) {
 	client := new(MockClient)
 	client.response = "{\"result\":false}"
 	app := setup(client)
-	assert.Equal(t, http.StatusUnauthorized, must("http://localhost:8883/humanresources").StatusCode)
+	assert.Equal(t, http.StatusUnauthorized, must(fmt.Sprintf("http://%s/humanresources", app.Addr)).StatusCode)
 	web_support.Stop(app)
 }
 
 func setup(client *MockClient) *http.Server {
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../../../cmd/demo/resources")
-	app := App(client, "http://0.0.0.0:8887/v1/data/authz/allow", "localhost:8883", resourcesDirectory)
+	listener, _ := net.Listen("tcp", "localhost:0")
+	app := App(client, "http://localhost:8887/v1/data/authz/allow", listener.Addr().String(), resourcesDirectory)
 	go func() {
-		web_support.Start(app)
+		web_support.Start(app, listener)
 	}()
 	web_support.WaitForHealthy(app)
 	return app

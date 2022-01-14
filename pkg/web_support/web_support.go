@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"html/template"
 	"log"
+	"net"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -70,11 +71,10 @@ func Create(addr string, handlers func(x *mux.Router), options Options) *http.Se
 	return &server
 }
 
-func Start(server *http.Server) {
-	log.Printf("Starting the server.")
-	err := server.ListenAndServe()
+func Start(server *http.Server, l net.Listener) {
+	log.Println("Starting the server.", server.Addr)
+	err := server.Serve(l)
 	if err != nil {
-		log.Println(err)
 		return
 	}
 }
@@ -82,10 +82,9 @@ func Start(server *http.Server) {
 func WaitForHealthy(server *http.Server) {
 	var isLive bool
 	for !isLive {
-		log.Println(fmt.Sprintf("Checking server health. %v", server.Addr))
-		resp, err := http.Get(fmt.Sprintf("http://%v/health", server.Addr))
+		resp, err := http.Get(fmt.Sprintf("http://%s/health", server.Addr))
 		if err == nil && resp.StatusCode == http.StatusOK {
-			log.Println("Server is healthy.")
+			log.Println("Server is healthy.", server.Addr)
 			isLive = true
 		}
 	}
