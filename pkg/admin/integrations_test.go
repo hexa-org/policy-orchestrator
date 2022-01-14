@@ -51,6 +51,13 @@ func (suite *IntegrationsSuite) TestListIntegrations() {
 	assert.Contains(suite.T(), string(body), "Discovery")
 }
 
+func (suite *IntegrationsSuite) TestListIntegrations_with_error() {
+	suite.client.Err = errors.New("oops")
+	resp, _ := http.Get("http://localhost:8883/integrations")
+	body, _ := io.ReadAll(resp.Body)
+	assert.Contains(suite.T(), string(body), "Something went wrong.")
+}
+
 func (suite *IntegrationsSuite) TestNewIntegration() {
 	resp := suite.must(http.Get("http://localhost:8883/integrations/new"))
 	body, _ := io.ReadAll(resp.Body)

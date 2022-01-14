@@ -29,7 +29,10 @@ func (i integrationsHandler) List(w http.ResponseWriter, r *http.Request) {
 	url := fmt.Sprintf("%v/integrations", i.orchestratorUrl)
 	integrations, err := i.client.Integrations(url)
 	if err != nil {
+		model := web_support.Model{Map: map[string]interface{}{"resource": "integrations", "message": "Unable to contact orchestrator."}}
+		_ = web_support.ModelAndView(w, "integrations", model)
 		log.Println(err)
+		return
 	}
 	model := web_support.Model{Map: map[string]interface{}{"resource": "integrations", "integrations": integrations}}
 	_ = web_support.ModelAndView(w, "integrations", model)

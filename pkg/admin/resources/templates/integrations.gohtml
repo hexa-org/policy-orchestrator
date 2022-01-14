@@ -1,6 +1,10 @@
 {{- template "base" .}}
 {{- define "main"}}
     <div class="card">
+        {{- $m := index .Map "message"}}
+        {{- if $m}}
+            <div class="message">Something went wrong. {{$m}}</div>
+        {{- end }}
         <h1>Discovery</h1>
         <table>
             <thead>

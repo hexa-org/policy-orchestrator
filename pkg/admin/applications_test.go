@@ -1,6 +1,7 @@
 package admin_test
 
 import (
+	"errors"
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin/test"
@@ -56,15 +57,26 @@ func (suite *ApplicationsSuite) TestApplications() {
 	assert.Contains(suite.T(), string(body), "aDescription")
 }
 
+func (suite *ApplicationsSuite) TestApplications_with_error() {
+	suite.client.Err = errors.New("oops")
+	resp, _ := http.Get("http://localhost:8883/applications")
+	body, _ := io.ReadAll(resp.Body)
+	assert.Contains(suite.T(), string(body), "Something went wrong.")
+}
+
 func (suite *ApplicationsSuite) TestApplication() {
 	identifier := "anId"
-	resp, err := http.Get(fmt.Sprintf("http://localhost:8883/applications/%s", identifier))
-	if err != nil {
-		log.Fatalln(err)
-	}
+	resp, _ := http.Get(fmt.Sprintf("http://localhost:8883/applications/%s", identifier))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Applications")
 	assert.Contains(suite.T(), string(body), "anObjectId")
 	assert.Contains(suite.T(), string(body), "aName")
 	assert.Contains(suite.T(), string(body), "aDescription")
+}
+
+func (suite *ApplicationsSuite) TestApplication_with_error() {
+	suite.client.Err = errors.New("oops")
+	resp, _ := http.Get("http://localhost:8883/applications/000")
+	body, _ := io.ReadAll(resp.Body)
+	assert.Contains(suite.T(), string(body), "Something went wrong.")
 }
