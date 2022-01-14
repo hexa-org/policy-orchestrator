@@ -2,6 +2,7 @@ package opa_support_test
 
 import (
 	"bytes"
+	"errors"
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/cmd/demo/opa_support"
 	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
@@ -17,11 +18,12 @@ import (
 type MockClient struct {
 	mock.Mock
 	response []byte
+	err      error
 }
 
 func (m *MockClient) Do(req *http.Request) (*http.Response, error) {
 	r := ioutil.NopCloser(bytes.NewReader(m.response))
-	return &http.Response{StatusCode: 200, Body: r}, nil
+	return &http.Response{StatusCode: 200, Body: r}, m.err
 }
 
 ///
@@ -39,6 +41,16 @@ func TestAllow(t *testing.T) {
 	allow, err := support.Allow(input)
 	assert.NoError(t, err)
 	assert.True(t, allow)
+}
+
+func TestAllow_bad_json(t *testing.T) {
+	mockClient := &MockClient{err: errors.New("oops")}
+	mockClient.response = []byte("{\"result\":true}")
+
+	support, err := opa_support.NewOpaSupport(mockClient, "aUrl")
+	allow, err := support.Allow(nil)
+	assert.Error(t, err)
+	assert.False(t, allow)
 }
 
 func TestNotAllow(t *testing.T) {

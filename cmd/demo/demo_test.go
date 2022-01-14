@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -34,6 +35,12 @@ func TestApp(t *testing.T) {
 }
 
 func TestConfig(t *testing.T) {
+	newApp()
+}
+
+func TestConfigWithPort(t *testing.T) {
+	_ = os.Setenv("PORT", "8883")
+	_ = os.Setenv("OPA_SERVER_URL", "http://0.0.0.0:8887/v1/data/authz/allow")
 	newApp()
 }
 

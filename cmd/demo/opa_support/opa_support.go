@@ -32,15 +32,7 @@ type OpaResponse struct {
 
 func (o *OpaSupport) Allow(input interface{}) (bool, error) {
 	marshal, err := json.Marshal(input)
-	if err != nil {
-		return false, err
-	}
-
 	request, err := http.NewRequest("POST", o.url, bytes.NewBuffer(marshal))
-	if err != nil {
-		return false, err
-	}
-
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	response, err := o.client.Do(request)
 	if err != nil {

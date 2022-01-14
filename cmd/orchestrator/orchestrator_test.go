@@ -4,6 +4,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
 	"github.com/stretchr/testify/assert"
 	"net/http"
+	"os"
 	"testing"
 )
 
@@ -22,5 +23,10 @@ func TestApp(t *testing.T) {
 }
 
 func TestConfig(t *testing.T) {
+	newApp()
+}
+
+func TestConfigWithPort(t *testing.T) {
+	_ = os.Setenv("PORT", "8883")
 	newApp()
 }
