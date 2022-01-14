@@ -3,6 +3,7 @@
 # Hexa Policy Orchestrator
 
 [![Build results](https://github.com/hexa-org/policy-orchestrator/workflows/build/badge.svg)](https://github.com/hexa-org/policy-orchestrator/actions)
+[![Go Report Card](https://goreportcard.com/badge/hexa-org/policy-orchestrator)](https://goreportcard.com/report/hexa-org/policy-orchestrator)
 
 Hexa is the open-source, standards-based policy orchestration software for multi-cloud and hybrid businesses.
 
