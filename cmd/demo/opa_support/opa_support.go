@@ -39,18 +39,11 @@ func (o *OpaSupport) Allow(input interface{}) (bool, error) {
 		return false, err
 	}
 	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			fmt.Println("trouble closing a response body.")
-		}
+		_ = Body.Close()
 	}(response.Body)
 
 	var jsonResponse OpaResponse
 	err = json.NewDecoder(response.Body).Decode(&jsonResponse)
-	if err != nil {
-		return false, err
-	}
-
 	if err != nil {
 		return false, err
 	}
@@ -64,15 +57,11 @@ func OpaMiddleware(o *OpaSupport, next http.HandlerFunc, unauthorized http.Handl
 			"path":       r.RequestURI,
 			"principals": []interface{}{"allusers", "allauthenticatedusers", "sales@"},
 		}}
-
 		log.Println(fmt.Sprintf("Checking authorization for %v", input))
 
 		allow, err := o.Allow(input)
-		if err != nil {
+		if !allow || err != nil {
 			fmt.Println(err)
-		}
-
-		if !allow {
 			unauthorized(w, r)
 		} else {
 			next(w, r)

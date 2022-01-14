@@ -3,7 +3,6 @@ package opa_support
 import (
 	"archive/tar"
 	"compress/gzip"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -25,7 +24,6 @@ func Compress(writer http.ResponseWriter, path string) {
 		header.Name = rel
 
 		if err := tarWriter.WriteHeader(header); err != nil {
-			fmt.Println(err)
 			return err
 		}
 		if !fi.IsDir() {
@@ -42,10 +40,6 @@ func Compress(writer http.ResponseWriter, path string) {
 	if err != nil {
 		return
 	}
-	if err := tarWriter.Close(); err != nil {
-		fmt.Println("unable to tar.")
-	}
-	if err := gzipWriter.Close(); err != nil {
-		fmt.Println("unable to gzip.")
-	}
+	_ = tarWriter.Close()
+	_ = gzipWriter.Close()
 }
