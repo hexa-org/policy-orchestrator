@@ -10,11 +10,12 @@ type MockClient struct {
 	Err error
 }
 
-func (m *MockClient) Integrations(url string) ([]admin.Integration, error) {
-	return []admin.Integration{{"anId", "aName", "google", []byte("aKey")}}, m.Err
+func (m *MockClient) Integrations(_ string) ([]admin.Integration, error) {
+	integration := admin.Integration{ID: "anId", Name: "aName", Provider: "google", Key: []byte("aKey")}
+	return []admin.Integration{integration}, m.Err
 }
 
-func (m *MockClient) CreateIntegration(url string, provider string, key []byte) error {
+func (m *MockClient) CreateIntegration(url string, _ string, _ []byte) error {
 	args := m.Called(url)
 	if len(args) > 0 {
 		return args.Error(0)
@@ -30,14 +31,15 @@ func (m *MockClient) DeleteIntegration(url string) error {
 	return m.Err
 }
 
-func (m *MockClient) Applications(url string) ([]admin.Application, error) {
-	return []admin.Application{{"anId", "anIntegrationId", "anObjectId", "aName", "aDescription"}}, m.Err
+func (m *MockClient) Applications(_ string) ([]admin.Application, error) {
+	application := admin.Application{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription"}
+	return []admin.Application{application}, m.Err
 }
 
-func (m *MockClient) Application(url string) (admin.Application, error) {
+func (m *MockClient) Application(_ string) (admin.Application, error) {
 	return admin.Application{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription"}, m.Err
 }
 
-func (m *MockClient) Health(url string) (string, error) {
+func (m *MockClient) Health(_ string) (string, error) {
 	return "{\"status\":\"pass\"}", nil
 }

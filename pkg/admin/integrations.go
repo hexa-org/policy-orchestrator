@@ -72,7 +72,7 @@ func (i integrationsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	http.Redirect(w, r, "/integrations", 301)
+	http.Redirect(w, r, "/integrations", http.StatusMovedPermanently)
 }
 
 func (i integrationsHandler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -81,5 +81,5 @@ func (i integrationsHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	http.Redirect(w, r, "/integrations", 301)
+	http.Redirect(w, r, "/integrations", http.StatusMovedPermanently)
 }

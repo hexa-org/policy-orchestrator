@@ -44,8 +44,8 @@ func (suite *GatewaySuite) TestFind() {
 func (suite *GatewaySuite) TestFind_bad_url() {
 	open, _ := database_support.Open("")
 	gateway := orchestrator.IntegrationsDataGateway{DB: open}
-	_, err := suite.gateway.Create("aName", "google cloud", []byte("aKey"))
-	_, err = gateway.Find()
+	_, _ = suite.gateway.Create("aName", "google cloud", []byte("aKey"))
+	_, err := gateway.Find()
 	assert.Error(suite.T(), err)
 }
 

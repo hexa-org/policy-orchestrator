@@ -35,7 +35,7 @@ func (handler ApplicationsHandler) List(w http.ResponseWriter, r *http.Request) 
 	data, _ := json.Marshal(list)
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write(data)
+	_, _ = w.Write(data)
 }
 
 func (handler ApplicationsHandler) Show(w http.ResponseWriter, r *http.Request) {
@@ -49,5 +49,5 @@ func (handler ApplicationsHandler) Show(w http.ResponseWriter, r *http.Request) 
 	data, _ := json.Marshal(app)
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write(data)
+	_, _ = w.Write(data)
 }

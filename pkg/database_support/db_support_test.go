@@ -7,11 +7,11 @@ import (
 )
 
 func TestOpen(t *testing.T) {
-	db, err := Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
+	db, _ := Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
 	defer func(db *sql.DB) {
 		_ = db.Close()
 	}(db)
 
-	err = db.Ping()
+	err := db.Ping()
 	assert.NoError(t, err)
 }

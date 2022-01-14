@@ -2,7 +2,6 @@ package open_policy_agent_test
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/open_policy_agent"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +25,7 @@ func TestWrite(t *testing.T) {
 	actualRegoBytes := new(strings.Builder)
 	_ = service.WritePolicies(policies, actualRegoBytes)
 
-	regoFile, _ := os.Open(filepath.Join(resourcesDirectory, fmt.Sprintf("./bundles/bundle/policy.rego")))
+	regoFile, _ := os.Open(filepath.Join(resourcesDirectory, "./bundles/bundle/policy.rego"))
 	regoBytes, _ := ioutil.ReadAll(regoFile)
 
 	assert.Equal(t, string(regoBytes), actualRegoBytes.String())
@@ -48,7 +47,7 @@ func TestRead(t *testing.T) {
 	resourcesDirectory := filepath.Join(file, "../resources")
 	service := open_policy_agent.NewOpaService(resourcesDirectory)
 
-	regoFile, _ := os.Open(filepath.Join(resourcesDirectory, fmt.Sprintf("./bundles/bundle/policy.rego")))
+	regoFile, _ := os.Open(filepath.Join(resourcesDirectory, "./bundles/bundle/policy.rego"))
 	regoBytes, _ := ioutil.ReadAll(regoFile)
 	reader := bytes.NewReader(regoBytes)
 
@@ -74,7 +73,7 @@ func TestReadWrite(t *testing.T) {
 	resourcesDirectory := filepath.Join(file, "../resources")
 	service := open_policy_agent.NewOpaService(resourcesDirectory)
 
-	regoFile, _ := os.Open(filepath.Join(resourcesDirectory, fmt.Sprintf("./bundles/bundle/policy.rego")))
+	regoFile, _ := os.Open(filepath.Join(resourcesDirectory, "./bundles/bundle/policy.rego"))
 	regoBytes, _ := ioutil.ReadAll(regoFile)
 	policies, _ := service.ReadPolicies(bytes.NewReader(regoBytes))
 

@@ -25,7 +25,7 @@ type Options struct {
 func ModelAndView(w http.ResponseWriter, view string, data Model) error {
 	views := []string{
 		filepath.Join(resourcesDirectory, fmt.Sprintf("./templates/%v.gohtml", view)),
-		filepath.Join(resourcesDirectory, fmt.Sprintf("./templates/template.gohtml")),
+		filepath.Join(resourcesDirectory, "./templates/template.gohtml"),
 	}
 
 	base := filepath.Base(views[0]) // to match template names in ParseFiles
@@ -39,7 +39,7 @@ func ModelAndView(w http.ResponseWriter, view string, data Model) error {
 		},
 	}).ParseFiles(views...)).Execute(w, data)
 	if err != nil {
-		log.Printf("Unable to execute golang html templates.")
+		log.Println("Unable to execute golang html templates.")
 		return err
 	}
 	return nil
@@ -81,7 +81,7 @@ func Start(server *http.Server) {
 
 func WaitForHealthy(server *http.Server) {
 	var isLive bool
-	for isLive == false {
+	for !isLive {
 		log.Println(fmt.Sprintf("Checking server health. %v", server.Addr))
 		resp, err := http.Get(fmt.Sprintf("http://%v/health", server.Addr))
 		if err == nil && resp.StatusCode == http.StatusOK {

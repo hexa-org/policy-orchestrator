@@ -55,17 +55,17 @@ func (gateway ApplicationsDataGateway) Find() ([]ApplicationRecord, error) {
 
 func (gateway ApplicationsDataGateway) FindByObjectId(objectId string) (records ApplicationRecord, err error) {
 	s := "select id, integration_id, object_id, name, description from applications where object_id=$1"
-	return gateway.queryRow(s, objectId, err)
+	return gateway.queryRow(s, objectId)
 }
 
 func (gateway ApplicationsDataGateway) FindById(id string) (records ApplicationRecord, err error) {
 	s := "select id, integration_id, object_id, name, description from applications where id=$1"
-	return gateway.queryRow(s, id, err)
+	return gateway.queryRow(s, id)
 }
 
-func (gateway ApplicationsDataGateway) queryRow(sql string, id string, err error) (ApplicationRecord, error) {
+func (gateway ApplicationsDataGateway) queryRow(sql string, id string) (ApplicationRecord, error) {
 	row := gateway.DB.QueryRow(sql, id)
 	var record ApplicationRecord
-	err = row.Scan(&record.ID, &record.IntegreationId, &record.ObjectId, &record.Name, &record.Description)
+	err := row.Scan(&record.ID, &record.IntegreationId, &record.ObjectId, &record.Name, &record.Description)
 	return record, err
 }

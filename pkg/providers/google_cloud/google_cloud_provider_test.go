@@ -62,6 +62,6 @@ func TestClient(t *testing.T) {
 	client, _ := p.HttpClient(key)
 	assert.NotNil(t, client)
 
-	client, err := p.HttpClient([]byte(""))
+	_, err := p.HttpClient([]byte(""))
 	assert.Error(t, err)
 }
