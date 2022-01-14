@@ -51,6 +51,14 @@ func (suite *ApplicationGatewaySuite) TestFind() {
 	assert.Equal(suite.T(), "aDescription", all[0].Description)
 }
 
+func (suite *ApplicationGatewaySuite) TestFind_bad_url() {
+	open, _ := database_support.Open("")
+	gateway := orchestrator.ApplicationsDataGateway{DB: open}
+	_, _ = gateway.Create(suite.integrationTestId, "anObjectId", "aName", "aDescription")
+	_, err := gateway.Find()
+	assert.Error(suite.T(), err)
+}
+
 func (suite *ApplicationGatewaySuite) TestIgnoresDuplicates() {
 	_, _ = suite.gateway.Create(suite.integrationTestId, "anObjectId", "aName", "aDescription")
 	_, _ = suite.gateway.Create(suite.integrationTestId, "anObjectId", "aName", "aDescription")

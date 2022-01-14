@@ -44,6 +44,7 @@ func (handler IntegrationsHandler) Create(w http.ResponseWriter, r *http.Request
 	_, err := handler.gateway.Create(jsonRequest.Name, jsonRequest.Provider, jsonRequest.Key)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	find, err := handler.gateway.Find()
 	_ = handler.worker.Run(find)
@@ -54,6 +55,7 @@ func (handler IntegrationsHandler) Delete(w http.ResponseWriter, r *http.Request
 	err := handler.gateway.Delete(mux.Vars(r)["id"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
 }

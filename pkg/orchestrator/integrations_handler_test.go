@@ -46,7 +46,7 @@ func (suite *HandlerSuite) TestList() {
 	assert.Equal(suite.T(), []byte("aKey"), jsonResponse.Integrations[0].Key)
 }
 
-func (suite *HandlerSuite) TestCreate() {
+func (suite *HandlerSuite) TestCreate_fails() {
 	integration := orchestrator.Integration{Name: "aName", Provider: "google cloud", Key: []byte("aKey")}
 	marshal, _ := json.Marshal(integration)
 	_, _ = hawk_support.HawkPost(&http.Client{}, "anId", suite.fields.Key, "http://localhost:8883/integrations", bytes.NewReader(marshal))
@@ -65,4 +65,10 @@ func (suite *HandlerSuite) TestDelete() {
 
 	all, _ := suite.fields.Gateway.Find()
 	assert.Equal(suite.T(), 0, len(all))
+}
+
+func (suite *HandlerSuite) TestDelete_bad_id() {
+	_, _ = suite.fields.Gateway.Create("aName", "google cloud", []byte("aKey"))
+	resp, _ := hawk_support.HawkGet(&http.Client{}, "anId", suite.fields.Key, fmt.Sprintf("http://localhost:8883/integrations/%s", "0000"))
+	assert.Equal(suite.T(), resp.StatusCode, http.StatusInternalServerError)
 }

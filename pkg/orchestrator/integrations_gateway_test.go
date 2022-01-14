@@ -41,6 +41,14 @@ func (suite *GatewaySuite) TestFind() {
 	assert.Equal(suite.T(), 1, len(all))
 }
 
+func (suite *GatewaySuite) TestFind_bad_url() {
+	open, _ := database_support.Open("")
+	gateway := orchestrator.IntegrationsDataGateway{DB: open}
+	_, err := suite.gateway.Create("aName", "google cloud", []byte("aKey"))
+	_, err = gateway.Find()
+	assert.Error(suite.T(), err)
+}
+
 func (suite *GatewaySuite) TestDelete() {
 	id, _ := suite.gateway.Create("aName", "google cloud", []byte("aKey"))
 	_ = suite.gateway.Delete(id)
