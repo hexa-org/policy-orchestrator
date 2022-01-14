@@ -43,4 +43,6 @@ jobs:
           migrate -verbose -path ./databases/orchestrator -database postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable up
       - name: test
         run: |
-          go test -p 1 ./.../
+          go test -coverprofile=coverage.out -p 1 ./.../
+      - name: Upload coverage to Codecov
+        run: bash <(curl -s https://codecov.io/bash)
