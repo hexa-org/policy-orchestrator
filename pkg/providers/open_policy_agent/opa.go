@@ -7,7 +7,6 @@ import (
 	"html/template"
 	"io"
 	"path/filepath"
-	"strings"
 )
 
 type OpaService struct {
@@ -20,11 +19,8 @@ func NewOpaService(resourcesDirectory string) providers.Service {
 
 func (o OpaService) WritePolicies(policies []providers.Policy, destination io.Writer) error {
 	templates := []string{filepath.Join(o.resourcesDirectory, fmt.Sprintf("./template.gohtml"))}
-	err := template.Must(template.ParseFiles(templates...)).Execute(destination, policies)
-	if err != nil {
-		return err
-	}
-	return nil
+	must := template.Must(template.ParseFiles(templates...))
+	return must.Execute(destination, policies)
 }
 
 func (o OpaService) ReadPolicies(source io.Reader) ([]providers.Policy, error) {
@@ -82,12 +78,6 @@ func (l *Value) String() string {
 	switch {
 	case l.Str != nil:
 		return fmt.Sprintf("%s", *l.Str)
-	case l.Array != nil:
-		out := []string{}
-		for _, v := range l.Array {
-			out = append(out, v.String())
-		}
-		return fmt.Sprintf("[]*Value{ %s }", strings.Join(out, ", "))
 	}
 	panic("??")
 }
