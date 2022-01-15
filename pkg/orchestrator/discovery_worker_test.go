@@ -2,18 +2,18 @@ package orchestrator_test
 
 import (
 	"errors"
-	"github.com/hexa-org/policy-orchestrator/pkg/database_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
-	"github.com/hexa-org/policy-orchestrator/pkg/workflow_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
 
 func setUp() (orchestrator.IntegrationsDataGateway, orchestrator.ApplicationsDataGateway) {
-	db, _ := database_support.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
+	db, _ := databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
 	_, _ = db.Exec("delete from integrations;")
 	gateway := orchestrator.IntegrationsDataGateway{DB: db}
 	appGateway := orchestrator.ApplicationsDataGateway{DB: db}
@@ -27,8 +27,8 @@ func TestWorkflow(t *testing.T) {
 	discovery := orchestrator_test.NoopDiscovery{}
 	worker := orchestrator.DiscoveryWorker{Providers: []provider.Provider{&discovery}, Gateway: appGateway}
 	finder := orchestrator.DiscoveryWorkFinder{Gateway: gateway}
-	list := []workflow_support.Worker{&worker}
-	scheduler := workflow_support.NewScheduler(&finder, list, 50)
+	list := []workflowsupport.Worker{&worker}
+	scheduler := workflowsupport.NewScheduler(&finder, list, 50)
 	scheduler.Start()
 	for finder.Completed < 1 {
 		time.Sleep(time.Duration(50) * time.Millisecond)
@@ -46,8 +46,8 @@ func TestWorkflow_empty(t *testing.T) {
 
 	worker := orchestrator.DiscoveryWorker{}
 	finder := orchestrator.DiscoveryWorkFinder{Gateway: gateway}
-	list := []workflow_support.Worker{&worker}
-	scheduler := workflow_support.NewScheduler(&finder, list, 50)
+	list := []workflowsupport.Worker{&worker}
+	scheduler := workflowsupport.NewScheduler(&finder, list, 50)
 	scheduler.Start()
 	time.Sleep(time.Duration(50) * time.Millisecond)
 	scheduler.Stop()
@@ -68,8 +68,8 @@ func TestWorkflow_bad_find(t *testing.T) {
 
 	worker := ErroneousWorker{}
 	finder := orchestrator.DiscoveryWorkFinder{Gateway: gateway}
-	list := []workflow_support.Worker{&worker}
-	scheduler := workflow_support.NewScheduler(&finder, list, 50)
+	list := []workflowsupport.Worker{&worker}
+	scheduler := workflowsupport.NewScheduler(&finder, list, 50)
 	scheduler.Start()
 	for finder.NotCompleted < 1 {
 		time.Sleep(time.Duration(50) * time.Millisecond)

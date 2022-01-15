@@ -3,7 +3,7 @@ package admin
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/hexa-org/policy-orchestrator/pkg/hawk_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
 	"io"
 	"log"
 	"net/http"
@@ -46,7 +46,7 @@ type application struct {
 }
 
 func (c orchestratorClient) Applications(url string) (applications []Application, err error) {
-	resp, err := hawk_support.HawkGet(c.client, "anId", c.key, url)
+	resp, err := hawksupport.HawkGet(c.client, "anId", c.key, url)
 	if err != nil {
 		log.Println(err)
 		return applications, err
@@ -73,7 +73,7 @@ func (c orchestratorClient) Applications(url string) (applications []Application
 }
 
 func (c orchestratorClient) Application(url string) (Application, error) {
-	resp, err := hawk_support.HawkGet(c.client, "anId", c.key, url)
+	resp, err := hawksupport.HawkGet(c.client, "anId", c.key, url)
 	if err != nil {
 		return Application{}, err
 	}
@@ -100,7 +100,7 @@ type integration struct {
 }
 
 func (c orchestratorClient) Integrations(url string) (integrations []Integration, err error) {
-	resp, err := hawk_support.HawkGet(c.client, "anId", c.key, url)
+	resp, err := hawksupport.HawkGet(c.client, "anId", c.key, url)
 	if err != nil {
 		return integrations, err
 	}
@@ -122,11 +122,11 @@ func (c orchestratorClient) Integrations(url string) (integrations []Integration
 func (c orchestratorClient) CreateIntegration(url string, provider string, key []byte) error {
 	integration := integration{Name: "aName", Provider: provider, Key: key} // todo - replace with project name in key
 	marshal, _ := json.Marshal(integration)
-	_, err := hawk_support.HawkPost(c.client, "anId", c.key, url, bytes.NewReader(marshal))
+	_, err := hawksupport.HawkPost(c.client, "anId", c.key, url, bytes.NewReader(marshal))
 	return err
 }
 
 func (c orchestratorClient) DeleteIntegration(url string) error {
-	_, err := hawk_support.HawkGet(c.client, "anId", c.key, url)
+	_, err := hawksupport.HawkGet(c.client, "anId", c.key, url)
 	return err
 }

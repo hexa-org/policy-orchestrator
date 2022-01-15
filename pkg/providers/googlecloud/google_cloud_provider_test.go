@@ -1,9 +1,9 @@
-package google_cloud_test
+package googlecloud_test
 
 import (
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
-	"github.com/hexa-org/policy-orchestrator/pkg/providers/google_cloud"
-	"github.com/hexa-org/policy-orchestrator/pkg/providers/google_cloud/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/providers/googlecloud"
+	"github.com/hexa-org/policy-orchestrator/pkg/providers/googlecloud/test"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"path/filepath"
@@ -13,7 +13,7 @@ import (
 
 func TestDiscovery(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
-	providers := []provider.Provider{google_cloud.GoogleProvider{Http: m}}
+	providers := []provider.Provider{googlecloud.GoogleProvider{Http: m}}
 
 	for _, p := range providers {
 		info := provider.IntegrationInfo{Name: "google cloud", Key: []byte("aKey")}
@@ -24,7 +24,7 @@ func TestDiscovery(t *testing.T) {
 
 func TestDiscovery_ignores_case(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
-	providers := []provider.Provider{google_cloud.GoogleProvider{Http: m}}
+	providers := []provider.Provider{googlecloud.GoogleProvider{Http: m}}
 
 	for _, p := range providers {
 		info := provider.IntegrationInfo{Name: "Google Cloud", Key: []byte("aKey")}
@@ -35,7 +35,7 @@ func TestDiscovery_ignores_case(t *testing.T) {
 
 func TestNoDiscovery(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
-	providers := []provider.Provider{google_cloud.GoogleProvider{Http: m}}
+	providers := []provider.Provider{googlecloud.GoogleProvider{Http: m}}
 
 	for _, p := range providers {
 		info := provider.IntegrationInfo{Name: "not google cloud", Key: []byte("aKey")}
@@ -48,7 +48,7 @@ func TestGoogleProvider_DetermineProjectId(t *testing.T) {
 	jsonFile := filepath.Join(file, "./../test/project.json")
 	key, _ := ioutil.ReadFile(jsonFile)
 
-	p := google_cloud.GoogleProvider{}
+	p := googlecloud.GoogleProvider{}
 	foundCredentials := p.Credentials(key)
 	assert.Equal(t, "google-cloud-project-id", foundCredentials.ProjectId)
 }
@@ -58,7 +58,7 @@ func TestClient(t *testing.T) {
 	jsonFile := filepath.Join(file, "./../test/project.json")
 	key, _ := ioutil.ReadFile(jsonFile)
 
-	p := google_cloud.GoogleProvider{}
+	p := googlecloud.GoogleProvider{}
 	client, _ := p.HttpClient(key)
 	assert.NotNil(t, client)
 

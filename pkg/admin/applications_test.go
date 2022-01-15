@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin/test"
-	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"io"
@@ -33,16 +33,16 @@ func (suite *ApplicationsSuite) SetupTest() {
 
 	listener, _ := net.Listen("tcp", "localhost:0")
 	suite.client = new(admin_test.MockClient)
-	suite.server = web_support.Create(
+	suite.server = websupport.Create(
 		listener.Addr().String(),
 		admin.LoadHandlers("http://noop", suite.client),
-		web_support.Options{ResourceDirectory: resourcesDirectory})
-	go web_support.Start(suite.server, listener)
-	web_support.WaitForHealthy(suite.server)
+		websupport.Options{ResourceDirectory: resourcesDirectory})
+	go websupport.Start(suite.server, listener)
+	websupport.WaitForHealthy(suite.server)
 }
 
 func (suite *ApplicationsSuite) TearDownTest() {
-	web_support.Stop(suite.server)
+	websupport.Stop(suite.server)
 }
 
 ///

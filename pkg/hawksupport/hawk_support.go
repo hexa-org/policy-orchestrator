@@ -1,4 +1,4 @@
-package hawk_support
+package hawksupport
 
 import (
 	"fmt"

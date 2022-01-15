@@ -2,7 +2,7 @@ package orchestrator_test
 
 import (
 	"database/sql"
-	"github.com/hexa-org/policy-orchestrator/pkg/database_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -20,7 +20,7 @@ func TestIntegrationsDataGateway(t *testing.T) {
 }
 
 func (suite *GatewaySuite) SetupTest() {
-	suite.db, _ = database_support.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
+	suite.db, _ = databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
 	suite.gateway = orchestrator.IntegrationsDataGateway{DB: suite.db}
 	_, _ = suite.db.Exec("delete from integrations;")
 }
@@ -42,7 +42,7 @@ func (suite *GatewaySuite) TestFind() {
 }
 
 func (suite *GatewaySuite) TestFind_bad_url() {
-	open, _ := database_support.Open("")
+	open, _ := databasesupport.Open("")
 	gateway := orchestrator.IntegrationsDataGateway{DB: open}
 	_, _ = suite.gateway.Create("aName", "google cloud", []byte("aKey"))
 	_, err := gateway.Find()

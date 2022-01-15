@@ -1,4 +1,4 @@
-package open_policy_agent
+package openpolicyagent
 
 import (
 	"github.com/alecthomas/participle/v2"

@@ -1,12 +1,12 @@
-package hawk_support_test
+package hawksupport_test
 
 import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/hexa-org/policy-orchestrator/pkg/hawk_support"
-	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net"
@@ -28,18 +28,18 @@ func securePost(w http.ResponseWriter, r *http.Request) {
 
 func setup(key string) (*http.Server, func(t *testing.T)) {
 	listener, _ := net.Listen("tcp", "localhost:0")
-	get := hawk_support.HawkMiddleware(secureGet, hawk_support.NewCredentialStore(key), listener.Addr().String())
-	post := hawk_support.HawkMiddleware(securePost, hawk_support.NewCredentialStore(key), listener.Addr().String())
-	server := web_support.Create(listener.Addr().String(), func(router *mux.Router) {
+	get := hawksupport.HawkMiddleware(secureGet, hawksupport.NewCredentialStore(key), listener.Addr().String())
+	post := hawksupport.HawkMiddleware(securePost, hawksupport.NewCredentialStore(key), listener.Addr().String())
+	server := websupport.Create(listener.Addr().String(), func(router *mux.Router) {
 		router.HandleFunc("/secure", get).Methods("GET")
 		router.HandleFunc("/secure", post).Methods("POST")
-	}, web_support.Options{})
+	}, websupport.Options{})
 
-	go web_support.Start(server, listener)
-	web_support.WaitForHealthy(server)
+	go websupport.Start(server, listener)
+	websupport.WaitForHealthy(server)
 
 	return server, func(t *testing.T) {
-		defer web_support.Stop(server)
+		defer websupport.Stop(server)
 	}
 }
 
@@ -48,7 +48,7 @@ func TestGet(t *testing.T) {
 	app, teardownTestCase := setup(key)
 	defer teardownTestCase(t)
 
-	resp, _ := hawk_support.HawkGet(&http.Client{}, "anId", key, fmt.Sprintf("http://%s/secure", app.Addr))
+	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", key, fmt.Sprintf("http://%s/secure", app.Addr))
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	b, _ := ioutil.ReadAll(resp.Body)
@@ -68,7 +68,7 @@ func TestGet_bad_url(t *testing.T) {
 	_, teardownTestCase := setup(key)
 	defer teardownTestCase(t)
 
-	_, err := hawk_support.HawkGet(&http.Client{}, "anId", key, "httq://localhost")
+	_, err := hawksupport.HawkGet(&http.Client{}, "anId", key, "httq://localhost")
 	assert.Error(t, err)
 }
 
@@ -78,7 +78,7 @@ func TestPost(t *testing.T) {
 	defer teardownTestCase(t)
 
 	reader := strings.NewReader("aBody")
-	resp, _ := hawk_support.HawkPost(&http.Client{}, "anId", key, fmt.Sprintf("http://%s/secure", app.Addr), reader)
+	resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", key, fmt.Sprintf("http://%s/secure", app.Addr), reader)
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 
 	b, _ := ioutil.ReadAll(resp.Body)

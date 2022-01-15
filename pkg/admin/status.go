@@ -2,7 +2,7 @@ package admin
 
 import (
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"net/http"
 )
 
@@ -24,6 +24,6 @@ func (p statusHandler) StatusHandler(w http.ResponseWriter, r *http.Request) {
 	url := fmt.Sprintf("%v/health", p.orchestratorUrl)
 	health, _ := p.client.Health(url)
 	status := Status{url, health}
-	model := web_support.Model{Map: map[string]interface{}{"resource": "status", "status": status}}
-	_ = web_support.ModelAndView(w, "status", model)
+	model := websupport.Model{Map: map[string]interface{}{"resource": "status", "status": status}}
+	_ = websupport.ModelAndView(w, "status", model)
 }

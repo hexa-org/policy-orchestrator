@@ -1,4 +1,4 @@
-package database_support
+package databasesupport
 
 import (
 	"database/sql"

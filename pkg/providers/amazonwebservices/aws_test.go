@@ -1,4 +1,4 @@
-package amazon_web_services_test
+package amazonwebservices_test
 
 import (
 	"github.com/stretchr/testify/assert"

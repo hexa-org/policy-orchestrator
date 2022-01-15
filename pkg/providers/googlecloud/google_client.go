@@ -1,4 +1,4 @@
-package google_cloud
+package googlecloud
 
 import (
 	"encoding/json"

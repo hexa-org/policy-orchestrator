@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"io/ioutil"
@@ -33,7 +33,7 @@ func TestApp(t *testing.T) {
 	assert.Equal(t, http.StatusOK, must(fmt.Sprintf("http://%s/sales", app.Addr)).StatusCode)
 	assert.Equal(t, http.StatusOK, must(fmt.Sprintf("http://%s/accounting", app.Addr)).StatusCode)
 	assert.Equal(t, http.StatusOK, must(fmt.Sprintf("http://%s/humanresources", app.Addr)).StatusCode)
-	web_support.Stop(app)
+	websupport.Stop(app)
 }
 
 func TestConfigWithPort(t *testing.T) {
@@ -47,7 +47,7 @@ func TestApp_unauthorized(t *testing.T) {
 	client.response = "{\"result\":false}"
 	app := setup(client)
 	assert.Equal(t, http.StatusUnauthorized, must(fmt.Sprintf("http://%s/humanresources", app.Addr)).StatusCode)
-	web_support.Stop(app)
+	websupport.Stop(app)
 }
 
 func setup(client *MockClient) *http.Server {
@@ -56,9 +56,9 @@ func setup(client *MockClient) *http.Server {
 	listener, _ := net.Listen("tcp", "localhost:0")
 	app := App(client, "http://localhost:8887/v1/data/authz/allow", listener.Addr().String(), resourcesDirectory)
 	go func() {
-		web_support.Start(app, listener)
+		websupport.Start(app, listener)
 	}()
-	web_support.WaitForHealthy(app)
+	websupport.WaitForHealthy(app)
 	return app
 }
 

@@ -1,9 +1,9 @@
-package open_policy_agent_test
+package openpolicyagent_test
 
 import (
 	"bytes"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers"
-	"github.com/hexa-org/policy-orchestrator/pkg/providers/open_policy_agent"
+	"github.com/hexa-org/policy-orchestrator/pkg/providers/openpolicyagent"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
@@ -20,7 +20,7 @@ func TestWrite(t *testing.T) {
 	policies, _ := providers.Decode(jsonBytes)
 
 	resourcesDirectory := filepath.Join(file, "../resources")
-	service := open_policy_agent.NewOpaService(resourcesDirectory)
+	service := openpolicyagent.NewOpaService(resourcesDirectory)
 
 	actualRegoBytes := new(strings.Builder)
 	_ = service.WritePolicies(policies, actualRegoBytes)
@@ -34,7 +34,7 @@ func TestWrite(t *testing.T) {
 func TestWriteEmpty(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../resources")
-	service := open_policy_agent.NewOpaService(resourcesDirectory)
+	service := openpolicyagent.NewOpaService(resourcesDirectory)
 
 	actualRegoBytes := new(strings.Builder)
 	_ = service.WritePolicies([]providers.Policy{}, actualRegoBytes)
@@ -45,7 +45,7 @@ func TestWriteEmpty(t *testing.T) {
 func TestRead(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../resources")
-	service := open_policy_agent.NewOpaService(resourcesDirectory)
+	service := openpolicyagent.NewOpaService(resourcesDirectory)
 
 	regoFile, _ := os.Open(filepath.Join(resourcesDirectory, "./bundles/bundle/policy.rego"))
 	regoBytes, _ := ioutil.ReadAll(regoFile)
@@ -61,7 +61,7 @@ func TestRead(t *testing.T) {
 func TestRead_failed(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../resources")
-	service := open_policy_agent.NewOpaService(resourcesDirectory)
+	service := openpolicyagent.NewOpaService(resourcesDirectory)
 
 	reader := bytes.NewReader([]byte(""))
 	_, err := service.ReadPolicies(reader)
@@ -71,7 +71,7 @@ func TestRead_failed(t *testing.T) {
 func TestReadWrite(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../resources")
-	service := open_policy_agent.NewOpaService(resourcesDirectory)
+	service := openpolicyagent.NewOpaService(resourcesDirectory)
 
 	regoFile, _ := os.Open(filepath.Join(resourcesDirectory, "./bundles/bundle/policy.rego"))
 	regoBytes, _ := ioutil.ReadAll(regoFile)

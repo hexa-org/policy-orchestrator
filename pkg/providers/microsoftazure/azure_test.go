@@ -1,4 +1,4 @@
-package microsoft_azure_test
+package microsoftazure_test
 
 import (
 	"github.com/stretchr/testify/assert"

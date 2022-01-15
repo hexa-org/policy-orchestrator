@@ -1,4 +1,4 @@
-package opa_support
+package opasupport
 
 import (
 	"archive/tar"

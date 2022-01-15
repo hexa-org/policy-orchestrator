@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"net"
 	"net/http"
@@ -18,12 +18,12 @@ func TestApp(t *testing.T) {
 	listener, _ := net.Listen("tcp", "localhost:0")
 	app := App(resourcesDirectory, listener.Addr().String(), "http://localhost:8885/", "aKey")
 	go func() {
-		web_support.Start(app, listener)
+		websupport.Start(app, listener)
 	}()
-	web_support.WaitForHealthy(app)
+	websupport.WaitForHealthy(app)
 	resp, _ := http.Get(fmt.Sprintf("http://%s/health", app.Addr))
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	web_support.Stop(app)
+	websupport.Stop(app)
 }
 
 func TestConfigWithPort(t *testing.T) {

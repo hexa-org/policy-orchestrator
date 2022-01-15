@@ -3,7 +3,7 @@ package admin
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -29,18 +29,18 @@ func (i integrationsHandler) List(w http.ResponseWriter, r *http.Request) {
 	url := fmt.Sprintf("%v/integrations", i.orchestratorUrl)
 	integrations, err := i.client.Integrations(url)
 	if err != nil {
-		model := web_support.Model{Map: map[string]interface{}{"resource": "integrations", "message": "Unable to contact orchestrator."}}
-		_ = web_support.ModelAndView(w, "integrations", model)
+		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "message": "Unable to contact orchestrator."}}
+		_ = websupport.ModelAndView(w, "integrations", model)
 		log.Println(err)
 		return
 	}
-	model := web_support.Model{Map: map[string]interface{}{"resource": "integrations", "integrations": integrations}}
-	_ = web_support.ModelAndView(w, "integrations", model)
+	model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "integrations": integrations}}
+	_ = websupport.ModelAndView(w, "integrations", model)
 }
 
 func (i integrationsHandler) New(w http.ResponseWriter, r *http.Request) {
-	model := web_support.Model{Map: map[string]interface{}{"resource": "integrations"}}
-	_ = web_support.ModelAndView(w, "integrations_new", model)
+	model := websupport.Model{Map: map[string]interface{}{"resource": "integrations"}}
+	_ = websupport.ModelAndView(w, "integrations_new", model)
 }
 
 func (i integrationsHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -56,8 +56,8 @@ func (i integrationsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	file, _, err := r.FormFile("key")
 	if err != nil {
 		log.Printf("Missing key file %s.\n", err.Error())
-		model := web_support.Model{Map: map[string]interface{}{"resource": "integrations", "message": "Missing key file."}}
-		_ = web_support.ModelAndView(w, "integrations_new", model)
+		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "message": "Missing key file."}}
+		_ = websupport.ModelAndView(w, "integrations_new", model)
 		return
 	}
 

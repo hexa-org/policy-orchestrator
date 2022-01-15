@@ -1,4 +1,4 @@
-package workflow_support
+package workflowsupport
 
 import (
 	"log"

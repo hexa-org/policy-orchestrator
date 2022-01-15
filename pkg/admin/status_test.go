@@ -5,7 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin/test"
-	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"io"
@@ -32,16 +32,16 @@ func (suite *StatusSuite) SetupTest() {
 
 	handler := admin.NewStatusHandler("http://noop", new(admin_test.MockClient))
 	listener, _ := net.Listen("tcp", "localhost:0")
-	suite.server = web_support.Create(listener.Addr().String(), func(router *mux.Router) {
+	suite.server = websupport.Create(listener.Addr().String(), func(router *mux.Router) {
 		router.HandleFunc("/status", handler.StatusHandler).Methods("GET")
-	}, web_support.Options{ResourceDirectory: resourcesDirectory})
+	}, websupport.Options{ResourceDirectory: resourcesDirectory})
 
-	go web_support.Start(suite.server, listener)
-	web_support.WaitForHealthy(suite.server)
+	go websupport.Start(suite.server, listener)
+	websupport.WaitForHealthy(suite.server)
 }
 
 func (suite *StatusSuite) TearDownTest() {
-	web_support.Stop(suite.server)
+	websupport.Stop(suite.server)
 }
 
 ///

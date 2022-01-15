@@ -2,7 +2,7 @@ package orchestrator_test
 
 import (
 	"database/sql"
-	"github.com/hexa-org/policy-orchestrator/pkg/database_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -22,7 +22,7 @@ func TestApplicationsDataGateway(t *testing.T) {
 }
 
 func (suite *ApplicationGatewaySuite) SetupTest() {
-	suite.db, _ = database_support.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
+	suite.db, _ = databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
 	suite.gateway = orchestrator.ApplicationsDataGateway{DB: suite.db}
 	_, _ = suite.db.Exec("delete from applications;")
 	_, _ = suite.db.Exec("delete from integrations;")
@@ -52,7 +52,7 @@ func (suite *ApplicationGatewaySuite) TestFind() {
 }
 
 func (suite *ApplicationGatewaySuite) TestFind_bad_url() {
-	open, _ := database_support.Open("")
+	open, _ := databasesupport.Open("")
 	gateway := orchestrator.ApplicationsDataGateway{DB: open}
 	_, _ = gateway.Create(suite.integrationTestId, "anObjectId", "aName", "aDescription")
 	_, err := gateway.Find()

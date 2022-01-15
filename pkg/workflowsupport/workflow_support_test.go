@@ -1,8 +1,8 @@
-package workflow_support_test
+package workflowsupport_test
 
 import (
 	"errors"
-	"github.com/hexa-org/policy-orchestrator/pkg/workflow_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
@@ -53,8 +53,8 @@ func TestWorkflow(t *testing.T) {
 	var worker NoopWorker
 	var finder NoopWorkFinder
 
-	list := []workflow_support.Worker{&worker}
-	scheduler := workflow_support.NewScheduler(&finder, list, 50)
+	list := []workflowsupport.Worker{&worker}
+	scheduler := workflowsupport.NewScheduler(&finder, list, 50)
 	scheduler.Start()
 
 	for finder.completed < 3 {
@@ -68,8 +68,8 @@ func TestErroneousWorkflow(t *testing.T) {
 	var worker ErroneousWorker
 	var finder NoopWorkFinder
 
-	list := []workflow_support.Worker{&worker}
-	scheduler := workflow_support.NewScheduler(&finder, list, 50)
+	list := []workflowsupport.Worker{&worker}
+	scheduler := workflowsupport.NewScheduler(&finder, list, 50)
 	scheduler.Start()
 
 	for finder.notcompleted < 3 {

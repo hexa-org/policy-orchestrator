@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin"
-	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"log"
 	"net"
 	"net/http"
@@ -15,8 +15,8 @@ import (
 func App(resourcesDirectory string, addr string, orchestratorUrl string, orchestratorKey string) *http.Server {
 	client := admin.NewOrchestratorClient(&http.Client{}, orchestratorKey)
 	handlers := admin.LoadHandlers(orchestratorUrl, client)
-	options := web_support.Options{ResourceDirectory: resourcesDirectory}
-	return web_support.Create(addr, handlers, options)
+	options := websupport.Options{ResourceDirectory: resourcesDirectory}
+	return websupport.Create(addr, handlers, options)
 }
 
 func newApp() (*http.Server, net.Listener) {
@@ -35,5 +35,5 @@ func newApp() (*http.Server, net.Listener) {
 }
 
 func main() {
-	web_support.Start(newApp())
+	websupport.Start(newApp())
 }

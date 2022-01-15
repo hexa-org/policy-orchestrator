@@ -3,10 +3,10 @@ package orchestrator_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/hawk_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
-	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"log"
@@ -27,13 +27,13 @@ func TestApplicationsHandler(t *testing.T) {
 func (suite *ApplicationsHandlerSuite) SetupTest() {
 	listener, _ := net.Listen("tcp", "localhost:0")
 	suite.fields.Setup(listener.Addr().String())
-	go web_support.Start(suite.fields.Server, listener)
-	web_support.WaitForHealthy(suite.fields.Server)
+	go websupport.Start(suite.fields.Server, listener)
+	websupport.WaitForHealthy(suite.fields.Server)
 }
 
 func (suite *ApplicationsHandlerSuite) TearDownTest() {
 	_ = suite.fields.DB.Close()
-	web_support.Stop(suite.fields.Server)
+	websupport.Stop(suite.fields.Server)
 }
 
 func (suite *ApplicationsHandlerSuite) TestList() {
@@ -45,7 +45,7 @@ func (suite *ApplicationsHandlerSuite) TestList() {
 	_ = suite.fields.DB.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
 		integrationTestId, "anObjectId", "aName", "aDescription").Scan(&applicationTestId)
 
-	resp, err := hawk_support.HawkGet(&http.Client{}, "anId", suite.fields.Key, fmt.Sprintf("http://%s/applications", suite.fields.Server.Addr))
+	resp, err := hawksupport.HawkGet(&http.Client{}, "anId", suite.fields.Key, fmt.Sprintf("http://%s/applications", suite.fields.Server.Addr))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -68,7 +68,7 @@ func (suite *ApplicationsHandlerSuite) TestShow() {
 	_ = suite.fields.DB.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
 		integrationTestId, "anObjectId", "aName", "aDescription").Scan(&applicationTestId)
 
-	resp, err := hawk_support.HawkGet(&http.Client{}, "anId", suite.fields.Key, fmt.Sprintf("http://%s/applications/%s", suite.fields.Server.Addr, applicationTestId))
+	resp, err := hawksupport.HawkGet(&http.Client{}, "anId", suite.fields.Key, fmt.Sprintf("http://%s/applications/%s", suite.fields.Server.Addr, applicationTestId))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -82,6 +82,6 @@ func (suite *ApplicationsHandlerSuite) TestShow() {
 }
 
 func (suite *ApplicationsHandlerSuite) TestShow_identifier() {
-	resp, _ := hawk_support.HawkGet(&http.Client{}, "anId", suite.fields.Key, fmt.Sprintf("http://%s/applications/oops", suite.fields.Server.Addr))
+	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", suite.fields.Key, fmt.Sprintf("http://%s/applications/oops", suite.fields.Server.Addr))
 	assert.Equal(suite.T(), http.StatusInternalServerError, resp.StatusCode)
 }

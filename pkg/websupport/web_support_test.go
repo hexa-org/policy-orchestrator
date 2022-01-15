@@ -1,10 +1,10 @@
-package web_support_test
+package websupport_test
 
 import (
 	"bytes"
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/hexa-org/policy-orchestrator/pkg/web_support"
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net"
@@ -17,47 +17,47 @@ import (
 
 func TestHealth(t *testing.T) {
 	listener, _ := net.Listen("tcp", "localhost:0")
-	server := web_support.Create(listener.Addr().String(), func(x *mux.Router) {}, web_support.Options{})
-	go web_support.Start(server, listener)
+	server := websupport.Create(listener.Addr().String(), func(x *mux.Router) {}, websupport.Options{})
+	go websupport.Start(server, listener)
 
-	web_support.WaitForHealthy(server)
+	websupport.WaitForHealthy(server)
 
 	resp, _ := http.Get(fmt.Sprintf("http://%s/health", server.Addr))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, "{\"status\":\"pass\"}", string(body))
 
-	web_support.Stop(server)
+	websupport.Stop(server)
 }
 
 func TestWaitForHealth(t *testing.T) {
 	listener, _ := net.Listen("tcp", "localhost:0")
-	server := web_support.Create(listener.Addr().String(), func(x *mux.Router) {}, web_support.Options{})
+	server := websupport.Create(listener.Addr().String(), func(x *mux.Router) {}, websupport.Options{})
 
-	go web_support.Start(server, listener)
-	web_support.WaitForHealthy(server)
+	go websupport.Start(server, listener)
+	websupport.WaitForHealthy(server)
 
 	resp, _ := http.Get(fmt.Sprintf("http://%s/health", server.Addr))
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	web_support.Stop(server)
+	websupport.Stop(server)
 }
 
 func TestModelAndView(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
-	resourcesDirectory := filepath.Join(file, "../../../pkg/web_support/test")
-	options := web_support.Options{ResourceDirectory: resourcesDirectory}
+	resourcesDirectory := filepath.Join(file, "../../../pkg/websupport/test")
+	options := websupport.Options{ResourceDirectory: resourcesDirectory}
 
 	listener, _ := net.Listen("tcp", "localhost:0")
-	web_support.Create(listener.Addr().String(), func(x *mux.Router) {}, options)
+	websupport.Create(listener.Addr().String(), func(x *mux.Router) {}, options)
 	writer := &httptest.ResponseRecorder{Body: new(bytes.Buffer)}
 
-	_ = web_support.ModelAndView(writer, "test", web_support.Model{Map: map[string]interface{}{"resource": "resource"}})
+	_ = websupport.ModelAndView(writer, "test", websupport.Model{Map: map[string]interface{}{"resource": "resource"}})
 	body, _ := io.ReadAll(writer.Body)
 	assert.Contains(t, string(body), "success!")
 	assert.Contains(t, string(body), "Resource")
 	assert.Contains(t, string(body), "contains")
 	assert.Contains(t, string(body), "nope")
 
-	err := web_support.ModelAndView(&httptest.ResponseRecorder{}, "bad", web_support.Model{})
+	err := websupport.ModelAndView(&httptest.ResponseRecorder{}, "bad", websupport.Model{})
 	assert.Contains(t, err.Error(), "can't evaluate field Ba")
 }
