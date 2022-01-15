@@ -5,7 +5,6 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
 	"github.com/stretchr/testify/assert"
 	"log"
-	"sync/atomic"
 	"testing"
 )
 
@@ -18,18 +17,25 @@ func (n *NoopWorker) Run(interface{}) error {
 }
 
 type NoopWorkFinder struct {
-	completed    int32
-	notcompleted int32
+	Results chan bool
+}
+
+func NewNoopWorkFinder() NoopWorkFinder {
+	return NoopWorkFinder{Results: make(chan bool)}
 }
 
 func (n *NoopWorkFinder) MarkErroneous() {
-	addInt64 := atomic.AddInt32(&n.notcompleted, 1)
-	log.Printf("notcompleted %v tasks\n", addInt64)
+	n.Results <- false
+	log.Println("non completed task")
 }
 
 func (n *NoopWorkFinder) MarkCompleted() {
-	addInt64 := atomic.AddInt32(&n.completed, 1)
-	log.Printf("completed %v tasks\n", addInt64)
+	n.Results <- true
+	log.Println("completed task")
+}
+
+func (n *NoopWorkFinder) Stop() {
+	close(n.Results)
 }
 
 func (n NoopWorkFinder) FindRequested() []interface{} {
@@ -52,28 +58,30 @@ func (n *ErroneousWorker) Run(interface{}) error {
 
 func TestWorkflow(t *testing.T) {
 	var worker NoopWorker
-	var finder NoopWorkFinder
+	finder := NewNoopWorkFinder()
 
 	list := []workflowsupport.Worker{&worker}
 	scheduler := workflowsupport.NewScheduler(&finder, list, 50)
 	scheduler.Start()
 
-	for atomic.LoadInt32(&finder.completed) < 3 {
+	for i := 0; i < 3; i++ {
+		assert.True(t, <-finder.Results)
 	}
+
 	scheduler.Stop()
-	assert.True(t, atomic.LoadInt32(&finder.completed) > 2)
 }
 
 func TestErroneousWorkflow(t *testing.T) {
 	var worker ErroneousWorker
-	var finder NoopWorkFinder
+	finder := NewNoopWorkFinder()
 
 	list := []workflowsupport.Worker{&worker}
 	scheduler := workflowsupport.NewScheduler(&finder, list, 50)
 	scheduler.Start()
 
-	for atomic.LoadInt32(&finder.notcompleted) < 3 {
+	for i := 0; i < 3; i++ {
+		assert.False(t, <-finder.Results)
 	}
+
 	scheduler.Stop()
-	assert.True(t, atomic.LoadInt32(&finder.notcompleted) > 2)
 }

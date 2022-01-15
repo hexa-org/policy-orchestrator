@@ -8,7 +8,6 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
 	"github.com/stretchr/testify/assert"
-	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -27,18 +26,16 @@ func TestWorkflow(t *testing.T) {
 
 	discovery := orchestrator_test.NoopDiscovery{}
 	worker := orchestrator.DiscoveryWorker{Providers: []provider.Provider{&discovery}, Gateway: appGateway}
-	finder := orchestrator.DiscoveryWorkFinder{Gateway: gateway}
+	finder := orchestrator.NewDiscoveryWorkFinder(gateway)
 	list := []workflowsupport.Worker{&worker}
 	scheduler := workflowsupport.NewScheduler(&finder, list, 50)
+
 	scheduler.Start()
-	for atomic.LoadInt32(&finder.Completed) < 1 {
-		time.Sleep(time.Duration(50) * time.Millisecond)
-	}
+	assert.True(t, <-finder.Results)
 	scheduler.Stop()
 
 	find, _ := appGateway.Find()
 	assert.Equal(t, 3, len(find))
-	assert.True(t, atomic.LoadInt32(&finder.Completed) > 0)
 	assert.True(t, discovery.Discovered > 2)
 }
 
@@ -46,14 +43,16 @@ func TestWorkflow_empty(t *testing.T) {
 	gateway, _ := setUp()
 
 	worker := orchestrator.DiscoveryWorker{}
-	finder := orchestrator.DiscoveryWorkFinder{Gateway: gateway}
+	finder := orchestrator.NewDiscoveryWorkFinder(gateway)
 	list := []workflowsupport.Worker{&worker}
 	scheduler := workflowsupport.NewScheduler(&finder, list, 50)
+
 	scheduler.Start()
 	time.Sleep(time.Duration(50) * time.Millisecond)
 	scheduler.Stop()
 
-	assert.Equal(t, atomic.LoadInt32(&finder.Completed), int32(0))
+	_, resultReceived := <-finder.Results
+	assert.False(t, resultReceived)
 }
 
 type ErroneousWorker struct {
@@ -68,14 +67,11 @@ func TestWorkflow_bad_find(t *testing.T) {
 	_, _ = gateway.Create("aName", "google cloud", []byte("aKey"))
 
 	worker := ErroneousWorker{}
-	finder := orchestrator.DiscoveryWorkFinder{Gateway: gateway}
+	finder := orchestrator.NewDiscoveryWorkFinder(gateway)
 	list := []workflowsupport.Worker{&worker}
 	scheduler := workflowsupport.NewScheduler(&finder, list, 50)
-	scheduler.Start()
-	for atomic.LoadInt32(&finder.NotCompleted) < 1 {
-		time.Sleep(time.Duration(50) * time.Millisecond)
-	}
-	scheduler.Stop()
 
-	assert.True(t, atomic.LoadInt32(&finder.NotCompleted) > 0)
+	scheduler.Start()
+	assert.False(t, <-finder.Results)
+	scheduler.Stop()
 }
