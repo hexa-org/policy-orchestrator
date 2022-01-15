@@ -39,7 +39,7 @@ func TestAllow(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = []byte("{\"result\":true}")
 
-	support, err := opasupport.NewOpaSupport(mockClient, "aUrl")
+	support, _ := opasupport.NewOpaSupport(mockClient, "aUrl")
 	allow, err := support.Allow(input)
 	assert.NoError(t, err)
 	assert.True(t, allow)
@@ -49,7 +49,7 @@ func TestAllow_bad_json(t *testing.T) {
 	mockClient := &MockClient{err: errors.New("oops")}
 	mockClient.response = []byte("{\"result\":true}")
 
-	support, err := opasupport.NewOpaSupport(mockClient, "aUrl")
+	support, _ := opasupport.NewOpaSupport(mockClient, "aUrl")
 	allow, err := support.Allow(nil)
 	assert.Error(t, err)
 	assert.False(t, allow)
@@ -64,7 +64,7 @@ func TestNotAllow(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = []byte("{\"result\":false}")
 
-	support, err := opasupport.NewOpaSupport(mockClient, "aUrl")
+	support, _ := opasupport.NewOpaSupport(mockClient, "aUrl")
 	allow, err := support.Allow(input)
 	assert.NoError(t, err)
 	assert.False(t, allow)
@@ -73,7 +73,7 @@ func TestNotAllow(t *testing.T) {
 func TestMiddleware(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = []byte("{\"result\":true}")
-	err, server := setup(mockClient)
+	_, server := setup(mockClient)
 
 	resp, err := http.Get(fmt.Sprintf("http://%s/", server.Addr))
 	if err != nil {
@@ -89,7 +89,7 @@ func TestMiddleware(t *testing.T) {
 func TestMiddlewareNotAllowed(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = []byte("{\"result\":false}")
-	err, server := setup(mockClient)
+	_, server := setup(mockClient)
 
 	resp, err := http.Get(fmt.Sprintf("http://%s/", server.Addr))
 	if err != nil {

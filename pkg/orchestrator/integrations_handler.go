@@ -35,7 +35,7 @@ func (handler IntegrationsHandler) List(w http.ResponseWriter, r *http.Request) 
 	data, _ := json.Marshal(list)
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write(data)
+	_, _ = w.Write(data)
 }
 
 func (handler IntegrationsHandler) Create(w http.ResponseWriter, r *http.Request) {
