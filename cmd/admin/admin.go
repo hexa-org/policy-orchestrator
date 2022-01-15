@@ -19,10 +19,10 @@ func App(resourcesDirectory string, addr string, orchestratorUrl string, orchest
 	return websupport.Create(addr, handlers, options)
 }
 
-func newApp() (*http.Server, net.Listener) {
-	addr := "0.0.0.0:8884"
+func newApp(addr string) (*http.Server, net.Listener) {
 	if found := os.Getenv("PORT"); found != "" {
-		addr = fmt.Sprintf("0.0.0.0:%v", found)
+		host, _, _ := net.SplitHostPort(addr)
+		addr = fmt.Sprintf("%v:%v", host, found)
 	}
 	log.Printf("Found server address %v", addr)
 
@@ -35,5 +35,5 @@ func newApp() (*http.Server, net.Listener) {
 }
 
 func main() {
-	websupport.Start(newApp())
+	websupport.Start(newApp("0.0.0.0:8884"))
 }

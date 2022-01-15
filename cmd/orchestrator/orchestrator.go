@@ -20,10 +20,10 @@ func App(key string, addr string, hostPort string, dbUrl string) (*http.Server, 
 	return websupport.Create(addr, handlers, websupport.Options{}), scheduler
 }
 
-func newApp() (*http.Server, net.Listener, *workflowsupport.WorkScheduler) {
-	addr := "0.0.0.0:8885"
+func newApp(addr string) (*http.Server, net.Listener, *workflowsupport.WorkScheduler) {
 	if found := os.Getenv("PORT"); found != "" {
-		addr = fmt.Sprintf("0.0.0.0:%v", found)
+		host, _, _ := net.SplitHostPort(addr)
+		addr = fmt.Sprintf("%v:%v", host, found)
 	}
 	log.Printf("Found server address %v", addr)
 
@@ -36,7 +36,7 @@ func newApp() (*http.Server, net.Listener, *workflowsupport.WorkScheduler) {
 }
 
 func main() {
-	app, listener, scheduler := newApp()
+	app, listener, scheduler := newApp("0.0.0.0:8885")
 	scheduler.Start()
 	websupport.Start(app, listener)
 }

@@ -39,7 +39,7 @@ func TestApp(t *testing.T) {
 func TestConfigWithPort(t *testing.T) {
 	_ = os.Setenv("PORT", "0")
 	_ = os.Setenv("OPA_SERVER_URL", "http://localhost:8887/v1/data/authz/allow")
-	newApp()
+	newApp("localhost:0")
 }
 
 func TestApp_unauthorized(t *testing.T) {

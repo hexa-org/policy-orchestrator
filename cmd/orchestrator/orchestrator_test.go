@@ -26,5 +26,5 @@ func TestApp(t *testing.T) {
 
 func TestConfigWithPort(t *testing.T) {
 	_ = os.Setenv("PORT", "0")
-	newApp()
+	newApp("localhost:0")
 }
