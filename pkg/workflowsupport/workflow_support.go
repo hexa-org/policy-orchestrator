@@ -11,8 +11,8 @@ type Worker interface {
 
 type WorkFinder interface {
 	FindRequested() []interface{}
-	MarkCompleted(interface{})
-	MarkErroneous(interface{})
+	MarkCompleted()
+	MarkErroneous()
 }
 
 type WorkScheduler struct {
@@ -61,11 +61,11 @@ func (ws *WorkScheduler) checkForWork(worker Worker) {
 			err := worker.Run(task)
 			if err != nil {
 				log.Printf("oops. %v\n", err)
-				finder.MarkErroneous(task)
+				finder.MarkErroneous()
 				return
 			}
 			log.Printf("Completed work.\n")
-			finder.MarkCompleted(task)
+			finder.MarkCompleted()
 		}(t)
 	}
 }

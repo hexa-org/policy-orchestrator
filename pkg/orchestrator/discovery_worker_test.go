@@ -8,6 +8,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
 	"github.com/stretchr/testify/assert"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -30,14 +31,14 @@ func TestWorkflow(t *testing.T) {
 	list := []workflowsupport.Worker{&worker}
 	scheduler := workflowsupport.NewScheduler(&finder, list, 50)
 	scheduler.Start()
-	for finder.Completed < 1 {
+	for atomic.LoadInt32(&finder.Completed) < 1 {
 		time.Sleep(time.Duration(50) * time.Millisecond)
 	}
 	scheduler.Stop()
 
 	find, _ := appGateway.Find()
 	assert.Equal(t, 3, len(find))
-	assert.True(t, finder.Completed > 0)
+	assert.True(t, atomic.LoadInt32(&finder.Completed) > 0)
 	assert.True(t, discovery.Discovered > 2)
 }
 
@@ -52,7 +53,7 @@ func TestWorkflow_empty(t *testing.T) {
 	time.Sleep(time.Duration(50) * time.Millisecond)
 	scheduler.Stop()
 
-	assert.Equal(t, finder.Completed, 0)
+	assert.Equal(t, atomic.LoadInt32(&finder.Completed), int32(0))
 }
 
 type ErroneousWorker struct {
@@ -71,10 +72,10 @@ func TestWorkflow_bad_find(t *testing.T) {
 	list := []workflowsupport.Worker{&worker}
 	scheduler := workflowsupport.NewScheduler(&finder, list, 50)
 	scheduler.Start()
-	for finder.NotCompleted < 1 {
+	for atomic.LoadInt32(&finder.NotCompleted) < 1 {
 		time.Sleep(time.Duration(50) * time.Millisecond)
 	}
 	scheduler.Stop()
 
-	assert.True(t, finder.NotCompleted > 0)
+	assert.True(t, atomic.LoadInt32(&finder.NotCompleted) > 0)
 }

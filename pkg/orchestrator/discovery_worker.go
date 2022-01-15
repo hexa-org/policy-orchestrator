@@ -3,6 +3,7 @@ package orchestrator
 import (
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"log"
+	"sync/atomic"
 )
 
 type DiscoveryWorker struct {
@@ -32,20 +33,20 @@ func (n *DiscoveryWorker) Run(work interface{}) error {
 }
 
 type DiscoveryWorkFinder struct {
-	Completed    int
-	NotCompleted int
+	Completed    int32
+	NotCompleted int32
 	Gateway      IntegrationsDataGateway
 }
 
-func (finder *DiscoveryWorkFinder) MarkErroneous(task interface{}) {
-	finder.NotCompleted = finder.NotCompleted + 1
+func (finder *DiscoveryWorkFinder) MarkErroneous() {
+	atomic.AddInt32(&finder.NotCompleted, 1)
 }
 
-func (finder *DiscoveryWorkFinder) MarkCompleted(task interface{}) {
-	finder.Completed = finder.Completed + 1
+func (finder *DiscoveryWorkFinder) MarkCompleted() {
+	atomic.AddInt32(&finder.Completed, 1)
 }
 
-func (finder DiscoveryWorkFinder) FindRequested() (results []interface{}) {
+func (finder *DiscoveryWorkFinder) FindRequested() (results []interface{}) {
 	found, err := finder.Gateway.Find()
 	if err != nil {
 		log.Printf(err.Error())
