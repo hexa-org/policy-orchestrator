@@ -13,6 +13,7 @@ type WorkFinder interface {
 	FindRequested() []interface{}
 	MarkCompleted()
 	MarkErroneous()
+	Stop()
 }
 
 type WorkScheduler struct {
@@ -72,5 +73,6 @@ func (ws *WorkScheduler) checkForWork(worker Worker) {
 
 func (ws *WorkScheduler) Stop() {
 	ws.done <- true
+	ws.Finder.(WorkFinder).Stop()
 	log.Printf("Scheduler stopped.\n")
 }

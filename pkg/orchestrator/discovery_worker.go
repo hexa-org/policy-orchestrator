@@ -1,9 +1,9 @@
 package orchestrator
 
 import (
+	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"log"
-	"sync/atomic"
 )
 
 type DiscoveryWorker struct {
@@ -33,17 +33,27 @@ func (n *DiscoveryWorker) Run(work interface{}) error {
 }
 
 type DiscoveryWorkFinder struct {
-	Completed    int32
-	NotCompleted int32
-	Gateway      IntegrationsDataGateway
+	Results chan bool
+	Gateway IntegrationsDataGateway
+}
+
+func NewDiscoveryWorkFinder(gateway IntegrationsDataGateway) DiscoveryWorkFinder {
+	return DiscoveryWorkFinder{
+		Results: make(chan bool),
+		Gateway: gateway,
+	}
 }
 
 func (finder *DiscoveryWorkFinder) MarkErroneous() {
-	atomic.AddInt32(&finder.NotCompleted, 1)
+	finder.Results <- false
 }
 
 func (finder *DiscoveryWorkFinder) MarkCompleted() {
-	atomic.AddInt32(&finder.Completed, 1)
+	finder.Results <- true
+}
+
+func (finder *DiscoveryWorkFinder) Stop() {
+	close(finder.Results)
 }
 
 func (finder *DiscoveryWorkFinder) FindRequested() (results []interface{}) {
@@ -57,4 +67,16 @@ func (finder *DiscoveryWorkFinder) FindRequested() (results []interface{}) {
 		return results
 	}
 	return results
+}
+
+func Report(results chan bool) {
+	go func() {
+		for success := range results {
+			if success {
+				fmt.Println("work successfully completed")
+			} else {
+				fmt.Println("work not completed")
+			}
+		}
+	}()
 }

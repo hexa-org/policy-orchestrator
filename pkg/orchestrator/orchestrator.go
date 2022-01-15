@@ -16,13 +16,15 @@ func LoadHandlers(store hawk.CredentialStore, hostPort string, database *sql.DB)
 
 	googleProvider := &googlecloud.GoogleProvider{}
 	worker := DiscoveryWorker{[]provider.Provider{googleProvider}, applicationsGateway}
-	finder := DiscoveryWorkFinder{Gateway: integrationsGateway}
+	finder := NewDiscoveryWorkFinder(integrationsGateway)
 
 	applicationsHandler := ApplicationsHandler{applicationsGateway}
 	integrationsHandler := IntegrationsHandler{integrationsGateway, worker}
 
 	list := []workflowsupport.Worker{&worker}
 	scheduler := workflowsupport.NewScheduler(&finder, list, 60_000)
+
+	Report(finder.Results)
 
 	return func(router *mux.Router) {
 		router.HandleFunc("/applications", hawksupport.HawkMiddleware(applicationsHandler.List, store, hostPort)).Methods("GET")
