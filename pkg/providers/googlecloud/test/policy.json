@@ -1,0 +1,28 @@
+{
+  "policy": {
+    "bindings": [
+      {
+        "role": "roles/resourcemanager.organizationAdmin",
+        "members": [
+          "user:phil@example.com",
+          "group:admins@example.com",
+          "domain:google.com",
+          "serviceAccount:my-project-id@appspot.gserviceaccount.com"
+        ]
+      },
+      {
+        "role": "roles/resourcemanager.organizationViewer",
+        "members": [
+          "user:eve@example.com"
+        ],
+        "condition": {
+          "title": "expirable access",
+          "description": "Does not grant access after Sep 2020",
+          "expression": "request.time < timestamp('2020-10-01T00:00:00.000Z')"
+        }
+      }
+    ],
+    "etag": "BwWWja0YfJA=",
+    "version": 3
+  }
+}

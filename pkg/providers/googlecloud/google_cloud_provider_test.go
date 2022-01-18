@@ -13,22 +13,26 @@ import (
 
 func TestDiscovery(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
+	m.Json = google_cloud_test.Resource("backends.json")
 	providers := []provider.Provider{googlecloud.GoogleProvider{Http: m}}
 
 	for _, p := range providers {
 		info := provider.IntegrationInfo{Name: "google cloud", Key: []byte("aKey")}
-		assert.Equal(t, 2, len(p.DiscoverApplications(info)))
+		applications, _ := p.DiscoverApplications(info)
+		assert.Equal(t, 2, len(applications))
 		assert.Equal(t, "google cloud", p.Name())
 	}
 }
 
 func TestDiscovery_ignores_case(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
+	m.Json = google_cloud_test.Resource("backends.json")
 	providers := []provider.Provider{googlecloud.GoogleProvider{Http: m}}
 
 	for _, p := range providers {
 		info := provider.IntegrationInfo{Name: "Google Cloud", Key: []byte("aKey")}
-		assert.Equal(t, 2, len(p.DiscoverApplications(info)))
+		applications, _ := p.DiscoverApplications(info)
+		assert.Equal(t, 2, len(applications))
 		assert.Equal(t, "google cloud", p.Name())
 	}
 }
@@ -39,7 +43,8 @@ func TestNoDiscovery(t *testing.T) {
 
 	for _, p := range providers {
 		info := provider.IntegrationInfo{Name: "not google cloud", Key: []byte("aKey")}
-		assert.Equal(t, 0, len(p.DiscoverApplications(info)))
+		applications, _ := p.DiscoverApplications(info)
+		assert.Equal(t, 0, len(applications))
 	}
 }
 

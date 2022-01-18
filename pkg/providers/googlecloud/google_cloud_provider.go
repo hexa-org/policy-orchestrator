@@ -22,7 +22,7 @@ func (g GoogleProvider) Name() string {
 	return "google cloud"
 }
 
-func (g GoogleProvider) DiscoverApplications(info provider.IntegrationInfo) (apps []provider.ApplicationInfo) {
+func (g GoogleProvider) DiscoverApplications(info provider.IntegrationInfo) (apps []provider.ApplicationInfo, err error) {
 	key := info.Key
 	foundCredentials := g.Credentials(key)
 	if strings.EqualFold(info.Name, g.Name()) {
@@ -33,10 +33,12 @@ func (g GoogleProvider) DiscoverApplications(info provider.IntegrationInfo) (app
 		found, _ := googleClient.GetBackendApplications()
 		apps = append(apps, found...)
 	}
-	return apps
+	return apps, err
 }
 
-///
+func (g GoogleProvider) GetPolicyInfo(integration provider.IntegrationInfo, app provider.ApplicationInfo) (info provider.PolicyInfo, err error) {
+	return info, err
+}
 
 func (g GoogleProvider) Credentials(key []byte) credentials {
 	var foundCredentials credentials
