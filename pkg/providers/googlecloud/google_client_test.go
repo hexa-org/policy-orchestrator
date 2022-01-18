@@ -10,6 +10,7 @@ import (
 
 func TestClient_GetBackendApplications(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
+	m.Json = google_cloud_test.Resource("backends.json")
 	client := googlecloud.GoogleClient{HttpClient: m}
 	applications, _ := client.GetBackendApplications()
 
@@ -29,9 +30,17 @@ func TestClient_GetBackendApplications_with_error(t *testing.T) {
 
 func TestClient_GetBackendApplications_with_bad_json(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
-	m.Json = "-"
-
+	m.Json = []byte("-")
 	client := googlecloud.GoogleClient{HttpClient: m}
 	_, err := client.GetBackendApplications()
 	assert.Error(t, err)
+}
+
+func TestGoogleClient_GetBackendPolicy(t *testing.T) {
+	m := new(google_cloud_test.MockClient)
+	m.Json = google_cloud_test.Resource("policy.json")
+	client := googlecloud.GoogleClient{HttpClient: m}
+	info, _ := client.GetBackendPolicy()
+
+	assert.NotNil(t, info)
 }

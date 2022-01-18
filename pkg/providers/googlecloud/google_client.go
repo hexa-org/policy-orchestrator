@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
+	"io"
 	"log"
 	"net/http"
 )
 
 type HTTPClient interface {
 	Get(url string) (resp *http.Response, err error)
+	Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
 }
 
 type backendInfo struct {
@@ -46,4 +48,14 @@ func (c *GoogleClient) GetBackendApplications() (apps []provider.ApplicationInfo
 		apps = append(apps, provider.ApplicationInfo{ID: info.ID, Name: info.Name, Description: info.Description})
 	}
 	return apps, nil
+}
+
+func (c *GoogleClient) GetBackendPolicy() (info provider.PolicyInfo, err error) {
+	//https: //iap.googleapis.com/v1/{resource=**}:getIamPolicy
+
+	return info, err
+}
+
+func (c *GoogleClient) SetBackendPolicy() {
+	//https: //iap.googleapis.com/v1/{resource=**}:setIamPolicy
 }
