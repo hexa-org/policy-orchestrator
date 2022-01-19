@@ -19,7 +19,7 @@ func TestClient_GetBackendApplications(t *testing.T) {
 	assert.Equal(t, "k8s1-anotherName", applications[1].Name)
 }
 
-func TestClient_GetBackendApplications_with_error(t *testing.T) {
+func TestClient_GetBackendApplications_withRequestError(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
 	m.Err = errors.New("oops")
 
@@ -28,7 +28,7 @@ func TestClient_GetBackendApplications_with_error(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestClient_GetBackendApplications_with_bad_json(t *testing.T) {
+func TestClient_GetBackendApplications_withBadJson(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
 	m.Json = []byte("-")
 	client := googlecloud.GoogleClient{HttpClient: m}
@@ -53,7 +53,7 @@ func TestGoogleClient_GetBackendPolicies(t *testing.T) {
 	assert.Equal(t, []string{"/"}, infos[1].Object.Resources)
 }
 
-func TestGoogleClient_GetBackendPolicies_with_error(t *testing.T) {
+func TestGoogleClient_GetBackendPolicies_withRequestError(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
 	m.Err = errors.New("oops")
 
@@ -62,7 +62,7 @@ func TestGoogleClient_GetBackendPolicies_with_error(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestGoogleClient_GetBackendPolicies_with_bad_json(t *testing.T) {
+func TestGoogleClient_GetBackendPolicies_withBadJson(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
 	m.Json = []byte("-")
 	client := googlecloud.GoogleClient{HttpClient: m}
