@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestDiscovery(t *testing.T) {
+func TestGoogleProvider_DiscoverApplications(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
 	m.Json = google_cloud_test.Resource("backends.json")
 	providers := []provider.Provider{googlecloud.GoogleProvider{Http: m}}
@@ -24,7 +24,7 @@ func TestDiscovery(t *testing.T) {
 	}
 }
 
-func TestDiscovery_ignores_case(t *testing.T) {
+func TestGoogleProvider_DiscoverApplications_ignoresProviderCase(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
 	m.Json = google_cloud_test.Resource("backends.json")
 	providers := []provider.Provider{googlecloud.GoogleProvider{Http: m}}
@@ -37,7 +37,7 @@ func TestDiscovery_ignores_case(t *testing.T) {
 	}
 }
 
-func TestDiscovery_empty_response(t *testing.T) {
+func TestGoogleProvider_DiscoverApplications_emptyResponse(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
 	providers := []provider.Provider{googlecloud.GoogleProvider{Http: m}}
 
@@ -46,16 +46,6 @@ func TestDiscovery_empty_response(t *testing.T) {
 		applications, _ := p.DiscoverApplications(info)
 		assert.Equal(t, 0, len(applications))
 	}
-}
-
-func TestGoogleProvider_GetPolicy(t *testing.T) {
-	m := new(google_cloud_test.MockClient)
-	m.Json = google_cloud_test.Resource("policy.json")
-
-	p := googlecloud.GoogleProvider{Http: m}
-	info := provider.IntegrationInfo{Name: "not google cloud", Key: []byte("aKey")}
-	infos, _ := p.GetPolicyInfo(info, provider.ApplicationInfo{ID: "anObjectId"})
-	assert.Equal(t, 2, len(infos))
 }
 
 func TestGoogleProvider_DetermineProjectId(t *testing.T) {
@@ -68,7 +58,7 @@ func TestGoogleProvider_DetermineProjectId(t *testing.T) {
 	assert.Equal(t, "google-cloud-project-id", foundCredentials.ProjectId)
 }
 
-func TestClient(t *testing.T) {
+func TestGoogleProvider_HttpClient(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	jsonFile := filepath.Join(file, "./../test/project.json")
 	key, _ := ioutil.ReadFile(jsonFile)
@@ -76,7 +66,20 @@ func TestClient(t *testing.T) {
 	p := googlecloud.GoogleProvider{}
 	client, _ := p.HttpClient(key)
 	assert.NotNil(t, client)
+}
 
+func TestGoogleProvider_HttpClient_withBadKey(t *testing.T) {
+	p := googlecloud.GoogleProvider{}
 	_, err := p.HttpClient([]byte(""))
 	assert.Error(t, err)
+}
+
+func TestGoogleProvider_GetPolicy(t *testing.T) {
+	m := new(google_cloud_test.MockClient)
+	m.Json = google_cloud_test.Resource("policy.json")
+
+	p := googlecloud.GoogleProvider{Http: m}
+	info := provider.IntegrationInfo{Name: "not google cloud", Key: []byte("aKey")}
+	infos, _ := p.GetPolicyInfo(info, provider.ApplicationInfo{ID: "anObjectId"})
+	assert.Equal(t, 2, len(infos))
 }

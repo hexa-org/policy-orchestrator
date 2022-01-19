@@ -36,7 +36,6 @@ func (s *HandlerSuite) SetupTest() {
 	s.gateway = orchestrator.IntegrationsDataGateway{DB: s.db}
 
 	// todo - move below to scenario style
-	_, _ = s.db.Exec("delete from applications;")
 	_, _ = s.db.Exec("delete from integrations;")
 
 	listener, _ := net.Listen("tcp", "localhost:0")
@@ -92,7 +91,7 @@ func (s *HandlerSuite) TestDelete() {
 	assert.Equal(s.T(), 0, len(all))
 }
 
-func (s *HandlerSuite) TestDelete_Unknown_ID() {
+func (s *HandlerSuite) TestDelete_withUnknownID() {
 	_, _ = s.gateway.Create("aName", "google cloud", []byte("aKey"))
 
 	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/integrations/%s", s.server.Addr, "0000"))

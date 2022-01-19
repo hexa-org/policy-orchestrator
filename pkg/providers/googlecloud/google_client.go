@@ -15,6 +15,11 @@ type HTTPClient interface {
 	Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
 }
 
+type GoogleClient struct {
+	HttpClient HTTPClient
+	ProjectId  string
+}
+
 type backendInfo struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
@@ -24,20 +29,6 @@ type backendInfo struct {
 type backends struct {
 	ID        string        `json:"id"`
 	Resources []backendInfo `json:"items"`
-}
-
-type bindings struct {
-	Bindings []bindingInfo `json:"bindings"`
-}
-
-type bindingInfo struct {
-	Role    string   `json:"role"`
-	Members []string `json:"members"`
-}
-
-type GoogleClient struct {
-	HttpClient HTTPClient
-	ProjectId  string
 }
 
 func (c *GoogleClient) GetBackendApplications() (apps []provider.ApplicationInfo, err error) {
@@ -60,6 +51,15 @@ func (c *GoogleClient) GetBackendApplications() (apps []provider.ApplicationInfo
 		apps = append(apps, provider.ApplicationInfo{ID: info.ID, Name: info.Name, Description: info.Description})
 	}
 	return apps, nil
+}
+
+type bindings struct {
+	Bindings []bindingInfo `json:"bindings"`
+}
+
+type bindingInfo struct {
+	Role    string   `json:"role"`
+	Members []string `json:"members"`
 }
 
 func (c *GoogleClient) GetBackendPolicy(objectId string) (infos []provider.PolicyInfo, err error) {
