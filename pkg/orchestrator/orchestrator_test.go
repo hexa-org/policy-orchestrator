@@ -25,7 +25,7 @@ func TestOrchestratorHandlers(t *testing.T) {
 	listener, _ := net.Listen("tcp", "localhost:0")
 	providers := make(map[string]provider.Provider)
 	providers["google cloud"] = &orchestrator_test.NoopDiscovery{}
-	handlers, _ := orchestrator.LoadHandlers(providers, store, listener.Addr().String(), db)
+	handlers, _ := orchestrator.LoadHandlers(db, store, listener.Addr().String(), providers)
 	server := websupport.Create(listener.Addr().String(), handlers, websupport.Options{})
 	go websupport.Start(server, listener)
 	websupport.WaitForHealthy(server)

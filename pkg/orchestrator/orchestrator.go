@@ -9,7 +9,7 @@ import (
 	"github.com/hiyosi/hawk"
 )
 
-func LoadHandlers(providers map[string]provider.Provider, store hawk.CredentialStore, hostPort string, database *sql.DB) (func(router *mux.Router), *workflowsupport.WorkScheduler) {
+func LoadHandlers(database *sql.DB, store hawk.CredentialStore, hostPort string, providers map[string]provider.Provider) (func(router *mux.Router), *workflowsupport.WorkScheduler) {
 	applicationsGateway := ApplicationsDataGateway{database}
 	integrationsGateway := IntegrationsDataGateway{database}
 
