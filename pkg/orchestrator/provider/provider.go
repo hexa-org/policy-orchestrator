@@ -3,7 +3,7 @@ package provider
 type Provider interface {
 	Name() string
 	DiscoverApplications(IntegrationInfo) ([]ApplicationInfo, error)
-	GetPolicyInfo(IntegrationInfo, ApplicationInfo) (PolicyInfo, error)
+	GetPolicyInfo(IntegrationInfo, ApplicationInfo) ([]PolicyInfo, error)
 }
 
 type IntegrationInfo struct {
@@ -18,5 +18,16 @@ type ApplicationInfo struct {
 }
 
 type PolicyInfo struct {
-	Name string
+	Version string
+	Action  string
+	Subject SubjectInfo
+	Object  ObjectInfo
+}
+
+type SubjectInfo struct {
+	AuthenticatedUsers []string
+}
+
+type ObjectInfo struct {
+	Resources []string
 }

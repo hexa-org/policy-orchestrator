@@ -36,11 +36,36 @@ func TestClient_GetBackendApplications_with_bad_json(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestGoogleClient_GetBackendPolicy(t *testing.T) {
+func TestGoogleClient_GetBackendPolicies(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
 	m.Json = google_cloud_test.Resource("policy.json")
 	client := googlecloud.GoogleClient{HttpClient: m}
-	info, _ := client.GetBackendPolicy()
+	infos, _ := client.GetBackendPolicy("anObjectId")
 
-	assert.NotNil(t, info)
+	expectedUsers := []string{
+		"user:phil@example.com",
+		"group:admins@example.com",
+		"domain:google.com",
+		"serviceAccount:my-project-id@appspot.gserviceaccount.com",
+	}
+	assert.Equal(t, 2, len(infos))
+	assert.Equal(t, expectedUsers, infos[0].Subject.AuthenticatedUsers)
+	assert.Equal(t, []string{"/"}, infos[1].Object.Resources)
+}
+
+func TestGoogleClient_GetBackendPolicies_with_error(t *testing.T) {
+	m := new(google_cloud_test.MockClient)
+	m.Err = errors.New("oops")
+
+	client := googlecloud.GoogleClient{HttpClient: m}
+	_, err := client.GetBackendPolicy("anObjectId")
+	assert.Error(t, err)
+}
+
+func TestGoogleClient_GetBackendPolicies_with_bad_json(t *testing.T) {
+	m := new(google_cloud_test.MockClient)
+	m.Json = []byte("-")
+	client := googlecloud.GoogleClient{HttpClient: m}
+	_, err := client.GetBackendPolicy("anObjectId")
+	assert.Error(t, err)
 }
