@@ -31,7 +31,7 @@ func (fields *SuiteFields) Setup(providers map[string]provider.Provider, addr st
 	hash := sha256.Sum256([]byte("aKey"))
 	fields.Key = hex.EncodeToString(hash[:])
 	fields.Providers = providers
-	handlers, scheduler := orchestrator.LoadHandlers(fields.Providers, hawksupport.NewCredentialStore(fields.Key), addr, fields.DB)
+	handlers, scheduler := orchestrator.LoadHandlers(fields.DB, hawksupport.NewCredentialStore(fields.Key), addr, fields.Providers)
 	fields.Scheduler = scheduler
 	fields.Server = websupport.Create(addr, handlers, websupport.Options{})
 }

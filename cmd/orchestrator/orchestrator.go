@@ -20,7 +20,7 @@ func App(key string, addr string, hostPort string, dbUrl string) (*http.Server, 
 	store := hawksupport.NewCredentialStore(key)
 	providers := make(map[string]provider.Provider)
 	providers["google cloud"] = &googlecloud.GoogleProvider{}
-	handlers, scheduler := orchestrator.LoadHandlers(providers, store, hostPort, db)
+	handlers, scheduler := orchestrator.LoadHandlers(db, store, hostPort, providers)
 	return websupport.Create(addr, handlers, websupport.Options{}), scheduler
 }
 
