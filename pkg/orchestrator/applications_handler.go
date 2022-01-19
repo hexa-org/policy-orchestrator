@@ -84,7 +84,7 @@ func (handler ApplicationsHandler) GetPolicies(w http.ResponseWriter, r *http.Re
 	}
 
 	integration := provider.IntegrationInfo{Name: integrationRecord.Name, Key: integrationRecord.Key}
-	application := provider.ApplicationInfo{ID: record.ID, Name: record.Name, Description: record.Description}
+	application := provider.ApplicationInfo{ObjectID: record.ID, Name: record.Name, Description: record.Description}
 	p := handler.providers[integrationRecord.Provider]
 	records, err := p.GetPolicyInfo(integration, application)
 	if err != nil {

@@ -11,9 +11,8 @@ import (
 
 type ApplicationGatewaySuite struct {
 	suite.Suite
-	db      *sql.DB
-	gateway orchestrator.ApplicationsDataGateway
-
+	db                *sql.DB
+	gateway           orchestrator.ApplicationsDataGateway
 	integrationTestId string
 }
 
@@ -23,11 +22,12 @@ func TestApplicationsDataGateway(t *testing.T) {
 
 func (suite *ApplicationGatewaySuite) SetupTest() {
 	suite.db, _ = databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
-	suite.gateway = orchestrator.ApplicationsDataGateway{DB: suite.db}
 	_, _ = suite.db.Exec("delete from applications;")
 	_, _ = suite.db.Exec("delete from integrations;")
 	_ = suite.db.QueryRow(`insert into integrations (name, provider, key) values ($1, $2, $3) returning id`,
 		"aName", "aProvider", []byte("aKey")).Scan(&suite.integrationTestId)
+
+	suite.gateway = orchestrator.ApplicationsDataGateway{DB: suite.db}
 }
 
 func (suite *ApplicationGatewaySuite) TearDownTest() {
@@ -51,7 +51,7 @@ func (suite *ApplicationGatewaySuite) TestFind() {
 	assert.Equal(suite.T(), "aDescription", all[0].Description)
 }
 
-func (suite *ApplicationGatewaySuite) TestFind_bad_url() {
+func (suite *ApplicationGatewaySuite) TestFind_withBadDatabaseUrl() {
 	open, _ := databasesupport.Open("")
 	gateway := orchestrator.ApplicationsDataGateway{DB: open}
 	_, _ = gateway.Create(suite.integrationTestId, "anObjectId", "aName", "aDescription")
@@ -59,7 +59,7 @@ func (suite *ApplicationGatewaySuite) TestFind_bad_url() {
 	assert.Error(suite.T(), err)
 }
 
-func (suite *ApplicationGatewaySuite) TestIgnoresDuplicates() {
+func (suite *ApplicationGatewaySuite) TestFind_ignoresDuplicates() {
 	_, _ = suite.gateway.Create(suite.integrationTestId, "anObjectId", "aName", "aDescription")
 	_, _ = suite.gateway.Create(suite.integrationTestId, "anObjectId", "aName", "aDescription")
 	find, _ := suite.gateway.Find()

@@ -12,7 +12,7 @@ type IntegrationInfo struct {
 }
 
 type ApplicationInfo struct {
-	ID          string
+	ObjectID    string
 	Name        string
 	Description string
 }

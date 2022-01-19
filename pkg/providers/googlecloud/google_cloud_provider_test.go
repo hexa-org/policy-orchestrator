@@ -48,14 +48,13 @@ func TestGoogleProvider_DiscoverApplications_emptyResponse(t *testing.T) {
 	}
 }
 
-func TestGoogleProvider_DetermineProjectId(t *testing.T) {
+func TestGoogleProvider_Project(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	jsonFile := filepath.Join(file, "./../test/project.json")
 	key, _ := ioutil.ReadFile(jsonFile)
 
 	p := googlecloud.GoogleProvider{}
-	foundCredentials := p.Credentials(key)
-	assert.Equal(t, "google-cloud-project-id", foundCredentials.ProjectId)
+	assert.Equal(t, "google-cloud-project-id", p.Project(key))
 }
 
 func TestGoogleProvider_HttpClient(t *testing.T) {
@@ -80,6 +79,6 @@ func TestGoogleProvider_GetPolicy(t *testing.T) {
 
 	p := googlecloud.GoogleProvider{Http: m}
 	info := provider.IntegrationInfo{Name: "not google cloud", Key: []byte("aKey")}
-	infos, _ := p.GetPolicyInfo(info, provider.ApplicationInfo{ID: "anObjectId"})
+	infos, _ := p.GetPolicyInfo(info, provider.ApplicationInfo{ObjectID: "anObjectId"})
 	assert.Equal(t, 2, len(infos))
 }

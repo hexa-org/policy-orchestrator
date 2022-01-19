@@ -41,7 +41,7 @@ func (suite *GatewaySuite) TestFind() {
 	assert.Equal(suite.T(), 1, len(all))
 }
 
-func (suite *GatewaySuite) TestFind_bad_url() {
+func (suite *GatewaySuite) TestFind_withBadDatabaseUrl() {
 	open, _ := databasesupport.Open("")
 	gateway := orchestrator.IntegrationsDataGateway{DB: open}
 	_, _ = suite.gateway.Create("aName", "google cloud", []byte("aKey"))
