@@ -74,9 +74,13 @@ func (suite *ApplicationsSuite) TestApplication() {
 	assert.Contains(suite.T(), string(body), "anObjectId")
 	assert.Contains(suite.T(), string(body), "aName")
 	assert.Contains(suite.T(), string(body), "aDescription")
+
+	assert.Contains(suite.T(), string(body), "aVersion")
+	assert.Contains(suite.T(), string(body), "anotherAction")
+	assert.Contains(suite.T(), string(body), "anotherUser")
 }
 
-func (suite *ApplicationsSuite) TestApplication_with_error() {
+func (suite *ApplicationsSuite) TestApplication_withErroneousGet() {
 	suite.client.Err = errors.New("oops")
 	resp, _ := http.Get(fmt.Sprintf("http://%s/applications/000", suite.server.Addr))
 	body, _ := io.ReadAll(resp.Body)

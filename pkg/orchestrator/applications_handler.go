@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"net/http"
+	"strings"
 )
 
 type Applications struct {
@@ -84,8 +85,8 @@ func (handler ApplicationsHandler) GetPolicies(w http.ResponseWriter, r *http.Re
 	}
 
 	integration := provider.IntegrationInfo{Name: integrationRecord.Name, Key: integrationRecord.Key}
-	application := provider.ApplicationInfo{ObjectID: record.ID, Name: record.Name, Description: record.Description}
-	p := handler.providers[integrationRecord.Provider]
+	application := provider.ApplicationInfo{ObjectID: record.ObjectId, Name: record.Name, Description: record.Description}
+	p := handler.providers[strings.ToLower(integrationRecord.Provider)] // todo - test for lower?
 	records, err := p.GetPolicyInfo(integration, application)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

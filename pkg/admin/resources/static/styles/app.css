@@ -335,3 +335,20 @@ textarea {
     color: var(--red);
     margin: 1rem;
 }
+
+code {
+    font-size: 0.8rem;
+    color: var(--gray);
+    font-family: monospace;
+}
+
+pre code {
+    display: block;
+    white-space: pre;
+}
+
+pre {
+    line-height: 1.4;
+    overflow-x: auto;
+    margin: 0 1rem 1rem 1rem;
+}
