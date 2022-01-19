@@ -7,6 +7,8 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
+	orchestrator_test "github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"log"
@@ -21,7 +23,9 @@ func TestOrchestratorHandlers(t *testing.T) {
 	key := hex.EncodeToString(hash[:])
 	store := hawksupport.NewCredentialStore(key)
 	listener, _ := net.Listen("tcp", "localhost:0")
-	handlers, _ := orchestrator.LoadHandlers(store, listener.Addr().String(), db)
+	providers := make(map[string]provider.Provider)
+	providers["google cloud"] = &orchestrator_test.NoopDiscovery{}
+	handlers, _ := orchestrator.LoadHandlers(providers, store, listener.Addr().String(), db)
 	server := websupport.Create(listener.Addr().String(), handlers, websupport.Options{})
 	go websupport.Start(server, listener)
 	websupport.WaitForHealthy(server)

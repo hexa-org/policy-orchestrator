@@ -7,6 +7,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
 	"net/http"
@@ -18,9 +19,10 @@ type SuiteFields struct {
 	Scheduler *workflowsupport.WorkScheduler
 	Key       string
 	Gateway   orchestrator.IntegrationsDataGateway
+	Providers map[string]provider.Provider
 }
 
-func (fields *SuiteFields) Setup(addr string) {
+func (fields *SuiteFields) Setup(providers map[string]provider.Provider, addr string) {
 	fields.DB, _ = databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
 	fields.Gateway = orchestrator.IntegrationsDataGateway{DB: fields.DB}
 	_, _ = fields.DB.Exec("delete from applications;")
@@ -28,8 +30,8 @@ func (fields *SuiteFields) Setup(addr string) {
 
 	hash := sha256.Sum256([]byte("aKey"))
 	fields.Key = hex.EncodeToString(hash[:])
-
-	handlers, scheduler := orchestrator.LoadHandlers(hawksupport.NewCredentialStore(fields.Key), addr, fields.DB)
+	fields.Providers = providers
+	handlers, scheduler := orchestrator.LoadHandlers(fields.Providers, hawksupport.NewCredentialStore(fields.Key), addr, fields.DB)
 	fields.Scheduler = scheduler
 	fields.Server = websupport.Create(addr, handlers, websupport.Options{})
 }

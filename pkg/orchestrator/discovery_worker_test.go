@@ -24,8 +24,10 @@ func TestWorkflow(t *testing.T) {
 	gateway, appGateway := setUp()
 	_, _ = gateway.Create("aName", "noop", []byte("aKey"))
 
-	discovery := orchestrator_test.NoopDiscovery{}
-	worker := orchestrator.DiscoveryWorker{Providers: []provider.Provider{&discovery}, Gateway: appGateway}
+	noopProvider := orchestrator_test.NoopDiscovery{}
+	providers := make(map[string]provider.Provider)
+	providers["noop"] = &noopProvider
+	worker := orchestrator.DiscoveryWorker{Providers: providers, Gateway: appGateway}
 	finder := orchestrator.NewDiscoveryWorkFinder(gateway)
 	list := []workflowsupport.Worker{&worker}
 	scheduler := workflowsupport.NewScheduler(&finder, list, 50)
@@ -36,7 +38,7 @@ func TestWorkflow(t *testing.T) {
 
 	find, _ := appGateway.Find()
 	assert.Equal(t, 3, len(find))
-	assert.True(t, discovery.Discovered > 2)
+	assert.True(t, noopProvider.Discovered > 2)
 }
 
 func TestWorkflow_empty(t *testing.T) {

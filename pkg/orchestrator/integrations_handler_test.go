@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +27,9 @@ func TestIntegrationsHandler(t *testing.T) {
 
 func (suite *HandlerSuite) SetupTest() {
 	listener, _ := net.Listen("tcp", "localhost:0")
-	suite.fields.Setup(listener.Addr().String())
+	providers := make(map[string]provider.Provider)
+	providers["google cloud"] = &orchestrator_test.NoopDiscovery{}
+	suite.fields.Setup(providers, listener.Addr().String())
 	go websupport.Start(suite.fields.Server, listener)
 	websupport.WaitForHealthy(suite.fields.Server)
 }
