@@ -6,6 +6,7 @@ import (
 
 type NoopDiscovery struct {
 	Discovered int
+	Err error
 }
 
 func (n *NoopDiscovery) Name() string {
@@ -18,10 +19,12 @@ func (n *NoopDiscovery) DiscoverApplications(info provider.IntegrationInfo) (app
 		apps = append(apps, found...)
 		n.Discovered = n.Discovered + 3
 	}
-	return apps, nil
+	return apps, n.Err
 }
 
 func (n *NoopDiscovery) GetPolicyInfo(info provider.IntegrationInfo, info2 provider.ApplicationInfo) ([]provider.PolicyInfo, error) {
-	//TODO implement me
-	panic("implement me")
+	return []provider.PolicyInfo{
+		{"aVersion", "anAction", provider.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, provider.ObjectInfo{Resources: []string{"/"}}},
+		{"aVersion", "anotherAction", provider.SubjectInfo{AuthenticatedUsers: []string{"anotherUser"}}, provider.ObjectInfo{Resources: []string{"/"}}},
+	}, n.Err
 }

@@ -7,7 +7,7 @@ import (
 )
 
 type DiscoveryWorker struct {
-	Providers []provider.Provider
+	Providers map[string]provider.Provider
 	Gateway   ApplicationsDataGateway
 }
 

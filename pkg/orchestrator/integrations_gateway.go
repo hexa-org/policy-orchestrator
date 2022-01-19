@@ -47,3 +47,10 @@ func (gateway IntegrationsDataGateway) Delete(id string) error {
 	_, err := gateway.DB.Exec(`delete from integrations where id=$1`, id)
 	return err
 }
+
+func (gateway IntegrationsDataGateway) FindById(id string) (IntegrationRecord, error) {
+	row := gateway.DB.QueryRow("select id, name, provider, key from integrations where id=$1", id)
+	var record IntegrationRecord
+	err := row.Scan(&record.ID, &record.Name, &record.Provider, &record.Key)
+	return record, err
+}
