@@ -48,7 +48,7 @@ func (c *GoogleClient) GetBackendApplications() (apps []provider.ApplicationInfo
 
 	for _, info := range backend.Resources {
 		log.Printf("Found google cloud backend services %s.\n", info.Name)
-		apps = append(apps, provider.ApplicationInfo{ID: info.ID, Name: info.Name, Description: info.Description})
+		apps = append(apps, provider.ApplicationInfo{ObjectID: info.ID, Name: info.Name, Description: info.Description})
 	}
 	return apps, nil
 }

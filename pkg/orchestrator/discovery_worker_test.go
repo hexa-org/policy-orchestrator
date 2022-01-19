@@ -41,7 +41,7 @@ func TestWorkflow(t *testing.T) {
 	assert.True(t, noopProvider.Discovered > 2)
 }
 
-func TestWorkflow_empty(t *testing.T) {
+func TestWorkflow_withEmptyResults(t *testing.T) {
 	gateway, _ := setUp()
 
 	worker := orchestrator.DiscoveryWorker{}
@@ -64,7 +64,7 @@ func (n *ErroneousWorker) Run(interface{}) error {
 	return errors.New("oops")
 }
 
-func TestWorkflow_bad_find(t *testing.T) {
+func TestWorkflow_erroneousFind(t *testing.T) {
 	gateway, _ := setUp()
 	_, _ = gateway.Create("aName", "google cloud", []byte("aKey"))
 

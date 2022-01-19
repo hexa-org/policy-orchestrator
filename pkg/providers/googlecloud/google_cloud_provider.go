@@ -10,10 +10,6 @@ import (
 	"strings"
 )
 
-type credentials struct {
-	ProjectId string `json:"project_id"`
-}
-
 type GoogleProvider struct {
 	Http HTTPClient
 }
@@ -22,9 +18,13 @@ func (g GoogleProvider) Name() string {
 	return "google cloud"
 }
 
+func (g GoogleProvider) Project(key []byte) string {
+	return g.credentials(key).ProjectId
+}
+
 func (g GoogleProvider) DiscoverApplications(info provider.IntegrationInfo) (apps []provider.ApplicationInfo, err error) {
 	key := info.Key
-	foundCredentials := g.Credentials(key)
+	foundCredentials := g.credentials(key)
 	if strings.EqualFold(info.Name, g.Name()) {
 		if g.Http == nil {
 			g.Http, _ = g.HttpClient(key) // todo - for testing, might be a better way?
@@ -38,18 +38,12 @@ func (g GoogleProvider) DiscoverApplications(info provider.IntegrationInfo) (app
 
 func (g GoogleProvider) GetPolicyInfo(integration provider.IntegrationInfo, app provider.ApplicationInfo) (infos []provider.PolicyInfo, err error) {
 	key := integration.Key
-	foundCredentials := g.Credentials(key)
+	foundCredentials := g.credentials(key)
 	if g.Http == nil {
 		g.Http, _ = g.HttpClient(key) // todo - for testing, might be a better way?
 	}
 	googleClient := GoogleClient{g.Http, foundCredentials.ProjectId}
-	return googleClient.GetBackendPolicy(app.ID) // todo - rename to object_id
-}
-
-func (g GoogleProvider) Credentials(key []byte) credentials {
-	var foundCredentials credentials
-	_ = json.NewDecoder(bytes.NewReader(key)).Decode(&foundCredentials)
-	return foundCredentials
+	return googleClient.GetBackendPolicy(app.ObjectID)
 }
 
 func (g GoogleProvider) HttpClient(key []byte) (HTTPClient, error) {
@@ -61,4 +55,16 @@ func (g GoogleProvider) HttpClient(key []byte) (HTTPClient, error) {
 		return nil, err
 	}
 	return client, nil
+}
+
+///
+
+type credentials struct {
+	ProjectId string `json:"project_id"`
+}
+
+func (g GoogleProvider) credentials(key []byte) credentials {
+	var foundCredentials credentials
+	_ = json.NewDecoder(bytes.NewReader(key)).Decode(&foundCredentials)
+	return foundCredentials
 }
