@@ -1,6 +1,8 @@
 package admin
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
@@ -14,6 +16,21 @@ type Application struct {
 	ObjectId      string
 	Name          string
 	Description   string
+}
+
+type Policy struct {
+	Version string
+	Action  string
+	Subject Subject
+	Object  Object
+}
+
+type Subject struct {
+	AuthenticatedUsers []string
+}
+
+type Object struct {
+	Resources []string
 }
 
 type applicationsHandler struct {
@@ -40,14 +57,16 @@ func (p applicationsHandler) List(w http.ResponseWriter, r *http.Request) {
 
 func (p applicationsHandler) Show(w http.ResponseWriter, r *http.Request) {
 	identifier := mux.Vars(r)["id"]
-	url := fmt.Sprintf("%v/applications/%s", p.orchestratorUrl, identifier)
-	app, err := p.client.Application(url)
-	if err != nil {
+	app, err := p.client.Application(fmt.Sprintf("%v/applications/%s", p.orchestratorUrl, identifier))
+	policies, rawJson, anotherPossibleErr := p.client.Policies(fmt.Sprintf("%v/applications/%s/policies", p.orchestratorUrl, identifier))
+	if err != nil || anotherPossibleErr != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "message": "Unable to contact orchestrator."}}
 		_ = websupport.ModelAndView(w, "applications_show", model)
 		log.Println(err)
 		return
 	}
-	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": app}}
+	var buffer bytes.Buffer
+	_ = json.Indent(&buffer, []byte(rawJson), "", "  ")
+	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": app, "policies": policies, "rawJson": buffer.String()}}
 	_ = websupport.ModelAndView(w, "applications_show", model)
 }

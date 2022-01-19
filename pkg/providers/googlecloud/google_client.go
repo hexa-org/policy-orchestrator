@@ -64,7 +64,7 @@ type bindingInfo struct {
 
 func (c *GoogleClient) GetBackendPolicy(objectId string) (infos []provider.PolicyInfo, err error) {
 	var b []byte
-	url := fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s", c.ProjectId, objectId)
+	url := fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s:getIamPolicy", c.ProjectId, objectId)
 	post, err := c.HttpClient.Post(url, "application/json", bytes.NewReader(b))
 	if err != nil {
 		log.Println("Unable to find google cloud policy.")

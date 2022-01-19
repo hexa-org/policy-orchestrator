@@ -58,7 +58,7 @@ func TestOrchestratorClient_Applications(t *testing.T) {
 	assert.Equal(t, []admin.Application{{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "anApp", Description: "aDescription"}}, resp)
 }
 
-func TestOrchestratorClient_Applications_bad_get(t *testing.T) {
+func TestOrchestratorClient_Applications_withErroneousGet(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.err = errors.New("oops")
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
@@ -67,7 +67,7 @@ func TestOrchestratorClient_Applications_bad_get(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestOrchestratorClient_Applications_bad_json(t *testing.T) {
+func TestOrchestratorClient_Applications_withBadJson(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = []byte("{\"_applications\":[}")
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
@@ -86,7 +86,7 @@ func TestOrchestratorClient_Application(t *testing.T) {
 	assert.Equal(t, admin.Application{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "anApp", Description: "aDescription"}, resp)
 }
 
-func TestOrchestratorClient_Application_bad_json(t *testing.T) {
+func TestOrchestratorClient_Application_withBadJson(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = []byte("_{\"_id\":\"anId\"}}")
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
@@ -105,7 +105,7 @@ func TestOrchestratorClient_Integrations(t *testing.T) {
 	assert.Equal(t, []admin.Integration{{Provider: "google", Key: []byte("anotherKey")}}, resp)
 }
 
-func TestOrchestratorClient_Integrations_bad_get(t *testing.T) {
+func TestOrchestratorClient_Integrations_withErroneousGet(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.err = errors.New("oops")
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
@@ -114,7 +114,7 @@ func TestOrchestratorClient_Integrations_bad_get(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestOrchestratorClient_Integrations_bad_json(t *testing.T) {
+func TestOrchestratorClient_Integrations_withBadJson(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = []byte(fmt.Sprintf("{\"_integrations\":[}"))
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
@@ -140,4 +140,37 @@ func TestOrchestratorClient_DeleteIntegrations(t *testing.T) {
 
 	err := client.DeleteIntegration("localhost:8883/integrations/101")
 	assert.NoError(t, err)
+}
+
+func TestOrchestratorClient_GetPolicy(t *testing.T) {
+	mockClient := new(MockClient)
+	rawJson := "[{\"version\":\"aVersion\",\"action\":\"anAction\",\"subject\":{\"authenticated_users\":[\"aUser\"]},\"object\":{\"resources\":[\"/\"]}},{\"version\":\"aVersion\",\"action\":\"anotherAction\",\"subject\":{\"authenticated_users\":[\"anotherUser\"]},\"object\":{\"resources\":[\"/\"]}}]"
+	mockClient.response = []byte(rawJson)
+	client := admin.NewOrchestratorClient(mockClient, "aKey")
+
+	resp, raw, _ := client.Policies("localhost:8883/applications/anId/policies")
+	assert.Equal(t, rawJson, raw)
+	assert.Equal(t, "aVersion", resp[0].Version)
+	assert.Equal(t, "anAction", resp[0].Action)
+	assert.Equal(t, []string{"aUser"}, resp[0].Subject.AuthenticatedUsers)
+	assert.Equal(t, []string{"/"}, resp[0].Object.Resources)
+}
+
+func TestOrchestratorClient_GetPolicy_withErroneousGet(t *testing.T) {
+	mockClient := new(MockClient)
+	mockClient.err = errors.New("oops")
+	client := admin.NewOrchestratorClient(mockClient, "aKey")
+
+	resp, _, err := client.Policies("localhost:8883/applications/anId/policies")
+	assert.Error(t, err)
+	assert.Equal(t, []admin.Policy{}, resp)
+}
+
+func TestOrchestratorClient_GetPolicy_withBadJson(t *testing.T) {
+	mockClient := new(MockClient)
+	client := admin.NewOrchestratorClient(mockClient, "aKey")
+
+	resp, _, err := client.Policies("localhost:8883/applications/anId/policies")
+	assert.Error(t, err)
+	assert.Equal(t, []admin.Policy{}, resp)
 }

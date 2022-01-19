@@ -12,6 +12,7 @@ type Client interface {
 	Integrations(url string) ([]Integration, error)
 	CreateIntegration(url string, provider string, key []byte) error
 	DeleteIntegration(url string) error
+	Policies(url string) ([]Policy, string, error)
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {

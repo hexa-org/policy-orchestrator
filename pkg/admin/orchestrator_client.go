@@ -120,8 +120,8 @@ func (c orchestratorClient) Integrations(url string) (integrations []Integration
 }
 
 func (c orchestratorClient) CreateIntegration(url string, provider string, key []byte) error {
-	integration := integration{Name: "aName", Provider: provider, Key: key} // todo - replace with project name in key
-	marshal, _ := json.Marshal(integration)
+	i := integration{Name: "aName", Provider: provider, Key: key} // todo - replace with project name in key
+	marshal, _ := json.Marshal(i)
 	_, err := hawksupport.HawkPost(c.client, "anId", c.key, url, bytes.NewReader(marshal))
 	return err
 }
@@ -129,4 +129,40 @@ func (c orchestratorClient) CreateIntegration(url string, provider string, key [
 func (c orchestratorClient) DeleteIntegration(url string) error {
 	_, err := hawksupport.HawkGet(c.client, "anId", c.key, url)
 	return err
+}
+
+type policy struct {
+	Version string  `json:"version"`
+	Action  string  `json:"action"`
+	Subject subject `json:"subject"`
+	Object  object  `json:"object"`
+}
+
+type subject struct {
+	AuthenticatedUsers []string `json:"authenticated_users"`
+}
+
+type object struct {
+	Resources []string `json:"resources"`
+}
+
+func (c orchestratorClient) Policies(url string) (policies []Policy, rawJson string, err error) {
+	resp, err := hawksupport.HawkGet(c.client, "anId", c.key, url)
+	if err != nil {
+		return []Policy{}, rawJson, err
+	}
+
+	var jsonResponse []policy
+	all, err := io.ReadAll(resp.Body)
+	rawJson = string(all)
+	decoder := json.NewDecoder(bytes.NewReader(all))
+	err = decoder.Decode(&jsonResponse)
+	if err != nil {
+		return []Policy{}, rawJson, err
+	}
+
+	for _, p := range jsonResponse {
+		policies = append(policies, Policy{Version: p.Version, Action: p.Action, Subject: Subject{AuthenticatedUsers: p.Subject.AuthenticatedUsers}, Object: Object{Resources: p.Object.Resources}})
+	}
+	return policies, rawJson, nil
 }

@@ -29,26 +29,35 @@
         <table>
             <thead>
             <tr>
+                <th>Version</th>
+                <th>Action</th>
+                <th>Subject</th>
+                <th>Object</th>
             </tr>
             </thead>
+            <tbody>
+            {{- range $policy := index .Map "policies"}}
+                <tr>
+                    <td>{{$policy.Version}}</td>
+                    <td>{{$policy.Action}}</td>
+                    <td>
+                        {{- range $user := $policy.Subject.AuthenticatedUsers}}
+                            {{$user}}
+                        {{- end}}
+                    </td>
+                    <td>
+                        {{- range $resource := $policy.Object.Resources}}
+                            {{$resource}}
+                        {{- end}}
+                    </td>
+                </tr>
+            {{- end}}
+            </tbody>
         </table>
     </div>
     <div class="card">
-        <h2>IDQL Policy</h2>
-        <table>
-            <thead>
-            <tr>
-            </tr>
-            </thead>
-        </table>
-    </div>
-    <div class="card">
-        <h2>Google Policy</h2>
-        <table>
-            <thead>
-            <tr>
-            </tr>
-            </thead>
-        </table>
+        <h2>Policy JSON</h2>
+        <pre><code>{{- index .Map "rawJson"}}</code>
+</pre>
     </div>
 {{- end}}

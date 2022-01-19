@@ -40,6 +40,13 @@ func (m *MockClient) Application(_ string) (admin.Application, error) {
 	return admin.Application{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription"}, m.Err
 }
 
+func (m *MockClient) Policies(url string) ([]admin.Policy, string, error) {
+	return []admin.Policy{
+		{"aVersion", "anAction", admin.Subject{AuthenticatedUsers: []string{"aUser"}}, admin.Object{Resources: []string{"/"}}},
+		{"aVersion", "anotherAction", admin.Subject{AuthenticatedUsers: []string{"anotherUser"}}, admin.Object{Resources: []string{"/"}}},
+	}, "", m.Err
+}
+
 func (m *MockClient) Health(_ string) (string, error) {
 	return "{\"status\":\"pass\"}", nil
 }
