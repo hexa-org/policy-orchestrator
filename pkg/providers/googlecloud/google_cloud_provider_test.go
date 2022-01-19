@@ -37,7 +37,7 @@ func TestDiscovery_ignores_case(t *testing.T) {
 	}
 }
 
-func TestNoDiscovery(t *testing.T) {
+func TestDiscovery_empty_response(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
 	providers := []provider.Provider{googlecloud.GoogleProvider{Http: m}}
 
@@ -46,6 +46,16 @@ func TestNoDiscovery(t *testing.T) {
 		applications, _ := p.DiscoverApplications(info)
 		assert.Equal(t, 0, len(applications))
 	}
+}
+
+func TestGoogleProvider_GetPolicy(t *testing.T) {
+	m := new(google_cloud_test.MockClient)
+	m.Json = google_cloud_test.Resource("policy.json")
+
+	p := googlecloud.GoogleProvider{Http: m}
+	info := provider.IntegrationInfo{Name: "not google cloud", Key: []byte("aKey")}
+	infos, _ := p.GetPolicyInfo(info, provider.ApplicationInfo{ID: "anObjectId"})
+	assert.Equal(t, 2, len(infos))
 }
 
 func TestGoogleProvider_DetermineProjectId(t *testing.T) {

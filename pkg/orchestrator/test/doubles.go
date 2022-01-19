@@ -21,7 +21,7 @@ func (n *NoopDiscovery) DiscoverApplications(info provider.IntegrationInfo) (app
 	return apps, nil
 }
 
-func (n *NoopDiscovery) GetPolicyInfo(info provider.IntegrationInfo, info2 provider.ApplicationInfo) (provider.PolicyInfo, error) {
+func (n *NoopDiscovery) GetPolicyInfo(info provider.IntegrationInfo, info2 provider.ApplicationInfo) ([]provider.PolicyInfo, error) {
 	//TODO implement me
 	panic("implement me")
 }

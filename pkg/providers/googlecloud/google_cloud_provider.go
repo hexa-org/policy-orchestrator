@@ -36,8 +36,14 @@ func (g GoogleProvider) DiscoverApplications(info provider.IntegrationInfo) (app
 	return apps, err
 }
 
-func (g GoogleProvider) GetPolicyInfo(integration provider.IntegrationInfo, app provider.ApplicationInfo) (info provider.PolicyInfo, err error) {
-	return info, err
+func (g GoogleProvider) GetPolicyInfo(integration provider.IntegrationInfo, app provider.ApplicationInfo) (infos []provider.PolicyInfo, err error) {
+	key := integration.Key
+	foundCredentials := g.Credentials(key)
+	if g.Http == nil {
+		g.Http, _ = g.HttpClient(key) // todo - for testing, might be a better way?
+	}
+	googleClient := GoogleClient{g.Http, foundCredentials.ProjectId}
+	return googleClient.GetBackendPolicy(app.ID) // todo - rename to object_id
 }
 
 func (g GoogleProvider) Credentials(key []byte) credentials {
