@@ -82,3 +82,15 @@ func TestGoogleProvider_GetPolicy(t *testing.T) {
 	infos, _ := p.GetPolicyInfo(info, provider.ApplicationInfo{ObjectID: "anObjectId"})
 	assert.Equal(t, 2, len(infos))
 }
+
+func TestGoogleProvider_SetPolicy(t *testing.T) {
+	policy := provider.PolicyInfo{
+		Version: "aVersion", Action: "anAction", Subject: provider.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: provider.ObjectInfo{Resources: []string{"/"}},
+	}
+	m := new(google_cloud_test.MockClient)
+
+	p := googlecloud.GoogleProvider{Http: m}
+	info := provider.IntegrationInfo{Name: "not google cloud", Key: []byte("aKey")}
+	err := p.SetPolicyInfo(info, provider.ApplicationInfo{ObjectID: "anObjectId"}, policy)
+	assert.NoError(t, err)
+}

@@ -53,6 +53,10 @@ func (c *GoogleClient) GetBackendApplications() (apps []provider.ApplicationInfo
 	return apps, nil
 }
 
+type policy struct {
+	Policy bindings `json:"policy"`
+}
+
 type bindings struct {
 	Bindings []bindingInfo `json:"bindings"`
 }
@@ -91,6 +95,17 @@ func (c *GoogleClient) GetBackendPolicy(objectId string) (infos []provider.Polic
 	return infos, err
 }
 
-func (c *GoogleClient) SetBackendPolicy() {
-	//https: //iap.googleapis.com/v1/{resource=**}:setIamPolicy
+func (c *GoogleClient) SetBackendPolicy(objectId string, p provider.PolicyInfo) error {
+	body := policy{bindings{[]bindingInfo{{p.Action, p.Subject.AuthenticatedUsers}}}}
+	b := new(bytes.Buffer)
+	_ = json.NewEncoder(b).Encode(body)
+
+	url := fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s:setIamPolicy", c.ProjectId, objectId)
+	post, err := c.HttpClient.Post(url, "application/json", b)
+	if err != nil {
+		log.Println("Unable to find google cloud policy.")
+		return err
+	}
+	log.Printf("Google cloud response %s.\n", post.Status)
+	return nil
 }

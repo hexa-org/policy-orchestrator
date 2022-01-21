@@ -4,6 +4,7 @@ type Provider interface {
 	Name() string
 	DiscoverApplications(IntegrationInfo) ([]ApplicationInfo, error)
 	GetPolicyInfo(IntegrationInfo, ApplicationInfo) ([]PolicyInfo, error)
+	SetPolicyInfo(IntegrationInfo, ApplicationInfo, PolicyInfo) error
 }
 
 type IntegrationInfo struct {

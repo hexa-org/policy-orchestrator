@@ -2,6 +2,7 @@ package googlecloud_test
 
 import (
 	"errors"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/googlecloud"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/googlecloud/test"
 	"github.com/stretchr/testify/assert"
@@ -67,5 +68,27 @@ func TestGoogleClient_GetBackendPolicies_withBadJson(t *testing.T) {
 	m.Json = []byte("-")
 	client := googlecloud.GoogleClient{HttpClient: m}
 	_, err := client.GetBackendPolicy("anObjectId")
+	assert.Error(t, err)
+}
+
+func TestGoogleClient_SetBackendPolicies(t *testing.T) {
+	policy := provider.PolicyInfo{
+		Version: "aVersion", Action: "anAction", Subject: provider.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: provider.ObjectInfo{Resources: []string{"/"}},
+	}
+	m := new(google_cloud_test.MockClient)
+	client := googlecloud.GoogleClient{HttpClient: m}
+	err := client.SetBackendPolicy("anObjectId", policy)
+	assert.NoError(t, err)
+	assert.Equal(t,"{\"policy\":{\"bindings\":[{\"role\":\"anAction\",\"members\":[\"aUser\"]}]}}\n" , string(m.Json))
+}
+
+func TestGoogleClient_SetBackendPolicies_withRequestError(t *testing.T) {
+	policy := provider.PolicyInfo{
+		Version: "aVersion", Action: "anAction", Subject: provider.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: provider.ObjectInfo{Resources: []string{"/"}},
+	}
+	m := new(google_cloud_test.MockClient)
+	m.Err = errors.New("oops")
+	client := googlecloud.GoogleClient{HttpClient: m}
+	err := client.SetBackendPolicy("anObjectId", policy)
 	assert.Error(t, err)
 }

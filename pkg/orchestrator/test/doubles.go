@@ -28,3 +28,7 @@ func (n *NoopDiscovery) GetPolicyInfo(info provider.IntegrationInfo, info2 provi
 		{"aVersion", "anotherAction", provider.SubjectInfo{AuthenticatedUsers: []string{"anotherUser"}}, provider.ObjectInfo{Resources: []string{"/"}}},
 	}, n.Err
 }
+
+func (n *NoopDiscovery) SetPolicyInfo(p provider.IntegrationInfo, app provider.ApplicationInfo, policy provider.PolicyInfo) error {
+	panic("implement me")
+}
