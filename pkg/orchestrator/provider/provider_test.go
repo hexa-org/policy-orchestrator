@@ -8,7 +8,7 @@ import (
 )
 
 func TestDiscovery(t *testing.T) {
-	providers := []provider.Provider{&orchestrator_test.NoopDiscovery{}}
+	providers := []provider.Provider{&orchestrator_test.NoopProvider{}}
 	for _, p := range providers {
 		info := provider.IntegrationInfo{Name: "noop", Key: []byte("aKey")}
 		applications, _ := p.DiscoverApplications(info)
