@@ -13,7 +13,7 @@ import (
 
 func TestGoogleProvider_DiscoverApplications(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
-	m.Json = google_cloud_test.Resource("backends.json")
+	m.ResponseBody = google_cloud_test.Resource("backends.json")
 	providers := []provider.Provider{googlecloud.GoogleProvider{Http: m}}
 
 	for _, p := range providers {
@@ -26,7 +26,7 @@ func TestGoogleProvider_DiscoverApplications(t *testing.T) {
 
 func TestGoogleProvider_DiscoverApplications_ignoresProviderCase(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
-	m.Json = google_cloud_test.Resource("backends.json")
+	m.ResponseBody = google_cloud_test.Resource("backends.json")
 	providers := []provider.Provider{googlecloud.GoogleProvider{Http: m}}
 
 	for _, p := range providers {
@@ -75,7 +75,7 @@ func TestGoogleProvider_HttpClient_withBadKey(t *testing.T) {
 
 func TestGoogleProvider_GetPolicy(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
-	m.Json = google_cloud_test.Resource("policy.json")
+	m.ResponseBody = google_cloud_test.Resource("policy.json")
 
 	p := googlecloud.GoogleProvider{Http: m}
 	info := provider.IntegrationInfo{Name: "not google cloud", Key: []byte("aKey")}

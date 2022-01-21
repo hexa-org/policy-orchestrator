@@ -11,7 +11,7 @@ import (
 
 func TestClient_GetBackendApplications(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
-	m.Json = google_cloud_test.Resource("backends.json")
+	m.ResponseBody = google_cloud_test.Resource("backends.json")
 	client := googlecloud.GoogleClient{HttpClient: m}
 	applications, _ := client.GetBackendApplications()
 
@@ -31,7 +31,7 @@ func TestClient_GetBackendApplications_withRequestError(t *testing.T) {
 
 func TestClient_GetBackendApplications_withBadJson(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
-	m.Json = []byte("-")
+	m.ResponseBody = []byte("-")
 	client := googlecloud.GoogleClient{HttpClient: m}
 	_, err := client.GetBackendApplications()
 	assert.Error(t, err)
@@ -39,7 +39,7 @@ func TestClient_GetBackendApplications_withBadJson(t *testing.T) {
 
 func TestGoogleClient_GetBackendPolicies(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
-	m.Json = google_cloud_test.Resource("policy.json")
+	m.ResponseBody = google_cloud_test.Resource("policy.json")
 	client := googlecloud.GoogleClient{HttpClient: m}
 	infos, _ := client.GetBackendPolicy("anObjectId")
 
@@ -65,7 +65,7 @@ func TestGoogleClient_GetBackendPolicies_withRequestError(t *testing.T) {
 
 func TestGoogleClient_GetBackendPolicies_withBadJson(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
-	m.Json = []byte("-")
+	m.ResponseBody = []byte("-")
 	client := googlecloud.GoogleClient{HttpClient: m}
 	_, err := client.GetBackendPolicy("anObjectId")
 	assert.Error(t, err)
@@ -79,7 +79,7 @@ func TestGoogleClient_SetBackendPolicies(t *testing.T) {
 	client := googlecloud.GoogleClient{HttpClient: m}
 	err := client.SetBackendPolicy("anObjectId", policy)
 	assert.NoError(t, err)
-	assert.Equal(t,"{\"policy\":{\"bindings\":[{\"role\":\"anAction\",\"members\":[\"aUser\"]}]}}\n" , string(m.Json))
+	assert.Equal(t,"{\"policy\":{\"bindings\":[{\"role\":\"anAction\",\"members\":[\"aUser\"]}]}}\n" , string(m.RequestBody))
 }
 
 func TestGoogleClient_SetBackendPolicies_withRequestError(t *testing.T) {
