@@ -46,6 +46,16 @@ func (g GoogleProvider) GetPolicyInfo(integration provider.IntegrationInfo, app 
 	return googleClient.GetBackendPolicy(app.ObjectID)
 }
 
+func (g GoogleProvider) SetPolicyInfo(integration provider.IntegrationInfo, app provider.ApplicationInfo, policy provider.PolicyInfo) error {
+	key := integration.Key
+	foundCredentials := g.credentials(key)
+	if g.Http == nil {
+		g.Http, _ = g.HttpClient(key) // todo - for testing, might be a better way?
+	}
+	googleClient := GoogleClient{g.Http, foundCredentials.ProjectId}
+	return googleClient.SetBackendPolicy(app.ObjectID, policy)
+}
+
 func (g GoogleProvider) HttpClient(key []byte) (HTTPClient, error) {
 	var opts []option.ClientOption
 	opt := option.WithCredentialsJSON(key)

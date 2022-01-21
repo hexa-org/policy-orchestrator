@@ -14,16 +14,20 @@ type MockClient struct {
 	Json []byte
 }
 
-func (m *MockClient) Post(url, contentType string, body io.Reader) (resp *http.Response, err error) {
+func (m *MockClient) Get(url string) (resp *http.Response, err error) {
 	if m.Err != nil {
 		return resp, m.Err
 	}
 	return &http.Response{StatusCode: 200, Body: ioutil.NopCloser(bytes.NewReader(m.Json))}, nil
 }
 
-func (m *MockClient) Get(url string) (resp *http.Response, err error) {
+func (m *MockClient) Post(url, contentType string, body io.Reader) (resp *http.Response, err error) {
 	if m.Err != nil {
 		return resp, m.Err
+	}
+	all, err := io.ReadAll(body)
+	if len(all) != 0 {
+		m.Json = all
 	}
 	return &http.Response{StatusCode: 200, Body: ioutil.NopCloser(bytes.NewReader(m.Json))}, nil
 }
