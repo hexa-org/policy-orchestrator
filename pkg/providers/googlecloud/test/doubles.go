@@ -10,24 +10,22 @@ import (
 
 type MockClient struct {
 	mock.Mock
-	Err  error
-	Json []byte
+	Err          error
+	ResponseBody []byte
+	RequestBody []byte
 }
 
 func (m *MockClient) Get(url string) (resp *http.Response, err error) {
 	if m.Err != nil {
 		return resp, m.Err
 	}
-	return &http.Response{StatusCode: 200, Body: ioutil.NopCloser(bytes.NewReader(m.Json))}, nil
+	return &http.Response{StatusCode: 200, Body: ioutil.NopCloser(bytes.NewReader(m.ResponseBody))}, nil
 }
 
 func (m *MockClient) Post(url, contentType string, body io.Reader) (resp *http.Response, err error) {
 	if m.Err != nil {
 		return resp, m.Err
 	}
-	all, err := io.ReadAll(body)
-	if len(all) != 0 {
-		m.Json = all
-	}
-	return &http.Response{StatusCode: 200, Body: ioutil.NopCloser(bytes.NewReader(m.Json))}, nil
+	m.RequestBody, _ = io.ReadAll(body)
+	return &http.Response{StatusCode: 200, Body: ioutil.NopCloser(bytes.NewReader(m.ResponseBody))}, nil
 }
