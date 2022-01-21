@@ -75,7 +75,7 @@ func (s *ApplicationsHandlerSuite) TestList() {
 	_ = s.db.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
 		integrationTestId, "anObjectId", "aName", "aDescription").Scan(&applicationTestId)
 
-	s.providers["google cloud"] = &orchestrator_test.NoopDiscovery{}
+	s.providers["google cloud"] = &orchestrator_test.NoopProvider{}
 
 	resp, err := hawksupport.HawkGet(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/applications", s.server.Addr))
 	if err != nil {
@@ -100,7 +100,7 @@ func (s *ApplicationsHandlerSuite) TestShow() {
 	_ = s.db.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
 		integrationTestId, "anObjectId", "aName", "aDescription").Scan(&applicationTestId)
 
-	s.providers["google cloud"] = &orchestrator_test.NoopDiscovery{}
+	s.providers["google cloud"] = &orchestrator_test.NoopProvider{}
 
 	resp, err := hawksupport.HawkGet(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/applications/%s", s.server.Addr, applicationTestId))
 	if err != nil {
@@ -129,7 +129,7 @@ func (s *ApplicationsHandlerSuite) TestGetPolicies() {
 	_ = s.db.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
 		integrationTestId, "anObjectId", "aName", "aDescription").Scan(&applicationTestId)
 
-	s.providers["google cloud"] = &orchestrator_test.NoopDiscovery{}
+	s.providers["google cloud"] = &orchestrator_test.NoopProvider{}
 
 	resp, err := hawksupport.HawkGet(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, applicationTestId))
 	if err != nil {
@@ -155,7 +155,7 @@ func (s *ApplicationsHandlerSuite) TestGetPolicies_withRequestFails() {
 	_ = s.db.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
 		integrationTestId, "anObjectId", "aName", "aDescription").Scan(&applicationTestId)
 
-	discovery := orchestrator_test.NoopDiscovery{}
+	discovery := orchestrator_test.NoopProvider{}
 	discovery.Err = errors.New("oops")
 	s.providers["google cloud"] = &discovery
 

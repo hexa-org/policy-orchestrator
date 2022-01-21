@@ -24,7 +24,7 @@ func TestWorkflow(t *testing.T) {
 	gateway, appGateway := setUp()
 	_, _ = gateway.Create("aName", "noop", []byte("aKey"))
 
-	noopProvider := orchestrator_test.NoopDiscovery{}
+	noopProvider := orchestrator_test.NoopProvider{}
 	providers := make(map[string]provider.Provider)
 	providers["noop"] = &noopProvider
 	worker := orchestrator.DiscoveryWorker{Providers: providers, Gateway: appGateway}
