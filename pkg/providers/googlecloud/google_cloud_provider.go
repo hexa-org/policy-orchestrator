@@ -61,10 +61,7 @@ func (g GoogleProvider) HttpClient(key []byte) (HTTPClient, error) {
 	opt := option.WithCredentialsJSON(key)
 	opts = append([]option.ClientOption{option.WithScopes("https://www.googleapis.com/auth/cloud-platform")}, opt)
 	client, _, err := http.NewClient(context.Background(), opts...)
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
+	return client, err
 }
 
 ///

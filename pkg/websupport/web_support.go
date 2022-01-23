@@ -30,7 +30,7 @@ func ModelAndView(w http.ResponseWriter, view string, data Model) error {
 	}
 
 	base := filepath.Base(views[0]) // to match template names in ParseFiles
-	err := template.Must(template.New(base).Funcs(template.FuncMap{
+	return template.Must(template.New(base).Funcs(template.FuncMap{
 		"capitalize": func(s string) string {
 			return strings.Title(s)
 		},
@@ -42,11 +42,6 @@ func ModelAndView(w http.ResponseWriter, view string, data Model) error {
 			return strings.HasPrefix(s, prefix)
 		},
 	}).ParseFiles(views...)).Execute(w, data)
-	if err != nil {
-		log.Println("Unable to execute golang html templates.")
-		return err
-	}
-	return nil
 }
 
 type Health struct {
