@@ -85,4 +85,49 @@ func (suite *ApplicationsSuite) TestApplication_withErroneousGet() {
 	resp, _ := http.Get(fmt.Sprintf("http://%s/applications/000", suite.server.Addr))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Something went wrong.")
+	assert.Contains(suite.T(), string(body), "Unable to contact orchestrator.")
+}
+
+func (suite *ApplicationsSuite) TestApplication_Edit() {
+	identifier := "anId"
+	resp, _ := http.Get(fmt.Sprintf("http://%s/applications/%s/edit", suite.server.Addr, identifier))
+	body, _ := io.ReadAll(resp.Body)
+	assert.Contains(suite.T(), string(body), "Applications")
+	assert.Contains(suite.T(), string(body), "anObjectId")
+	assert.Contains(suite.T(), string(body), "aName")
+	assert.Contains(suite.T(), string(body), "aDescription")
+
+	assert.Contains(suite.T(), string(body), "action=\"/applications/anId\"")
+}
+
+func (suite *ApplicationsSuite) TestApplication_Edit_withErroneousGet() {
+	suite.client.Err = errors.New("oops")
+	identifier := "anId"
+	resp, _ := http.Get(fmt.Sprintf("http://%s/applications/%s/edit", suite.server.Addr, identifier))
+	body, _ := io.ReadAll(resp.Body)
+	assert.Contains(suite.T(), string(body), "Something went wrong.")
+	assert.Contains(suite.T(), string(body), "Unable to contact orchestrator.")
+}
+
+func (suite *ApplicationsSuite) TestApplication_Update() {
+	identifier := "anId"
+	resp, _ := http.Post(fmt.Sprintf("http://%s/applications/%s", suite.server.Addr, identifier), "application/json", nil)
+	body, _ := io.ReadAll(resp.Body)
+	assert.Contains(suite.T(), string(body), "Applications")
+	assert.Contains(suite.T(), string(body), "anObjectId")
+	assert.Contains(suite.T(), string(body), "aName")
+	assert.Contains(suite.T(), string(body), "aDescription")
+
+	assert.Contains(suite.T(), string(body), "aVersion")
+	assert.Contains(suite.T(), string(body), "anotherAction")
+	assert.Contains(suite.T(), string(body), "anotherUser")
+}
+
+func (suite *ApplicationsSuite) TestApplication_Update_withErroneousGet() {
+	suite.client.Err = errors.New("oops")
+	identifier := "anId"
+	resp, _ := http.Post(fmt.Sprintf("http://%s/applications/%s", suite.server.Addr, identifier), "application/json", nil)
+	body, _ := io.ReadAll(resp.Body)
+	assert.Contains(suite.T(), string(body), "Something went wrong.")
+	assert.Contains(suite.T(), string(body), "Unable to contact orchestrator.")
 }

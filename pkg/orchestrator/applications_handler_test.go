@@ -1,6 +1,7 @@
 package orchestrator_test
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
@@ -160,6 +161,57 @@ func (s *ApplicationsHandlerSuite) TestGetPolicies_withRequestFails() {
 	s.providers["google cloud"] = &discovery
 
 	resp, err := hawksupport.HawkGet(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, applicationTestId))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	assert.Equal(s.T(), http.StatusInternalServerError, resp.StatusCode)
+}
+
+func (s *ApplicationsHandlerSuite) TestSetPolicies() {
+	var integrationTestId string
+	_ = s.db.QueryRow(`insert into integrations (name, provider, key) values ($1, $2, $3) returning id`,
+		"aName", "google cloud", []byte("aKey")).Scan(&integrationTestId)
+
+	var applicationTestId string
+	_ = s.db.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
+		integrationTestId, "anObjectId", "aName", "aDescription").Scan(&applicationTestId)
+
+	s.providers["google cloud"] = &orchestrator_test.NoopProvider{}
+
+	var buf bytes.Buffer
+	policy := orchestrator.Policy{Version: "v0.1", Action: "anAction", Subject: orchestrator.Subject{AuthenticatedUsers: []string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{Resources: []string{"/"}}}
+	_ = json.NewEncoder(&buf).Encode([]orchestrator.Policy{policy})
+
+	resp, err := hawksupport.HawkPost(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, applicationTestId), bytes.NewReader(buf.Bytes()))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+}
+
+func (s *ApplicationsHandlerSuite) TestSetPolicies_withErroneousProvider() {
+	var integrationTestId string
+	_ = s.db.QueryRow(`insert into integrations (name, provider, key) values ($1, $2, $3) returning id`,
+		"aName", "google cloud", []byte("aKey")).Scan(&integrationTestId)
+
+	var applicationTestId string
+	_ = s.db.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
+		integrationTestId, "anObjectId", "aName", "aDescription").Scan(&applicationTestId)
+
+	noopProvider := orchestrator_test.NoopProvider{}
+	noopProvider.Err = errors.New("oops")
+	s.providers["google cloud"] = &noopProvider
+
+	var buf bytes.Buffer
+	policy := orchestrator.Policy{Version: "v0.1", Action: "anAction", Subject: orchestrator.Subject{[]string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{Resources: []string{"/"}}}
+	_ = json.NewEncoder(&buf).Encode(policy)
+
+	resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, applicationTestId), bytes.NewReader(buf.Bytes()))
+	assert.Equal(s.T(), http.StatusInternalServerError, resp.StatusCode)
+}
+
+func (s *ApplicationsHandlerSuite) TestSetPolicies_withMissingJson() {
+	resp, err := hawksupport.HawkPost(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, "anId"), nil)
 	if err != nil {
 		log.Fatalln(err)
 	}

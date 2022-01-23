@@ -28,6 +28,7 @@ func LoadHandlers(database *sql.DB, store hawk.CredentialStore, hostPort string,
 		router.HandleFunc("/applications", hawksupport.HawkMiddleware(applicationsHandler.List, store, hostPort)).Methods("GET")
 		router.HandleFunc("/applications/{id}", hawksupport.HawkMiddleware(applicationsHandler.Show, store, hostPort)).Methods("GET")
 		router.HandleFunc("/applications/{id}/policies", hawksupport.HawkMiddleware(applicationsHandler.GetPolicies, store, hostPort)).Methods("GET")
+		router.HandleFunc("/applications/{id}/policies", hawksupport.HawkMiddleware(applicationsHandler.SetPolicies, store, hostPort)).Methods("POST")
 		router.HandleFunc("/integrations", hawksupport.HawkMiddleware(integrationsHandler.List, store, hostPort)).Methods("GET")
 		router.HandleFunc("/integrations", hawksupport.HawkMiddleware(integrationsHandler.Create, store, hostPort)).Methods("POST")
 		router.HandleFunc("/integrations/{id}", hawksupport.HawkMiddleware(integrationsHandler.Delete, store, hostPort)).Methods("GET")

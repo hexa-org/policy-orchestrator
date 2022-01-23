@@ -148,7 +148,7 @@ func TestOrchestratorClient_GetPolicy(t *testing.T) {
 	mockClient.response = []byte(rawJson)
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 
-	resp, raw, _ := client.Policies("localhost:8883/applications/anId/policies")
+	resp, raw, _ := client.GetPolicies("localhost:8883/applications/anId/policies")
 	assert.Equal(t, rawJson, raw)
 	assert.Equal(t, "aVersion", resp[0].Version)
 	assert.Equal(t, "anAction", resp[0].Action)
@@ -161,7 +161,7 @@ func TestOrchestratorClient_GetPolicy_withErroneousGet(t *testing.T) {
 	mockClient.err = errors.New("oops")
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 
-	resp, _, err := client.Policies("localhost:8883/applications/anId/policies")
+	resp, _, err := client.GetPolicies("localhost:8883/applications/anId/policies")
 	assert.Error(t, err)
 	assert.Equal(t, []admin.Policy{}, resp)
 }
@@ -170,7 +170,23 @@ func TestOrchestratorClient_GetPolicy_withBadJson(t *testing.T) {
 	mockClient := new(MockClient)
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 
-	resp, _, err := client.Policies("localhost:8883/applications/anId/policies")
+	resp, _, err := client.GetPolicies("localhost:8883/applications/anId/policies")
 	assert.Error(t, err)
 	assert.Equal(t, []admin.Policy{}, resp)
+}
+
+func TestOrchestratorClient_SetPolicy(t *testing.T) {
+	mockClient := new(MockClient)
+	policies := "[{\"version\":\"aVersion\",\"action\":\"anAction\",\"subject\":{\"authenticated_users\":[\"aUser\"]},\"object\":{\"resources\":[\"/\"]}},{\"version\":\"aVersion\",\"action\":\"anotherAction\",\"subject\":{\"authenticated_users\":[\"anotherUser\"]},\"object\":{\"resources\":[\"/\"]}}]"
+	client := admin.NewOrchestratorClient(mockClient, "aKey")
+	err := client.SetPolicies("localhost:8883/applications/anId/policies", policies)
+	assert.NoError(t, err)
+}
+
+func TestOrchestratorClient_SetPolicy_withErroneousSet(t *testing.T) {
+	mockClient := new(MockClient)
+	mockClient.err = errors.New("oops")
+	client := admin.NewOrchestratorClient(mockClient, "aKey")
+	err := client.SetPolicies("localhost:8883/applications/anId/policies", "")
+	assert.Error(t, err)
 }

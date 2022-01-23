@@ -6,6 +6,9 @@
     {{- if (contains $resource "res") }}
         contains
     {{- end}}
+    {{- if (startsWith $resource "re") }}
+        starts
+    {{- end}}
     {{- if not (contains $resource "nope") }}
         nope
     {{- end}}
