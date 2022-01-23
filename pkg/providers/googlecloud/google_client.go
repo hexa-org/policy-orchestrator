@@ -20,32 +20,34 @@ type GoogleClient struct {
 	ProjectId  string
 }
 
+type backends struct {
+	ID        string        `json:"id"`
+	Resources []backendInfo `json:"items"`
+}
+
 type backendInfo struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
 
-type backends struct {
-	ID        string        `json:"id"`
-	Resources []backendInfo `json:"items"`
-}
+func (c *GoogleClient) GetBackendApplications() ([]provider.ApplicationInfo, error) {
+	url := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/backendServices", c.ProjectId)
 
-func (c *GoogleClient) GetBackendApplications() (apps []provider.ApplicationInfo, err error) {
-	get, err := c.HttpClient.Get(fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/backendServices", c.ProjectId))
+	get, err := c.HttpClient.Get(url)
 	if err != nil {
 		log.Println("Unable to find google cloud backend services.")
-		return apps, err
+		return []provider.ApplicationInfo{}, err
 	}
 	log.Printf("Google cloud response %s.\n", get.Status)
 
 	var backend backends
-	err = json.NewDecoder(get.Body).Decode(&backend)
-	if err != nil {
+	if err = json.NewDecoder(get.Body).Decode(&backend); err != nil {
 		log.Println("Unable to decode google cloud backend services.")
-		return apps, err
+		return []provider.ApplicationInfo{}, err
 	}
 
+	var apps []provider.ApplicationInfo
 	for _, info := range backend.Resources {
 		log.Printf("Found google cloud backend services %s.\n", info.Name)
 		apps = append(apps, provider.ApplicationInfo{ObjectID: info.ID, Name: info.Name, Description: info.Description})
@@ -66,46 +68,42 @@ type bindingInfo struct {
 	Members []string `json:"members"`
 }
 
-func (c *GoogleClient) GetBackendPolicy(objectId string) (infos []provider.PolicyInfo, err error) {
-	var b []byte
+func (c *GoogleClient) GetBackendPolicy(objectId string) ([]provider.PolicyInfo, error) {
 	url := fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s:getIamPolicy", c.ProjectId, objectId)
-	post, err := c.HttpClient.Post(url, "application/json", bytes.NewReader(b))
+
+	post, err := c.HttpClient.Post(url, "application/json", bytes.NewReader([]byte{}))
 	if err != nil {
 		log.Println("Unable to find google cloud policy.")
-		return infos, err
+		return []provider.PolicyInfo{}, err
 	}
 	log.Printf("Google cloud response %s.\n", post.Status)
 
 	var binds bindings
-	err = json.NewDecoder(post.Body).Decode(&binds)
-	if err != nil {
+	if err = json.NewDecoder(post.Body).Decode(&binds); err != nil {
 		log.Println("Unable to decode google cloud policy.")
-		return infos, err
+		return []provider.PolicyInfo{}, err
 	}
 
+	var policies []provider.PolicyInfo
 	for _, found := range binds.Bindings {
 		log.Printf("Found google cloud policy for role %s.\n", found.Role)
-		infos = append(infos, provider.PolicyInfo{
+		policies = append(policies, provider.PolicyInfo{
 			Version: "0.1",
 			Action:  found.Role,
 			Subject: provider.SubjectInfo{AuthenticatedUsers: found.Members},
 			Object:  provider.ObjectInfo{Resources: []string{"/"}},
 		})
 	}
-	return infos, err
+	return policies, err
 }
 
 func (c *GoogleClient) SetBackendPolicy(objectId string, p provider.PolicyInfo) error {
+	url := fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s:setIamPolicy", c.ProjectId, objectId)
+
 	body := policy{bindings{[]bindingInfo{{p.Action, p.Subject.AuthenticatedUsers}}}}
 	b := new(bytes.Buffer)
 	_ = json.NewEncoder(b).Encode(body)
 
-	url := fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s:setIamPolicy", c.ProjectId, objectId)
-	post, err := c.HttpClient.Post(url, "application/json", b)
-	if err != nil {
-		log.Println("Unable to find google cloud policy.")
-		return err
-	}
-	log.Printf("Google cloud response %s.\n", post.Status)
-	return nil
+	_, err := c.HttpClient.Post(url, "application/json", b)
+	return err
 }
