@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type HTTPClient interface {
@@ -146,7 +147,7 @@ type object struct {
 	Resources []string `json:"resources"`
 }
 
-func (c orchestratorClient) Policies(url string) (policies []Policy, rawJson string, err error) {
+func (c orchestratorClient) GetPolicies(url string) (policies []Policy, rawJson string, err error) {
 	resp, err := hawksupport.HawkGet(c.client, "anId", c.key, url)
 	if err != nil {
 		return []Policy{}, rawJson, err
@@ -165,4 +166,12 @@ func (c orchestratorClient) Policies(url string) (policies []Policy, rawJson str
 		policies = append(policies, Policy{Version: p.Version, Action: p.Action, Subject: Subject{AuthenticatedUsers: p.Subject.AuthenticatedUsers}, Object: Object{Resources: p.Object.Resources}})
 	}
 	return policies, rawJson, nil
+}
+
+func (c orchestratorClient) SetPolicies(url string, policies string) error {
+	_, err := hawksupport.HawkPost(c.client, "anId", c.key, url, strings.NewReader(policies))
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -108,3 +108,39 @@ func (handler ApplicationsHandler) GetPolicies(w http.ResponseWriter, r *http.Re
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(data)
 }
+
+func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Request) {
+	identifier := mux.Vars(r)["id"]
+	var policies []Policy
+	err := json.NewDecoder(r.Body).Decode(&policies)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	record, err := handler.applicationsGateway.FindById(identifier)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	integrationRecord, err := handler.integrationsGateway.FindById(record.IntegrationId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	integration := provider.IntegrationInfo{Name: integrationRecord.Name, Key: integrationRecord.Key}
+	application := provider.ApplicationInfo{ObjectID: record.ObjectId, Name: record.Name, Description: record.Description}
+	pro := handler.providers[strings.ToLower(integrationRecord.Provider)] // todo - test for lower?
+	for _, policy := range policies {
+		info := provider.PolicyInfo{Version: policy.Version, Action: policy.Action,
+			Subject: provider.SubjectInfo{AuthenticatedUsers: policy.Subject.AuthenticatedUsers},
+			Object:  provider.ObjectInfo{Resources: policy.Object.Resources}}
+		err = pro.SetPolicyInfo(integration, application, info)
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}

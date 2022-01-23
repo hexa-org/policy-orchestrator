@@ -30,5 +30,5 @@ func (n *NoopProvider) GetPolicyInfo(info provider.IntegrationInfo, info2 provid
 }
 
 func (n *NoopProvider) SetPolicyInfo(p provider.IntegrationInfo, app provider.ApplicationInfo, policy provider.PolicyInfo) error {
-	panic("implement me")
+	return n.Err
 }

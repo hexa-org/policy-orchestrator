@@ -38,6 +38,9 @@ func ModelAndView(w http.ResponseWriter, view string, data Model) error {
 			contains := strings.Contains(s, t)
 			return contains
 		},
+		"startsWith": func(s string, prefix string) bool {
+			return strings.HasPrefix(s, prefix)
+		},
 	}).ParseFiles(views...)).Execute(w, data)
 	if err != nil {
 		log.Println("Unable to execute golang html templates.")

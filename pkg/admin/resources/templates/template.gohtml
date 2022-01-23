@@ -1,5 +1,6 @@
 {{- define "base"}}
     {{- $resource := index .Map "resource"}}
+    {{- $resource_link := index .Map "resource_link"}}
     <!doctype html>
     <html lang="en">
     <head>
@@ -26,6 +27,9 @@
         </div>
         {{- if (eq $resource "integrations") }}
             <a href="/integrations/new"><img src="/images/add_white.svg" alt="add"></a>
+        {{end}}
+        {{- if and (startsWith $resource "applications") $resource_link }}
+            <a href="{{$resource_link}}/edit"><img src="/images/edit_white.svg" alt="add"></a>
         {{end}}
     </header>
     <main>

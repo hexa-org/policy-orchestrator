@@ -1,0 +1,37 @@
+{{- template "base" .}}
+{{- define "main"}}
+    <div class="card">
+        {{- $m := index .Map "message"}}
+        {{- if $m}}
+            <div class="message">Something went wrong. {{$m}}</div>
+        {{- end }}
+        <h1>Application</h1>
+        <table>
+            <thead>
+            <tr>
+                <th>ObjectId</th>
+                <th>Name</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{- $app := index .Map "application"}}
+            <tr>
+                <td>{{$app.ObjectId}}</td>
+                <td>{{$app.Name}}</td>
+                <td>{{$app.Description}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="card">
+        <h2>Policy JSON</h2>
+        <form name="application" action="/applications/{{$app.ID}}" method="post">
+            <label for="policy">
+                <textarea name="policy" id="policy">{{- index .Map "rawJson"}}</textarea>
+            </label>
+            <input type="submit" value="Save" class="button"/>
+            <a href="/applications/{{$app.ID}}" class="button secondary">Cancel</a>
+        </form>
+    </div>
+{{- end}}

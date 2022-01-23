@@ -12,7 +12,8 @@ type Client interface {
 	Integrations(url string) ([]Integration, error)
 	CreateIntegration(url string, provider string, key []byte) error
 	DeleteIntegration(url string) error
-	Policies(url string) ([]Policy, string, error)
+	GetPolicies(url string) ([]Policy, string, error)
+	SetPolicies(url string, policies string) error
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
@@ -28,6 +29,8 @@ func LoadHandlers(orchestratorUrl string, client Client) func(router *mux.Router
 		router.HandleFunc("/", IndexHandler).Methods("GET")
 		router.HandleFunc("/applications", apps.List).Methods("GET")
 		router.HandleFunc("/applications/{id}", apps.Show).Methods("GET")
+		router.HandleFunc("/applications/{id}/edit", apps.Edit).Methods("GET")
+		router.HandleFunc("/applications/{id}", apps.Update).Methods("POST")
 		router.HandleFunc("/integrations", integrations.List).Methods("GET")
 		router.HandleFunc("/integrations/new", integrations.New).Methods("GET")
 		router.HandleFunc("/integrations", integrations.Create).Methods("POST")
