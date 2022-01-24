@@ -1,7 +1,6 @@
 package websupport_test
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
@@ -9,9 +8,6 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"net/http/httptest"
-	"path/filepath"
-	"runtime"
 	"testing"
 )
 
@@ -40,26 +36,6 @@ func TestWaitForHealth(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	websupport.Stop(server)
-}
-
-func TestModelAndView(t *testing.T) {
-	_, file, _, _ := runtime.Caller(0)
-	resourcesDirectory := filepath.Join(file, "../../../pkg/websupport/test")
-	options := websupport.Options{ResourceDirectory: resourcesDirectory}
-
-	listener, _ := net.Listen("tcp", "localhost:0")
-	websupport.Create(listener.Addr().String(), func(x *mux.Router) {}, options)
-	writer := &httptest.ResponseRecorder{Body: new(bytes.Buffer)}
-
-	_ = websupport.ModelAndView(writer, "test", websupport.Model{Map: map[string]interface{}{"resource": "resource"}})
-	body, _ := io.ReadAll(writer.Body)
-	assert.Contains(t, string(body), "success!")
-	assert.Contains(t, string(body), "Resource")
-	assert.Contains(t, string(body), "contains")
-	assert.Contains(t, string(body), "nope")
-
-	err := websupport.ModelAndView(&httptest.ResponseRecorder{}, "bad", websupport.Model{})
-	assert.Contains(t, err.Error(), "can't evaluate field Ba")
 }
 
 func TestPaths(t *testing.T) {

@@ -26,25 +26,25 @@ func App(client HTTPClient, opaUrl string, addr string, resourcesDirectory strin
 	return server
 }
 
-func dashboard(req http.ResponseWriter, _ *http.Request) {
-	_ = websupport.ModelAndView(req, "dashboard", websupport.Model{Map: map[string]interface{}{}})
+func dashboard(writer http.ResponseWriter, req *http.Request) {
+	_ = websupport.ModelAndView(websupport.SecurityContextViewSupport(writer, req, "dashboard", websupport.Model{Map: map[string]interface{}{}}))
 }
 
-func accounting(writer http.ResponseWriter, _ *http.Request) {
-	_ = websupport.ModelAndView(writer, "accounting", websupport.Model{Map: map[string]interface{}{}})
+func accounting(writer http.ResponseWriter, req *http.Request) {
+	_ = websupport.ModelAndView(websupport.SecurityContextViewSupport(writer, req, "accounting", websupport.Model{Map: map[string]interface{}{}}))
 }
 
-func sales(writer http.ResponseWriter, _ *http.Request) {
-	_ = websupport.ModelAndView(writer, "sales", websupport.Model{Map: map[string]interface{}{}})
+func sales(writer http.ResponseWriter, req *http.Request) {
+	_ = websupport.ModelAndView(websupport.SecurityContextViewSupport(writer, req, "sales", websupport.Model{Map: map[string]interface{}{}}))
 }
 
-func humanresources(writer http.ResponseWriter, _ *http.Request) {
-	_ = websupport.ModelAndView(writer, "humanresources", websupport.Model{Map: map[string]interface{}{}})
+func humanresources(writer http.ResponseWriter, req *http.Request) {
+	_ = websupport.ModelAndView(websupport.SecurityContextViewSupport(writer, req, "humanresources", websupport.Model{Map: map[string]interface{}{}}))
 }
 
-func unauthorized(writer http.ResponseWriter, _ *http.Request) {
+func unauthorized(writer http.ResponseWriter, req *http.Request) {
 	writer.WriteHeader(http.StatusUnauthorized)
-	_ = websupport.ModelAndView(writer, "unauthorized", websupport.Model{Map: map[string]interface{}{}})
+	_ = websupport.ModelAndView(websupport.SecurityContextViewSupport(writer, req, "unauthorized", websupport.Model{Map: map[string]interface{}{}}))
 }
 
 func download(writer http.ResponseWriter, _ *http.Request) {

@@ -1,0 +1,7 @@
+{{- template "base" .}}
+{{- define "main"}}
+    {{- $email := index .Map "email"}}
+    {{- if $email }}
+        {{- $email}}
+    {{- end}}
+{{- end}}
