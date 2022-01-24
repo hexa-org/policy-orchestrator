@@ -16,12 +16,19 @@ type Integration struct {
 	Key      []byte
 }
 
+type IntegrationHandler interface {
+	List(w http.ResponseWriter, r *http.Request)
+	New(w http.ResponseWriter, r *http.Request)
+	Create(w http.ResponseWriter, r *http.Request)
+	Delete(w http.ResponseWriter, r *http.Request)
+}
+
 type integrationsHandler struct {
 	orchestratorUrl string
 	client          Client
 }
 
-func NewIntegrationsHandler(orchestratorUrl string, client Client) integrationsHandler {
+func NewIntegrationsHandler(orchestratorUrl string, client Client) IntegrationHandler {
 	return integrationsHandler{orchestratorUrl, client}
 }
 

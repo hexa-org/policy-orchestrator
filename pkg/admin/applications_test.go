@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"path/filepath"
@@ -45,13 +44,8 @@ func (suite *ApplicationsSuite) TearDownTest() {
 	websupport.Stop(suite.server)
 }
 
-///
-
 func (suite *ApplicationsSuite) TestApplications() {
-	resp, err := http.Get(fmt.Sprintf("http://%s/applications", suite.server.Addr))
-	if err != nil {
-		log.Fatalln(err)
-	}
+	resp, _ := http.Get(fmt.Sprintf("http://%s/applications", suite.server.Addr))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Applications")
 	assert.Contains(suite.T(), string(body), "anObjectId")
