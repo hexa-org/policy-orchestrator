@@ -120,8 +120,8 @@ func (c orchestratorClient) Integrations(url string) (integrations []Integration
 	return integrations, nil
 }
 
-func (c orchestratorClient) CreateIntegration(url string, provider string, key []byte) error {
-	i := integration{Name: "aName", Provider: provider, Key: key} // todo - replace with project name in key
+func (c orchestratorClient) CreateIntegration(url string, name string, provider string, key []byte) error {
+	i := integration{Name: name, Provider: provider, Key: key}
 	marshal, _ := json.Marshal(i)
 	_, err := hawksupport.HawkPost(c.client, "anId", c.key, url, bytes.NewReader(marshal))
 	return err

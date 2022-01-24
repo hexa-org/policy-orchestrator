@@ -8,7 +8,7 @@ import (
 type Client interface {
 	Health(url string) (string, error)
 	Integrations(url string) ([]Integration, error)
-	CreateIntegration(url string, provider string, key []byte) error
+	CreateIntegration(url string, name string, provider string, key []byte) error
 	DeleteIntegration(url string) error
 	Applications(url string) ([]Application, error)
 	Application(url string) (Application, error)
@@ -29,7 +29,7 @@ func LoadHandlers(orchestratorUrl string, client Client) func(router *mux.Router
 		router.HandleFunc("/", IndexHandler).Methods("GET")
 		router.HandleFunc("/integrations", integrations.List).Methods("GET")
 		router.HandleFunc("/integrations/new", integrations.New).Methods("GET")
-		router.HandleFunc("/integrations", integrations.Create).Methods("POST")
+		router.HandleFunc("/integrations", integrations.CreateGoogleIntegration).Methods("POST")
 		router.HandleFunc("/integrations/{id}", integrations.Delete).Methods("POST")
 		router.HandleFunc("/applications", apps.List).Methods("GET")
 		router.HandleFunc("/applications/{id}", apps.Show).Methods("GET")

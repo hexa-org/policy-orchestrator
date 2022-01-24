@@ -7,7 +7,10 @@ import (
 
 type MockClient struct {
 	mock.Mock
-	Err error
+	Name     string
+	Provider string
+	Key      []byte
+	Err      error
 }
 
 func (m *MockClient) Integrations(_ string) ([]admin.Integration, error) {
@@ -15,8 +18,11 @@ func (m *MockClient) Integrations(_ string) ([]admin.Integration, error) {
 	return []admin.Integration{integration}, m.Err
 }
 
-func (m *MockClient) CreateIntegration(url string, _ string, _ []byte) error {
+func (m *MockClient) CreateIntegration(url string, name string, provider string, key []byte) error {
 	args := m.Called(url)
+	m.Name = name
+	m.Provider = provider
+	m.Key = key
 	if len(args) > 0 {
 		return args.Error(0)
 	}

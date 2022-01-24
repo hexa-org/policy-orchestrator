@@ -1,6 +1,8 @@
 package admin
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
@@ -19,7 +21,7 @@ type Integration struct {
 type IntegrationHandler interface {
 	List(w http.ResponseWriter, r *http.Request)
 	New(w http.ResponseWriter, r *http.Request)
-	Create(w http.ResponseWriter, r *http.Request)
+	CreateGoogleIntegration(w http.ResponseWriter, r *http.Request)
 	Delete(w http.ResponseWriter, r *http.Request)
 }
 
@@ -50,7 +52,11 @@ func (i integrationsHandler) New(w http.ResponseWriter, r *http.Request) {
 	_ = websupport.ModelAndView(w, "integrations_new", model)
 }
 
-func (i integrationsHandler) Create(w http.ResponseWriter, r *http.Request) {
+type keyFile struct {
+	ProjectId string `json:"project_id"`
+}
+
+func (i integrationsHandler) CreateGoogleIntegration(w http.ResponseWriter, r *http.Request) {
 	url := fmt.Sprintf("%v/integrations", i.orchestratorUrl)
 
 	err := r.ParseMultipartForm(32 << 20)
@@ -75,7 +81,17 @@ func (i integrationsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = file.Close()
 
-	err = i.client.CreateIntegration(url, provider, key)
+	var foundKeyFile keyFile
+	err = json.NewDecoder(bytes.NewReader(key)).Decode(&foundKeyFile)
+	if err != nil || foundKeyFile.ProjectId == "" {
+		log.Println("Unable to read key file.")
+		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "message": "Unable to read key file."}}
+		_ = websupport.ModelAndView(w, "integrations_new", model)
+		return
+	}
+	name := foundKeyFile.ProjectId
+
+	err = i.client.CreateIntegration(url, name, provider, key)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

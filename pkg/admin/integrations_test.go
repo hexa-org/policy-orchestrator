@@ -67,25 +67,36 @@ func (suite *IntegrationsSuite) TestNewIntegration() {
 
 func (suite *IntegrationsSuite) TestCreateIntegration() {
 	suite.client.On("CreateIntegration", "http://noop/integrations").Return()
-	buf, contentType := suite.multipartForm()
-	resp := suite.must(http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf))
+	buf, contentType := suite.multipartFormSuccess()
+	resp, _ := http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf)
 	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
+	assert.Equal(suite.T(), "google-cloud-project-id", suite.client.Name)
+	assert.Equal(suite.T(), "google cloud", suite.client.Provider)
 }
 
-func (suite *IntegrationsSuite) TestCreateIntegration_with_error() {
+func (suite *IntegrationsSuite) TestCreateIntegration_withError() {
 	suite.client.On("CreateIntegration", "http://noop/integrations").Return(errors.New(""))
-	buf, contentType := suite.multipartForm()
+	buf, contentType := suite.multipartFormSuccess()
 	resp := suite.must(http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf))
 	assert.Equal(suite.T(), http.StatusInternalServerError, resp.StatusCode)
 }
 
-func (suite *IntegrationsSuite) TestCreateIntegration_missing_key_file() {
+func (suite *IntegrationsSuite) TestCreateIntegration_withMissingKeyFile() {
 	suite.client.On("CreateIntegration", "http://noop/integrations").Return(errors.New(""))
 	buff, contentType := suite.multipartFormMissingFile()
 	resp := suite.must(http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buff))
 	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
 	all, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(all), "Something went wrong. Missing key file.")
+}
+
+func (suite *IntegrationsSuite) TestCreateIntegration_withErroneousKeyFile() {
+	suite.client.On("CreateIntegration", "http://noop/integrations").Return()
+	buf, contentType := suite.multipartFormErroneousFile()
+	resp, _ := http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf)
+	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
+	all, _ := io.ReadAll(resp.Body)
+	assert.Contains(suite.T(), string(all), "Something went wrong. Unable to read key file.")
 }
 
 func (suite *IntegrationsSuite) TestDeleteIntegration() {
@@ -105,23 +116,37 @@ func (suite *IntegrationsSuite) must(resp *http.Response, _ error) *http.Respons
 	return resp
 }
 
-func (suite *IntegrationsSuite) multipartFormMissingFile() (*bytes.Buffer, string) {
-	buf := new(bytes.Buffer)
-	writer := multipart.NewWriter(buf)
-	provider, _ := writer.CreateFormField("provider")
-	_, _ = provider.Write([]byte("google cloud"))
-	contentType := writer.FormDataContentType()
-	_ = writer.Close()
-	return buf, contentType
+func (suite *IntegrationsSuite) multipartFormSuccess() (*bytes.Buffer, string) {
+	return suite.multipartForm(func(writer *multipart.Writer) {
+		provider, _ := writer.CreateFormField("provider")
+		_, _ = provider.Write([]byte("google cloud"))
+
+		file, _ := writer.CreateFormFile("key", "aKey.json")
+		_, _ = file.Write([]byte("{\"type\": \"service_account\", \"project_id\": \"google-cloud-project-id\"}"))
+	})
 }
 
-func (suite *IntegrationsSuite) multipartForm() (*bytes.Buffer, string) {
+func (suite *IntegrationsSuite) multipartFormMissingFile() (*bytes.Buffer, string) {
+	return suite.multipartForm(func(writer *multipart.Writer) {
+		provider, _ := writer.CreateFormField("provider")
+		_, _ = provider.Write([]byte("google cloud"))
+	})
+}
+
+func (suite *IntegrationsSuite) multipartFormErroneousFile() (*bytes.Buffer, string) {
+	return suite.multipartForm(func(writer *multipart.Writer) {
+		provider, _ := writer.CreateFormField("provider")
+		_, _ = provider.Write([]byte("google cloud"))
+
+		file, _ := writer.CreateFormFile("key", "aKey.json")
+		_, _ = file.Write([]byte("{\"_____project_id\": \"google-cloud-project-id\"}"))
+	})
+}
+
+func (suite *IntegrationsSuite) multipartForm(writeFormValues func(writer *multipart.Writer)) (*bytes.Buffer, string) {
 	buf := new(bytes.Buffer)
 	writer := multipart.NewWriter(buf)
-	provider, _ := writer.CreateFormField("provider")
-	_, _ = provider.Write([]byte("google cloud"))
-	file, _ := writer.CreateFormFile("key", "aKey.json")
-	_, _ = file.Write([]byte("aKey"))
+	writeFormValues(writer)
 	contentType := writer.FormDataContentType()
 	_ = writer.Close()
 	return buf, contentType

@@ -129,7 +129,7 @@ func TestOrchestratorClient_CreateIntegrations(t *testing.T) {
 	mockClient.status = http.StatusCreated
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 
-	err := client.CreateIntegration("localhost:8883/integrations", "", []byte{})
+	err := client.CreateIntegration("localhost:8883/integrations", "aName", "aProvider", []byte{})
 	assert.NoError(t, err)
 }
 
