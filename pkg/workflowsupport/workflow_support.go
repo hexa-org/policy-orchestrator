@@ -59,9 +59,7 @@ func (ws *WorkScheduler) checkForWork(worker Worker) {
 		log.Printf("Found work.\n")
 
 		go func(task interface{}) {
-			err := worker.Run(task)
-			if err != nil {
-				log.Printf("oops. %v\n", err)
+			if err := worker.Run(task); err != nil {
 				finder.MarkErroneous()
 				return
 			}

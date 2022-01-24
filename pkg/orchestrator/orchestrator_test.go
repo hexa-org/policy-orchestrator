@@ -11,7 +11,6 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
-	"log"
 	"net"
 	"net/http"
 	"testing"
@@ -37,9 +36,7 @@ func TestOrchestratorHandlers(t *testing.T) {
 	websupport.WaitForHealthy(server)
 
 	resp, err := http.Get(fmt.Sprintf("http://%s/health", server.Addr))
-	if err != nil {
-		log.Fatalln(err)
-	}
+	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	websupport.Stop(server)

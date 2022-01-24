@@ -35,8 +35,6 @@ func (suite *ApplicationGatewaySuite) TearDownTest() {
 	_ = suite.db.Close()
 }
 
-///
-
 func (suite *ApplicationGatewaySuite) TestCreate() {
 	id, err := suite.gateway.Create(suite.integrationTestId, "anObjectId", "aName", "aDescription")
 	assert.NotEmpty(suite.T(), id)

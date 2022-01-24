@@ -42,12 +42,7 @@ func (handler IntegrationsHandler) Create(w http.ResponseWriter, r *http.Request
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	find, erroneousFind := handler.gateway.Find()
-	if erroneousFind != nil {
-		http.Error(w, erroneousFind.Error(), http.StatusInternalServerError)
-		return
-	}
-	_ = handler.worker.Run(find)
+	handler.RunWorker()
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -57,4 +52,9 @@ func (handler IntegrationsHandler) Delete(w http.ResponseWriter, r *http.Request
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func (handler IntegrationsHandler) RunWorker() {
+	find, _ := handler.gateway.Find()
+	_ = handler.worker.Run(find)
 }
