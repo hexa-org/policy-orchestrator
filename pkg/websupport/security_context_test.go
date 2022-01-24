@@ -15,7 +15,7 @@ import (
 	"testing"
 )
 
-func TestSecurityContextMiddleware_withEmail(t *testing.T) {
+func TestSecurityContextMiddleware_withGoogleEmail(t *testing.T) {
 	model := websupport.Model{Map: map[string]interface{}{"resource": "resource"}}
 	request := httptest.NewRequest("GET", "/", strings.NewReader(""))
 	request.Header["X-Goog-Authenticated-User-Email"] = []string{"anEmail@google.com"}
@@ -26,7 +26,7 @@ func TestSecurityContextMiddleware_withEmail(t *testing.T) {
 	assert.Contains(t, string(body), "anEmail@google.com")
 }
 
-func TestSecurityContextMiddleware_withoutEmail(t *testing.T) {
+func TestSecurityContextMiddleware_withoutGoogleEmail(t *testing.T) {
 	model := websupport.Model{Map: map[string]interface{}{"resource": "resource"}}
 	request := httptest.NewRequest("GET", "/", strings.NewReader(""))
 
