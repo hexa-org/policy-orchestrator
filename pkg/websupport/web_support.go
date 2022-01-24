@@ -44,6 +44,22 @@ func ModelAndView(w http.ResponseWriter, view string, data Model) error {
 	}).ParseFiles(views...)).Execute(w, data)
 }
 
+type Path struct {
+	URI     string
+	Methods []string
+}
+
+func Paths(router *mux.Router) []Path {
+	var paths []Path
+	_ = router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+		uri, _ := route.GetPathTemplate()
+		methods, _ := route.GetMethods()
+		paths = append(paths, Path{uri, methods})
+		return nil
+	})
+	return paths
+}
+
 type Health struct {
 	Status string `json:"status"`
 }
@@ -65,6 +81,9 @@ func Create(addr string, handlers func(x *mux.Router), options Options) *http.Se
 	server := http.Server{
 		Addr:    addr,
 		Handler: router,
+	}
+	for _, p := range Paths(router) {
+		log.Println("Registered route", p.Methods, p.URI)
 	}
 	return &server
 }
