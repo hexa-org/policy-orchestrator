@@ -58,8 +58,8 @@ func (suite *GatewaySuite) TestDelete() {
 
 func (suite *GatewaySuite) TestFindById() {
 	id, _ := suite.gateway.Create("aName", "google cloud", []byte("aKey"))
-	i, _ := suite.gateway.FindById(id)
-	assert.Equal(suite.T(), "aName", i.Name)
-	assert.Equal(suite.T(), "google cloud", i.Provider)
-	assert.Equal(suite.T(), []byte("aKey"), i.Key)
+	record, _ := suite.gateway.FindById(id)
+	assert.Equal(suite.T(), "aName", record.Name)
+	assert.Equal(suite.T(), "google cloud", record.Provider)
+	assert.Equal(suite.T(), []byte("aKey"), record.Key)
 }

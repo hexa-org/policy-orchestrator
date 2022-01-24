@@ -22,11 +22,12 @@ func TestApplicationsDataGateway(t *testing.T) {
 
 func (suite *ApplicationGatewaySuite) SetupTest() {
 	suite.db, _ = databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
-	_, _ = suite.db.Exec("delete from applications;")
-	_, _ = suite.db.Exec("delete from integrations;")
-	_ = suite.db.QueryRow(`insert into integrations (name, provider, key) values ($1, $2, $3) returning id`,
-		"aName", "aProvider", []byte("aKey")).Scan(&suite.integrationTestId)
-
+	_, _ = suite.db.Exec(`
+delete from applications;
+delete from integrations;
+insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'aName', 'google cloud', 'aKey');
+`)
+	suite.integrationTestId = "50e00619-9f15-4e85-a7e9-f26d87ea12e7"
 	suite.gateway = orchestrator.ApplicationsDataGateway{DB: suite.db}
 }
 
@@ -44,11 +45,12 @@ func (suite *ApplicationGatewaySuite) TestCreate() {
 
 func (suite *ApplicationGatewaySuite) TestFind() {
 	_, _ = suite.gateway.Create(suite.integrationTestId, "anObjectId", "aName", "aDescription")
-	all, _ := suite.gateway.Find()
-	assert.Equal(suite.T(), suite.integrationTestId, all[0].IntegrationId)
-	assert.Equal(suite.T(), "anObjectId", all[0].ObjectId)
-	assert.Equal(suite.T(), "aName", all[0].Name)
-	assert.Equal(suite.T(), "aDescription", all[0].Description)
+	records, _ := suite.gateway.Find()
+	record := records[0]
+	assert.Equal(suite.T(), suite.integrationTestId, record.IntegrationId)
+	assert.Equal(suite.T(), "anObjectId", record.ObjectId)
+	assert.Equal(suite.T(), "aName", record.Name)
+	assert.Equal(suite.T(), "aDescription", record.Description)
 }
 
 func (suite *ApplicationGatewaySuite) TestFind_withBadDatabaseUrl() {
@@ -68,9 +70,9 @@ func (suite *ApplicationGatewaySuite) TestFind_ignoresDuplicates() {
 
 func (suite *ApplicationGatewaySuite) TestFindById() {
 	id, _ := suite.gateway.Create(suite.integrationTestId, "anObjectId", "aName", "aDescription")
-	found, _ := suite.gateway.FindById(id)
-	assert.Equal(suite.T(), suite.integrationTestId, found.IntegrationId)
-	assert.Equal(suite.T(), "anObjectId", found.ObjectId)
-	assert.Equal(suite.T(), "aName", found.Name)
-	assert.Equal(suite.T(), "aDescription", found.Description)
+	record, _ := suite.gateway.FindById(id)
+	assert.Equal(suite.T(), suite.integrationTestId, record.IntegrationId)
+	assert.Equal(suite.T(), "anObjectId", record.ObjectId)
+	assert.Equal(suite.T(), "aName", record.Name)
+	assert.Equal(suite.T(), "aDescription", record.Description)
 }

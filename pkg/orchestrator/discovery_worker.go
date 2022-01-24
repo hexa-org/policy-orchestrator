@@ -1,7 +1,6 @@
 package orchestrator
 
 import (
-	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"log"
 )
@@ -12,7 +11,6 @@ type DiscoveryWorker struct {
 }
 
 func (n *DiscoveryWorker) Run(work interface{}) error {
-	// todo - explore just in time provider creation
 	for _, p := range n.Providers {
 		log.Printf("Found discovery provider %s.", p.Name())
 
@@ -22,10 +20,7 @@ func (n *DiscoveryWorker) Run(work interface{}) error {
 
 			log.Printf("Found %d applications for integration provider %s.", len(applications), p.Name())
 			for _, app := range applications {
-				_, err := n.Gateway.Create(record.ID, app.ObjectID, app.Name, app.Description)
-				if err != nil {
-					log.Printf(err.Error())
-				}
+				_, _ = n.Gateway.Create(record.ID, app.ObjectID, app.Name, app.Description)
 			}
 		}
 	}
@@ -56,27 +51,15 @@ func (finder *DiscoveryWorkFinder) Stop() {
 	close(finder.Results)
 }
 
-func (finder *DiscoveryWorkFinder) FindRequested() (results []interface{}) {
+func (finder *DiscoveryWorkFinder) FindRequested() []interface{} {
 	found, err := finder.Gateway.Find()
 	if err != nil {
-		log.Printf(err.Error())
-		return results
+		return nil
 	}
+	var results []interface{}
 	if len(found) > 0 {
 		results = append(results, found)
 		return results
 	}
 	return results
-}
-
-func Report(results chan bool) {
-	go func() {
-		for success := range results {
-			if success {
-				fmt.Println("work successfully completed")
-			} else {
-				fmt.Println("work not completed")
-			}
-		}
-	}()
 }
