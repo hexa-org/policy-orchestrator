@@ -34,8 +34,6 @@ func TestIntegrationsHandler(t *testing.T) {
 func (s *HandlerSuite) SetupTest() {
 	s.db, _ = databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
 	s.gateway = orchestrator.IntegrationsDataGateway{DB: s.db}
-
-	// todo - move below to scenario style
 	_, _ = s.db.Exec("delete from integrations;")
 
 	listener, _ := net.Listen("tcp", "localhost:0")
