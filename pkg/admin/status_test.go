@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"path/filepath"
@@ -44,13 +43,8 @@ func (suite *StatusSuite) TearDownTest() {
 	websupport.Stop(suite.server)
 }
 
-///
-
 func (suite *StatusSuite) TestStatus() {
-	resp, err := http.Get(fmt.Sprintf("http://%s/status", suite.server.Addr))
-	if err != nil {
-		log.Fatalln(err)
-	}
+	resp, _ := http.Get(fmt.Sprintf("http://%s/status", suite.server.Addr))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Hexa Policy Orchestrator Status")
 	assert.Contains(suite.T(), string(body), "http://noop")

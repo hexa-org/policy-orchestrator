@@ -33,16 +33,23 @@ type Object struct {
 	Resources []string
 }
 
-type applicationsHandler struct {
+type ApplicationsHandler interface {
+	List(w http.ResponseWriter, r *http.Request)
+	Show(w http.ResponseWriter, r *http.Request)
+	Edit(w http.ResponseWriter, r *http.Request)
+	Update(w http.ResponseWriter, r *http.Request)
+}
+
+type appsHandler struct {
 	orchestratorUrl string
 	client          Client
 }
 
-func NewApplicationsHandler(orchestratorUrl string, client Client) applicationsHandler {
-	return applicationsHandler{orchestratorUrl, client}
+func NewApplicationsHandler(orchestratorUrl string, client Client) ApplicationsHandler {
+	return appsHandler{orchestratorUrl, client}
 }
 
-func (p applicationsHandler) List(w http.ResponseWriter, r *http.Request) {
+func (p appsHandler) List(w http.ResponseWriter, r *http.Request) {
 	url := fmt.Sprintf("%v/applications", p.orchestratorUrl)
 	applications, err := p.client.Applications(url)
 	if err != nil {
@@ -55,7 +62,7 @@ func (p applicationsHandler) List(w http.ResponseWriter, r *http.Request) {
 	_ = websupport.ModelAndView(w, "applications", model)
 }
 
-func (p applicationsHandler) Show(w http.ResponseWriter, r *http.Request) {
+func (p appsHandler) Show(w http.ResponseWriter, r *http.Request) {
 	identifier := mux.Vars(r)["id"]
 	orchestratorAppEndpoint := fmt.Sprintf("%v/applications/%s", p.orchestratorUrl, identifier)
 	app, err := p.client.Application(orchestratorAppEndpoint)
@@ -75,7 +82,7 @@ func (p applicationsHandler) Show(w http.ResponseWriter, r *http.Request) {
 	_ = websupport.ModelAndView(w, "applications_show", model)
 }
 
-func (p applicationsHandler) Edit(w http.ResponseWriter, r *http.Request) {
+func (p appsHandler) Edit(w http.ResponseWriter, r *http.Request) {
 	identifier := mux.Vars(r)["id"]
 	orchestratorAppsEndpoint := fmt.Sprintf("%v/applications/%s", p.orchestratorUrl, identifier)
 	app, err := p.client.Application(orchestratorAppsEndpoint)
@@ -93,7 +100,7 @@ func (p applicationsHandler) Edit(w http.ResponseWriter, r *http.Request) {
 	_ = websupport.ModelAndView(w, "applications_edit", model)
 }
 
-func (p applicationsHandler) Update(w http.ResponseWriter, r *http.Request) {
+func (p appsHandler) Update(w http.ResponseWriter, r *http.Request) {
 	identifier := mux.Vars(r)["id"]
 	orchestratorPolicyEndpoint := fmt.Sprintf("%v/applications/%s/policies", p.orchestratorUrl, identifier)
 	value := r.FormValue("policy")

@@ -46,8 +46,6 @@ func (suite *IntegrationsSuite) TearDownTest() {
 	websupport.Stop(suite.server)
 }
 
-///
-
 func (suite *IntegrationsSuite) TestListIntegrations() {
 	resp := suite.must(http.Get(fmt.Sprintf("http://%s/integrations", suite.server.Addr)))
 	body, _ := io.ReadAll(resp.Body)
@@ -102,8 +100,6 @@ func (suite *IntegrationsSuite) TestDeleteIntegration_with_error() {
 	resp := suite.must(http.Post(fmt.Sprintf("http://%s/integrations/101", suite.server.Addr), "", nil))
 	assert.Equal(suite.T(), http.StatusInternalServerError, resp.StatusCode)
 }
-
-///
 
 func (suite *IntegrationsSuite) must(resp *http.Response, _ error) *http.Response {
 	return resp
