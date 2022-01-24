@@ -17,7 +17,7 @@ type IntegrationsDataGateway struct {
 
 func (gateway IntegrationsDataGateway) Create(name string, provider string, key []byte) (string, error) {
 	var id string
-	err := gateway.DB.QueryRow(`insert into integrations (name, provider, key) values ($1, $2, $3) returning id`,
+	err := gateway.DB.QueryRow("insert into integrations (name, provider, key) values ($1, $2, $3) returning id",
 		name, provider, key).Scan(&id)
 	return id, err
 }
@@ -34,9 +34,8 @@ func (gateway IntegrationsDataGateway) Find() ([]IntegrationRecord, error) {
 	var records []IntegrationRecord
 	for rows.Next() {
 		var record IntegrationRecord
-		err := rows.Scan(&record.ID, &record.Name, &record.Provider, &record.Key)
-		if err != nil {
-			return nil, err
+		if erroneousScan := rows.Scan(&record.ID, &record.Name, &record.Provider, &record.Key); erroneousScan != nil {
+			return nil, erroneousScan
 		}
 		records = append(records, record)
 	}
@@ -44,7 +43,7 @@ func (gateway IntegrationsDataGateway) Find() ([]IntegrationRecord, error) {
 }
 
 func (gateway IntegrationsDataGateway) Delete(id string) error {
-	_, err := gateway.DB.Exec(`delete from integrations where id=$1`, id)
+	_, err := gateway.DB.Exec("delete from integrations where id=$1", id)
 	return err
 }
 

@@ -17,7 +17,6 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"log"
 	"net"
 	"net/http"
 	"testing"
@@ -25,13 +24,12 @@ import (
 
 type ApplicationsHandlerSuite struct {
 	suite.Suite
-	db         *sql.DB
-	server     *http.Server
-	scheduler  *workflowsupport.WorkScheduler
-	key        string
-	gateway    orchestrator.IntegrationsDataGateway
-	appGateway orchestrator.ApplicationsDataGateway
-	providers  map[string]provider.Provider
+	db                *sql.DB
+	server            *http.Server
+	scheduler         *workflowsupport.WorkScheduler
+	key               string
+	providers         map[string]provider.Provider
+	applicationTestId string
 }
 
 func TestApplicationsHandler(t *testing.T) {
@@ -40,11 +38,13 @@ func TestApplicationsHandler(t *testing.T) {
 
 func (s *ApplicationsHandlerSuite) SetupTest() {
 	s.db, _ = databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
-	s.gateway = orchestrator.IntegrationsDataGateway{DB: s.db}
-
-	// todo - move below to scenario style
-	_, _ = s.db.Exec("delete from applications;")
-	_, _ = s.db.Exec("delete from integrations;")
+	_, _ = s.db.Exec(`
+delete from applications;
+delete from integrations;
+insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'aName', 'google cloud', 'aKey');
+insert into applications (id, integration_id, object_id, name, description) values ('6409776a-367a-483a-a194-5ccf9c4ff210', '50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'anObjectId', 'aName', 'aDescription');
+`)
+	s.applicationTestId = "6409776a-367a-483a-a194-5ccf9c4ff210"
 
 	listener, _ := net.Listen("tcp", "localhost:0")
 	addr := listener.Addr().String()
@@ -53,6 +53,7 @@ func (s *ApplicationsHandlerSuite) SetupTest() {
 	s.key = hex.EncodeToString(hash[:])
 
 	s.providers = make(map[string]provider.Provider)
+	s.providers["google cloud"] = &orchestrator_test.NoopProvider{}
 
 	handlers, scheduler := orchestrator.LoadHandlers(s.db, hawksupport.NewCredentialStore(s.key), addr, s.providers)
 	s.scheduler = scheduler
@@ -68,45 +69,25 @@ func (s *ApplicationsHandlerSuite) TearDownTest() {
 }
 
 func (s *ApplicationsHandlerSuite) TestList() {
-	var integrationTestId string
-	_ = s.db.QueryRow(`insert into integrations (name, provider, key) values ($1, $2, $3) returning id`,
-		"aName", "aProvider", []byte("aKey")).Scan(&integrationTestId)
+	url := fmt.Sprintf("http://%s/applications", s.server.Addr)
 
-	var applicationTestId string
-	_ = s.db.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
-		integrationTestId, "anObjectId", "aName", "aDescription").Scan(&applicationTestId)
-
-	s.providers["google cloud"] = &orchestrator_test.NoopProvider{}
-
-	resp, err := hawksupport.HawkGet(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/applications", s.server.Addr))
-	if err != nil {
-		log.Fatalln(err)
-	}
+	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, url)
 	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
 
 	var apps orchestrator.Applications
 	_ = json.NewDecoder(resp.Body).Decode(&apps)
 	assert.Equal(s.T(), 1, len(apps.Applications))
-	assert.Equal(s.T(), "anObjectId", apps.Applications[0].ObjectId)
-	assert.Equal(s.T(), "aName", apps.Applications[0].Name)
-	assert.Equal(s.T(), "aDescription", apps.Applications[0].Description)
+
+	application := apps.Applications[0]
+	assert.Equal(s.T(), "anObjectId", application.ObjectId)
+	assert.Equal(s.T(), "aName", application.Name)
+	assert.Equal(s.T(), "aDescription", application.Description)
 }
 
 func (s *ApplicationsHandlerSuite) TestShow() {
-	var integrationTestId string
-	_ = s.db.QueryRow(`insert into integrations (name, provider, key) values ($1, $2, $3) returning id`,
-		"aName", "aProvider", []byte("aKey")).Scan(&integrationTestId)
+	url := fmt.Sprintf("http://%s/applications/%s", s.server.Addr, s.applicationTestId)
 
-	var applicationTestId string
-	_ = s.db.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
-		integrationTestId, "anObjectId", "aName", "aDescription").Scan(&applicationTestId)
-
-	s.providers["google cloud"] = &orchestrator_test.NoopProvider{}
-
-	resp, err := hawksupport.HawkGet(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/applications/%s", s.server.Addr, applicationTestId))
-	if err != nil {
-		log.Fatalln(err)
-	}
+	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, url)
 	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
 
 	var app orchestrator.Application
@@ -117,87 +98,51 @@ func (s *ApplicationsHandlerSuite) TestShow() {
 }
 
 func (s *ApplicationsHandlerSuite) TestShow_withUnknownID() {
-	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/applications/oops", s.server.Addr))
+	url := fmt.Sprintf("http://%s/applications/oops", s.server.Addr)
+
+	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, url)
 	assert.Equal(s.T(), http.StatusInternalServerError, resp.StatusCode)
 }
 
 func (s *ApplicationsHandlerSuite) TestGetPolicies() {
-	var integrationTestId string
-	_ = s.db.QueryRow(`insert into integrations (name, provider, key) values ($1, $2, $3) returning id`,
-		"aName", "google cloud", []byte("aKey")).Scan(&integrationTestId)
+	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)
 
-	var applicationTestId string
-	_ = s.db.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
-		integrationTestId, "anObjectId", "aName", "aDescription").Scan(&applicationTestId)
-
-	s.providers["google cloud"] = &orchestrator_test.NoopProvider{}
-
-	resp, err := hawksupport.HawkGet(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, applicationTestId))
-	if err != nil {
-		log.Fatalln(err)
-	}
+	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, url)
 	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
 
-	var p []orchestrator.Policy
-	_ = json.NewDecoder(resp.Body).Decode(&p)
-	assert.Equal(s.T(), 2, len(p))
-	assert.Equal(s.T(), "anAction", p[0].Action)
-	assert.Equal(s.T(), "aVersion", p[0].Version)
-	assert.Equal(s.T(), []string{"aUser"}, p[0].Subject.AuthenticatedUsers)
-	assert.Equal(s.T(), []string{"/"}, p[0].Object.Resources)
+	var policies []orchestrator.Policy
+	_ = json.NewDecoder(resp.Body).Decode(&policies)
+	assert.Equal(s.T(), 2, len(policies))
+
+	policy := policies[0]
+	assert.Equal(s.T(), "anAction", policy.Action)
+	assert.Equal(s.T(), "aVersion", policy.Version)
+	assert.Equal(s.T(), []string{"aUser"}, policy.Subject.AuthenticatedUsers)
+	assert.Equal(s.T(), []string{"/"}, policy.Object.Resources)
 }
 
 func (s *ApplicationsHandlerSuite) TestGetPolicies_withRequestFails() {
-	var integrationTestId string
-	_ = s.db.QueryRow(`insert into integrations (name, provider, key) values ($1, $2, $3) returning id`,
-		"aName", "google cloud", []byte("aKey")).Scan(&integrationTestId)
-
-	var applicationTestId string
-	_ = s.db.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
-		integrationTestId, "anObjectId", "aName", "aDescription").Scan(&applicationTestId)
-
 	discovery := orchestrator_test.NoopProvider{}
 	discovery.Err = errors.New("oops")
 	s.providers["google cloud"] = &discovery
 
-	resp, err := hawksupport.HawkGet(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, applicationTestId))
-	if err != nil {
-		log.Fatalln(err)
-	}
+	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)
+
+	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, url)
 	assert.Equal(s.T(), http.StatusInternalServerError, resp.StatusCode)
 }
 
 func (s *ApplicationsHandlerSuite) TestSetPolicies() {
-	var integrationTestId string
-	_ = s.db.QueryRow(`insert into integrations (name, provider, key) values ($1, $2, $3) returning id`,
-		"aName", "google cloud", []byte("aKey")).Scan(&integrationTestId)
-
-	var applicationTestId string
-	_ = s.db.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
-		integrationTestId, "anObjectId", "aName", "aDescription").Scan(&applicationTestId)
-
-	s.providers["google cloud"] = &orchestrator_test.NoopProvider{}
-
 	var buf bytes.Buffer
 	policy := orchestrator.Policy{Version: "v0.1", Action: "anAction", Subject: orchestrator.Subject{AuthenticatedUsers: []string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{Resources: []string{"/"}}}
 	_ = json.NewEncoder(&buf).Encode([]orchestrator.Policy{policy})
 
-	resp, err := hawksupport.HawkPost(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, applicationTestId), bytes.NewReader(buf.Bytes()))
-	if err != nil {
-		log.Fatalln(err)
-	}
+	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)
+	resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", s.key, url, bytes.NewReader(buf.Bytes()))
 	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
 }
 
 func (s *ApplicationsHandlerSuite) TestSetPolicies_withErroneousProvider() {
-	var integrationTestId string
-	_ = s.db.QueryRow(`insert into integrations (name, provider, key) values ($1, $2, $3) returning id`,
-		"aName", "google cloud", []byte("aKey")).Scan(&integrationTestId)
-
-	var applicationTestId string
-	_ = s.db.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
-		integrationTestId, "anObjectId", "aName", "aDescription").Scan(&applicationTestId)
-
 	noopProvider := orchestrator_test.NoopProvider{}
 	noopProvider.Err = errors.New("oops")
 	s.providers["google cloud"] = &noopProvider
@@ -206,14 +151,15 @@ func (s *ApplicationsHandlerSuite) TestSetPolicies_withErroneousProvider() {
 	policy := orchestrator.Policy{Version: "v0.1", Action: "anAction", Subject: orchestrator.Subject{[]string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{Resources: []string{"/"}}}
 	_ = json.NewEncoder(&buf).Encode(policy)
 
-	resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, applicationTestId), bytes.NewReader(buf.Bytes()))
+	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)
+
+	resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", s.key, url, bytes.NewReader(buf.Bytes()))
 	assert.Equal(s.T(), http.StatusInternalServerError, resp.StatusCode)
 }
 
 func (s *ApplicationsHandlerSuite) TestSetPolicies_withMissingJson() {
-	resp, err := hawksupport.HawkPost(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, "anId"), nil)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, "anId")
+
+	resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", s.key, url, nil)
 	assert.Equal(s.T(), http.StatusInternalServerError, resp.StatusCode)
 }

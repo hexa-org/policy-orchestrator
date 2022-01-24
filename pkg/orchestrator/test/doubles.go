@@ -6,7 +6,7 @@ import (
 
 type NoopProvider struct {
 	Discovered int
-	Err error
+	Err        error
 }
 
 func (n *NoopProvider) Name() string {

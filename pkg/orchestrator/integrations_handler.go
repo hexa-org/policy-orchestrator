@@ -3,7 +3,6 @@ package orchestrator
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"log"
 	"net/http"
 )
 
@@ -24,10 +23,7 @@ type IntegrationsHandler struct {
 }
 
 func (handler IntegrationsHandler) List(w http.ResponseWriter, r *http.Request) {
-	records, err := handler.gateway.Find()
-	if err != nil {
-		log.Println(err)
-	}
+	records, _ := handler.gateway.Find()
 	var list Integrations
 	for _, rec := range records {
 		list.Integrations = append(list.Integrations, Integration{rec.ID, rec.Name, rec.Provider, rec.Key})
@@ -46,14 +42,17 @@ func (handler IntegrationsHandler) Create(w http.ResponseWriter, r *http.Request
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	find, err := handler.gateway.Find()
+	find, erroneousFind := handler.gateway.Find()
+	if erroneousFind != nil {
+		http.Error(w, erroneousFind.Error(), http.StatusInternalServerError)
+		return
+	}
 	_ = handler.worker.Run(find)
 	w.WriteHeader(http.StatusCreated)
 }
 
 func (handler IntegrationsHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	err := handler.gateway.Delete(mux.Vars(r)["id"])
-	if err != nil {
+	if err := handler.gateway.Delete(mux.Vars(r)["id"]); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

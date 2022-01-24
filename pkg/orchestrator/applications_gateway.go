@@ -22,18 +22,16 @@ func (gateway ApplicationsDataGateway) Create(integrationId string, objectId str
 	if existing.ObjectId != "" {
 		log.Println("Found existing application record.")
 		return existing.ID, nil
-	} else {
-		var id string
-		err := gateway.DB.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
-			integrationId, objectId, name, description).Scan(&id)
-		return id, err
 	}
+	var id string
+	err := gateway.DB.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
+		integrationId, objectId, name, description).Scan(&id)
+	return id, err
 }
 
 func (gateway ApplicationsDataGateway) Find() ([]ApplicationRecord, error) {
 	rows, err := gateway.DB.Query("select id, integration_id, object_id, name, description from applications")
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 	defer func(rows *sql.Rows) {
@@ -43,22 +41,20 @@ func (gateway ApplicationsDataGateway) Find() ([]ApplicationRecord, error) {
 	var records []ApplicationRecord
 	for rows.Next() {
 		var record ApplicationRecord
-		err := rows.Scan(&record.ID, &record.IntegrationId, &record.ObjectId, &record.Name, &record.Description)
-		if err != nil {
-			log.Println(err)
-			return nil, err
+		if erroneousScan := rows.Scan(&record.ID, &record.IntegrationId, &record.ObjectId, &record.Name, &record.Description); erroneousScan != nil {
+			return nil, erroneousScan
 		}
 		records = append(records, record)
 	}
 	return records, nil
 }
 
-func (gateway ApplicationsDataGateway) FindByObjectId(objectId string) (records ApplicationRecord, err error) {
+func (gateway ApplicationsDataGateway) FindByObjectId(objectId string) (ApplicationRecord, error) {
 	s := "select id, integration_id, object_id, name, description from applications where object_id=$1"
 	return gateway.queryRow(s, objectId)
 }
 
-func (gateway ApplicationsDataGateway) FindById(id string) (records ApplicationRecord, err error) {
+func (gateway ApplicationsDataGateway) FindById(id string) (ApplicationRecord, error) {
 	s := "select id, integration_id, object_id, name, description from applications where id=$1"
 	return gateway.queryRow(s, id)
 }

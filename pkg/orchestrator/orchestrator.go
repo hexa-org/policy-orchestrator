@@ -22,8 +22,6 @@ func LoadHandlers(database *sql.DB, store hawk.CredentialStore, hostPort string,
 	list := []workflowsupport.Worker{&worker}
 	scheduler := workflowsupport.NewScheduler(&finder, list, 60_000)
 
-	Report(finder.Results)
-
 	return func(router *mux.Router) {
 		router.HandleFunc("/applications", hawksupport.HawkMiddleware(applicationsHandler.List, store, hostPort)).Methods("GET")
 		router.HandleFunc("/applications/{id}", hawksupport.HawkMiddleware(applicationsHandler.Show, store, hostPort)).Methods("GET")

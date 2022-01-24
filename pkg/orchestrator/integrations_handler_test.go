@@ -60,13 +60,15 @@ func (s *HandlerSuite) TestList() {
 	_, _ = s.gateway.Create("aName", "google cloud", []byte("aKey"))
 
 	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/integrations", s.server.Addr))
+	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+
 	var jsonResponse orchestrator.Integrations
 	_ = json.NewDecoder(resp.Body).Decode(&jsonResponse)
 
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
-	assert.Equal(s.T(), "aName", jsonResponse.Integrations[0].Name)
-	assert.Equal(s.T(), "google cloud", jsonResponse.Integrations[0].Provider)
-	assert.Equal(s.T(), []byte("aKey"), jsonResponse.Integrations[0].Key)
+	integration := jsonResponse.Integrations[0]
+	assert.Equal(s.T(), "aName", integration.Name)
+	assert.Equal(s.T(), "google cloud", integration.Provider)
+	assert.Equal(s.T(), []byte("aKey"), integration.Key)
 }
 
 func (s *HandlerSuite) TestCreate() {
@@ -74,11 +76,13 @@ func (s *HandlerSuite) TestCreate() {
 	marshal, _ := json.Marshal(integration)
 	_, _ = hawksupport.HawkPost(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/integrations", s.server.Addr), bytes.NewReader(marshal))
 
-	all, _ := s.gateway.Find()
-	assert.Equal(s.T(), 1, len(all))
-	assert.Equal(s.T(), "aName", all[0].Name)
-	assert.Equal(s.T(), "google cloud", all[0].Provider)
-	assert.Equal(s.T(), []byte("aKey"), all[0].Key)
+	records, _ := s.gateway.Find()
+	assert.Equal(s.T(), 1, len(records))
+
+	record := records[0]
+	assert.Equal(s.T(), "aName", record.Name)
+	assert.Equal(s.T(), "google cloud", record.Provider)
+	assert.Equal(s.T(), []byte("aKey"), record.Key)
 }
 
 func (s *HandlerSuite) TestDelete() {
@@ -87,8 +91,8 @@ func (s *HandlerSuite) TestDelete() {
 	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/integrations/%s", s.server.Addr, id))
 	assert.Equal(s.T(), resp.StatusCode, http.StatusOK)
 
-	all, _ := s.gateway.Find()
-	assert.Equal(s.T(), 0, len(all))
+	records, _ := s.gateway.Find()
+	assert.Equal(s.T(), 0, len(records))
 }
 
 func (s *HandlerSuite) TestDelete_withUnknownID() {
