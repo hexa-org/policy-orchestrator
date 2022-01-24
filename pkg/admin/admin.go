@@ -7,11 +7,11 @@ import (
 
 type Client interface {
 	Health(url string) (string, error)
-	Applications(url string) ([]Application, error)
-	Application(url string) (Application, error)
 	Integrations(url string) ([]Integration, error)
 	CreateIntegration(url string, provider string, key []byte) error
 	DeleteIntegration(url string) error
+	Applications(url string) ([]Application, error)
+	Application(url string) (Application, error)
 	GetPolicies(url string) ([]Policy, string, error)
 	SetPolicies(url string, policies string) error
 }
@@ -27,14 +27,14 @@ func LoadHandlers(orchestratorUrl string, client Client) func(router *mux.Router
 
 	return func(router *mux.Router) {
 		router.HandleFunc("/", IndexHandler).Methods("GET")
-		router.HandleFunc("/applications", apps.List).Methods("GET")
-		router.HandleFunc("/applications/{id}", apps.Show).Methods("GET")
-		router.HandleFunc("/applications/{id}/edit", apps.Edit).Methods("GET")
-		router.HandleFunc("/applications/{id}", apps.Update).Methods("POST")
 		router.HandleFunc("/integrations", integrations.List).Methods("GET")
 		router.HandleFunc("/integrations/new", integrations.New).Methods("GET")
 		router.HandleFunc("/integrations", integrations.Create).Methods("POST")
 		router.HandleFunc("/integrations/{id}", integrations.Delete).Methods("POST")
+		router.HandleFunc("/applications", apps.List).Methods("GET")
+		router.HandleFunc("/applications/{id}", apps.Show).Methods("GET")
+		router.HandleFunc("/applications/{id}/edit", apps.Edit).Methods("GET")
+		router.HandleFunc("/applications/{id}", apps.Update).Methods("POST")
 		router.HandleFunc("/status", status.StatusHandler).Methods("GET")
 
 		fileServer := http.FileServer(http.Dir("pkg/admin/resources/static"))

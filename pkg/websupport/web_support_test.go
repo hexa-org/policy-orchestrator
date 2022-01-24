@@ -61,3 +61,10 @@ func TestModelAndView(t *testing.T) {
 	err := websupport.ModelAndView(&httptest.ResponseRecorder{}, "bad", websupport.Model{})
 	assert.Contains(t, err.Error(), "can't evaluate field Ba")
 }
+
+func TestPaths(t *testing.T) {
+	listener, _ := net.Listen("tcp", "localhost:0")
+	server := websupport.Create(listener.Addr().String(), func(x *mux.Router) {}, websupport.Options{})
+
+	assert.Equal(t, 1, len(websupport.Paths(server.Handler.(*mux.Router))))
+}
