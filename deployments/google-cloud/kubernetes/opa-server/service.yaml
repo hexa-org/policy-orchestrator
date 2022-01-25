@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hexa-demo-opa-server-agent
+  annotations:
+    beta.cloud.google.com/backend-config: '{"default": "config-default-opa-server"}'
+  labels:
+    app: hexa-demo-opa-server-agent
+    tier: frontend
+spec:
+  type: NodePort
+  ports:
+    - port: 8887
+      targetPort: 8881
+  selector:
+    app: hexa-demo-opa-server-agent
+    tier: frontend

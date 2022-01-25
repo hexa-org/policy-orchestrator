@@ -1,0 +1,13 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hexa-demo-opa-server-agent
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: hexa-demo-opa-server-static-ip
+    kubernetes.io/ingress.class: "gce"
+spec:
+  defaultBackend:
+    service:
+      name: hexa-demo-opa-server-agent
+      port:
+        number: 8887

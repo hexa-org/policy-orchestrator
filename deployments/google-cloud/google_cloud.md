@@ -120,6 +120,70 @@ gcloud run services update ${GCP_PROJECT_NAME}-demo --region=${GCP_PROJECT_REGIO
   --update-env-vars HEXA_DEMO_URL='https://<hexa-demo-url>'
 ```
 
+## Deploy via Kubernetes
+
+Deploy the Demo app and the OPA Agent to Kubernetes.
+
+Make sure you have sourced your environment file and set the project.
+
+Enable the Kubernetes Engine API.
+
+```bash
+gcloud services enable container.googleapis.com
+```
+
+Create a GKE cluster.
+
+```bash
+gcloud beta container --project "${GCP_PROJECT_ID}" \
+  clusters create-auto hexa-demo \
+  --region ${GCP_PROJECT_REGION} \
+  --release-channel "regular" \
+  --network "projects/${GCP_PROJECT_ID}/global/networks/default" \
+  --subnetwork "projects/${GCP_PROJECT_ID}/regions/${GCP_PROJECT_REGION}/subnetworks/default" \
+  --cluster-ipv4-cidr "/17" \
+  --services-ipv4-cidr "/22"
+```
+
+Configure kubectl for newly created cluster.
+
+```bash
+gcloud container clusters get-credentials hexa-demo --region ${GCP_PROJECT_REGION} --project ${GCP_PROJECT_ID}
+```
+
+Create IP addresses for the Demo app and OPA Agent.
+```bash
+gcloud compute addresses create hexa-demo-app-static-ip --global --ip-version IPV4
+gcloud compute addresses create hexa-demo-opa-server-static-ip --global --ip-version IPV4
+```
+
+After both IPs are created, export `OPA_SERVER_URL` with the IP for the OPA Server and `HEXA_DEMO_URL` with the IP
+for the Hexa demo app. Use `gcloud compute addresses describe <IP name> --global` to get the IPs.
+
+```bash
+gcloud compute addresses describe hexa-demo-opa-server-static-ip --global
+
+export OPA_SERVER_URL=http://<IP Address>
+```
+
+Deploy demo app objects.
+
+```bash
+envsubst < kubernetes/demo/config.yaml | kubectl apply -f -
+envsubst < kubernetes/demo/deployment.yaml | kubectl apply -f -
+envsubst < kubernetes/demo/service.yaml | kubectl apply -f - 
+envsubst < kubernetes/demo/ingress.yaml | kubectl apply -f -
+```
+
+Deploy OPA Agent objects.
+
+```bash
+envsubst < kubernetes/opa-server/config.yaml | kubectl apply -f -
+envsubst < kubernetes/opa-server/deployment.yaml | kubectl apply -f -
+envsubst < kubernetes/opa-server/service.yaml | kubectl apply -f - 
+envsubst < kubernetes/opa-server/ingress.yaml | kubectl apply -f -
+```
+
 For orchestrating policy, you'll need to set up Google's Identity Aware Proxy. For Cloud Run, you'll need a load balancer
 and backend resource. See this [gcloud reference](https://cloud.google.com/load-balancing/docs/https/setup-global-ext-https-serverless#gcloud_1) 
 for more information.
