@@ -20,7 +20,7 @@ func (n *DiscoveryWorker) Run(work interface{}) error {
 
 			log.Printf("Found %d applications for integration provider %s.", len(applications), p.Name())
 			for _, app := range applications {
-				_, _ = n.Gateway.Create(record.ID, app.ObjectID, app.Name, app.Description)
+				_, _ = n.Gateway.CreateIfAbsent(record.ID, app.ObjectID, app.Name, app.Description) // idempotent work
 			}
 		}
 	}

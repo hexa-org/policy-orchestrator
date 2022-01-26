@@ -17,7 +17,7 @@ type ApplicationsDataGateway struct {
 	DB *sql.DB
 }
 
-func (gateway ApplicationsDataGateway) Create(integrationId string, objectId string, name string, description string) (string, error) {
+func (gateway ApplicationsDataGateway) CreateIfAbsent(integrationId string, objectId string, name string, description string) (string, error) {
 	existing, _ := gateway.FindByObjectId(objectId)
 	if existing.ObjectId != "" {
 		log.Println("Found existing application record.")

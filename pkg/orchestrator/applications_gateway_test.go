@@ -36,13 +36,13 @@ func (suite *ApplicationGatewaySuite) TearDownTest() {
 }
 
 func (suite *ApplicationGatewaySuite) TestCreate() {
-	id, err := suite.gateway.Create(suite.integrationTestId, "anObjectId", "aName", "aDescription")
+	id, err := suite.gateway.CreateIfAbsent(suite.integrationTestId, "anObjectId", "aName", "aDescription")
 	assert.NotEmpty(suite.T(), id)
 	assert.NoError(suite.T(), err)
 }
 
 func (suite *ApplicationGatewaySuite) TestFind() {
-	_, _ = suite.gateway.Create(suite.integrationTestId, "anObjectId", "aName", "aDescription")
+	_, _ = suite.gateway.CreateIfAbsent(suite.integrationTestId, "anObjectId", "aName", "aDescription")
 	records, _ := suite.gateway.Find()
 	record := records[0]
 	assert.Equal(suite.T(), suite.integrationTestId, record.IntegrationId)
@@ -54,20 +54,20 @@ func (suite *ApplicationGatewaySuite) TestFind() {
 func (suite *ApplicationGatewaySuite) TestFind_withBadDatabaseUrl() {
 	open, _ := databasesupport.Open("")
 	gateway := orchestrator.ApplicationsDataGateway{DB: open}
-	_, _ = gateway.Create(suite.integrationTestId, "anObjectId", "aName", "aDescription")
+	_, _ = gateway.CreateIfAbsent(suite.integrationTestId, "anObjectId", "aName", "aDescription")
 	_, err := gateway.Find()
 	assert.Error(suite.T(), err)
 }
 
 func (suite *ApplicationGatewaySuite) TestFind_ignoresDuplicates() {
-	_, _ = suite.gateway.Create(suite.integrationTestId, "anObjectId", "aName", "aDescription")
-	_, _ = suite.gateway.Create(suite.integrationTestId, "anObjectId", "aName", "aDescription")
+	_, _ = suite.gateway.CreateIfAbsent(suite.integrationTestId, "anObjectId", "aName", "aDescription")
+	_, _ = suite.gateway.CreateIfAbsent(suite.integrationTestId, "anObjectId", "aName", "aDescription")
 	find, _ := suite.gateway.Find()
 	assert.Equal(suite.T(), 1, len(find))
 }
 
 func (suite *ApplicationGatewaySuite) TestFindById() {
-	id, _ := suite.gateway.Create(suite.integrationTestId, "anObjectId", "aName", "aDescription")
+	id, _ := suite.gateway.CreateIfAbsent(suite.integrationTestId, "anObjectId", "aName", "aDescription")
 	record, _ := suite.gateway.FindById(id)
 	assert.Equal(suite.T(), suite.integrationTestId, record.IntegrationId)
 	assert.Equal(suite.T(), "anObjectId", record.ObjectId)
