@@ -3,6 +3,10 @@ kind: BackendConfig
 metadata:
   name: config-default
 spec:
+  iap:
+    enabled: true
+    oauthclientCredentials:
+      secretName: ${GCP_PROJECT_NAME}-secret
   healthCheck:
     checkIntervalSec: 15
     port: 8881

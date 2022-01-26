@@ -170,6 +170,7 @@ Deploy demo app objects.
 
 ```bash
 envsubst < kubernetes/demo/config.yaml | kubectl apply -f -
+envsubst < kubernetes/demo/managed-certificate.yaml | kubectl apply -f -
 envsubst < kubernetes/demo/deployment.yaml | kubectl apply -f -
 envsubst < kubernetes/demo/service.yaml | kubectl apply -f - 
 envsubst < kubernetes/demo/ingress.yaml | kubectl apply -f -
