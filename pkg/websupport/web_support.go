@@ -2,9 +2,9 @@ package websupport
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/metricssupport"
 	"log"
 	"net"
 	"net/http"
@@ -30,22 +30,13 @@ func Paths(router *mux.Router) []Path {
 	return paths
 }
 
-type Health struct {
-	Status string `json:"status"`
-}
-
-func health(w http.ResponseWriter, r *http.Request) {
-	data, _ := json.Marshal(&Health{"pass"})
-	w.Header().Set("content-type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data)
-}
-
 func Create(addr string, handlers func(x *mux.Router), options Options) *http.Server {
 	resourcesDirectory = options.ResourceDirectory
 
 	router := mux.NewRouter()
-	router.HandleFunc("/health", health).Methods("GET")
+	router.Use(metricssupport.MetricsMiddleware)
+	router.HandleFunc("/health", healthsupport.HealthHandlerFunction).Methods("GET")
+	router.Path("/metrics").Handler(metricssupport.MetricsHandler())
 	router.StrictSlash(true)
 	handlers(router)
 	server := http.Server{
@@ -63,17 +54,6 @@ func Start(server *http.Server, l net.Listener) {
 	err := server.Serve(l)
 	if err != nil {
 		return
-	}
-}
-
-func WaitForHealthy(server *http.Server) {
-	var isLive bool
-	for !isLive {
-		resp, err := http.Get(fmt.Sprintf("http://%s/health", server.Addr))
-		if err == nil && resp.StatusCode == http.StatusOK {
-			log.Println("Server is healthy.", server.Addr)
-			isLive = true
-		}
 	}
 }
 

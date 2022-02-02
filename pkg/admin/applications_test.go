@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -37,7 +38,7 @@ func (suite *ApplicationsSuite) SetupTest() {
 		admin.LoadHandlers("http://noop", suite.client),
 		websupport.Options{ResourceDirectory: resourcesDirectory})
 	go websupport.Start(suite.server, listener)
-	websupport.WaitForHealthy(suite.server)
+	healthsupport.WaitForHealthy(suite.server)
 }
 
 func (suite *ApplicationsSuite) TearDownTest() {

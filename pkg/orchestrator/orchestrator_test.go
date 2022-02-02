@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
@@ -33,7 +34,7 @@ func TestOrchestratorHandlers(t *testing.T) {
 
 	go websupport.Start(server, listener)
 
-	websupport.WaitForHealthy(server)
+	healthsupport.WaitForHealthy(server)
 
 	resp, err := http.Get(fmt.Sprintf("http://%s/health", server.Addr))
 	assert.NoError(t, err)

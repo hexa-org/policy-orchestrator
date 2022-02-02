@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
@@ -46,7 +47,7 @@ func (s *HandlerSuite) SetupTest() {
 	s.server = websupport.Create(addr, handlers, websupport.Options{})
 
 	go websupport.Start(s.server, listener)
-	websupport.WaitForHealthy(s.server)
+	healthsupport.WaitForHealthy(s.server)
 }
 
 func (s *HandlerSuite) TearDownTest() {
