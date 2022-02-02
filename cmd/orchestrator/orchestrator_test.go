@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"net"
@@ -17,7 +18,7 @@ func TestApp(t *testing.T) {
 		websupport.Start(app, listener)
 		scheduler.Start()
 	}()
-	websupport.WaitForHealthy(app)
+	healthsupport.WaitForHealthy(app)
 	resp, _ := http.Get(fmt.Sprintf("http://%s/health", app.Addr))
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	websupport.Stop(app)

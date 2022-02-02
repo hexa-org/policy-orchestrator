@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -58,7 +59,7 @@ func setup(client *MockClient) *http.Server {
 	go func() {
 		websupport.Start(app, listener)
 	}()
-	websupport.WaitForHealthy(app)
+	healthsupport.WaitForHealthy(app)
 	return app
 }
 
