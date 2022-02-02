@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/cmd/demo/opasupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -116,6 +117,6 @@ func setup(mockClient *MockClient) (error, *http.Server) {
 
 	go websupport.Start(server, listener)
 
-	websupport.WaitForHealthy(server)
+	healthsupport.WaitForHealthy(server)
 	return err, server
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"net"
@@ -16,7 +17,7 @@ func TestAdminHandlers(t *testing.T) {
 	handlers := admin.LoadHandlers("localhost:8885", new(admin_test.MockClient))
 	server := websupport.Create(listener.Addr().String(), handlers, websupport.Options{})
 	go websupport.Start(server, listener)
-	websupport.WaitForHealthy(server)
+	healthsupport.WaitForHealthy(server)
 
 	resp, _ := http.Get(fmt.Sprintf("http://%s/health", server.Addr))
 	assert.Equal(t, http.StatusOK, resp.StatusCode)

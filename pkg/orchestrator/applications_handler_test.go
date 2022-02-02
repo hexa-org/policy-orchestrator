@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
@@ -60,7 +61,7 @@ insert into applications (id, integration_id, object_id, name, description) valu
 	s.server = websupport.Create(addr, handlers, websupport.Options{})
 
 	go websupport.Start(s.server, listener)
-	websupport.WaitForHealthy(s.server)
+	healthsupport.WaitForHealthy(s.server)
 }
 
 func (s *ApplicationsHandlerSuite) TearDownTest() {

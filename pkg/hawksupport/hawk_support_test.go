@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -36,7 +37,7 @@ func setup(key string) (*http.Server, func(t *testing.T)) {
 	}, websupport.Options{})
 
 	go websupport.Start(server, listener)
-	websupport.WaitForHealthy(server)
+	healthsupport.WaitForHealthy(server)
 
 	return server, func(t *testing.T) {
 		defer websupport.Stop(server)
