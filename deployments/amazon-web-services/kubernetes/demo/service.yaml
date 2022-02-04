@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hexa-demo
+  labels:
+    app: hexa-demo
+    tier: frontend
+spec:
+  type: NodePort
+  ports:
+    - port: 8886
+      targetPort: 8886
+  selector:
+    app: hexa-demo
+    tier: frontend

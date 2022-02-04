@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hexa-demo-opa-server-agent
+  labels:
+    app: hexa-demo-opa-server-agent
+    tier: frontend
+spec:
+  type: NodePort
+  ports:
+    - port: 8887
+      targetPort: 8887
+  selector:
+    app: hexa-demo-opa-server-agent
+    tier: frontend
