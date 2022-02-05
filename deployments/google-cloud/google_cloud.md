@@ -89,11 +89,14 @@ gcloud run deploy ${GCP_PROJECT_NAME}-demo --command="demo" --allow-unauthentica
 
 Build an OPA server with configuration via Docker.
 
-From the `./deployments/google-cloud/opa-server` directory run the below commands.
+From the `./deployments/opa-server` directory run the below commands.
 
 ```bash
 docker pull openpolicyagent/opa:latest
-docker build --build-arg GCP_PROJECT_ID=${GCP_PROJECT_ID} -t ${GCP_PROJECT_NAME}-opa-server:latest .
+docker build -t ${GCP_PROJECT_NAME}-opa-server:latest .
+```
+
+```bash
 docker tag ${GCP_PROJECT_NAME}-opa-server:latest gcr.io/${GCP_PROJECT_ID}/hexa-opa-server:latest
 docker push gcr.io/${GCP_PROJECT_ID}/hexa-opa-server:latest
 ```
@@ -151,19 +154,10 @@ Configure kubectl for newly created cluster.
 gcloud container clusters get-credentials hexa-demo --region ${GCP_PROJECT_REGION} --project ${GCP_PROJECT_ID}
 ```
 
-Create IP addresses for the Demo app and OPA Agent.
+Create IP addresses for the Demo app.
+
 ```bash
 gcloud compute addresses create hexa-demo-app-static-ip --global --ip-version IPV4
-gcloud compute addresses create hexa-demo-opa-server-static-ip --global --ip-version IPV4
-```
-
-After both IPs are created, export `OPA_SERVER_URL` with the IP for the OPA Server and `HEXA_DEMO_URL` with the IP
-for the Hexa demo app. Use `gcloud compute addresses describe <IP name> --global` to get the IPs.
-
-```bash
-gcloud compute addresses describe hexa-demo-opa-server-static-ip --global
-
-export OPA_SERVER_URL=http://<IP Address>
 ```
 
 Deploy demo app objects.
@@ -179,10 +173,8 @@ envsubst < kubernetes/demo/ingress.yaml | kubectl apply -f -
 Deploy OPA Agent objects.
 
 ```bash
-envsubst < kubernetes/opa-server/config.yaml | kubectl apply -f -
 envsubst < kubernetes/opa-server/deployment.yaml | kubectl apply -f -
 envsubst < kubernetes/opa-server/service.yaml | kubectl apply -f - 
-envsubst < kubernetes/opa-server/ingress.yaml | kubectl apply -f -
 ```
 
 For orchestrating policy, you'll need to set up Google's Identity Aware Proxy. For Cloud Run, you'll need a load balancer

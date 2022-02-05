@@ -9,6 +9,6 @@ spec:
       secretName: ${GCP_PROJECT_NAME}-secret
   healthCheck:
     checkIntervalSec: 15
-    port: 8881
+    port: 8886
     type: HTTP
     requestPath: /health
