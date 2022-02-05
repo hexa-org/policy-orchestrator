@@ -10,8 +10,8 @@ metadata:
 spec:
   type: NodePort
   ports:
-    - port: 8887
-      targetPort: 8881
+    - port: 8886
+      targetPort: 8886
   selector:
     app: hexa-demo
     tier: frontend

@@ -21,7 +21,7 @@ spec:
           - "run"
           - "--server"
           - "--addr"
-          - "0.0.0.0:8881"
+          - "0.0.0.0:8887"
           - "--config-file"
           - "/config.yaml"
           imagePullPolicy: Always
@@ -31,9 +31,9 @@ spec:
               memory: 100Mi
           env:
             - name: PORT
-              value: "8881"
+              value: "8887"
             - name: HEXA_DEMO_URL
-              value: ${HEXA_DEMO_URL}
+              value: http://hexa-demo.default.svc.cluster.local:8886
 
           ports:
-            - containerPort: 8881
+            - containerPort: 8887
