@@ -1,4 +1,3 @@
-ARG GCP_PROJECT_ID
 FROM openpolicyagent/opa:latest
 ADD config/config.yaml /config.yaml
 ENTRYPOINT ["/opa"]

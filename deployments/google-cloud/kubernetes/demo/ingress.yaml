@@ -11,4 +11,4 @@ spec:
     service:
       name: hexa-demo
       port:
-        number: 8887
+        number: 8886

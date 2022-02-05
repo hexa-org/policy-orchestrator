@@ -11,7 +11,7 @@ spec:
   type: NodePort
   ports:
     - port: 8887
-      targetPort: 8881
+      targetPort: 8887
   selector:
     app: hexa-demo-opa-server-agent
     tier: frontend
