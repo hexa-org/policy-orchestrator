@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/gorilla/sessions"
+	"github.com/hexa-org/policy-orchestrator/cmd/demo/amazonsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
@@ -55,7 +57,8 @@ func setup(client *MockClient) *http.Server {
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../../../cmd/demo/resources")
 	listener, _ := net.Listen("tcp", "localhost:0")
-	app := App(client, "http://localhost:8887/v1/data/authz/allow", listener.Addr().String(), resourcesDirectory)
+	var session = sessions.NewCookieStore([]byte("super_secret"))
+	app := App(session, amazonsupport.AmazonCognitoConfiguration{}, client, "http://localhost:8887/v1/data/authz/allow", listener.Addr().String(), resourcesDirectory)
 	go func() {
 		websupport.Start(app, listener)
 	}()

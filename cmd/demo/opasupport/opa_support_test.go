@@ -31,6 +31,10 @@ func (m *MockClient) Do(req *http.Request) (*http.Response, error) {
 
 ///
 
+func unauthorized(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusUnauthorized)
+}
+
 func TestAllow(t *testing.T) {
 	input := opasupport.OpaQuery{Input: map[string]interface{}{
 		"method":     "GET",
@@ -40,7 +44,7 @@ func TestAllow(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = []byte("{\"result\":true}")
 
-	support, _ := opasupport.NewOpaSupport(mockClient, "aUrl")
+	support := opasupport.NewOpaSupport(mockClient, "aUrl", unauthorized)
 	allow, err := support.Allow(input)
 	assert.NoError(t, err)
 	assert.True(t, allow)
@@ -50,7 +54,7 @@ func TestAllow_bad_json(t *testing.T) {
 	mockClient := &MockClient{err: errors.New("oops")}
 	mockClient.response = []byte("{\"result\":true}")
 
-	support, _ := opasupport.NewOpaSupport(mockClient, "aUrl")
+	support := opasupport.NewOpaSupport(mockClient, "aUrl", unauthorized)
 	allow, err := support.Allow(nil)
 	assert.Error(t, err)
 	assert.False(t, allow)
@@ -65,7 +69,7 @@ func TestNotAllow(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = []byte("{\"result\":false}")
 
-	support, _ := opasupport.NewOpaSupport(mockClient, "aUrl")
+	support := opasupport.NewOpaSupport(mockClient, "aUrl", unauthorized)
 	allow, err := support.Allow(input)
 	assert.NoError(t, err)
 	assert.False(t, allow)
@@ -74,7 +78,7 @@ func TestNotAllow(t *testing.T) {
 func TestMiddleware(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = []byte("{\"result\":true}")
-	_, server := setup(mockClient)
+	server := setupWithMockClient(mockClient)
 
 	resp, err := http.Get(fmt.Sprintf("http://%s/", server.Addr))
 	if err != nil {
@@ -90,7 +94,7 @@ func TestMiddleware(t *testing.T) {
 func TestMiddlewareNotAllowed(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = []byte("{\"result\":false}")
-	_, server := setup(mockClient)
+	server := setupWithMockClient(mockClient)
 
 	resp, err := http.Get(fmt.Sprintf("http://%s/", server.Addr))
 	if err != nil {
@@ -101,22 +105,20 @@ func TestMiddlewareNotAllowed(t *testing.T) {
 	websupport.Stop(server)
 }
 
-func setup(mockClient *MockClient) (error, *http.Server) {
-	support, err := opasupport.NewOpaSupport(mockClient, "aUrl")
-
-	handler := opasupport.OpaMiddleware(support, func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte("opa!"))
-	}, func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusUnauthorized)
-	})
+func setupWithMockClient(mockClient *MockClient) *http.Server {
+	support := opasupport.NewOpaSupport(mockClient, "aUrl", unauthorized)
 
 	listener, _ := net.Listen("tcp", "localhost:0")
 	server := websupport.Create(listener.Addr().String(), func(router *mux.Router) {
-		router.HandleFunc("/", handler).Methods("GET")
+		router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			_, _ = w.Write([]byte("opa!"))
+		})
 	}, websupport.Options{})
+	router := server.Handler.(*mux.Router)
+	router.Use(support.Middleware)
 
 	go websupport.Start(server, listener)
 
 	healthsupport.WaitForHealthy(server)
-	return err, server
+	return server
 }

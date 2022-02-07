@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
+	"github.com/hexa-org/policy-orchestrator/cmd/demo/amazonsupport"
+	"github.com/hexa-org/policy-orchestrator/cmd/demo/googlesupport"
 	"github.com/hexa-org/policy-orchestrator/cmd/demo/opasupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"log"
@@ -17,52 +20,76 @@ type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-func App(client HTTPClient, opaUrl string, addr string, resourcesDirectory string) *http.Server {
-	opaSupport, err := opasupport.NewOpaSupport(client, opaUrl)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	server := websupport.Create(addr, loadHandlers(opaSupport), websupport.Options{ResourceDirectory: resourcesDirectory})
+func App(session *sessions.CookieStore, amazonConfig amazonsupport.AmazonCognitoConfiguration, client HTTPClient, opaUrl string, addr string, resourcesDirectory string) *http.Server {
+	basic := NewBasicApp(session, amazonConfig)
+	googleSupport := googlesupport.NewGoogleSupport(session)
+	amazonSupport := amazonsupport.NewAmazonSupport(client, amazonConfig, session)
+	opaSupport := opasupport.NewOpaSupport(client, opaUrl, basic.unauthorized)
+	server := websupport.Create(addr, basic.loadHandlers(), websupport.Options{ResourceDirectory: resourcesDirectory})
+	router := server.Handler.(*mux.Router)
+	router.Use(googleSupport.Middleware, amazonSupport.Middleware, opaSupport.Middleware)
 	return server
 }
 
-func dashboard(writer http.ResponseWriter, req *http.Request) {
-	_ = websupport.ModelAndView(websupport.SecurityContextViewSupport(writer, req, "dashboard", websupport.Model{Map: map[string]interface{}{}}))
+type BasicApp struct {
+	session      *sessions.CookieStore
+	amazonConfig amazonsupport.AmazonCognitoConfiguration
 }
 
-func accounting(writer http.ResponseWriter, req *http.Request) {
-	_ = websupport.ModelAndView(websupport.SecurityContextViewSupport(writer, req, "accounting", websupport.Model{Map: map[string]interface{}{}}))
+func NewBasicApp(session *sessions.CookieStore, amazonConfig amazonsupport.AmazonCognitoConfiguration) BasicApp {
+	return BasicApp{session, amazonConfig}
 }
 
-func sales(writer http.ResponseWriter, req *http.Request) {
-	_ = websupport.ModelAndView(websupport.SecurityContextViewSupport(writer, req, "sales", websupport.Model{Map: map[string]interface{}{}}))
+func (a *BasicApp) dashboard(writer http.ResponseWriter, req *http.Request) {
+	_ = websupport.ModelAndView(writer, "dashboard", websupport.Model{Map: map[string]interface{}{"provider_email": a.principal(req)}})
 }
 
-func humanresources(writer http.ResponseWriter, req *http.Request) {
-	_ = websupport.ModelAndView(websupport.SecurityContextViewSupport(writer, req, "humanresources", websupport.Model{Map: map[string]interface{}{}}))
+func (a *BasicApp) accounting(writer http.ResponseWriter, req *http.Request) {
+	_ = websupport.ModelAndView(writer, "accounting", websupport.Model{Map: map[string]interface{}{"provider_email": a.principal(req)}})
 }
 
-func unauthorized(writer http.ResponseWriter, req *http.Request) {
+func (a *BasicApp) sales(writer http.ResponseWriter, req *http.Request) {
+	_ = websupport.ModelAndView(writer, "sales", websupport.Model{Map: map[string]interface{}{"provider_email": a.principal(req)}})
+}
+
+func (a *BasicApp) humanresources(writer http.ResponseWriter, req *http.Request) {
+	_ = websupport.ModelAndView(writer, "humanresources", websupport.Model{Map: map[string]interface{}{"provider_email": a.principal(req)}})
+}
+
+func (a *BasicApp) unauthorized(writer http.ResponseWriter, req *http.Request) {
 	writer.WriteHeader(http.StatusUnauthorized)
-	_ = websupport.ModelAndView(websupport.SecurityContextViewSupport(writer, req, "unauthorized", websupport.Model{Map: map[string]interface{}{}}))
+	model := websupport.Model{Map: map[string]interface{}{}}
+	_ = websupport.ModelAndView(writer, "unauthorized", model)
 }
 
-func download(writer http.ResponseWriter, _ *http.Request) {
+func (a *BasicApp) download(writer http.ResponseWriter, _ *http.Request) {
 	_, file, _, _ := runtime.Caller(0)
 	opasupport.Compress(writer, filepath.Join(file, "../resources/bundles/bundle"))
 }
 
-func loadHandlers(opa *opasupport.OpaSupport) func(router *mux.Router) {
+func (a *BasicApp) loadHandlers() func(router *mux.Router) {
 	return func(router *mux.Router) {
-		router.HandleFunc("/", opasupport.OpaMiddleware(opa, dashboard, unauthorized)).Methods("GET")
-		router.HandleFunc("/sales", opasupport.OpaMiddleware(opa, sales, unauthorized)).Methods("GET")
-		router.HandleFunc("/accounting", opasupport.OpaMiddleware(opa, accounting, unauthorized)).Methods("GET")
-		router.HandleFunc("/humanresources", opasupport.OpaMiddleware(opa, humanresources, unauthorized)).Methods("GET")
-		router.HandleFunc("/bundles/bundle.tar.gz", download).Methods("GET")
+		router.HandleFunc("/", a.dashboard).Methods("GET")
+		router.HandleFunc("/sales", a.sales).Methods("GET")
+		router.HandleFunc("/accounting", a.accounting).Methods("GET")
+		router.HandleFunc("/humanresources", a.humanresources).Methods("GET")
+		router.HandleFunc("/bundles/bundle.tar.gz", a.download).Methods("GET")
 
 		fileServer := http.FileServer(http.Dir("cmd/demo/resources/static"))
 		router.PathPrefix("/").Handler(http.StripPrefix("/", fileServer))
 	}
+}
+
+func (a *BasicApp) principal(req *http.Request) string {
+	session, err := a.session.Get(req, "session")
+	if err != nil {
+		return ""
+	}
+	principal := session.Values["principal"]
+	if principal == nil {
+		return ""
+	}
+	return principal.(string)
 }
 
 func newApp(addr string) (*http.Server, net.Listener) {
@@ -78,10 +105,25 @@ func newApp(addr string) (*http.Server, net.Listener) {
 	}
 	log.Printf("Found open policy agenet server address %v", opaUrl)
 
+	key := "super_private"
+	if found := os.Getenv("SESSION_KEY"); found != "" {
+		key = found
+	}
+	log.Println("Found sessions key.")
+
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../../../cmd/demo/resources")
 	listener, _ := net.Listen("tcp", addr)
-	return App(&http.Client{}, opaUrl, listener.Addr().String(), resourcesDirectory), listener
+	var session = sessions.NewCookieStore([]byte(os.Getenv(key)))
+	amazon := amazonsupport.AmazonCognitoConfiguration{
+		Region:               os.Getenv("AWS_REGION"),
+		Domain:               os.Getenv("AWS_COGNITO_USER_POOL_DOMAIN"),
+		RedirectUrl:          os.Getenv("AWS_COGNITO_DOMAIN_REDIRECT_UR"),
+		UserPoolId:           os.Getenv("AWS_COGNITO_USER_POOL_ID"),
+		UserPoolClientId:     os.Getenv("AWS_COGNITO_USER_POOL_CLIENT_ID"),
+		UserPoolClientSecret: os.Getenv("AWS_COGNITO_USER_POOL_CLIENT_SECRET"),
+	}
+	return App(session, amazon, &http.Client{}, opaUrl, listener.Addr().String(), resourcesDirectory), listener
 }
 
 func main() {
