@@ -1,6 +1,6 @@
 {{- template "base" .}}
 {{- define "main"}}
-    {{- $email := index .Map "google_email"}}
+    {{- $email := index .Map "provider_email"}}
     {{- if $email }}
         {{- $email}}
     {{- end}}

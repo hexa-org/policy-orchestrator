@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type HTTPClient interface {
@@ -14,12 +15,15 @@ type HTTPClient interface {
 }
 
 type OpaSupport struct {
-	client HTTPClient
-	url    string
+	client       HTTPClient
+	url          string
+	unauthorized http.HandlerFunc
+	skip         []string
 }
 
-func NewOpaSupport(client HTTPClient, url string) (*OpaSupport, error) {
-	return &OpaSupport{client, url}, nil
+func NewOpaSupport(client HTTPClient, url string, unauthorized http.HandlerFunc) *OpaSupport {
+	return &OpaSupport{client, url, unauthorized,
+		[]string{"/health", "/metrics", "/styles", "/images", "/bundle"}}
 }
 
 type OpaQuery struct {
@@ -50,8 +54,13 @@ func (o *OpaSupport) Allow(input interface{}) (bool, error) {
 	return jsonResponse.Result, nil
 }
 
-func OpaMiddleware(o *OpaSupport, next http.HandlerFunc, unauthorized http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (o *OpaSupport) Middleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		for _, s := range o.skip {
+			if strings.HasPrefix(r.RequestURI, s) {
+				next.ServeHTTP(w, r)
+			}
+		}
 		input := OpaQuery{map[string]interface{}{
 			"method":     "GET",
 			"path":       r.RequestURI,
@@ -61,10 +70,9 @@ func OpaMiddleware(o *OpaSupport, next http.HandlerFunc, unauthorized http.Handl
 
 		allow, err := o.Allow(input)
 		if !allow || err != nil {
-			fmt.Println(err)
-			unauthorized(w, r)
+			o.unauthorized(w, r)
 		} else {
-			next(w, r)
+			next.ServeHTTP(w, r)
 		}
-	}
+	})
 }

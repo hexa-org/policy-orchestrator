@@ -14,11 +14,11 @@ metadata:
     alb.ingress.kubernetes.io/auth-session-timeout: '60'
     alb.ingress.kubernetes.io/auth-session-cookie: AWSELBAuthSessionCookie
     alb.ingress.kubernetes.io/auth-on-unauthenticated-request: authenticate
-    alb.ingress.kubernetes.io/auth-idp-cognito: '{"UserPoolArn":"${AWS_USER_POOL_ARN}", "UserPoolClientId":"${AWS_USER_POOL_CLIENT_ID}", "UserPoolDomain":"${AWS_USER_POOL_DOMAIN}"}'
-    alb.ingress.kubernetes.io/certificate-arn: '${AWS_CERTIFICATE_ARN}'
+    alb.ingress.kubernetes.io/auth-idp-cognito: '{"UserPoolArn":"arn:aws:cognito-idp:${AWS_REGION}:${AWS_ACCOUNT_ID}:userpool/${AWS_COGNITO_USER_POOL_ID}", "UserPoolClientId":"${AWS_COGNITO_USER_POOL_CLIENT_ID}", "UserPoolDomain":"${AWS_COGNITO_USER_POOL_DOMAIN}"}'
+    alb.ingress.kubernetes.io/certificate-arn: '${AWS_COGNITO_CERTIFICATE_ARN}'
 spec:
   rules:
-  - host: ${AWS_HOST}
+  - host: ${AWS_COGNITO_HOST}
     http:
       paths:
       - path: /*
