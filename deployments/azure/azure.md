@@ -20,7 +20,7 @@ export AZ_ACR_NAME=<name>
 Create container registry.
 
 ```bash
-az acr create --name ${AZ_ACR_NAME} \
+  az acr create --name ${AZ_ACR_NAME} \
 --resource-group ${AZ_RESOURCE_GROUP} \
 --sku standard \
 --admin-enabled true
@@ -39,9 +39,44 @@ docker tag ${APP_NAME} ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}:tag1
 docker push ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}:tag1
 ```
 
-
-
 Build and push OPA Server.
+
+## Deploy to App Services
+
+
+Create App Service Plan.
+
+```bash
+az appservice plan create --name ${APP_NAME}plan \
+--resource-group ${AZ_RESOURCE_GROUP} \
+--is-linux
+```
+
+Deploy Hexa Demo App.
+
+```bash
+az webapp create --name ${APP_NAME}-demo \
+--resource-group ${AZ_RESOURCE_GROUP} \
+--plan ${APP_NAME}plan \
+--startup-file="demo" \
+--deployment-container-image-name ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}:tag1
+
+az webapp config appsettings set --name ${APP_NAME}-demo \
+--resource-group ${AZ_RESOURCE_GROUP} \
+--settings PORT=8881
+
+az webapp config container set --name ${APP_NAME}-demo \
+--resource-group ${AZ_RESOURCE_GROUP} \
+--docker-custom-image-name ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}:tag1 \
+--docker-registry-server-url "https://${AZ_ACR_NAME}.azurecr.io"
+
+az webapp restart --name ${APP_NAME}-demo \
+--resource-group ${AZ_RESOURCE_GROUP}
+
+az webapp show --name ${APP_NAME}-demo \
+--resource-group ${AZ_RESOURCE_GROUP} \
+| jq -r '.defaultHostName'
+```
 
 ## Deploy to Kubernetes - AKS
 
