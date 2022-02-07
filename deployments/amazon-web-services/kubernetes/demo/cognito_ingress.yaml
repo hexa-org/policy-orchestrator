@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: hexa-demo
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+    alb.ingress.kubernetes.io/actions.ssl-redirect-default: '{ "Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301" } }'
+
+    alb.ingress.kubernetes.io/auth-type: cognito
+    alb.ingress.kubernetes.io/auth-scope: openid
+    alb.ingress.kubernetes.io/auth-session-timeout: '60'
+    alb.ingress.kubernetes.io/auth-session-cookie: AWSELBAuthSessionCookie
+    alb.ingress.kubernetes.io/auth-on-unauthenticated-request: authenticate
+    alb.ingress.kubernetes.io/auth-idp-cognito: '{"UserPoolArn":"${AWS_USER_POOL_ARN}", "UserPoolClientId":"${AWS_USER_POOL_CLIENT_ID}", "UserPoolDomain":"${AWS_USER_POOL_DOMAIN}"}'
+    alb.ingress.kubernetes.io/certificate-arn: '${AWS_CERTIFICATE_ARN}'
+spec:
+  rules:
+  - host: ${AWS_HOST}
+    http:
+      paths:
+      - path: /*
+        backend:
+          serviceName: ssl-redirect
+          servicePort: use-annotation
+      - path: /*
+        backend:
+          serviceName: hexa-demo
+          servicePort: 8886
+      - path: /oauth2/idpresponse
+        backend:
+          serviceName: hexa-demo
+          servicePort: 8886
