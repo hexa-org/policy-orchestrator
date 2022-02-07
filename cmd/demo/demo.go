@@ -58,8 +58,7 @@ func (a *BasicApp) humanresources(writer http.ResponseWriter, req *http.Request)
 
 func (a *BasicApp) unauthorized(writer http.ResponseWriter, req *http.Request) {
 	writer.WriteHeader(http.StatusUnauthorized)
-	model := websupport.Model{Map: map[string]interface{}{}}
-	_ = websupport.ModelAndView(writer, "unauthorized", model)
+	_ = websupport.ModelAndView(writer, "unauthorized", websupport.Model{Map: map[string]interface{}{}})
 }
 
 func (a *BasicApp) download(writer http.ResponseWriter, _ *http.Request) {

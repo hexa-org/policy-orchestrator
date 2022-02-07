@@ -57,8 +57,10 @@ func (o *OpaSupport) Allow(input interface{}) (bool, error) {
 func (o *OpaSupport) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		for _, s := range o.skip {
+			log.Println(fmt.Sprintf("Attempting to skip authorization for %v and %v", s, r.RequestURI))
 			if strings.HasPrefix(r.RequestURI, s) {
 				next.ServeHTTP(w, r)
+				return
 			}
 		}
 		input := OpaQuery{map[string]interface{}{
