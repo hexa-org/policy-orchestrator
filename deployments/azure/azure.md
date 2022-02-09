@@ -43,7 +43,6 @@ Build and push OPA Server.
 
 ## Deploy to App Services
 
-
 Create App Service Plan.
 
 ```bash
@@ -55,25 +54,25 @@ az appservice plan create --name ${APP_NAME}plan \
 Deploy Hexa Demo App.
 
 ```bash
-az webapp create --name ${APP_NAME}-demo \
+az webapp create --name ${APP_NAME} \
 --resource-group ${AZ_RESOURCE_GROUP} \
 --plan ${APP_NAME}plan \
 --startup-file="demo" \
 --deployment-container-image-name ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}:tag1
 
-az webapp config appsettings set --name ${APP_NAME}-demo \
+az webapp config appsettings set --name ${APP_NAME} \
 --resource-group ${AZ_RESOURCE_GROUP} \
 --settings PORT=8881
 
-az webapp config container set --name ${APP_NAME}-demo \
+az webapp config container set --name ${APP_NAME} \
 --resource-group ${AZ_RESOURCE_GROUP} \
 --docker-custom-image-name ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}:tag1 \
 --docker-registry-server-url "https://${AZ_ACR_NAME}.azurecr.io"
 
-az webapp restart --name ${APP_NAME}-demo \
+az webapp restart --name ${APP_NAME} \
 --resource-group ${AZ_RESOURCE_GROUP}
 
-az webapp show --name ${APP_NAME}-demo \
+az webapp show --name ${APP_NAME} \
 --resource-group ${AZ_RESOURCE_GROUP} \
 | jq -r '.defaultHostName'
 ```
@@ -125,4 +124,54 @@ Deploy OPA Agent objects.
 ```bash
 envsubst < kubernetes/opa-server/deployment.yaml | kubectl apply -f -
 envsubst < kubernetes/opa-server/service.yaml | kubectl apply -f -
+```
+
+## Update Webapp Auth
+
+```bash
+
+# Create AD App Registration
+az ad app create \
+--display-name ${APP_NAME} \
+--homepage "https://${APP_NAME}.azurewebsites.net" \
+--reply-urls "https://${APP_NAME}.azurewebsites.net/.auth/login/aad/callback" \
+--available-to-other-tenants false \
+--required-resource-accesses @required-resource-accesses.json.txt \
+--password ${AZ_APP_SECRET}
+
+AD_APP_ID=$(az ad app list --filter "displayname eq '${APP_NAME}'" | jq -r '.[].appId')
+echo "Newly created ad app with id ${APP_NAME}"
+
+echo "Adding the authV2 extension"
+az extension add --name authV2
+
+echo "Updating the ${APP_NAME} app with microsoft auth provider"
+az webapp auth microsoft update --name ${APP_NAME} \
+  --resource-group ${AZ_RESOURCE_GROUP} \
+  --client-id ${AD_APP_ID} \
+  --client-secret ${AZ_APP_SECRET} \
+  --yes \
+  --allowed-audiences  "api://${AD_APP_ID}" \
+  --issuer "https://sts.windows.net/${AZ_AD_TENANT_ID}/"
+
+echo "Creating the service principal for the ${AZ_PROJECT_NAME} app"
+az ad sp create --id ${AD_APP_ID}
+
+AD_SP_ID=$(az ad sp list --query "[?appId=='$AD_APP_ID']" | jq -r '.[].objectId')
+echo "Newly created service principal with id ${AD_SP_ID}"
+
+echo "Updating the service principal for the ${AZ_PROJECT_NAME} app"
+az ad sp update --id ${AD_SP_ID} --set "appRoleAssignmentRequired=true" --add tags WindowsAzureActiveDirectoryIntegratedApp
+```
+
+Add a user to the app.1
+
+```bash
+userId=<user id>
+appId=$(az ad app list --filter "displayname eq '${APP_NAME}'" | jq -r '.[].appId')
+spObjectId=$(az ad sp list --query "[?appId=='$appId']" | jq -r '.[].objectId')
+appRoleId='00000000-0000-0000-0000-000000000000'
+az rest --method post --uri "https://graph.microsoft.com/beta/users/$userId/appRoleAssignments" \
+--body "{'appRoleId': '$appRoleId','principalId': '$userId','resourceId': '$spObjectId'}" \
+--headers "Content-Type=application/json"
 ```
