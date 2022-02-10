@@ -41,6 +41,20 @@ docker push ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}:tag1
 
 Build and push OPA Server.
 
+From the `./deployments/opa-server` directory run the below commands.
+
+```bash
+docker pull openpolicyagent/opa:latest
+docker build -t ${APP_NAME}-opa-server:latest .
+```
+
+Push image to ACR.
+
+```bash
+docker tag ${APP_NAME}-opa-server:latest ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}-opa-server:latest
+docker push ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}-opa-server:latest
+```
+
 ## Deploy to App Services
 
 Create App Service Plan.
@@ -77,6 +91,54 @@ az webapp show --name ${APP_NAME} \
 | jq -r '.defaultHostName'
 ```
 
+Deploy OPA Server.
+
+```bash
+az webapp create --name ${APP_NAME}-demo-opa-agent \
+--resource-group ${AZ_RESOURCE_GROUP} \
+--plan ${APP_NAME}plan \
+--startup-file="run --server --addr 0.0.0.0:8881 --config-file /config.yaml" \
+--deployment-container-image-name ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}-opa-server:latest
+
+az webapp config appsettings set --name ${APP_NAME}-demo-opa-agent \
+--resource-group ${AZ_RESOURCE_GROUP} \
+--settings PORT=8881
+
+az webapp config container set --name ${APP_NAME}-demo-opa-agent \
+--resource-group ${AZ_RESOURCE_GROUP} \
+--docker-custom-image-name ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}-opa-server:latest \
+--docker-registry-server-url "https://${AZ_ACR_NAME}.azurecr.io"
+
+az webapp restart --name ${APP_NAME}-demo-opa-agent \
+--resource-group ${AZ_RESOURCE_GROUP}
+
+az webapp show --name ${APP_NAME}-demo-opa-agent \
+--resource-group ${AZ_RESOURCE_GROUP} \
+| jq -r '.defaultHostName'
+```
+
+Update config for both apps.
+
+```bash
+opa_url=$(az webapp show --name ${APP_NAME}-demo-opa-agent \
+--resource-group ${AZ_RESOURCE_GROUP} \
+| jq -r '.defaultHostName')
+
+hexa_demo_url=$(az webapp show --name ${APP_NAME}-demo \
+--resource-group ${AZ_RESOURCE_GROUP} \
+| jq -r '.defaultHostName')
+
+az webapp config appsettings set --name ${APP_NAME}-demo \
+--resource-group ${AZ_RESOURCE_GROUP} \
+--settings OPA_SERVER_URL=https://${opa_url}/v1/data/authz/allow
+
+az webapp config appsettings set --name ${APP_NAME}-demo-opa-agent \
+--resource-group ${AZ_RESOURCE_GROUP} \
+--settings HEXA_DEMO_URL=https://${hexa_demo_url}
+```
+
+Restart both apps.
+
 ## Deploy to Kubernetes - AKS
 
 Create cluster.
@@ -100,16 +162,6 @@ Connect to cluster.
 
 ```bash
 az aks get-credentials --resource-group ${AZ_RESOURCE_GROUP} --name ${AZ_AKS_CLUSTER_NAME}
-```
-
-Create IP Address for Demo app.
-
-```bash
-az network public-ip create -g ${AZ_RESOURCE_GROUP} -n ${APP_NAME}-static-ip --allocation-method static
-```
-
-```bash
-az network public-ip show -g ${AZ_RESOURCE_GROUP} -n ${APP_NAME}-static-ip
 ```
 
 Deploy demo app objects.
