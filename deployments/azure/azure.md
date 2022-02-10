@@ -216,7 +216,7 @@ echo "Updating the service principal for the ${AZ_PROJECT_NAME} app"
 az ad sp update --id ${AD_SP_ID} --set "appRoleAssignmentRequired=true" --add tags WindowsAzureActiveDirectoryIntegratedApp
 ```
 
-Add a user to the app.1
+Add a user to the app.
 
 ```bash
 userId=<user id>
@@ -227,3 +227,44 @@ az rest --method post --uri "https://graph.microsoft.com/beta/users/$userId/appR
 --body "{'appRoleId': '$appRoleId','principalId': '$userId','resourceId': '$spObjectId'}" \
 --headers "Content-Type=application/json"
 ```
+
+## az CLI Commands
+
+List Web Services apps
+
+```bash
+az webapp list --resource-group ${AZ_RESOURCE_GROUP} | jq -r '.[].name'
+```
+
+List AD App Registrations
+
+List all
+
+```bash
+az ad app list
+```
+
+```bash
+AD_APP_ID=$(az ad app list --filter "displayname eq '${APP_NAME}'" | jq -r '.[].appId')
+az ad app show --id ${AD_APP_ID}
+```
+
+List AD Service Principals (Enterprise Apps)
+
+```bash
+AD_APP_ID=$(az ad app list --filter "displayname eq '${APP_NAME}'" | jq -r '.[].appId')
+AD_SP_ID=$(az ad sp list --query "[?appId=='$AD_APP_ID']" | jq -r '.[].objectId')
+az ad sp show --id ${AD_SP_ID}
+```
+
+# Making REST Calls to Azure APIs
+
+You need to create an AD App Registration to make API requests. 
+
+1. Create an AD App Registration
+2. Create secret for App Registration
+3. Enable Microsoft Graph API permissions and choose "Application Permissions"
+
+To make requests to the API you need to exchange your client secret and client ID for an Access Token
+and use that token to make Graph API requests.
+
