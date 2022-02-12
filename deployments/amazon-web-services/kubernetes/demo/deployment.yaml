@@ -29,5 +29,17 @@ spec:
               value: "8886"
             - name: OPA_SERVER_URL
               value: http://hexa-demo-opa-server-agent.default.svc.cluster.local:8887/v1/data/authz/allow
+            - name: AWS_REGION
+              value: "${AWS_REGION}"
+            - name: AWS_COGNITO_USER_POOL_DOMAIN
+              value: "${AWS_COGNITO_USER_POOL_DOMAIN}"
+            - name: AWS_COGNITO_DOMAIN_REDIRECT_URL
+              value: "${AWS_COGNITO_DOMAIN_REDIRECT_URL}"
+            - name: AWS_COGNITO_USER_POOL_ID
+              value: "${AWS_COGNITO_USER_POOL_ID}"
+            - name: AWS_COGNITO_USER_POOL_CLIENT_ID
+              value: "${AWS_COGNITO_USER_POOL_CLIENT_ID}"
+            - name: AWS_COGNITO_USER_POOL_CLIENT_SECRET
+              value: "${AWS_COGNITO_USER_POOL_CLIENT_SECRET}"
           ports:
             - containerPort: 8886

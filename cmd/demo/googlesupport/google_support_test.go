@@ -42,9 +42,9 @@ func TestGoogleSecurityOptions(t *testing.T) {
 	defer websupport.Stop(server)
 
 	request, _ := http.NewRequest("GET", fmt.Sprintf("http://%s/", server.Addr), nil)
-	request.Header["X-Goog-Authenticated-User-Email"] = []string{"anEmail@google.com"}
+	request.Header["X-Goog-Authenticated-User-Email"] = []string{"accounts.google.com:example@gmail.com"}
 	response, _ := (&http.Client{}).Do(request)
 
 	body, _ := io.ReadAll(response.Body)
-	assert.Contains(t, string(body), "anEmail@google.com")
+	assert.Contains(t, string(body), "accounts.google.com:example@gmail.com")
 }

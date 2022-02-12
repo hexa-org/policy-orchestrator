@@ -1,33 +1,26 @@
 package amazonsupport
 
 import (
-	"context"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/sessions"
-	"github.com/lestrrat-go/jwx/jwk"
+	"log"
 	"net/http"
+	"strings"
 )
 
 type AmazonCognitoConfiguration struct {
-	Region       string
-	Domain       string
-	RedirectUrl  string
-	UserPoolId       string
+	Region               string
+	Domain               string
+	RedirectUrl          string
+	UserPoolId           string
 	UserPoolClientId     string
 	UserPoolClientSecret string
 }
 
-type AmazonCognitoToken struct {
-	Token   string `json:"id_token"`
-	Type    string `json:"token_type"`
-	Expires int32  `json:"expires_in"`
-}
-
 type AmazonCognitoClaims struct {
-	Email string `json:email`
+	Email    string `json:email`
+	Username string `json:username`
 	jwt.StandardClaims
 }
 
@@ -38,56 +31,50 @@ type HTTPClient interface {
 type AmazonSupport struct {
 	client       HTTPClient
 	amazonConfig AmazonCognitoConfiguration
+	claimsParser ClaimsParser
 	session      *sessions.CookieStore
 }
 
-func NewAmazonSupport(client HTTPClient, amazonConfig AmazonCognitoConfiguration, session *sessions.CookieStore) *AmazonSupport {
-	return &AmazonSupport{client, amazonConfig, session}
+func NewAmazonSupport(client HTTPClient, amazonConfig AmazonCognitoConfiguration, claimsParser ClaimsParser, session *sessions.CookieStore) *AmazonSupport {
+	return &AmazonSupport{client, amazonConfig, claimsParser, session}
+}
+
+type ClaimsParser interface {
+	ParseWithClaims(tokenString string, region string, claims jwt.Claims) (*jwt.Token, error)
+}
+
+type AmazonCognitoClaimsParser struct {
+}
+
+func (m AmazonCognitoClaimsParser) ParseWithClaims(tokenString string, region string, claims jwt.Claims) (*jwt.Token, error) {
+
+	// todo - currently unable to parse and verify the amazon elb token as the elb returns an un-parsable base64 token
+	tokenString = strings.Replace(tokenString, "=", "", -1)
+
+	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, claims)
+	if err != nil {
+		return token, err
+	}
+	claims = token.Claims.(*AmazonCognitoClaims)
+	return nil, nil
 }
 
 func (a *AmazonSupport) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if code := r.URL.Query().Get("code"); code != "" {
-
-			clientInfo := []byte(fmt.Sprintf("%s:%s", a.amazonConfig.UserPoolClientId, a.amazonConfig.UserPoolClientSecret))
-			clientInfoBase64 := base64.StdEncoding.EncodeToString(clientInfo)
-			domain := fmt.Sprintf("%s.auth.%s.amazoncognito.com", a.amazonConfig.Domain, a.amazonConfig.Region)
-			url := fmt.Sprintf("https://%s/oauth2/token?code=%s&grant_type=authorization_code&redirect_uri=%s",
-				domain, code, a.amazonConfig.RedirectUrl)
-			post, postError := a.requestToken(url, clientInfoBase64)
-			if postError != nil {
-				return
-			}
-
-			var token AmazonCognitoToken
-			if json.NewDecoder(post.Body).Decode(&token) != nil {
-				return
-			}
-
-			/// todo -
-
-			publicKeysURL := fmt.Sprintf("https://cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json", a.amazonConfig.Region, a.amazonConfig.UserPoolId)
-			publicKeySet, _ := jwk.Fetch(context.Background(), publicKeysURL)
+		if access := r.Header["X-Amzn-Oidc-Data"]; access != nil && len(access) > 0 {
 			claims := &AmazonCognitoClaims{}
-			_, _ = jwt.ParseWithClaims(token.Token, claims, func(token *jwt.Token) (interface{}, error) {
-				claims = token.Claims.(*AmazonCognitoClaims)
-				keys, _ := publicKeySet.LookupKeyID(token.Header["kid"].(string))
-				var tokenKey interface{}
-				keysErr := keys.Raw(&tokenKey)
-				return tokenKey, keysErr
-			})
-			session, _ := a.session.Get(r, "session")
-			session.Values["principal"] = claims.Email
-			_ = session.Save(r, w)
+			_, tokenErr := a.claimsParser.ParseWithClaims(access[0], a.amazonConfig.Region, claims)
+			if tokenErr != nil {
+				log.Printf("Oops, error parsing amazon cognito token claims. %v\n", tokenErr.Error())
+			} else {
+				session, _ := a.session.Get(r, "session")
+				log.Println(fmt.Sprintf("Found amazon cognito authenticated user email %v", claims.Email))
+				session.Values["principal"] = []string{claims.Email}
+				session.Values["logout"] = fmt.Sprintf("https://%s.auth.%s.amazoncognito.com/logout?client_id=%v&redirect_uri=%s&response_type=code",
+					a.amazonConfig.Domain, a.amazonConfig.Region, a.amazonConfig.UserPoolClientId, a.amazonConfig.RedirectUrl)
+				_ = session.Save(r, w)
+			}
 		}
 		next.ServeHTTP(w, r)
 	})
-
-}
-
-func (a *AmazonSupport) requestToken(url string, clientInfoBase64 string) (*http.Response, error) {
-	request, _ := http.NewRequest("POST", url, nil)
-	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	request.Header.Set("Authorization", fmt.Sprintf("Basic %s", clientInfoBase64))
-	return a.client.Do(request)
 }

@@ -2,8 +2,12 @@ package amazonsupport_test
 
 import (
 	"bytes"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"errors"
 	"fmt"
+	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/hexa-org/policy-orchestrator/cmd/demo/amazonsupport"
@@ -33,11 +37,25 @@ func (m *MockClient) Do(req *http.Request) (*http.Response, error) {
 	return &http.Response{StatusCode: 200, Body: r}, m.err
 }
 
+type MockClaimsParser struct {
+	Err error
+}
+
+func (m MockClaimsParser) ParseWithClaims(tokenString string, region string, claims jwt.Claims) (*jwt.Token, error) {
+	if m.Err != nil {
+		return nil, m.Err
+	}
+	c := claims.(*amazonsupport.AmazonCognitoClaims)
+	c.Email = "example@amazon.com"
+	return nil, nil
+}
+
 ///
 
 func TestAmazonSupport(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = nil
+	mockParser := MockClaimsParser{}
 
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../../../demo/test")
@@ -47,27 +65,32 @@ func TestAmazonSupport(t *testing.T) {
 	listener, _ := net.Listen("tcp", "localhost:0")
 	server := websupport.Create(listener.Addr().String(), func(router *mux.Router) {
 		router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			_, _ = w.Write([]byte(""))
+			session, _ := session.Get(r, "session")
+			principal := session.Values["principal"].([]string)
+			_, _ = w.Write([]byte(principal[0]))
 		})
 	}, options)
 	router := server.Handler.(*mux.Router)
-	router.Use(amazonsupport.NewAmazonSupport(mockClient, amazonsupport.AmazonCognitoConfiguration{}, session).Middleware)
+	router.Use(amazonsupport.NewAmazonSupport(mockClient, amazonsupport.AmazonCognitoConfiguration{}, mockParser, session).Middleware)
 
 	go websupport.Start(server, listener)
 	healthsupport.WaitForHealthy(server)
 	defer websupport.Stop(server)
 
-	request, _ := http.NewRequest("GET", fmt.Sprintf("http://%s/?code=42", server.Addr), nil)
+	claims := &jwt.StandardClaims{ExpiresAt: 300, Issuer: "https://cognito", Id: "anId"}
+	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+	token.Header["kid"] = "billy"
+	key, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	signedString, _ := token.SignedString(key)
+
+	request, _ := http.NewRequest("GET", fmt.Sprintf("http://%s/", server.Addr), nil)
+	request.Header["X-Amzn-Oidc-Data"] = []string{signedString}
 	response, _ := (&http.Client{}).Do(request)
-	assert.Equal(t, "https://.auth..amazoncognito.com/oauth2/token?code=42&grant_type=authorization_code&redirect_uri=", mockClient.req.URL.String())
 
 	body, _ := io.ReadAll(response.Body)
+	assert.Contains(t, string(body), "example@amazon.com")
+
+	mockParser.Err = errors.New("oops")
+	_, _ = (&http.Client{}).Do(request)
 	assert.Contains(t, string(body), "")
-
-	mockClient.err = errors.New("oops.")
-	erroneousRequest, _ := http.NewRequest("GET", fmt.Sprintf("http://%s/?code=42", server.Addr), nil)
-	erroneousResponse, _ := (&http.Client{}).Do(erroneousRequest)
-
-	erroneousBody, _ := io.ReadAll(erroneousResponse.Body)
-	assert.Contains(t, string(erroneousBody), "")
 }

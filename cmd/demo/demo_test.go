@@ -8,6 +8,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -49,7 +50,9 @@ func TestApp_unauthorized(t *testing.T) {
 	client := new(MockClient)
 	client.response = "{\"result\":false}"
 	app := setup(client)
-	assert.Equal(t, http.StatusUnauthorized, must(fmt.Sprintf("http://%s/humanresources", app.Addr)).StatusCode)
+	response := must(fmt.Sprintf("http://%s/humanresources", app.Addr))
+	body, _ := io.ReadAll(response.Body)
+	assert.Contains(t, string(body), "Sorry, you're not able to access this page.")
 	websupport.Stop(app)
 }
 

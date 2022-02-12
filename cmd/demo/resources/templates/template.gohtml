@@ -13,10 +13,11 @@
     <nav class="top-nav top-bar">
         <h1 class="hexa-title">Hexa Industries</h1>
         {{- $email := index .Map "provider_email"}}
+        {{- $logout := index .Map "logout"}}
         {{- if $email }}
             <div class="gray">
                 {{$email}}
-                | <a href="?gcp-iap-mode=CLEAR_LOGIN_COOKIE">Log out</a>
+                | <a href="{{$logout}}">Log out</a>
             </div>
         {{- end}}
     </nav>
@@ -44,8 +45,8 @@
             <hr>
             <ul>
                 <li>
-                    {{- if $email }}
-                        <a href="?gcp-iap-mode=CLEAR_LOGIN_COOKIE">Log out</a>
+                    {{- if $logout }}
+                        <a href="{{$logout}}">Log out</a>
                     {{- end}}
                 </li>
             </ul>
