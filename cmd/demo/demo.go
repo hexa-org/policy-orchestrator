@@ -23,7 +23,7 @@ type HTTPClient interface {
 func App(session *sessions.CookieStore, amazonConfig amazonsupport.AmazonCognitoConfiguration, client HTTPClient, opaUrl string, addr string, resourcesDirectory string) *http.Server {
 	basic := NewBasicApp(session, amazonConfig)
 	googleSupport := googlesupport.NewGoogleSupport(session)
-	amazonSupport := amazonsupport.NewAmazonSupport(client, amazonConfig, session)
+	amazonSupport := amazonsupport.NewAmazonSupport(client, amazonConfig, amazonsupport.AmazonCognitoClaimsParser{}, session)
 	opaSupport := opasupport.NewOpaSupport(client, opaUrl, basic.unauthorized)
 	server := websupport.Create(addr, basic.loadHandlers(), websupport.Options{ResourceDirectory: resourcesDirectory})
 	router := server.Handler.(*mux.Router)
@@ -41,24 +41,23 @@ func NewBasicApp(session *sessions.CookieStore, amazonConfig amazonsupport.Amazo
 }
 
 func (a *BasicApp) dashboard(writer http.ResponseWriter, req *http.Request) {
-	_ = websupport.ModelAndView(writer, "dashboard", websupport.Model{Map: map[string]interface{}{"provider_email": a.principal(req)}})
+	_ = websupport.ModelAndView(writer, "dashboard", a.principalAndLogout(req))
 }
 
 func (a *BasicApp) accounting(writer http.ResponseWriter, req *http.Request) {
-	_ = websupport.ModelAndView(writer, "accounting", websupport.Model{Map: map[string]interface{}{"provider_email": a.principal(req)}})
+	_ = websupport.ModelAndView(writer, "accounting", a.principalAndLogout(req))
 }
 
 func (a *BasicApp) sales(writer http.ResponseWriter, req *http.Request) {
-	_ = websupport.ModelAndView(writer, "sales", websupport.Model{Map: map[string]interface{}{"provider_email": a.principal(req)}})
+	_ = websupport.ModelAndView(writer, "sales", a.principalAndLogout(req))
 }
 
 func (a *BasicApp) humanresources(writer http.ResponseWriter, req *http.Request) {
-	_ = websupport.ModelAndView(writer, "humanresources", websupport.Model{Map: map[string]interface{}{"provider_email": a.principal(req)}})
+	_ = websupport.ModelAndView(writer, "humanresources", a.principalAndLogout(req))
 }
 
 func (a *BasicApp) unauthorized(writer http.ResponseWriter, req *http.Request) {
-	writer.WriteHeader(http.StatusUnauthorized)
-	_ = websupport.ModelAndView(writer, "unauthorized", websupport.Model{Map: map[string]interface{}{}})
+	_ = websupport.ModelAndView(writer, "unauthorized", a.principalAndLogout(req))
 }
 
 func (a *BasicApp) download(writer http.ResponseWriter, _ *http.Request) {
@@ -79,16 +78,19 @@ func (a *BasicApp) loadHandlers() func(router *mux.Router) {
 	}
 }
 
-func (a *BasicApp) principal(req *http.Request) string {
+func (a *BasicApp) principalAndLogout(req *http.Request) websupport.Model {
 	session, err := a.session.Get(req, "session")
 	if err != nil {
-		return ""
+		return websupport.Model{Map: map[string]interface{}{}}
 	}
 	principal := session.Values["principal"]
-	if principal == nil {
-		return ""
+	if principal == nil || len(principal.([]string)) == 0 {
+		return websupport.Model{Map: map[string]interface{}{}}
 	}
-	return principal.(string)
+	return websupport.Model{Map: map[string]interface{}{
+		"provider_email": principal.([]string),
+		"logout": session.Values["logout"].(string),
+	}}
 }
 
 func newApp(addr string) (*http.Server, net.Listener) {
@@ -117,7 +119,7 @@ func newApp(addr string) (*http.Server, net.Listener) {
 	amazon := amazonsupport.AmazonCognitoConfiguration{
 		Region:               os.Getenv("AWS_REGION"),
 		Domain:               os.Getenv("AWS_COGNITO_USER_POOL_DOMAIN"),
-		RedirectUrl:          os.Getenv("AWS_COGNITO_DOMAIN_REDIRECT_UR"),
+		RedirectUrl:          os.Getenv("AWS_COGNITO_DOMAIN_REDIRECT_URL"),
 		UserPoolId:           os.Getenv("AWS_COGNITO_USER_POOL_ID"),
 		UserPoolClientId:     os.Getenv("AWS_COGNITO_USER_POOL_CLIENT_ID"),
 		UserPoolClientSecret: os.Getenv("AWS_COGNITO_USER_POOL_CLIENT_SECRET"),

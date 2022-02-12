@@ -29,7 +29,3 @@ spec:
         backend:
           serviceName: hexa-demo
           servicePort: 8886
-      - path: /oauth2/idpresponse
-        backend:
-          serviceName: hexa-demo
-          servicePort: 8886
