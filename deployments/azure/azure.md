@@ -264,6 +264,7 @@ You need to create an AD App Registration to make API requests.
 1. Create an AD App Registration
 2. Create secret for App Registration
 3. Enable Microsoft Graph API permissions and choose "Application Permissions"
+4. Add the `ServicePrincipalEndpoint.Read.All` permission
 
 To make requests to the API you need to exchange your client secret and client ID for an Access Token
 and use that token to make Graph API requests.
