@@ -1,5 +1,12 @@
 # Deploy to Azure
 
+## Install Azure CLI
+
+Install the Azure CLI following [these instructions](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) or with 
+[Homebrew](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-macos)
+
+## Azure Setup
+
 Log in to azure CLI.
 
 ```bash
@@ -11,19 +18,40 @@ Create a `.env_azure.sh` file to store your azure environment variables.
 ```bash
 export APP_NAME=<app name>
 export AZ_RESOURCE_GROUP=<resource group>
+export AZ_LOCATION=<location>
+expoer AZ_AD_TENANT_ID=<tenant id>
 export AZ_AKS_CLUSTER_NAME=<cluster name>
 export AZ_ACR_NAME=<name>
 ```
 
+Source the `.env_azure.sh` file.
+
+```bash
+source .env_azure.sh
+```
+
+A resource group may also be needed.
+
+```bash
+az group create --name ${AZ_RESOURCE_GROUP} \
+  --location ${AZ_LOCATION} 
+```
+
 ## Build and push images
+
+Build the hexa image.
+
+```bash
+pack build hexa --builder heroku/buildpacks:20
+```
 
 Create container registry.
 
 ```bash
-  az acr create --name ${AZ_ACR_NAME} \
---resource-group ${AZ_RESOURCE_GROUP} \
---sku standard \
---admin-enabled true
+az acr create --name ${AZ_ACR_NAME} \
+  --resource-group ${AZ_RESOURCE_GROUP} \
+  --sku standard \
+  --admin-enabled true
 ```
 
 Log in to azure registry.
@@ -35,121 +63,98 @@ az acr login --name ${AZ_ACR_NAME}
 Tag and push demo app image.
 
 ```bash
-docker tag ${APP_NAME} ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}:tag1
-docker push ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}:tag1
+docker tag hexa ${AZ_ACR_NAME}.azurecr.io/hexa:tag1
+docker push ${AZ_ACR_NAME}.azurecr.io/hexa:tag1
 ```
 
-Build and push OPA Server.
+Build an OPA server with configuration via Docker.
 
 From the `./deployments/opa-server` directory run the below commands.
 
 ```bash
 docker pull openpolicyagent/opa:latest
-docker build -t ${APP_NAME}-opa-server:latest .
+docker build -t hexa-opa-server:latest .
 ```
 
 Push image to ACR.
 
 ```bash
-docker tag ${APP_NAME}-opa-server:latest ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}-opa-server:latest
-docker push ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}-opa-server:latest
+docker tag hexa-opa-server:latest ${AZ_ACR_NAME}.azurecr.io/hexa-opa-server:latest
+docker push ${AZ_ACR_NAME}.azurecr.io/hexa-opa-server:latest
 ```
 
-## Deploy to App Services
+## Deploy via App Services
 
 Create App Service Plan.
 
 ```bash
 az appservice plan create --name ${APP_NAME}plan \
---resource-group ${AZ_RESOURCE_GROUP} \
---is-linux
+  --resource-group ${AZ_RESOURCE_GROUP} \
+  --is-linux
 ```
 
-Deploy Hexa Demo App.
+Deploy the Hexa Demo App.
 
 ```bash
 az webapp create --name ${APP_NAME} \
---resource-group ${AZ_RESOURCE_GROUP} \
---plan ${APP_NAME}plan \
---startup-file="demo" \
---deployment-container-image-name ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}:tag1
+  --resource-group ${AZ_RESOURCE_GROUP} \
+  --plan ${APP_NAME}plan \
+  --startup-file="demo" \
+  --deployment-container-image-name ${AZ_ACR_NAME}.azurecr.io/hexa:tag1
 
 az webapp config appsettings set --name ${APP_NAME} \
---resource-group ${AZ_RESOURCE_GROUP} \
---settings PORT=8881
-
-az webapp config container set --name ${APP_NAME} \
---resource-group ${AZ_RESOURCE_GROUP} \
---docker-custom-image-name ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}:tag1 \
---docker-registry-server-url "https://${AZ_ACR_NAME}.azurecr.io"
+  --resource-group ${AZ_RESOURCE_GROUP} \
+  --settings PORT=8886
 
 az webapp restart --name ${APP_NAME} \
---resource-group ${AZ_RESOURCE_GROUP}
-
-az webapp show --name ${APP_NAME} \
---resource-group ${AZ_RESOURCE_GROUP} \
-| jq -r '.defaultHostName'
+  --resource-group ${AZ_RESOURCE_GROUP}
 ```
 
-Deploy OPA Server.
+Deploy the OPA Server.
 
 ```bash
-az webapp create --name ${APP_NAME}-demo-opa-agent \
---resource-group ${AZ_RESOURCE_GROUP} \
---plan ${APP_NAME}plan \
---startup-file="run --server --addr 0.0.0.0:8881 --config-file /config.yaml" \
---deployment-container-image-name ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}-opa-server:latest
+az webapp create --name ${APP_NAME}-opa-server \
+  --resource-group ${AZ_RESOURCE_GROUP} \
+  --plan ${APP_NAME}plan \
+  --startup-file="run --server --addr 0.0.0.0:8887 --config-file /config.yaml" \
+  --deployment-container-image-name ${AZ_ACR_NAME}.azurecr.io/hexa-opa-server:latest
+    
+az webapp config appsettings set --name ${APP_NAME}-opa-server \
+  --resource-group ${AZ_RESOURCE_GROUP} \
+  --settings PORT=8887
 
-az webapp config appsettings set --name ${APP_NAME}-demo-opa-agent \
---resource-group ${AZ_RESOURCE_GROUP} \
---settings PORT=8881
+az webapp config appsettings set --name ${APP_NAME}-opa-server \
+  --resource-group ${AZ_RESOURCE_GROUP} \
+  --settings HEXA_DEMO_URL=https://$(az webapp show --name ${APP_NAME} --resource-group ${AZ_RESOURCE_GROUP} | jq -r '.defaultHostName')
 
-az webapp config container set --name ${APP_NAME}-demo-opa-agent \
---resource-group ${AZ_RESOURCE_GROUP} \
---docker-custom-image-name ${AZ_ACR_NAME}.azurecr.io/${APP_NAME}-opa-server:latest \
---docker-registry-server-url "https://${AZ_ACR_NAME}.azurecr.io"
-
-az webapp restart --name ${APP_NAME}-demo-opa-agent \
---resource-group ${AZ_RESOURCE_GROUP}
-
-az webapp show --name ${APP_NAME}-demo-opa-agent \
---resource-group ${AZ_RESOURCE_GROUP} \
-| jq -r '.defaultHostName'
+az webapp restart --name ${APP_NAME}-opa-server \
+  --resource-group ${AZ_RESOURCE_GROUP}
 ```
 
-Update config for both apps.
+Update the Hexa demo config.
 
 ```bash
-opa_url=$(az webapp show --name ${APP_NAME}-demo-opa-agent \
---resource-group ${AZ_RESOURCE_GROUP} \
-| jq -r '.defaultHostName')
-
-hexa_demo_url=$(az webapp show --name ${APP_NAME}-demo \
---resource-group ${AZ_RESOURCE_GROUP} \
-| jq -r '.defaultHostName')
-
-az webapp config appsettings set --name ${APP_NAME}-demo \
---resource-group ${AZ_RESOURCE_GROUP} \
---settings OPA_SERVER_URL=https://${opa_url}/v1/data/authz/allow
-
-az webapp config appsettings set --name ${APP_NAME}-demo-opa-agent \
---resource-group ${AZ_RESOURCE_GROUP} \
---settings HEXA_DEMO_URL=https://${hexa_demo_url}
+az webapp config appsettings set --name ${APP_NAME} \
+  --resource-group ${AZ_RESOURCE_GROUP} \
+  --settings OPA_SERVER_URL=https://$(az webapp show --name ${APP_NAME}-opa-server --resource-group ${AZ_RESOURCE_GROUP} | jq -r '.defaultHostName')/v1/data/authz/allow
+  
+az webapp restart --name ${APP_NAME} \
+  --resource-group ${AZ_RESOURCE_GROUP}  
 ```
-
-Restart both apps.
 
 ## Deploy to Kubernetes - AKS
+
+_Below is work in progress_
 
 Create cluster.
 
 ```bash
 az aks create \
-    --resource-group ${AZ_RESOURCE_GROUP} \
-    --name ${AZ_AKS_CLUSTER_NAME} \
-    --node-count 2 \
-    --generate-ssh-keys \
-    --attach-acr ${AZ_ACR_NAME}
+  --resource-group ${AZ_RESOURCE_GROUP} \
+  --name ${AZ_AKS_CLUSTER_NAME} \
+  --node-count 2 \
+  --generate-ssh-keys \
+  --attach-acr ${AZ_ACR_NAME}
 ```
 
 View cluster.
@@ -178,19 +183,29 @@ envsubst < kubernetes/opa-server/deployment.yaml | kubectl apply -f -
 envsubst < kubernetes/opa-server/service.yaml | kubectl apply -f -
 ```
 
-## Update Webapp Auth
+## Create AD App Registration
+
+_Below is work in progress_
+
+Here is a [link](https://www.shawntabrizi.com/aad/common-microsoft-resources-azure-active-directory)
+describing the required-resource-accesses file  resourceAccess and resourceAppId are specific to associated apis
+look for User.Read (az ad sp list | grep User.Read)
+
+Create an Azure Active Directory app.
 
 ```bash
-
-# Create AD App Registration
 az ad app create \
---display-name ${APP_NAME} \
---homepage "https://${APP_NAME}.azurewebsites.net" \
---reply-urls "https://${APP_NAME}.azurewebsites.net/.auth/login/aad/callback" \
---available-to-other-tenants false \
---required-resource-accesses @required-resource-accesses.json.txt \
---password ${AZ_APP_SECRET}
+  --display-name ${APP_NAME} \
+  --homepage "https://${APP_NAME}.azurewebsites.net" \
+  --reply-urls "https://${APP_NAME}.azurewebsites.net/.auth/login/aad/callback" \
+  --available-to-other-tenants false \
+  --required-resource-accesses @required-resource-accesses.json.txt \
+  --password ${AZ_APP_SECRET}
+```
 
+Enable webapp authentication and authorization for the demo app.
+
+```bash
 AD_APP_ID=$(az ad app list --filter "displayname eq '${APP_NAME}'" | jq -r '.[].appId')
 echo "Newly created ad app with id ${APP_NAME}"
 
@@ -215,57 +230,3 @@ echo "Newly created service principal with id ${AD_SP_ID}"
 echo "Updating the service principal for the ${AZ_PROJECT_NAME} app"
 az ad sp update --id ${AD_SP_ID} --set "appRoleAssignmentRequired=true" --add tags WindowsAzureActiveDirectoryIntegratedApp
 ```
-
-Add a user to the app.
-
-```bash
-userId=<user id>
-appId=$(az ad app list --filter "displayname eq '${APP_NAME}'" | jq -r '.[].appId')
-spObjectId=$(az ad sp list --query "[?appId=='$appId']" | jq -r '.[].objectId')
-appRoleId='00000000-0000-0000-0000-000000000000'
-az rest --method post --uri "https://graph.microsoft.com/beta/users/$userId/appRoleAssignments" \
---body "{'appRoleId': '$appRoleId','principalId': '$userId','resourceId': '$spObjectId'}" \
---headers "Content-Type=application/json"
-```
-
-## az CLI Commands
-
-List Web Services apps
-
-```bash
-az webapp list --resource-group ${AZ_RESOURCE_GROUP} | jq -r '.[].name'
-```
-
-List AD App Registrations
-
-List all
-
-```bash
-az ad app list
-```
-
-```bash
-AD_APP_ID=$(az ad app list --filter "displayname eq '${APP_NAME}'" | jq -r '.[].appId')
-az ad app show --id ${AD_APP_ID}
-```
-
-List AD Service Principals (Enterprise Apps)
-
-```bash
-AD_APP_ID=$(az ad app list --filter "displayname eq '${APP_NAME}'" | jq -r '.[].appId')
-AD_SP_ID=$(az ad sp list --query "[?appId=='$AD_APP_ID']" | jq -r '.[].objectId')
-az ad sp show --id ${AD_SP_ID}
-```
-
-# Making REST Calls to Azure APIs
-
-You need to create an AD App Registration to make API requests. 
-
-1. Create an AD App Registration
-2. Create secret for App Registration
-3. Enable Microsoft Graph API permissions and choose "Application Permissions"
-4. Add the `ServicePrincipalEndpoint.Read.All` permission
-
-To make requests to the API you need to exchange your client secret and client ID for an Access Token
-and use that token to make Graph API requests.
-

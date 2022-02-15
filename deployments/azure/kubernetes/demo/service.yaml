@@ -9,7 +9,7 @@ spec:
   type: LoadBalancer
   ports:
     - port: 80
-      targetPort: 8881
+      targetPort: 8886
   selector:
     app: hexa-demo
     tier: frontend

@@ -26,9 +26,9 @@ spec:
               memory: 100Mi
           env:
             - name: PORT
-              value: "8881"
+              value: "8886"
             - name: OPA_SERVER_URL
-              value: ${OPA_SERVER_URL}/v1/data/authz/allow
+              value: http://hexa-demo-opa-server-agent.default.svc.cluster.local:8887/v1/data/authz/allow
 
           ports:
             - containerPort: 8881
