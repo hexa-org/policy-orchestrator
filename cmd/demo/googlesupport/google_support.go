@@ -12,6 +12,7 @@ type GoogleSupport struct {
 }
 
 func NewGoogleSupport(session *sessions.CookieStore) *GoogleSupport {
+	log.Println("Enabling google iap middleware.")
 	return &GoogleSupport{session}
 }
 

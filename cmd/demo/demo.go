@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/hexa-org/policy-orchestrator/cmd/demo/amazonsupport"
+	"github.com/hexa-org/policy-orchestrator/cmd/demo/azuresupport"
 	"github.com/hexa-org/policy-orchestrator/cmd/demo/googlesupport"
 	"github.com/hexa-org/policy-orchestrator/cmd/demo/opasupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
@@ -24,10 +25,11 @@ func App(session *sessions.CookieStore, amazonConfig amazonsupport.AmazonCognito
 	basic := NewBasicApp(session, amazonConfig)
 	googleSupport := googlesupport.NewGoogleSupport(session)
 	amazonSupport := amazonsupport.NewAmazonSupport(client, amazonConfig, amazonsupport.AmazonCognitoClaimsParser{}, session)
+	azureSupport := azuresupport.NewAzureSupport(session)
 	opaSupport := opasupport.NewOpaSupport(client, opaUrl, basic.unauthorized)
 	server := websupport.Create(addr, basic.loadHandlers(), websupport.Options{ResourceDirectory: resourcesDirectory})
 	router := server.Handler.(*mux.Router)
-	router.Use(googleSupport.Middleware, amazonSupport.Middleware, opaSupport.Middleware)
+	router.Use(googleSupport.Middleware, amazonSupport.Middleware, azureSupport.Middleware, opaSupport.Middleware)
 	return server
 }
 
