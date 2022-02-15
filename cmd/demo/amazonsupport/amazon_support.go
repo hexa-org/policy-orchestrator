@@ -47,6 +47,7 @@ type AmazonCognitoClaimsParser struct {
 }
 
 func (m AmazonCognitoClaimsParser) ParseWithClaims(tokenString string, region string, claims jwt.Claims) (*jwt.Token, error) {
+	log.Println("Enabling amazon cognito middleware.")
 
 	// todo - currently unable to parse and verify the amazon elb token as the elb returns an un-parsable base64 token
 	tokenString = strings.Replace(tokenString, "=", "", -1)
