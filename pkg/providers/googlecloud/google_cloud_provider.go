@@ -15,7 +15,7 @@ type GoogleProvider struct {
 }
 
 func (g GoogleProvider) Name() string {
-	return "google cloud"
+	return "google_cloud"
 }
 
 func (g GoogleProvider) Project(key []byte) string {

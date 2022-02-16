@@ -26,7 +26,10 @@
             <h1>{{ capitalize $resource }}</h1>
         </div>
         {{- if (eq $resource "integrations") }}
-            <a href="/integrations/new"><img src="/images/add_white.svg" alt="add"></a>
+            <div class="menu">
+                <a href="/integrations/new?provider=google_cloud">Google<img src="/images/add_white.svg" alt="add"></a>
+                <a href="/integrations/new?provider=azure">Azure<img src="/images/add_white.svg" alt="add"></a>
+            </div>
         {{end}}
         {{- if and (startsWith $resource "applications") $resource_link }}
             <a href="{{$resource_link}}/edit"><img src="/images/edit_white.svg" alt="add"></a>

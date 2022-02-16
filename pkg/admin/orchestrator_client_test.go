@@ -98,11 +98,11 @@ func TestOrchestratorClient_Application_withBadJson(t *testing.T) {
 func TestOrchestratorClient_Integrations(t *testing.T) {
 	mockClient := new(MockClient)
 	key := base64.StdEncoding.EncodeToString([]byte("anotherKey"))
-	mockClient.response = []byte(fmt.Sprintf("{\"integrations\":[{\"provider\":\"google\", \"key\":\"%s\"}]}", key))
+	mockClient.response = []byte(fmt.Sprintf("{\"integrations\":[{\"provider\":\"google_cloud\", \"key\":\"%s\"}]}", key))
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 
 	resp, _ := client.Integrations("localhost:8883/applications")
-	assert.Equal(t, []admin.Integration{{Provider: "google", Key: []byte("anotherKey")}}, resp)
+	assert.Equal(t, []admin.Integration{{Provider: "google_cloud", Key: []byte("anotherKey")}}, resp)
 }
 
 func TestOrchestratorClient_Integrations_withErroneousGet(t *testing.T) {
