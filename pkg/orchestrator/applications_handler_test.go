@@ -42,7 +42,7 @@ func (s *ApplicationsHandlerSuite) SetupTest() {
 	_, _ = s.db.Exec(`
 delete from applications;
 delete from integrations;
-insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'aName', 'google cloud', 'aKey');
+insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'aName', 'google_cloud', 'aKey');
 insert into applications (id, integration_id, object_id, name, description) values ('6409776a-367a-483a-a194-5ccf9c4ff210', '50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'anObjectId', 'aName', 'aDescription');
 `)
 	s.applicationTestId = "6409776a-367a-483a-a194-5ccf9c4ff210"
@@ -54,7 +54,7 @@ insert into applications (id, integration_id, object_id, name, description) valu
 	s.key = hex.EncodeToString(hash[:])
 
 	s.providers = make(map[string]provider.Provider)
-	s.providers["google cloud"] = &orchestrator_test.NoopProvider{}
+	s.providers["google_cloud"] = &orchestrator_test.NoopProvider{}
 
 	handlers, scheduler := orchestrator.LoadHandlers(s.db, hawksupport.NewCredentialStore(s.key), addr, s.providers)
 	s.scheduler = scheduler
@@ -125,7 +125,7 @@ func (s *ApplicationsHandlerSuite) TestGetPolicies() {
 func (s *ApplicationsHandlerSuite) TestGetPolicies_withRequestFails() {
 	discovery := orchestrator_test.NoopProvider{}
 	discovery.Err = errors.New("oops")
-	s.providers["google cloud"] = &discovery
+	s.providers["google_cloud"] = &discovery
 
 	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)
 
@@ -146,7 +146,7 @@ func (s *ApplicationsHandlerSuite) TestSetPolicies() {
 func (s *ApplicationsHandlerSuite) TestSetPolicies_withErroneousProvider() {
 	noopProvider := orchestrator_test.NoopProvider{}
 	noopProvider.Err = errors.New("oops")
-	s.providers["google cloud"] = &noopProvider
+	s.providers["google_cloud"] = &noopProvider
 
 	var buf bytes.Buffer
 	policy := orchestrator.Policy{Version: "v0.1", Action: "anAction", Subject: orchestrator.Subject{[]string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{Resources: []string{"/"}}}

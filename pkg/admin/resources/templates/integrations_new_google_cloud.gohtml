@@ -2,9 +2,10 @@
 {{- define "main"}}
     <div class="card">
         {{- $m := index .Map "message"}}
+        {{- $provider := index .Map "provider"}}
         <h1>Install Cloud Provider</h1>
         <form name="integration" action="/integrations" method="post" enctype="multipart/form-data">
-            <input type="hidden" value="Google Cloud" name="provider"/>
+            <input type="hidden" value="{{$provider}}" name="provider"/>
             <h2 class="gcp-title">Google Cloud Platform</h2>
             <fieldset class="flex">
                 <p>

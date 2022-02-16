@@ -25,7 +25,7 @@ func (suite *ApplicationGatewaySuite) SetupTest() {
 	_, _ = suite.db.Exec(`
 delete from applications;
 delete from integrations;
-insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'aName', 'google cloud', 'aKey');
+insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'aName', 'google_cloud', 'aKey');
 `)
 	suite.integrationTestId = "50e00619-9f15-4e85-a7e9-f26d87ea12e7"
 	suite.gateway = orchestrator.ApplicationsDataGateway{DB: suite.db}

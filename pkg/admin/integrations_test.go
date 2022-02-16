@@ -14,6 +14,7 @@ import (
 	"mime/multipart"
 	"net"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -60,10 +61,21 @@ func (suite *IntegrationsSuite) TestListIntegrations_with_error() {
 	assert.Contains(suite.T(), string(body), "Something went wrong.")
 }
 
-func (suite *IntegrationsSuite) TestNewIntegration() {
-	resp := suite.must(http.Get(fmt.Sprintf("http://%s/integrations/new", suite.server.Addr)))
+func (suite *IntegrationsSuite) TestNewIntegration_GoogleCloud() {
+	resp := suite.must(http.Get(fmt.Sprintf("http://%s/integrations/new?provider=%s", suite.server.Addr, url.QueryEscape("google_cloud"))))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Install Cloud Provider")
+}
+
+func (suite *IntegrationsSuite) TestNewIntegration_Azure() {
+	resp := suite.must(http.Get(fmt.Sprintf("http://%s/integrations/new?provider=%s", suite.server.Addr, url.QueryEscape("Azure"))))
+	body, _ := io.ReadAll(resp.Body)
+	assert.Contains(suite.T(), string(body), "Install Cloud Provider")
+}
+
+func (suite *IntegrationsSuite) TestNewIntegration_withoutQueryParam() {
+	resp := suite.must(http.Get(fmt.Sprintf("http://%s/integrations/new", suite.server.Addr)))
+	assert.Equal(suite.T(), http.StatusNotFound, resp.StatusCode)
 }
 
 func (suite *IntegrationsSuite) TestCreateIntegration() {
@@ -72,7 +84,7 @@ func (suite *IntegrationsSuite) TestCreateIntegration() {
 	resp, _ := http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf)
 	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
 	assert.Equal(suite.T(), "google-cloud-project-id", suite.client.Name)
-	assert.Equal(suite.T(), "google cloud", suite.client.Provider)
+	assert.Equal(suite.T(), "google_cloud", suite.client.Provider)
 }
 
 func (suite *IntegrationsSuite) TestCreateIntegration_withError() {
@@ -120,7 +132,7 @@ func (suite *IntegrationsSuite) must(resp *http.Response, _ error) *http.Respons
 func (suite *IntegrationsSuite) multipartFormSuccess() (*bytes.Buffer, string) {
 	return suite.multipartForm(func(writer *multipart.Writer) {
 		provider, _ := writer.CreateFormField("provider")
-		_, _ = provider.Write([]byte("google cloud"))
+		_, _ = provider.Write([]byte("google_cloud"))
 
 		file, _ := writer.CreateFormFile("key", "aKey.json")
 		_, _ = file.Write([]byte("{\"type\": \"service_account\", \"project_id\": \"google-cloud-project-id\"}"))
@@ -130,14 +142,14 @@ func (suite *IntegrationsSuite) multipartFormSuccess() (*bytes.Buffer, string) {
 func (suite *IntegrationsSuite) multipartFormMissingFile() (*bytes.Buffer, string) {
 	return suite.multipartForm(func(writer *multipart.Writer) {
 		provider, _ := writer.CreateFormField("provider")
-		_, _ = provider.Write([]byte("google cloud"))
+		_, _ = provider.Write([]byte("google_cloud"))
 	})
 }
 
 func (suite *IntegrationsSuite) multipartFormErroneousFile() (*bytes.Buffer, string) {
 	return suite.multipartForm(func(writer *multipart.Writer) {
 		provider, _ := writer.CreateFormField("provider")
-		_, _ = provider.Write([]byte("google cloud"))
+		_, _ = provider.Write([]byte("google_cloud"))
 
 		file, _ := writer.CreateFormFile("key", "aKey.json")
 		_, _ = file.Write([]byte("{\"_____project_id\": \"google-cloud-project-id\"}"))

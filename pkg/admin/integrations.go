@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type Integration struct {
@@ -48,8 +49,10 @@ func (i integrationsHandler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (i integrationsHandler) New(w http.ResponseWriter, r *http.Request) {
-	model := websupport.Model{Map: map[string]interface{}{"resource": "integrations"}}
-	_ = websupport.ModelAndView(w, "integrations_new", model)
+	provider := r.URL.Query().Get("provider")
+	model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider}}
+	integrationView := i.knownIntegrationViews(provider)
+	_ = websupport.ModelAndView(w, integrationView, model)
 }
 
 type keyFile struct {
@@ -64,13 +67,13 @@ func (i integrationsHandler) CreateGoogleIntegration(w http.ResponseWriter, r *h
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 	provider := r.FormValue("provider")
+	integrationView := i.knownIntegrationViews(provider)
 	file, _, err := r.FormFile("key")
 	if err != nil {
 		log.Printf("Missing key file %s.\n", err.Error())
-		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "message": "Missing key file."}}
-		_ = websupport.ModelAndView(w, "integrations_new", model)
+		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Missing key file."}}
+		_ = websupport.ModelAndView(w, integrationView, model)
 		return
 	}
 
@@ -85,8 +88,8 @@ func (i integrationsHandler) CreateGoogleIntegration(w http.ResponseWriter, r *h
 	err = json.NewDecoder(bytes.NewReader(key)).Decode(&foundKeyFile)
 	if err != nil || foundKeyFile.ProjectId == "" {
 		log.Println("Unable to read key file.")
-		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "message": "Unable to read key file."}}
-		_ = websupport.ModelAndView(w, "integrations_new", model)
+		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Unable to read key file."}}
+		_ = websupport.ModelAndView(w, integrationView, model)
 		return
 	}
 	name := foundKeyFile.ProjectId
@@ -96,6 +99,14 @@ func (i integrationsHandler) CreateGoogleIntegration(w http.ResponseWriter, r *h
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	http.Redirect(w, r, "/integrations", http.StatusMovedPermanently)
+}
+
+func (i integrationsHandler) knownIntegrationViews(provider string) string {
+	integrationViews := make(map[string]string)
+	integrationViews["google_cloud"] = "integrations_new_google_cloud"
+	integrationViews["azure"] = "integrations_new_azure"
+	integrationView := integrationViews[strings.ToLower(provider)]
+	return integrationView
 }
 
 func (i integrationsHandler) Delete(w http.ResponseWriter, r *http.Request) {

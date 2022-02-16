@@ -30,13 +30,13 @@ func (suite *GatewaySuite) TearDownTest() {
 }
 
 func (suite *GatewaySuite) TestCreate() {
-	id, err := suite.gateway.Create("aName", "google cloud", []byte("aKey"))
+	id, err := suite.gateway.Create("aName", "google_cloud", []byte("aKey"))
 	assert.NotEmpty(suite.T(), id)
 	assert.NoError(suite.T(), err)
 }
 
 func (suite *GatewaySuite) TestFind() {
-	_, _ = suite.gateway.Create("aName", "google cloud", []byte("aKey"))
+	_, _ = suite.gateway.Create("aName", "google_cloud", []byte("aKey"))
 	all, _ := suite.gateway.Find()
 	assert.Equal(suite.T(), 1, len(all))
 }
@@ -44,22 +44,22 @@ func (suite *GatewaySuite) TestFind() {
 func (suite *GatewaySuite) TestFind_withBadDatabaseUrl() {
 	open, _ := databasesupport.Open("")
 	gateway := orchestrator.IntegrationsDataGateway{DB: open}
-	_, _ = suite.gateway.Create("aName", "google cloud", []byte("aKey"))
+	_, _ = suite.gateway.Create("aName", "google_cloud", []byte("aKey"))
 	_, err := gateway.Find()
 	assert.Error(suite.T(), err)
 }
 
 func (suite *GatewaySuite) TestDelete() {
-	id, _ := suite.gateway.Create("aName", "google cloud", []byte("aKey"))
+	id, _ := suite.gateway.Create("aName", "google_cloud", []byte("aKey"))
 	_ = suite.gateway.Delete(id)
 	find, _ := suite.gateway.Find()
 	assert.Equal(suite.T(), 0, len(find))
 }
 
 func (suite *GatewaySuite) TestFindById() {
-	id, _ := suite.gateway.Create("aName", "google cloud", []byte("aKey"))
+	id, _ := suite.gateway.Create("aName", "google_cloud", []byte("aKey"))
 	record, _ := suite.gateway.FindById(id)
 	assert.Equal(suite.T(), "aName", record.Name)
-	assert.Equal(suite.T(), "google cloud", record.Provider)
+	assert.Equal(suite.T(), "google_cloud", record.Provider)
 	assert.Equal(suite.T(), []byte("aKey"), record.Key)
 }
