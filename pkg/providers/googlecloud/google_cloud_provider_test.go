@@ -17,10 +17,10 @@ func TestGoogleProvider_DiscoverApplications(t *testing.T) {
 	providers := []provider.Provider{googlecloud.GoogleProvider{Http: m}}
 
 	for _, p := range providers {
-		info := provider.IntegrationInfo{Name: "google cloud", Key: []byte("aKey")}
+		info := provider.IntegrationInfo{Name: "google_cloud", Key: []byte("aKey")}
 		applications, _ := p.DiscoverApplications(info)
 		assert.Equal(t, 2, len(applications))
-		assert.Equal(t, "google cloud", p.Name())
+		assert.Equal(t, "google_cloud", p.Name())
 	}
 }
 
@@ -30,10 +30,10 @@ func TestGoogleProvider_DiscoverApplications_ignoresProviderCase(t *testing.T) {
 	providers := []provider.Provider{googlecloud.GoogleProvider{Http: m}}
 
 	for _, p := range providers {
-		info := provider.IntegrationInfo{Name: "Google Cloud", Key: []byte("aKey")}
+		info := provider.IntegrationInfo{Name: "Google_Cloud", Key: []byte("aKey")}
 		applications, _ := p.DiscoverApplications(info)
 		assert.Equal(t, 2, len(applications))
-		assert.Equal(t, "google cloud", p.Name())
+		assert.Equal(t, "google_cloud", p.Name())
 	}
 }
 
@@ -42,7 +42,7 @@ func TestGoogleProvider_DiscoverApplications_emptyResponse(t *testing.T) {
 	providers := []provider.Provider{googlecloud.GoogleProvider{Http: m}}
 
 	for _, p := range providers {
-		info := provider.IntegrationInfo{Name: "not google cloud", Key: []byte("aKey")}
+		info := provider.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
 		applications, _ := p.DiscoverApplications(info)
 		assert.Equal(t, 0, len(applications))
 	}
@@ -78,7 +78,7 @@ func TestGoogleProvider_GetPolicy(t *testing.T) {
 	m.ResponseBody = google_cloud_test.Resource("policy.json")
 
 	p := googlecloud.GoogleProvider{Http: m}
-	info := provider.IntegrationInfo{Name: "not google cloud", Key: []byte("aKey")}
+	info := provider.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
 	infos, _ := p.GetPolicyInfo(info, provider.ApplicationInfo{ObjectID: "anObjectId"})
 	assert.Equal(t, 2, len(infos))
 }
@@ -90,7 +90,7 @@ func TestGoogleProvider_SetPolicy(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
 
 	p := googlecloud.GoogleProvider{Http: m}
-	info := provider.IntegrationInfo{Name: "not google cloud", Key: []byte("aKey")}
+	info := provider.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
 	err := p.SetPolicyInfo(info, provider.ApplicationInfo{ObjectID: "anObjectId"}, policy)
 	assert.NoError(t, err)
 }

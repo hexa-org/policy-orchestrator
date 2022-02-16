@@ -14,7 +14,7 @@ type MockClient struct {
 }
 
 func (m *MockClient) Integrations(_ string) ([]admin.Integration, error) {
-	integration := admin.Integration{ID: "anId", Name: "aName", Provider: "google", Key: []byte("aKey")}
+	integration := admin.Integration{ID: "anId", Name: "aName", Provider: "google_cloud", Key: []byte("aKey")}
 	return []admin.Integration{integration}, m.Err
 }
 

@@ -56,7 +56,7 @@ func (s *HandlerSuite) TearDownTest() {
 }
 
 func (s *HandlerSuite) TestList() {
-	_, _ = s.gateway.Create("aName", "google cloud", []byte("aKey"))
+	_, _ = s.gateway.Create("aName", "google_cloud", []byte("aKey"))
 
 	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/integrations", s.server.Addr))
 	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
@@ -66,12 +66,12 @@ func (s *HandlerSuite) TestList() {
 
 	integration := jsonResponse.Integrations[0]
 	assert.Equal(s.T(), "aName", integration.Name)
-	assert.Equal(s.T(), "google cloud", integration.Provider)
+	assert.Equal(s.T(), "google_cloud", integration.Provider)
 	assert.Equal(s.T(), []byte("aKey"), integration.Key)
 }
 
 func (s *HandlerSuite) TestCreate() {
-	integration := orchestrator.Integration{Name: "aName", Provider: "google cloud", Key: []byte("aKey")}
+	integration := orchestrator.Integration{Name: "aName", Provider: "google_cloud", Key: []byte("aKey")}
 	marshal, _ := json.Marshal(integration)
 	_, _ = hawksupport.HawkPost(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/integrations", s.server.Addr), bytes.NewReader(marshal))
 
@@ -80,12 +80,12 @@ func (s *HandlerSuite) TestCreate() {
 
 	record := records[0]
 	assert.Equal(s.T(), "aName", record.Name)
-	assert.Equal(s.T(), "google cloud", record.Provider)
+	assert.Equal(s.T(), "google_cloud", record.Provider)
 	assert.Equal(s.T(), []byte("aKey"), record.Key)
 }
 
 func (s *HandlerSuite) TestDelete() {
-	id, _ := s.gateway.Create("aName", "google cloud", []byte("aKey"))
+	id, _ := s.gateway.Create("aName", "google_cloud", []byte("aKey"))
 
 	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/integrations/%s", s.server.Addr, id))
 	assert.Equal(s.T(), resp.StatusCode, http.StatusOK)
@@ -95,7 +95,7 @@ func (s *HandlerSuite) TestDelete() {
 }
 
 func (s *HandlerSuite) TestDelete_withUnknownID() {
-	_, _ = s.gateway.Create("aName", "google cloud", []byte("aKey"))
+	_, _ = s.gateway.Create("aName", "google_cloud", []byte("aKey"))
 
 	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, fmt.Sprintf("http://%s/integrations/%s", s.server.Addr, "0000"))
 	assert.Equal(s.T(), resp.StatusCode, http.StatusInternalServerError)

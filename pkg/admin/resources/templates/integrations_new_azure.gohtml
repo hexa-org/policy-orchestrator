@@ -1,0 +1,17 @@
+{{- template "base" .}}
+{{- define "main"}}
+    <div class="card">
+        {{- $m := index .Map "message"}}
+        {{- $provider := index .Map "provider"}}
+        <h1>Install Azure Provider</h1>
+        <form name="integration" action="/integrations" method="post" enctype="multipart/form-data">
+            <input type="hidden" value="{{$provider}}" name="provider"/>
+            <h2 class="gcp-title">Azure Cloud Platform</h2>
+           
+            <input type="submit" value="Install Cloud Provider" class="button"/>
+            {{- if $m}}
+                <div class="message">Something went wrong. {{$m}}</div>
+            {{- end }}
+        </form>
+    </div>
+{{- end}}
