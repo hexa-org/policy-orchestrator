@@ -103,13 +103,14 @@ func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Re
 	if provider == "azure" {
 		name = r.FormValue("subscription")
 		var buf bytes.Buffer
-		key := azureKey{
+		encoded := azureKey{
 			AppId:        r.FormValue("appId"),
-			Password:     r.FormValue("password"),
+			Secret:       r.FormValue("password"),
 			Tenant:       r.FormValue("tenant"),
 			Subscription: r.FormValue("subscription"),
 		}
-		_ = json.NewEncoder(&buf).Encode(key)
+		_ = json.NewEncoder(&buf).Encode(encoded)
+		key = buf.Bytes()
 	}
 
 	err = i.client.CreateIntegration(url, name, provider, key)
@@ -123,9 +124,9 @@ func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Re
 }
 
 type azureKey struct {
-	AppId string `json:"appId"`
-	Password string `json:"password"`
-	Tenant string `json:"tenant"`
+	AppId        string `json:"appId"`
+	Secret       string `json:"secret"`
+	Tenant       string `json:"tenant"`
 	Subscription string `json:"subscription"`
 }
 
