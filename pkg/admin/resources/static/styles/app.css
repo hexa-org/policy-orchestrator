@@ -90,7 +90,6 @@ form p {
 
 label {
     width: 100%;
-    margin-bottom: 1rem;
     display: block;
 }
 
@@ -218,6 +217,11 @@ header.top-bar {
 header .menu {
     display: flex;
     gap: 1rem;
+    align-items: center;
+}
+
+header .menu a {
+    display: flex;
     align-items: center;
 }
 
