@@ -30,7 +30,7 @@ func (gateway ApplicationsDataGateway) CreateIfAbsent(integrationId string, obje
 }
 
 func (gateway ApplicationsDataGateway) Find() ([]ApplicationRecord, error) {
-	rows, err := gateway.DB.Query("select id, integration_id, object_id, name, description from applications")
+	rows, err := gateway.DB.Query("select id, integration_id, object_id, name, description from applications order by name")
 	if err != nil {
 		return nil, err
 	}
