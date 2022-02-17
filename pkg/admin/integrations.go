@@ -22,7 +22,7 @@ type Integration struct {
 type IntegrationHandler interface {
 	List(w http.ResponseWriter, r *http.Request)
 	New(w http.ResponseWriter, r *http.Request)
-	CreateGoogleIntegration(w http.ResponseWriter, r *http.Request)
+	CreateIntegration(w http.ResponseWriter, r *http.Request)
 	Delete(w http.ResponseWriter, r *http.Request)
 }
 
@@ -59,7 +59,7 @@ type keyFile struct {
 	ProjectId string `json:"project_id"`
 }
 
-func (i integrationsHandler) CreateGoogleIntegration(w http.ResponseWriter, r *http.Request) {
+func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Request) {
 	url := fmt.Sprintf("%v/integrations", i.orchestratorUrl)
 
 	err := r.ParseMultipartForm(32 << 20)
@@ -69,36 +69,64 @@ func (i integrationsHandler) CreateGoogleIntegration(w http.ResponseWriter, r *h
 	}
 	provider := r.FormValue("provider")
 	integrationView := i.knownIntegrationViews(provider)
-	file, _, err := r.FormFile("key")
-	if err != nil {
-		log.Printf("Missing key file %s.\n", err.Error())
-		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Missing key file."}}
-		_ = websupport.ModelAndView(w, integrationView, model)
-		return
-	}
 
 	var key []byte
-	key, err = ioutil.ReadAll(file)
-	if err != nil {
-		return
-	}
-	_ = file.Close()
+	var name string
 
-	var foundKeyFile keyFile
-	err = json.NewDecoder(bytes.NewReader(key)).Decode(&foundKeyFile)
-	if err != nil || foundKeyFile.ProjectId == "" {
-		log.Println("Unable to read key file.")
-		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Unable to read key file."}}
-		_ = websupport.ModelAndView(w, integrationView, model)
-		return
+	// todo - replace conditional logic with strategy or new route
+	if provider == "google_cloud" {
+		file, _, err := r.FormFile("key")
+		if err != nil {
+			log.Printf("Missing key file %s.\n", err.Error())
+			model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Missing key file."}}
+			_ = websupport.ModelAndView(w, integrationView, model)
+			return
+		}
+
+		key, err = ioutil.ReadAll(file)
+		if err != nil {
+			return
+		}
+		_ = file.Close()
+
+		var foundKeyFile keyFile
+		err = json.NewDecoder(bytes.NewReader(key)).Decode(&foundKeyFile)
+		if err != nil || foundKeyFile.ProjectId == "" {
+			log.Println("Unable to read key file.")
+			model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Unable to read key file."}}
+			_ = websupport.ModelAndView(w, integrationView, model)
+			return
+		}
+		name = foundKeyFile.ProjectId
 	}
-	name := foundKeyFile.ProjectId
+
+	if provider == "azure" {
+		name = r.FormValue("subscription")
+		var buf bytes.Buffer
+		key := azureKey{
+			AppId:        r.FormValue("appId"),
+			Password:     r.FormValue("password"),
+			Tenant:       r.FormValue("tenant"),
+			Subscription: r.FormValue("subscription"),
+		}
+		_ = json.NewEncoder(&buf).Encode(key)
+	}
 
 	err = i.client.CreateIntegration(url, name, provider, key)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println("Unable to communicate with orchestrator.")
+		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Unable to communicate with orchestrator."}}
+		_ = websupport.ModelAndView(w, integrationView, model)
+		return
 	}
 	http.Redirect(w, r, "/integrations", http.StatusMovedPermanently)
+}
+
+type azureKey struct {
+	AppId string `json:"appId"`
+	Password string `json:"password"`
+	Tenant string `json:"tenant"`
+	Subscription string `json:"subscription"`
 }
 
 func (i integrationsHandler) knownIntegrationViews(provider string) string {

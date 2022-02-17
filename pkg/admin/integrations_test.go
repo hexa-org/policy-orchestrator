@@ -80,18 +80,29 @@ func (suite *IntegrationsSuite) TestNewIntegration_withoutQueryParam() {
 
 func (suite *IntegrationsSuite) TestCreateIntegration() {
 	suite.client.On("CreateIntegration", "http://noop/integrations").Return()
-	buf, contentType := suite.multipartFormSuccess()
+	buf, contentType := suite.multipartFormSuccessGoogle()
 	resp, _ := http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf)
 	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
 	assert.Equal(suite.T(), "google-cloud-project-id", suite.client.Name)
 	assert.Equal(suite.T(), "google_cloud", suite.client.Provider)
 }
 
+func (suite *IntegrationsSuite) TestCreateIntegration_withAzure() {
+	suite.client.On("CreateIntegration", "http://noop/integrations").Return()
+	buf, contentType := suite.multipartFormSuccessAzure()
+	resp, _ := http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf)
+	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
+	assert.Equal(suite.T(), "aSubscription", suite.client.Name)
+	assert.Equal(suite.T(), "azure", suite.client.Provider)
+}
+
 func (suite *IntegrationsSuite) TestCreateIntegration_withError() {
 	suite.client.On("CreateIntegration", "http://noop/integrations").Return(errors.New(""))
-	buf, contentType := suite.multipartFormSuccess()
+	buf, contentType := suite.multipartFormSuccessGoogle()
 	resp := suite.must(http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf))
-	assert.Equal(suite.T(), http.StatusInternalServerError, resp.StatusCode)
+	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
+	all, _ := io.ReadAll(resp.Body)
+	assert.Contains(suite.T(), string(all), "Something went wrong. Unable to communicate with orchestrator.")
 }
 
 func (suite *IntegrationsSuite) TestCreateIntegration_withMissingKeyFile() {
@@ -129,7 +140,7 @@ func (suite *IntegrationsSuite) must(resp *http.Response, _ error) *http.Respons
 	return resp
 }
 
-func (suite *IntegrationsSuite) multipartFormSuccess() (*bytes.Buffer, string) {
+func (suite *IntegrationsSuite) multipartFormSuccessGoogle() (*bytes.Buffer, string) {
 	return suite.multipartForm(func(writer *multipart.Writer) {
 		provider, _ := writer.CreateFormField("provider")
 		_, _ = provider.Write([]byte("google_cloud"))
@@ -153,6 +164,21 @@ func (suite *IntegrationsSuite) multipartFormErroneousFile() (*bytes.Buffer, str
 
 		file, _ := writer.CreateFormFile("key", "aKey.json")
 		_, _ = file.Write([]byte("{\"_____project_id\": \"google-cloud-project-id\"}"))
+	})
+}
+
+func (suite *IntegrationsSuite) multipartFormSuccessAzure() (*bytes.Buffer, string) {
+	return suite.multipartForm(func(writer *multipart.Writer) {
+		provider, _ := writer.CreateFormField("provider")
+		_, _ = provider.Write([]byte("azure"))
+		appId, _ := writer.CreateFormField("appId")
+		_, _ = appId.Write([]byte("anAppId"))
+		password, _ := writer.CreateFormField("password")
+		_, _ = password.Write([]byte("aPassword"))
+		tenant, _ := writer.CreateFormField("tenant")
+		_, _ = tenant.Write([]byte("aTenant"))
+		subscription, _ := writer.CreateFormField("subscription")
+		_, _ = subscription.Write([]byte("aSubscription"))
 	})
 }
 
