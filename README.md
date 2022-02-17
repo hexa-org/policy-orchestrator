@@ -64,18 +64,3 @@ Remove the local postgres database files.
 ```bash
 rm -rf .postgres
 ```
-
-## Maintainers
-
-* [Hexa project maintainers](MAINTAINERS.md)
-
-## Roadmap
-
-* [Current roadmap](ROADMAP.md)
-
-## Contributing
-
-[Join the Hexa community](https://hexaorchestration.org/preview/#join) to stay up-to-date with the project and contribute.
-
-* [Additional development information](DEVELOPMENT.md)
-* [Our of conduct statement](CODE_OF_CONDUCT.md)
