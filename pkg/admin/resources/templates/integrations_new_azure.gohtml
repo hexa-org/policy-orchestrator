@@ -7,7 +7,28 @@
         <form name="integration" action="/integrations" method="post" enctype="multipart/form-data">
             <input type="hidden" value="{{$provider}}" name="provider"/>
             <h2 class="gcp-title">Azure Cloud Platform</h2>
-           
+            <fieldset class="">
+                <p>
+                    Add a Azure services service principal, tenant, and subscription.
+                </p>
+                <label class="text">
+                    App ID
+                    <input type="text" name="appId"/>
+                </label>
+
+                <label class="text">
+                    Password
+                    <input type="text" name="password"/>
+                </label>
+                <label class="text">
+                    Tenant
+                    <input type="text" name="tenant"/>
+                </label>
+                <label class="text">
+                    Subscription
+                    <input type="text" name="subscription"/>
+                </label>
+            </fieldset>
             <input type="submit" value="Install Cloud Provider" class="button"/>
             {{- if $m}}
                 <div class="message">Something went wrong. {{$m}}</div>
