@@ -5,7 +5,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"log"
 	"net/http"
 )
 
@@ -21,7 +20,6 @@ func MetricsMiddleware(next http.Handler) http.Handler {
 		route := mux.CurrentRoute(r)
 		path, _ := route.GetPathTemplate()
 		timer := prometheus.NewTimer(httpDuration.WithLabelValues(path))
-		log.Println(r.Header)
 		next.ServeHTTP(w, r)
 		timer.ObserveDuration()
 	})
