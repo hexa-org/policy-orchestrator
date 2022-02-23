@@ -1,7 +1,6 @@
 package googlesupport
 
 import (
-	"fmt"
 	"github.com/gorilla/sessions"
 	"log"
 	"net/http"
@@ -19,13 +18,13 @@ func NewGoogleSupport(session *sessions.CookieStore) *GoogleSupport {
 func (g *GoogleSupport) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if email := r.Header["X-Goog-Authenticated-User-Email"]; email != nil && len(email) > 0 {
-			log.Println(fmt.Sprintf("Found google authenticated user email %v", email))
+			log.Println("Found google authenticated user email.")
 			session, _ := g.session.Get(r, "session")
-			session.Values["principal"] =  email
+			session.Values["principal"] = email
 			session.Values["logout"] = "?gcp-iap-mode=CLEAR_LOGIN_COOKIE"
 			err := session.Save(r, w)
 			if err == nil {
-				log.Println(fmt.Sprintf("Saved authenticated user email %v in session", email))
+				log.Println("Saved authenticated user email in session.")
 			}
 		}
 		next.ServeHTTP(w, r)

@@ -1,7 +1,6 @@
 package hawksupport
 
 import (
-	"fmt"
 	"github.com/hiyosi/hawk"
 	"io"
 	"net/http"
@@ -37,7 +36,6 @@ func HawkMiddleware(next http.HandlerFunc, credentialStore hawk.CredentialStore,
 		}
 		cred, err := s.Authenticate(r)
 		if err != nil {
-			fmt.Printf("Hawk authentication error %v\n", err)
 			w.Header().Set("www-authenticate", "hawk")
 			w.WriteHeader(401)
 			return

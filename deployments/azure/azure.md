@@ -221,12 +221,15 @@ az webapp auth microsoft update --name ${APP_NAME} \
   --allowed-audiences  "api://${AD_APP_ID}" \
   --issuer "https://sts.windows.net/${AZ_AD_TENANT_ID}/"
 
-echo "Creating the service principal for the ${AZ_PROJECT_NAME} app"
+echo "Creating the service principal for the ${APP_NAME} app"
 az ad sp create --id ${AD_APP_ID}
 
-AD_SP_ID=$(az ad sp list --query "[?appId=='$AD_APP_ID']" | jq -r '.[].objectId')
+AD_SP_ID=$(az ad sp list --all --query "[?appId=='$AD_APP_ID']" | jq -r '.[].objectId')
 echo "Newly created service principal with id ${AD_SP_ID}"
 
-echo "Updating the service principal for the ${AZ_PROJECT_NAME} app"
+echo "Updating the service principal for the ${APP_NAME} app"
 az ad sp update --id ${AD_SP_ID} --set "appRoleAssignmentRequired=true" --add tags WindowsAzureActiveDirectoryIntegratedApp
+
+echo "Deleting the azure ad app for ${APP_NAME}"
+az ad app delete --id $(az ad app list --filter "displayname eq '${APP_NAME}'" | jq -r '.[].appId')
 ```
