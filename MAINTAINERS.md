@@ -4,6 +4,7 @@ Current maintainers of the Hexa project.
 
 Strata Identity, Inc.
 * Gerry Gebel [@ggebel](https://github.com/ggebel)
+* Eric Olden [@identitynerd] (https://github.com/identitynerd)
 
 Independent Identity, Inc.
 * Phil Hunt [@independentid](https://github.com/independentid)
