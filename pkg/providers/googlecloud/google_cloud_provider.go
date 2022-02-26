@@ -26,9 +26,7 @@ func (g GoogleProvider) DiscoverApplications(info provider.IntegrationInfo) (app
 	key := info.Key
 	foundCredentials := g.credentials(key)
 	if strings.EqualFold(info.Name, g.Name()) {
-		if g.Http == nil {
-			g.Http, _ = g.HttpClient(key) // todo - for testing, might be a better way?
-		}
+		g.ensureClientIsAvailable(key)
 		googleClient := GoogleClient{g.Http, foundCredentials.ProjectId}
 		found, _ := googleClient.GetBackendApplications()
 		apps = append(apps, found...)
@@ -39,9 +37,7 @@ func (g GoogleProvider) DiscoverApplications(info provider.IntegrationInfo) (app
 func (g GoogleProvider) GetPolicyInfo(integration provider.IntegrationInfo, app provider.ApplicationInfo) (infos []provider.PolicyInfo, err error) {
 	key := integration.Key
 	foundCredentials := g.credentials(key)
-	if g.Http == nil {
-		g.Http, _ = g.HttpClient(key) // todo - for testing, might be a better way?
-	}
+	g.ensureClientIsAvailable(key)
 	googleClient := GoogleClient{g.Http, foundCredentials.ProjectId}
 	return googleClient.GetBackendPolicy(app.ObjectID)
 }
@@ -49,9 +45,7 @@ func (g GoogleProvider) GetPolicyInfo(integration provider.IntegrationInfo, app 
 func (g GoogleProvider) SetPolicyInfo(integration provider.IntegrationInfo, app provider.ApplicationInfo, policy provider.PolicyInfo) error {
 	key := integration.Key
 	foundCredentials := g.credentials(key)
-	if g.Http == nil {
-		g.Http, _ = g.HttpClient(key) // todo - for testing, might be a better way?
-	}
+	g.ensureClientIsAvailable(key)
 	googleClient := GoogleClient{g.Http, foundCredentials.ProjectId}
 	return googleClient.SetBackendPolicy(app.ObjectID, policy)
 }
@@ -74,4 +68,10 @@ func (g GoogleProvider) credentials(key []byte) credentials {
 	var foundCredentials credentials
 	_ = json.NewDecoder(bytes.NewReader(key)).Decode(&foundCredentials)
 	return foundCredentials
+}
+
+func (g GoogleProvider) ensureClientIsAvailable(key []byte) {
+	if g.Http == nil {
+		g.Http, _ = g.HttpClient(key) // todo - for testing, might be a better way?
+	}
 }

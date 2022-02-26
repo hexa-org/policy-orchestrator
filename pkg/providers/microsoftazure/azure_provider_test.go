@@ -84,7 +84,55 @@ func TestGetPolicy(t *testing.T) {
 
 func TestSetPolicy(t *testing.T) {
 	m := new(microsoftazure_test.MockClient)
-	p := microsoftazure.AzureProvider{Http: m}
-	err := p.SetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{}, provider.PolicyInfo{})
+	m.Exchanges = []microsoftazure_test.MockExchange{
+		{Path: "https://login.microsoftonline.com/aTenant/oauth2/v2.0/token", ResponseBody: []byte("{\"access_token\":\"aToken\"}")},
+		{Path: "https://graph.microsoft.com/v1.0/servicePrincipals?$search=\"appId:aDescription\"", ResponseBody: []byte("{\"value\":[{\"id\":\"aToken\"}]}")},
+		{Path: "https://graph.microsoft.com/v1.0/servicePrincipals/aToken/appRoleAssignedTo", ResponseBody: []byte(`
+{
+  "value": [
+    {
+      "id": "anId",
+      "appRoleId": "anAppRoleId", 
+      "principalId": "aPrincipalId",
+      "principalDisplayName": "aPrincipalDisplayName",
+      "resourceId": "aResourceId",
+      "resourceDisplayName": "aResourceDisplayName"
+    },{
+      "id": "anotherId",
+      "appRoleId": "anotherAppRoleId", 
+      "principalId": "anotherPrincipalId",
+      "principalDisplayName": "anotherPrincipalDisplayName",
+      "resourceId": "anotherResourceId",
+      "resourceDisplayName": "anotherResourceDisplayName"
+    },{
+      "id": "andAnotherId",
+      "appRoleId": "andAnotherAppRoleId", 
+      "principalId": "andAnotherPrincipalId",
+      "principalDisplayName": "andAnotherPrincipalDisplayName",
+      "resourceId": "andAnotherResourceId",
+      "resourceDisplayName": "andAnotherResourceDisplayName"
+    }
+  ]
+}
+`)},
+		{Path: "https://graph.microsoft.com/v1.0/servicePrincipals/aToken/appRoleAssignedTo/anotherId"},
+	}
+
+	azureProvider := microsoftazure.AzureProvider{Http: m}
+	key := []byte(`
+{
+  "appId":"anAppId",
+  "secret":"aSecret",
+  "tenant":"aTenant",
+  "subscription":"aSubscription"
+}
+`)
+	info := provider.IntegrationInfo{Name: "azure", Key: key}
+	appInfo := provider.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"}
+	err := azureProvider.SetPolicyInfo(info, appInfo, provider.PolicyInfo{
+		Action:  "anAppRoleId",
+		Subject: provider.SubjectInfo{AuthenticatedUsers: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
+		Object:  provider.ObjectInfo{Resources: []string{"aResourceId:aResourceDisplayName"}},
+	})
 	assert.NoError(t, err)
 }

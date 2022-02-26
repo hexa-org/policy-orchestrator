@@ -28,7 +28,7 @@ func (m *MockClient) Do(req *http.Request) (*http.Response, error) {
 			return &http.Response{StatusCode: 200, Body: ioutil.NopCloser(bytes.NewReader(e.ResponseBody))}, e.Err
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Missing mock exchange for %s.", req.RequestURI))
+	return nil, errors.New(fmt.Sprintf("Missing mock exchange for %s.", req.URL.String()))
 }
 
 func (m *MockClient) Post(url, contentType string, body io.Reader) (resp *http.Response, err error) {
