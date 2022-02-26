@@ -14,15 +14,15 @@ type GoogleProvider struct {
 	Http HTTPClient
 }
 
-func (g GoogleProvider) Name() string {
+func (g *GoogleProvider) Name() string {
 	return "google_cloud"
 }
 
-func (g GoogleProvider) Project(key []byte) string {
+func (g *GoogleProvider) Project(key []byte) string {
 	return g.credentials(key).ProjectId
 }
 
-func (g GoogleProvider) DiscoverApplications(info provider.IntegrationInfo) (apps []provider.ApplicationInfo, err error) {
+func (g *GoogleProvider) DiscoverApplications(info provider.IntegrationInfo) (apps []provider.ApplicationInfo, err error) {
 	key := info.Key
 	foundCredentials := g.credentials(key)
 	if strings.EqualFold(info.Name, g.Name()) {
@@ -34,7 +34,7 @@ func (g GoogleProvider) DiscoverApplications(info provider.IntegrationInfo) (app
 	return apps, err
 }
 
-func (g GoogleProvider) GetPolicyInfo(integration provider.IntegrationInfo, app provider.ApplicationInfo) (infos []provider.PolicyInfo, err error) {
+func (g *GoogleProvider) GetPolicyInfo(integration provider.IntegrationInfo, app provider.ApplicationInfo) (infos []provider.PolicyInfo, err error) {
 	key := integration.Key
 	foundCredentials := g.credentials(key)
 	g.ensureClientIsAvailable(key)
@@ -42,7 +42,7 @@ func (g GoogleProvider) GetPolicyInfo(integration provider.IntegrationInfo, app 
 	return googleClient.GetBackendPolicy(app.ObjectID)
 }
 
-func (g GoogleProvider) SetPolicyInfo(integration provider.IntegrationInfo, app provider.ApplicationInfo, policy provider.PolicyInfo) error {
+func (g *GoogleProvider) SetPolicyInfo(integration provider.IntegrationInfo, app provider.ApplicationInfo, policy provider.PolicyInfo) error {
 	key := integration.Key
 	foundCredentials := g.credentials(key)
 	g.ensureClientIsAvailable(key)
@@ -50,7 +50,7 @@ func (g GoogleProvider) SetPolicyInfo(integration provider.IntegrationInfo, app 
 	return googleClient.SetBackendPolicy(app.ObjectID, policy)
 }
 
-func (g GoogleProvider) HttpClient(key []byte) (HTTPClient, error) {
+func (g *GoogleProvider) HttpClient(key []byte) (HTTPClient, error) {
 	var opts []option.ClientOption
 	opt := option.WithCredentialsJSON(key)
 	opts = append([]option.ClientOption{option.WithScopes("https://www.googleapis.com/auth/cloud-platform")}, opt)
@@ -64,13 +64,13 @@ type credentials struct {
 	ProjectId string `json:"project_id"`
 }
 
-func (g GoogleProvider) credentials(key []byte) credentials {
+func (g *GoogleProvider) credentials(key []byte) credentials {
 	var foundCredentials credentials
 	_ = json.NewDecoder(bytes.NewReader(key)).Decode(&foundCredentials)
 	return foundCredentials
 }
 
-func (g GoogleProvider) ensureClientIsAvailable(key []byte) {
+func (g *GoogleProvider) ensureClientIsAvailable(key []byte) {
 	if g.Http == nil {
 		g.Http, _ = g.HttpClient(key) // todo - for testing, might be a better way?
 	}
