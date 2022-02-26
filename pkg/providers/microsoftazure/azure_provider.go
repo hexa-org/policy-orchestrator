@@ -11,11 +11,11 @@ type AzureProvider struct {
 	Http HTTPClient
 }
 
-func (g AzureProvider) Name() string {
+func (g *AzureProvider) Name() string {
 	return "azure"
 }
 
-func (a AzureProvider) DiscoverApplications(info provider.IntegrationInfo) (apps []provider.ApplicationInfo, err error) {
+func (a *AzureProvider) DiscoverApplications(info provider.IntegrationInfo) (apps []provider.ApplicationInfo, err error) {
 	key := info.Key
 	if strings.EqualFold(info.Name, a.Name()) {
 		a.ensureClientIsAvailable()
@@ -26,7 +26,7 @@ func (a AzureProvider) DiscoverApplications(info provider.IntegrationInfo) (apps
 	return apps, err
 }
 
-func (a AzureProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo) ([]provider.PolicyInfo, error) {
+func (a *AzureProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo) ([]provider.PolicyInfo, error) {
 	key := integrationInfo.Key
 	var policies []provider.PolicyInfo
 	a.ensureClientIsAvailable()
@@ -54,7 +54,7 @@ func (a AzureProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo, a
 	return policies, nil
 }
 
-func (a AzureProvider) SetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo, policyInfo provider.PolicyInfo) error {
+func (a *AzureProvider) SetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo, policyInfo provider.PolicyInfo) error {
 	key := integrationInfo.Key
 	a.ensureClientIsAvailable()
 	azureClient := AzureClient{a.Http}
@@ -71,7 +71,7 @@ func (a AzureProvider) SetPolicyInfo(integrationInfo provider.IntegrationInfo, a
 	return azureClient.SetAppRoleAssignedTo(key, principal.List[0].ID, assignments)
 }
 
-func (a AzureProvider) ensureClientIsAvailable() {
+func (a *AzureProvider) ensureClientIsAvailable() {
 	if a.Http == nil {
 		a.Http = &http.Client{} // todo - for testing, might be a better way?
 	}
