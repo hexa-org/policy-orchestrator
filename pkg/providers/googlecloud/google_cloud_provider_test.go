@@ -14,7 +14,7 @@ import (
 func TestGoogleProvider_DiscoverApplications(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
 	m.ResponseBody = google_cloud_test.Resource("backends.json")
-	providers := []provider.Provider{googlecloud.GoogleProvider{Http: m}}
+	providers := []provider.Provider{&googlecloud.GoogleProvider{Http: m}}
 
 	for _, p := range providers {
 		info := provider.IntegrationInfo{Name: "google_cloud", Key: []byte("aKey")}
@@ -27,7 +27,7 @@ func TestGoogleProvider_DiscoverApplications(t *testing.T) {
 func TestGoogleProvider_DiscoverApplications_ignoresProviderCase(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
 	m.ResponseBody = google_cloud_test.Resource("backends.json")
-	providers := []provider.Provider{googlecloud.GoogleProvider{Http: m}}
+	providers := []provider.Provider{&googlecloud.GoogleProvider{Http: m}}
 
 	for _, p := range providers {
 		info := provider.IntegrationInfo{Name: "Google_Cloud", Key: []byte("aKey")}
@@ -39,7 +39,7 @@ func TestGoogleProvider_DiscoverApplications_ignoresProviderCase(t *testing.T) {
 
 func TestGoogleProvider_DiscoverApplications_emptyResponse(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
-	providers := []provider.Provider{googlecloud.GoogleProvider{Http: m}}
+	providers := []provider.Provider{&googlecloud.GoogleProvider{Http: m}}
 
 	for _, p := range providers {
 		info := provider.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
