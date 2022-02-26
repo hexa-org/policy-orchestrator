@@ -24,7 +24,7 @@ func TestDiscoverApplications(t *testing.T) {
 }
 `)}}
 
-	providers := []provider.Provider{microsoftazure.AzureProvider{Http: m}}
+	providers := []provider.Provider{&microsoftazure.AzureProvider{Http: m}}
 	key := []byte(`
 {
   "appId":"anAppId",
@@ -62,7 +62,7 @@ func TestGetPolicy(t *testing.T) {
 }
 `)}}
 
-	providers := []provider.Provider{microsoftazure.AzureProvider{Http: m}}
+	providers := []provider.Provider{&microsoftazure.AzureProvider{Http: m}}
 	key := []byte(`
 {
   "appId":"anAppId",
