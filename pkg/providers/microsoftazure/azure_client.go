@@ -54,10 +54,10 @@ type azureServicePrincipal struct {
 }
 
 type AzureAppRoleAssignments struct {
-	List []azureAppRoleAssignment `json:"value"`
+	List []AzureAppRoleAssignment `json:"value"`
 }
 
-type azureAppRoleAssignment struct {
+type AzureAppRoleAssignment struct {
 	ID                   string `json:"id"`
 	AppRoleId            string `json:"appRoleId"`
 	PrincipalDisplayName string `json:"principalDisplayName"`
@@ -88,15 +88,6 @@ func (c *AzureClient) GetWebApplications(key []byte) ([]provider.ApplicationInfo
 		apps = append(apps, provider.ApplicationInfo{ObjectID: app.ID, Name: app.Name, Description: app.AppID})
 	}
 	return apps, err
-}
-
-func (c *AzureClient) GetPolicy(key []byte) ([]provider.PolicyInfo, error) {
-
-	return nil, nil
-}
-
-func (c *AzureClient) SetPolicy(key []byte, policy provider.PolicyInfo) error {
-	return nil
 }
 
 func (c *AzureClient) GetServicePrincipals(key []byte, appId string) (AzureServicePrincipals, error) {
@@ -136,6 +127,92 @@ func (c *AzureClient) GetAppRoleAssignedTo(key []byte, servicePrincipalId string
 	return assignments, nil
 }
 
+func (c *AzureClient) SetAppRoleAssignedTo(key []byte, servicePrincipalId string, assignments []AzureAppRoleAssignment) error {
+	existingRoleAssignments, err := c.GetAppRoleAssignedTo(key, servicePrincipalId)
+	if err != nil {
+		log.Println("Unable to get azure app role assignments.")
+		return err
+	}
+	addErr := c.AddAppRolesAssignedTo(key, servicePrincipalId, c.ShouldAdd(assignments, existingRoleAssignments))
+	if addErr != nil {
+		log.Println("Unable to add azure app role assignments.")
+		return addErr
+	}
+	removeErr := c.DeleteAppRolesAssignedTo(key, servicePrincipalId, c.ShouldRemove(existingRoleAssignments, assignments))
+	if removeErr != nil {
+		log.Println("Unable to delete azure app role assignments.")
+		return removeErr
+	}
+	return nil
+}
+
+func (c *AzureClient) ShouldAdd(assignments []AzureAppRoleAssignment, existingRoleAssignments AzureAppRoleAssignments) []AzureAppRoleAssignment {
+	var shouldAdd []AzureAppRoleAssignment
+	for _, assignment := range assignments {
+		var contains = false
+		for _, existingAssignment := range existingRoleAssignments.List {
+			if strings.Contains(assignment.PrincipalId, existingAssignment.PrincipalId) {
+				contains = true
+			}
+		}
+		if !contains {
+			shouldAdd = append(shouldAdd, assignment)
+		}
+	}
+	return shouldAdd
+}
+
+func (c *AzureClient) ShouldRemove(existingRoleAssignments AzureAppRoleAssignments, assignments []AzureAppRoleAssignment) []string {
+	var shouldRemove []string
+	for _, existingAssignment := range existingRoleAssignments.List {
+		var contains = false
+		for _, assignment := range assignments {
+			if strings.Contains(assignment.PrincipalId, existingAssignment.PrincipalId) {
+				contains = true
+			}
+		}
+		if !contains {
+			shouldRemove = append(shouldRemove, existingAssignment.ID)
+		}
+	}
+	return shouldRemove
+}
+
+type azureAppRoleAssignmentPost struct {
+	AppRoleId   string `json:"appRoleId"`
+	PrincipalId string `json:"principalId"`
+	ResourceId  string `json:"resourceId"`
+}
+
+func (c *AzureClient) AddAppRolesAssignedTo(key []byte, servicePrincipalId string, assignments []AzureAppRoleAssignment) (err error) {
+	for _, assignment := range assignments {
+		var buf bytes.Buffer
+		ra := azureAppRoleAssignmentPost{assignment.AppRoleId, assignment.PrincipalId, assignment.ResourceId}
+		_ = json.NewEncoder(&buf).Encode(ra)
+		url := fmt.Sprintf("https://graph.microsoft.com/v1.0/servicePrincipals/%s/appRoleAssignedTo", servicePrincipalId)
+		request, _ := http.NewRequest("POST", url, bytes.NewReader(buf.Bytes()))
+		_, err = c.azureRequest(key, request)
+		if err != nil {
+			log.Println("Unable to add azure app role assignments.")
+			return err
+		}
+	}
+	return err
+}
+
+func (c *AzureClient) DeleteAppRolesAssignedTo(key []byte, servicePrincipalId string, assignmentIds []string) (err error) {
+	for _, assignmentId := range assignmentIds {
+		url := fmt.Sprintf("https://graph.microsoft.com/v1.0/servicePrincipals/%s/appRoleAssignedTo/%s", servicePrincipalId, assignmentId)
+		request, _ := http.NewRequest("DELETE", url, nil)
+		_, err = c.azureRequest(key, request)
+		if err != nil {
+			log.Println("Unable to delete azure app role assignments.")
+			return err
+		}
+	}
+	return err
+}
+
 func (c *AzureClient) DecodeKey(key []byte) (AzureKey, error) {
 	var decoded AzureKey
 	err := json.NewDecoder(bytes.NewReader(key)).Decode(&decoded)
@@ -170,12 +247,5 @@ func (c *AzureClient) azureRequest(key []byte, request *http.Request) (*http.Res
 		"Content-Type":     []string{"application/json"},
 		"Authorization":    []string{fmt.Sprintf("Bearer %s", accessToken.Token)},
 	}
-	get, getError := c.HttpClient.Do(request)
-	if getError != nil {
-		log.Println("Unable to find azure web applications.")
-		return nil, getError
-	}
-	log.Printf("Azure response %s.\n", get.Status)
-
-	return get, nil
+	return c.HttpClient.Do(request)
 }

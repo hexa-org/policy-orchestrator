@@ -40,10 +40,12 @@
                 <tr>
                     <td>{{$policy.Version}}</td>
                     <td>{{$policy.Action}}</td>
-                    <td>
-                        {{- range $user := $policy.Subject.AuthenticatedUsers}}
-                            {{$user}}
-                        {{- end}}
+                    <td class="compact" >
+                        <table>
+                            {{- range $user := $policy.Subject.AuthenticatedUsers}}
+                                <tr><td>{{$user}}</td></tr>
+                            {{- end}}
+                        </table>
                     </td>
                     <td>
                         {{- range $resource := $policy.Object.Resources}}

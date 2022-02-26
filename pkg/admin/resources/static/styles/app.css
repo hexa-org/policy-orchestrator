@@ -175,6 +175,10 @@ td.first {
     width: 25rem;
 }
 
+td.compact {
+    padding: 0;
+}
+
 .top-bar {
     width: 100%;
     padding: 0 1rem;
