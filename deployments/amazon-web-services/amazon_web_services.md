@@ -59,8 +59,8 @@ aws ecr create-repository \
 Push the newly built hexa image.
 
 ```bash
-docker tag hexa ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_PROJECT_NAME}/hexa:tag1
-docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_PROJECT_NAME}/hexa:tag1
+docker tag hexa ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_PROJECT_NAME}/hexa:latest
+docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_PROJECT_NAME}/hexa:latest
 ```
 
 Build an OPA server with configuration via Docker.
@@ -92,6 +92,8 @@ docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_PROJECT_
 ## Deploy via Kubernetes
 
 Deploy the Demo app and the OPA Server to Kubernetes.
+
+From the `./deployments/amazon-web-services` directory.
 
 Create a new kubernetes cluster.
 
@@ -166,6 +168,16 @@ Deploy demo opa objects.
 envsubst < kubernetes/opa-server/deployment.yaml | kubectl apply -f -
 envsubst < kubernetes/opa-server/service.yaml | kubectl apply -f -
 ````
+
+Get the ingress address.
+
+```bash
+kubectl get ingress
+````
+
+Notes
+
+[aws knowledge-center](https://aws.amazon.com/premiumsupport/knowledge-center/eks-alb-ingress-controller-fargate/)
 
 Cleaning up.
 
