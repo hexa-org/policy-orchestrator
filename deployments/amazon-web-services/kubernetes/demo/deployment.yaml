@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: hexa-demo
-          image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_PROJECT_NAME}/hexa:tag1
+          image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_PROJECT_NAME}/hexa:latest
           imagePullPolicy: Always
           command:
             - demo
