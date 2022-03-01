@@ -100,6 +100,24 @@ func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Re
 		name = foundKeyFile.ProjectId
 	}
 
+	if provider == "amazon" {
+		file, _, err := r.FormFile("key")
+		if err != nil {
+			log.Printf("Missing key file %s.\n", err.Error())
+			model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Missing key file."}}
+			_ = websupport.ModelAndView(w, integrationView, model)
+			return
+		}
+
+		key, err = ioutil.ReadAll(file)
+		if err != nil {
+			return
+		}
+		_ = file.Close()
+
+		name = "amazon"
+	}
+
 	if provider == "azure" {
 		name = r.FormValue("subscription")
 		var buf bytes.Buffer
@@ -134,6 +152,7 @@ func (i integrationsHandler) knownIntegrationViews(provider string) string {
 	integrationViews := make(map[string]string)
 	integrationViews["google_cloud"] = "integrations_new_google_cloud"
 	integrationViews["azure"] = "integrations_new_azure"
+	integrationViews["amazon"] = "integrations_new_amazon"
 	integrationView := integrationViews[strings.ToLower(provider)]
 	return integrationView
 }

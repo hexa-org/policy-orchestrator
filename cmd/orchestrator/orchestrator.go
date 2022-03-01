@@ -6,6 +6,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
+	"github.com/hexa-org/policy-orchestrator/pkg/providers/amazonwebservices"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/googlecloud"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/microsoftazure"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
@@ -22,6 +23,7 @@ func App(key string, addr string, hostPort string, dbUrl string) (*http.Server, 
 	providers := make(map[string]provider.Provider)
 	providers["google_cloud"] = &googlecloud.GoogleProvider{}
 	providers["azure"] = &microsoftazure.AzureProvider{}
+	providers["amazon"] = &amazonwebservices.AmazonProvider{}
 	handlers, scheduler := orchestrator.LoadHandlers(db, store, hostPort, providers)
 	return websupport.Create(addr, handlers, websupport.Options{}), scheduler
 }

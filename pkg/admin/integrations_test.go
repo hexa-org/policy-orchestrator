@@ -96,6 +96,24 @@ func (suite *IntegrationsSuite) TestCreateIntegration_withAzure() {
 	assert.Equal(suite.T(), "azure", suite.client.Provider)
 }
 
+func (suite *IntegrationsSuite) TestCreateIntegration_withAmazon() {
+	suite.client.On("CreateIntegration", "http://noop/integrations").Return()
+	buf, contentType := suite.multipartFormSuccessAmazon()
+	resp, _ := http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf)
+	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
+	assert.Equal(suite.T(), "amazon", suite.client.Name)
+	assert.Equal(suite.T(), "amazon", suite.client.Provider)
+}
+
+func (suite *IntegrationsSuite) TestCreateIntegrationMissingKey_withAmazon() {
+	suite.client.On("CreateIntegration", "http://noop/integrations").Return()
+	buf, contentType := suite.multipartFormMissingFile_forAmazon()
+	resp, _ := http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf)
+	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
+	all, _ := io.ReadAll(resp.Body)
+	assert.Contains(suite.T(), string(all), "Something went wrong. Missing key file.")
+}
+
 func (suite *IntegrationsSuite) TestCreateIntegration_withError() {
 	suite.client.On("CreateIntegration", "http://noop/integrations").Return(errors.New(""))
 	buf, contentType := suite.multipartFormSuccessGoogle()
@@ -179,6 +197,23 @@ func (suite *IntegrationsSuite) multipartFormSuccessAzure() (*bytes.Buffer, stri
 		_, _ = tenant.Write([]byte("aTenant"))
 		subscription, _ := writer.CreateFormField("subscription")
 		_, _ = subscription.Write([]byte("aSubscription"))
+	})
+}
+
+func (suite *IntegrationsSuite) multipartFormSuccessAmazon() (*bytes.Buffer, string) {
+	return suite.multipartForm(func(writer *multipart.Writer) {
+		provider, _ := writer.CreateFormField("provider")
+		_, _ = provider.Write([]byte("amazon"))
+
+		file, _ := writer.CreateFormFile("key", "aKey.json")
+		_, _ = file.Write([]byte("someBytes"))
+	})
+}
+
+func (suite *IntegrationsSuite) multipartFormMissingFile_forAmazon() (*bytes.Buffer, string) {
+	return suite.multipartForm(func(writer *multipart.Writer) {
+		provider, _ := writer.CreateFormField("provider")
+		_, _ = provider.Write([]byte("amazon"))
 	})
 }
 
