@@ -1,0 +1,34 @@
+{{- template "base" .}}
+{{- define "main"}}
+    <div class="card">
+        {{- $m := index .Map "message"}}
+        {{- $provider := index .Map "provider"}}
+        <h1>Install Cloud Provider</h1>
+        <form name="integration" action="/integrations" method="post" enctype="multipart/form-data">
+            <input type="hidden" value="{{$provider}}" name="provider"/>
+            <h2 class="gcp-title">Amazon Web Services</h2>
+            <fieldset class="flex">
+                <p>
+                    Add a AWS access keys by uploading your security credentials file.
+                </p>
+                <label class="file">Choose a security credentials file<input type="file" name="key"/>
+                </label>
+            </fieldset>
+
+            <input type="submit" value="Install Cloud Provider" class="button"/>
+            {{- if $m}}
+                <div class="message">Something went wrong. {{$m}}</div>
+            {{- end }}
+        </form>
+        <div class="card">
+            <h3>Example credentials.json</h3>
+            <pre><code>
+{
+  "accessKeyID": "",
+  "secretAccessKey": "",
+  "region": ""
+}
+                </code></pre>
+        </div>
+    </div>
+{{- end}}
