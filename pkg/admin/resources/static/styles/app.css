@@ -98,7 +98,7 @@ label.file {
     padding-top: 1rem;
     color: var(--dark-orange);
     cursor: pointer;
-    width: 14rem;
+    width: 24rem;
 }
 
 label.file:active {
@@ -256,7 +256,7 @@ main .side-nav {
     margin: 0 1rem 1rem 1rem;
 }
 
-.card h2 {
+.card h2, .card h3 {
     margin: 0 1rem 1rem 1rem;
 }
 
