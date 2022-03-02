@@ -14,6 +14,7 @@ import (
 
 type CognitoClient interface {
 	ListUserPools(ctx context.Context, params *cognitoidentityprovider.ListUserPoolsInput, optFns ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUserPoolsOutput, error)
+	ListUsers(ctx context.Context, params *cognitoidentityprovider.ListUsersInput, optFns ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error)
 }
 
 type AmazonProvider struct {
@@ -52,7 +53,29 @@ func (a *AmazonProvider) ListUserPools() (apps []provider.ApplicationInfo, err e
 }
 
 func (a *AmazonProvider) GetPolicyInfo(info provider.IntegrationInfo, info2 provider.ApplicationInfo) ([]provider.PolicyInfo, error) {
-	return []provider.PolicyInfo{}, nil
+	userInput := cognitoidentityprovider.ListUsersInput{UserPoolId: &info2.ObjectID}
+	users, err := a.Client.ListUsers(context.Background(), &userInput)
+	if err != nil {
+		return nil, err
+	}
+
+	var authenticatedUsers []string
+	for _, u := range users.Users {
+		for _, attr := range u.Attributes {
+			if aws.ToString(attr.Name) == "email" {
+				authenticatedUsers = append(authenticatedUsers, aws.ToString(attr.Value))
+			}
+		}
+	}
+
+	var policies []provider.PolicyInfo
+	policies = append(policies, provider.PolicyInfo{
+		Version: "0.3",
+		Action:  "Access", // todo - not sure what this should be just yet.
+		Subject: provider.SubjectInfo{AuthenticatedUsers: authenticatedUsers},
+		Object:  provider.ObjectInfo{Resources: []string{info2.ObjectID}},
+	})
+	return policies, nil
 }
 
 func (a *AmazonProvider) SetPolicyInfo(info provider.IntegrationInfo, info2 provider.ApplicationInfo, info3 provider.PolicyInfo) error {

@@ -1,14 +1,12 @@
 package amazonwebservices_test
 
 import (
-	"context"
 	"errors"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/amazonwebservices"
+	"github.com/hexa-org/policy-orchestrator/pkg/providers/amazonwebservices/test"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"testing"
 )
 
@@ -46,21 +44,8 @@ func TestAmazonProvider_DiscoverApplications_withOtherProvider(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-type MockClient struct {
-	mock.Mock
-	err error
-}
-
-func (m *MockClient) ListUserPools(ctx context.Context, params *cognitoidentityprovider.ListUserPoolsInput, optFns ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUserPoolsOutput, error) {
-	id := "anId"
-	name := "aName"
-	return &cognitoidentityprovider.ListUserPoolsOutput{
-		UserPools: []types.UserPoolDescriptionType{{Id: &id, Name: &name}},
-	}, m.err
-}
-
 func TestAmazonProvider_ListUserPools(t *testing.T) {
-	mockClient := &MockClient{}
+	mockClient := &amazonwebservices_test.MockClient{}
 	p := &amazonwebservices.AmazonProvider{Client: mockClient}
 	pools, _ := p.ListUserPools()
 	assert.Equal(t, "anId", pools[0].ObjectID)
@@ -68,17 +53,28 @@ func TestAmazonProvider_ListUserPools(t *testing.T) {
 }
 
 func TestAmazonProvider_ListUserPools_withError(t *testing.T) {
-	mockClient := &MockClient{}
-	mockClient.err = errors.New("oops")
+	mockClient := &amazonwebservices_test.MockClient{}
+	mockClient.Err = errors.New("oops")
 	p := &amazonwebservices.AmazonProvider{Client: mockClient}
 	_, err := p.ListUserPools()
 	assert.Error(t, err)
 }
 
 func TestAmazonProvider_GetPolicyInfo(t *testing.T) {
-	p := &amazonwebservices.AmazonProvider{}
-	info, _ := p.GetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{})
-	assert.Equal(t, []provider.PolicyInfo{}, info)
+	mockClient := &amazonwebservices_test.MockClient{}
+	p := &amazonwebservices.AmazonProvider{Client: mockClient}
+	info, _ := p.GetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{ObjectID: "anObjectId"})
+	assert.Equal(t, 1, len(info))
+	assert.Equal(t, "aUser@amazon.com", info[0].Subject.AuthenticatedUsers[0])
+	assert.Equal(t, "anObjectId", info[0].Object.Resources[0])
+}
+
+func TestAmazonProvider_GetPolicyInfo_withError(t *testing.T) {
+	mockClient := &amazonwebservices_test.MockClient{}
+	mockClient.Err = errors.New("oops")
+	p := &amazonwebservices.AmazonProvider{Client: mockClient}
+	_, err := p.GetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{ObjectID: "anObjectId"})
+	assert.Error(t, err)
 }
 
 func TestAmazonProvider_SetPolicyInfo(t *testing.T) {
