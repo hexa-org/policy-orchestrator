@@ -53,8 +53,8 @@ func TestAmazonProvider_ListUserPools(t *testing.T) {
 }
 
 func TestAmazonProvider_ListUserPools_withError(t *testing.T) {
-	mockClient := &amazonwebservices_test.MockClient{}
-	mockClient.Err = errors.New("oops")
+	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
+	mockClient.Errs["ListUserPools"] = errors.New("oops")
 	p := &amazonwebservices.AmazonProvider{Client: mockClient}
 	_, err := p.ListUserPools()
 	assert.Error(t, err)
@@ -65,20 +65,65 @@ func TestAmazonProvider_GetPolicyInfo(t *testing.T) {
 	p := &amazonwebservices.AmazonProvider{Client: mockClient}
 	info, _ := p.GetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{ObjectID: "anObjectId"})
 	assert.Equal(t, 1, len(info))
-	assert.Equal(t, "aUser@amazon.com", info[0].Subject.AuthenticatedUsers[0])
+	assert.Equal(t, "aUser:aUser@amazon.com", info[0].Subject.AuthenticatedUsers[0])
 	assert.Equal(t, "anObjectId", info[0].Object.Resources[0])
 }
 
 func TestAmazonProvider_GetPolicyInfo_withError(t *testing.T) {
-	mockClient := &amazonwebservices_test.MockClient{}
-	mockClient.Err = errors.New("oops")
+	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
+	mockClient.Errs["ListUsers"] = errors.New("oops")
 	p := &amazonwebservices.AmazonProvider{Client: mockClient}
 	_, err := p.GetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{ObjectID: "anObjectId"})
 	assert.Error(t, err)
 }
 
+func TestAmazonProvider_ShouldEnable(t *testing.T) {
+	mockClient := &amazonwebservices_test.MockClient{}
+	p := &amazonwebservices.AmazonProvider{Client: mockClient}
+	shouldAdd := p.ShouldEnable([]string{"aUser@amazon.com", "yetAnotherUser@amazon.com"}, []string{"anotherUser@amazon.com"})
+	assert.Equal(t, []string{"anotherUser@amazon.com"}, shouldAdd)
+}
+
+func TestAmazonProvider_ShouldDisable(t *testing.T) {
+	mockClient := &amazonwebservices_test.MockClient{}
+	p := &amazonwebservices.AmazonProvider{Client: mockClient}
+	shouldAdd := p.ShouldDisable([]string{"aUser@amazon.com", "yetAnotherUser@amazon.com"}, []string{"yetAnotherUser@amazon.com"})
+	assert.Equal(t, []string{"aUser@amazon.com"}, shouldAdd)
+}
+
 func TestAmazonProvider_SetPolicyInfo(t *testing.T) {
-	p := &amazonwebservices.AmazonProvider{}
-	err := p.SetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{}, provider.PolicyInfo{})
+	mockClient := &amazonwebservices_test.MockClient{}
+	p := &amazonwebservices.AmazonProvider{Client: mockClient}
+	err := p.SetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{}, provider.PolicyInfo{
+		Subject: provider.SubjectInfo{AuthenticatedUsers: []string{"aUser:aUser@amazon.com", "anotherUser:anotherUser@amazon.com"}},
+		Object: provider.ObjectInfo{Resources: []string{"aResource"}},
+	})
 	assert.NoError(t, err)
+}
+
+func TestAmazonProvider_SetPolicyInfo_withListErr(t *testing.T) {
+	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
+	mockClient.Errs["ListUsers"] = errors.New("oops")
+	p := &amazonwebservices.AmazonProvider{Client: mockClient}
+	err := p.SetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{}, provider.PolicyInfo{})
+	assert.Error(t, err)
+}
+
+func TestAmazonProvider_SetPolicyInfo_withEnableErr(t *testing.T) {
+	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
+	mockClient.Errs["AdminEnableUser"] = errors.New("oops")
+	p := &amazonwebservices.AmazonProvider{Client: mockClient}
+	err := p.SetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{}, provider.PolicyInfo{
+		Subject: provider.SubjectInfo{AuthenticatedUsers: []string{"aUser:aUser@amazon.com", "anotherUser:anotherUser@amazon.com"}},
+		Object: provider.ObjectInfo{Resources: []string{"aResource"}},
+	})
+	assert.Error(t, err)
+}
+
+func TestAmazonProvider_SetPolicyInfo_withDisableErr(t *testing.T) {
+	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
+	mockClient.Errs["AdminDisableUser"] = errors.New("oops")
+	p := &amazonwebservices.AmazonProvider{Client: mockClient}
+	err := p.SetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{}, provider.PolicyInfo{})
+	assert.Error(t, err)
 }

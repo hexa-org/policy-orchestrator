@@ -9,22 +9,31 @@ import (
 
 type MockClient struct {
 	mock.Mock
-	Err error
+	Errs map[string]error
 }
 
-func (m *MockClient) ListUsers(ctx context.Context, params *cognitoidentityprovider.ListUsersInput, optFns ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
+func (m *MockClient) ListUsers(_ context.Context, _ *cognitoidentityprovider.ListUsersInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error) {
 	username := "aUser"
 	name := "email"
 	value := "aUser@amazon.com"
 	attributes := []types.AttributeType{{Name: &name, Value: &value}}
-	return &cognitoidentityprovider.ListUsersOutput{Users: []types.UserType{{Username: &username, Attributes: attributes}}}, m.Err
+	return &cognitoidentityprovider.ListUsersOutput{
+		Users: []types.UserType{{Username: &username, Attributes: attributes}},
+	}, m.Errs["ListUsers"]
 }
 
-func (m *MockClient) ListUserPools(ctx context.Context, params *cognitoidentityprovider.ListUserPoolsInput, optFns ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUserPoolsOutput, error) {
+func (m *MockClient) ListUserPools(_ context.Context, _ *cognitoidentityprovider.ListUserPoolsInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUserPoolsOutput, error) {
 	id := "anId"
 	name := "aName"
 	return &cognitoidentityprovider.ListUserPoolsOutput{
 		UserPools: []types.UserPoolDescriptionType{{Id: &id, Name: &name}},
-	}, m.Err
+	}, m.Errs["ListUserPools"]
 }
 
+func (m *MockClient) AdminEnableUser(_ context.Context, _ *cognitoidentityprovider.AdminEnableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminEnableUserOutput, error) {
+	return &cognitoidentityprovider.AdminEnableUserOutput{}, m.Errs["AdminEnableUser"]
+}
+
+func (m *MockClient) AdminDisableUser(_ context.Context, _ *cognitoidentityprovider.AdminDisableUserInput, _ ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminDisableUserOutput, error) {
+	return &cognitoidentityprovider.AdminDisableUserOutput{}, m.Errs["AdminDisableUser"]
+}

@@ -4,17 +4,21 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
+	"log"
 	"strings"
 )
 
 type CognitoClient interface {
 	ListUserPools(ctx context.Context, params *cognitoidentityprovider.ListUserPoolsInput, optFns ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUserPoolsOutput, error)
 	ListUsers(ctx context.Context, params *cognitoidentityprovider.ListUsersInput, optFns ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.ListUsersOutput, error)
+	AdminEnableUser(ctx context.Context, params *cognitoidentityprovider.AdminEnableUserInput, optFns ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminEnableUserOutput, error)
+	AdminDisableUser(ctx context.Context, params *cognitoidentityprovider.AdminDisableUserInput, optFns ...func(*cognitoidentityprovider.Options)) (*cognitoidentityprovider.AdminDisableUserOutput, error)
 }
 
 type AmazonProvider struct {
@@ -26,11 +30,12 @@ func (a *AmazonProvider) Name() string {
 }
 
 func (a *AmazonProvider) DiscoverApplications(info provider.IntegrationInfo) ([]provider.ApplicationInfo, error) {
+	err := a.ensureClientIsAvailable(info)
+	if err != nil {
+		return nil, err
+	}
+
 	if strings.EqualFold(info.Name, a.Name()) {
-		err := a.ensureClientIsAvailable(info)
-		if err != nil {
-			return nil, err
-		}
 		return a.ListUserPools()
 	}
 	return []provider.ApplicationInfo{}, nil
@@ -52,34 +57,129 @@ func (a *AmazonProvider) ListUserPools() (apps []provider.ApplicationInfo, err e
 	return apps, err
 }
 
-func (a *AmazonProvider) GetPolicyInfo(info provider.IntegrationInfo, info2 provider.ApplicationInfo) ([]provider.PolicyInfo, error) {
-	userInput := cognitoidentityprovider.ListUsersInput{UserPoolId: &info2.ObjectID}
-	users, err := a.Client.ListUsers(context.Background(), &userInput)
+func (a *AmazonProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo) ([]provider.PolicyInfo, error) {
+	err := a.ensureClientIsAvailable(integrationInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	var authenticatedUsers []string
-	for _, u := range users.Users {
-		for _, attr := range u.Attributes {
-			if aws.ToString(attr.Name) == "email" {
-				authenticatedUsers = append(authenticatedUsers, aws.ToString(attr.Value))
-			}
-		}
+	filter := "status=\"Enabled\""
+	userInput := cognitoidentityprovider.ListUsersInput{UserPoolId: &applicationInfo.ObjectID, Filter: &filter}
+	users, err := a.Client.ListUsers(context.Background(), &userInput)
+	if err != nil {
+		return nil, err
 	}
+	authenticatedUsers := a.authenticatedUsersFrom(users)
 
 	var policies []provider.PolicyInfo
 	policies = append(policies, provider.PolicyInfo{
 		Version: "0.3",
 		Action:  "Access", // todo - not sure what this should be just yet.
 		Subject: provider.SubjectInfo{AuthenticatedUsers: authenticatedUsers},
-		Object:  provider.ObjectInfo{Resources: []string{info2.ObjectID}},
+		Object:  provider.ObjectInfo{Resources: []string{applicationInfo.ObjectID}},
 	})
 	return policies, nil
 }
 
-func (a *AmazonProvider) SetPolicyInfo(info provider.IntegrationInfo, info2 provider.ApplicationInfo, info3 provider.PolicyInfo) error {
+func (a *AmazonProvider) SetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo, policyInfo provider.PolicyInfo) error {
+	err := a.ensureClientIsAvailable(integrationInfo)
+	if err != nil {
+		return err
+	}
+
+	var newUsers []string
+	for _, user := range policyInfo.Subject.AuthenticatedUsers {
+		newUsers = append(newUsers, user)
+	}
+
+	filter := "status=\"Enabled\""
+	userInput := cognitoidentityprovider.ListUsersInput{UserPoolId: &applicationInfo.ObjectID, Filter: &filter}
+	users, listUsersErr := a.Client.ListUsers(context.Background(), &userInput)
+	if listUsersErr != nil {
+		log.Println("Unable to find amazon cognito users.")
+		return listUsersErr
+	}
+	existingUsers := a.authenticatedUsersFrom(users)
+
+	enableErr := a.EnableUsers(applicationInfo.ObjectID, a.ShouldEnable(existingUsers, newUsers))
+	if enableErr != nil {
+		log.Println("Unable to enable amazon cognito users.")
+		return enableErr
+	}
+
+	disable := a.DisableUsers(applicationInfo.ObjectID, a.ShouldDisable(existingUsers, newUsers))
+	if disable != nil {
+		log.Println("Unable to disable amazon cognito users.")
+		return disable
+	}
 	return nil
+}
+
+func (a *AmazonProvider) authenticatedUsersFrom(users *cognitoidentityprovider.ListUsersOutput) []string {
+	var authenticatedUsers []string
+	for _, u := range users.Users {
+		for _, attr := range u.Attributes {
+			if aws.ToString(attr.Name) == "email" {
+				authenticatedUsers = append(authenticatedUsers, fmt.Sprintf("%s:%s", aws.ToString(u.Username), aws.ToString(attr.Value)))
+			}
+		}
+	}
+	return authenticatedUsers
+}
+
+func (a *AmazonProvider) EnableUsers(userPoolId string, shouldEnable []string) error {
+	for _, enable := range shouldEnable {
+		enable := cognitoidentityprovider.AdminEnableUserInput{UserPoolId: &userPoolId, Username: &strings.Split(enable, ":")[0]}
+		_, err := a.Client.AdminEnableUser(context.Background(), &enable)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *AmazonProvider) ShouldEnable(existingUsers []string, desiredUsers []string) []string {
+	var shouldEnable []string
+	for _, newUser := range desiredUsers {
+		var contains = false
+		for _, existingUser := range existingUsers {
+			if newUser == existingUser {
+				contains = true
+			}
+		}
+		if !contains {
+			shouldEnable = append(shouldEnable, newUser)
+		}
+	}
+	return shouldEnable
+}
+
+func (a *AmazonProvider) DisableUsers(userPoolId string, shouldDisable []string) error {
+	for _, disableUser := range shouldDisable {
+
+		disable := cognitoidentityprovider.AdminDisableUserInput{UserPoolId: &userPoolId, Username: &strings.Split(disableUser, ":")[0]}
+		_, err := a.Client.AdminDisableUser(context.Background(), &disable)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *AmazonProvider) ShouldDisable(existingUsers []string, desiredUsers []string) []string {
+	var shouldDisable []string
+	for _, existingUser := range existingUsers {
+		var contains = false
+		for _, newUser := range desiredUsers {
+			if strings.Contains(newUser, existingUser) {
+				contains = true
+			}
+		}
+		if !contains {
+			shouldDisable = append(shouldDisable, existingUser)
+		}
+	}
+	return shouldDisable
 }
 
 type CredentialsInfo struct {
