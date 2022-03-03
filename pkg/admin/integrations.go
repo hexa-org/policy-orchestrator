@@ -63,6 +63,10 @@ type azureKeyFile struct {
 	Tenant string `json:"tenant"`
 }
 
+type amazonKeyFile struct {
+	Region string `json:"region"`
+}
+
 func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Request) {
 	url := fmt.Sprintf("%v/integrations", i.orchestratorUrl)
 
@@ -96,54 +100,39 @@ func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Re
 		var foundKeyFile googleKeyFile
 		err = json.NewDecoder(bytes.NewReader(key)).Decode(&foundKeyFile)
 		if err != nil || foundKeyFile.ProjectId == "" {
-			log.Println("Unable to read key file.")
-			model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Unable to read key file."}}
-			_ = websupport.ModelAndView(w, integrationView, model)
+			i.viewWithMessage(w, provider, "Unable to read key file, missing project.", integrationView)
 			return
 		}
-		name = foundKeyFile.ProjectId
+		name = fmt.Sprintf("project:%s", foundKeyFile.ProjectId)
 	}
 
 	if provider == "azure" {
 		var foundKeyFile azureKeyFile
 		err = json.NewDecoder(bytes.NewReader(key)).Decode(&foundKeyFile)
 		if err != nil || foundKeyFile.Tenant == "" {
-			log.Println("Unable to read key file.")
-			model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Unable to read key file."}}
-			_ = websupport.ModelAndView(w, integrationView, model)
+			i.viewWithMessage(w, provider, "Unable to read key file, missing tenant.", integrationView)
 			return
 		}
-		name = foundKeyFile.Tenant
+		name = fmt.Sprintf("tenant:%s", foundKeyFile.Tenant)
 	}
 
 	if provider == "amazon" {
-		name = "amazon"
+		var foundKeyFile amazonKeyFile
+		err = json.NewDecoder(bytes.NewReader(key)).Decode(&foundKeyFile)
+		if err != nil || foundKeyFile.Region == "" {
+			i.viewWithMessage(w, provider, "Unable to read key file, missing region.", integrationView)
+			return
+		}
+		name = fmt.Sprintf("region:%s", foundKeyFile.Region)
 	}
 
 	err = i.client.CreateIntegration(url, name, provider, key)
 	if err != nil {
-		log.Println("Unable to communicate with orchestrator.")
 		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Unable to communicate with orchestrator."}}
 		_ = websupport.ModelAndView(w, integrationView, model)
 		return
 	}
 	http.Redirect(w, r, "/integrations", http.StatusMovedPermanently)
-}
-
-type azureKey struct {
-	AppId        string `json:"appId"`
-	Secret       string `json:"secret"`
-	Tenant       string `json:"tenant"`
-	Subscription string `json:"subscription"`
-}
-
-func (i integrationsHandler) knownIntegrationViews(provider string) string {
-	integrationViews := make(map[string]string)
-	integrationViews["google_cloud"] = "integrations_new_google_cloud"
-	integrationViews["azure"] = "integrations_new_azure"
-	integrationViews["amazon"] = "integrations_new_amazon"
-	integrationView := integrationViews[strings.ToLower(provider)]
-	return integrationView
 }
 
 func (i integrationsHandler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -153,4 +142,18 @@ func (i integrationsHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	http.Redirect(w, r, "/integrations", http.StatusMovedPermanently)
+}
+
+func (i integrationsHandler) viewWithMessage(w http.ResponseWriter, provider string, message string, integrationView string) {
+	model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": message}}
+	_ = websupport.ModelAndView(w, integrationView, model)
+}
+
+func (i integrationsHandler) knownIntegrationViews(provider string) string {
+	integrationViews := make(map[string]string)
+	integrationViews["google_cloud"] = "integrations_new_google_cloud"
+	integrationViews["azure"] = "integrations_new_azure"
+	integrationViews["amazon"] = "integrations_new_amazon"
+	integrationView := integrationViews[strings.ToLower(provider)]
+	return integrationView
 }
