@@ -55,8 +55,12 @@ func (i integrationsHandler) New(w http.ResponseWriter, r *http.Request) {
 	_ = websupport.ModelAndView(w, integrationView, model)
 }
 
-type keyFile struct {
+type googleKeyFile struct {
 	ProjectId string `json:"project_id"`
+}
+
+type azureKeyFile struct {
+	Tenant string `json:"tenant"`
 }
 
 func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Request) {
@@ -73,23 +77,23 @@ func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Re
 	var key []byte
 	var name string
 
+	file, _, err := r.FormFile("key")
+	if err != nil {
+		log.Printf("Missing key file %s.\n", err.Error())
+		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Missing key file."}}
+		_ = websupport.ModelAndView(w, integrationView, model)
+		return
+	}
+
+	key, err = ioutil.ReadAll(file)
+	if err != nil {
+		return
+	}
+	_ = file.Close()
+
 	// todo - replace conditional logic with strategy or new route
 	if provider == "google_cloud" {
-		file, _, err := r.FormFile("key")
-		if err != nil {
-			log.Printf("Missing key file %s.\n", err.Error())
-			model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Missing key file."}}
-			_ = websupport.ModelAndView(w, integrationView, model)
-			return
-		}
-
-		key, err = ioutil.ReadAll(file)
-		if err != nil {
-			return
-		}
-		_ = file.Close()
-
-		var foundKeyFile keyFile
+		var foundKeyFile googleKeyFile
 		err = json.NewDecoder(bytes.NewReader(key)).Decode(&foundKeyFile)
 		if err != nil || foundKeyFile.ProjectId == "" {
 			log.Println("Unable to read key file.")
@@ -100,35 +104,20 @@ func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Re
 		name = foundKeyFile.ProjectId
 	}
 
-	if provider == "amazon" {
-		file, _, err := r.FormFile("key")
-		if err != nil {
-			log.Printf("Missing key file %s.\n", err.Error())
-			model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Missing key file."}}
+	if provider == "azure" {
+		var foundKeyFile azureKeyFile
+		err = json.NewDecoder(bytes.NewReader(key)).Decode(&foundKeyFile)
+		if err != nil || foundKeyFile.Tenant == "" {
+			log.Println("Unable to read key file.")
+			model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Unable to read key file."}}
 			_ = websupport.ModelAndView(w, integrationView, model)
 			return
 		}
-
-		key, err = ioutil.ReadAll(file)
-		if err != nil {
-			return
-		}
-		_ = file.Close()
-
-		name = "amazon"
+		name = foundKeyFile.Tenant
 	}
 
-	if provider == "azure" {
-		name = r.FormValue("subscription")
-		var buf bytes.Buffer
-		encoded := azureKey{
-			AppId:        r.FormValue("appId"),
-			Secret:       r.FormValue("password"),
-			Tenant:       r.FormValue("tenant"),
-			Subscription: r.FormValue("subscription"),
-		}
-		_ = json.NewEncoder(&buf).Encode(encoded)
-		key = buf.Bytes()
+	if provider == "amazon" {
+		name = "amazon"
 	}
 
 	err = i.client.CreateIntegration(url, name, provider, key)
