@@ -83,8 +83,8 @@ func (suite *IntegrationsSuite) TestCreateIntegration_withGoogle() {
 	buf, contentType := suite.multipartFormSuccessGoogle()
 	resp, _ := http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf)
 	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
-	assert.Equal(suite.T(), "google-cloud-project-id", suite.client.Name)
 	assert.Equal(suite.T(), "google_cloud", suite.client.Provider)
+	assert.Equal(suite.T(), "project:google-cloud-project-id", suite.client.Name)
 }
 
 func (suite *IntegrationsSuite) TestCreateIntegration_withAzure() {
@@ -93,7 +93,7 @@ func (suite *IntegrationsSuite) TestCreateIntegration_withAzure() {
 	resp, _ := http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf)
 	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
 	assert.Equal(suite.T(), "azure", suite.client.Provider)
-	assert.Equal(suite.T(), "aTenant", suite.client.Name)
+	assert.Equal(suite.T(), "tenant:aTenant", suite.client.Name)
 }
 
 func (suite *IntegrationsSuite) TestCreateIntegration_withAmazon() {
@@ -101,8 +101,8 @@ func (suite *IntegrationsSuite) TestCreateIntegration_withAmazon() {
 	buf, contentType := suite.multipartFormSuccessAmazon()
 	resp, _ := http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf)
 	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
-	assert.Equal(suite.T(), "amazon", suite.client.Name)
 	assert.Equal(suite.T(), "amazon", suite.client.Provider)
+	assert.Equal(suite.T(), "region:aRegion", suite.client.Name)
 }
 
 func (suite *IntegrationsSuite) TestCreateIntegrationMissingKey_withAmazon() {
@@ -138,7 +138,7 @@ func (suite *IntegrationsSuite) TestCreateIntegration_withErroneousKeyFile() {
 	resp, _ := http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf)
 	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
 	all, _ := io.ReadAll(resp.Body)
-	assert.Contains(suite.T(), string(all), "Something went wrong. Unable to read key file.")
+	assert.Contains(suite.T(), string(all), "Something went wrong. Unable to read key file, missing project.")
 }
 
 func (suite *IntegrationsSuite) TestDeleteIntegration() {
@@ -201,7 +201,7 @@ func (suite *IntegrationsSuite) multipartFormSuccessAmazon() (*bytes.Buffer, str
 		_, _ = provider.Write([]byte("amazon"))
 
 		file, _ := writer.CreateFormFile("key", "aKey.json")
-		_, _ = file.Write([]byte("someBytes"))
+		_, _ = file.Write([]byte("{\"region\": \"aRegion\"}"))
 	})
 }
 
