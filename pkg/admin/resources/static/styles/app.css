@@ -127,6 +127,7 @@ input[type=file] {
 table {
     width: 100%;
     margin-bottom: 1rem;
+    table-layout: fixed;
 }
 
 thead {
@@ -169,6 +170,9 @@ tr.no-border {
 th, td {
     padding: .75rem 1rem;
     text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 td.first {

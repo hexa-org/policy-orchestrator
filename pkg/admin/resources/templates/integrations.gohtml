@@ -9,16 +9,16 @@
         <table>
             <thead>
             <tr>
-                <th>Name</th>
                 <th>Provider</th>
+                <th>Name</th>
                 <th></th>
             </tr>
             </thead>
             <tbody>
             {{- range index .Map "integrations"}}
                 <tr>
-                    <td>{{.Name}}</td>
                     <td>{{.Provider}}</td>
+                    <td>{{.Name}}</td>
                     <td>
                         <form action="integrations/{{.ID}}"
                               onsubmit="confirm('Are you sure?')" method="post" class="delete-form">
