@@ -62,18 +62,12 @@ func (a *BasicApp) unauthorized(writer http.ResponseWriter, req *http.Request) {
 	_ = websupport.ModelAndView(writer, "unauthorized", a.principalAndLogout(req))
 }
 
-func (a *BasicApp) download(writer http.ResponseWriter, _ *http.Request) {
-	_, file, _, _ := runtime.Caller(0)
-	opasupport.Compress(writer, filepath.Join(file, "../resources/bundles/bundle"))
-}
-
 func (a *BasicApp) loadHandlers() func(router *mux.Router) {
 	return func(router *mux.Router) {
 		router.HandleFunc("/", a.dashboard).Methods("GET")
 		router.HandleFunc("/sales", a.sales).Methods("GET")
 		router.HandleFunc("/accounting", a.accounting).Methods("GET")
 		router.HandleFunc("/humanresources", a.humanresources).Methods("GET")
-		router.HandleFunc("/bundles/bundle.tar.gz", a.download).Methods("GET")
 
 		fileServer := http.FileServer(http.Dir("cmd/demo/resources/static"))
 		router.PathPrefix("/").Handler(http.StripPrefix("/", fileServer))

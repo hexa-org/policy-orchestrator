@@ -1,4 +1,4 @@
-package opasupport
+package gzipsupport
 
 import (
 	"archive/tar"
