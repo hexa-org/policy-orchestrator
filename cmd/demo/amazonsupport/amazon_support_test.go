@@ -41,7 +41,7 @@ type MockClaimsParser struct {
 	Err error
 }
 
-func (m MockClaimsParser) ParseWithClaims(tokenString string, region string, claims jwt.Claims) (*jwt.Token, error) {
+func (m MockClaimsParser) ParseWithClaims(_ string, _ string, claims jwt.Claims) (*jwt.Token, error) {
 	if m.Err != nil {
 		return nil, m.Err
 	}
@@ -93,4 +93,17 @@ func TestAmazonSupport(t *testing.T) {
 	mockParser.Err = errors.New("oops")
 	_, _ = (&http.Client{}).Do(request)
 	assert.Contains(t, string(body), "")
+}
+
+func TestAmazonCognitoClaimsParser_ParseWithClaims(t *testing.T) {
+	claims := &amazonsupport.AmazonCognitoClaims{}
+	jwt.New(jwt.SigningMethodNone)
+	_, err := amazonsupport.AmazonCognitoClaimsParser{}.ParseWithClaims("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", "aRegion", claims)
+	assert.NoError(t, err)
+}
+
+func TestAmazonCognitoClaimsParser_ParseWithClaims_withErr(t *testing.T) {
+	claims := &amazonsupport.AmazonCognitoClaims{}
+	_, err := amazonsupport.AmazonCognitoClaimsParser{}.ParseWithClaims("erroneous", "aRegion", claims)
+	assert.Equal(t, "token contains an invalid number of segments", err.Error())
 }

@@ -24,14 +24,12 @@ type MockClient struct {
 	err      error
 }
 
-func (m *MockClient) Do(req *http.Request) (*http.Response, error) {
+func (m *MockClient) Do(_ *http.Request) (*http.Response, error) {
 	r := ioutil.NopCloser(bytes.NewReader(m.response))
 	return &http.Response{StatusCode: 200, Body: r}, m.err
 }
 
-///
-
-func unauthorized(w http.ResponseWriter, r *http.Request) {
+func unauthorized(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusUnauthorized)
 }
 

@@ -24,7 +24,7 @@ type MockClient struct {
 	response string
 }
 
-func (m *MockClient) Do(req *http.Request) (*http.Response, error) {
+func (m *MockClient) Do(_ *http.Request) (*http.Response, error) {
 	return &http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(m.response))}, nil
 }
 

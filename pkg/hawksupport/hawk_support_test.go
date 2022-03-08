@@ -16,7 +16,7 @@ import (
 	"testing"
 )
 
-func secureGet(w http.ResponseWriter, r *http.Request) {
+func secureGet(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("success"))
 }

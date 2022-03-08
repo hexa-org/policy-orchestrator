@@ -35,7 +35,7 @@ func NewIntegrationsHandler(orchestratorUrl string, client Client) IntegrationHa
 	return integrationsHandler{orchestratorUrl, client}
 }
 
-func (i integrationsHandler) List(w http.ResponseWriter, r *http.Request) {
+func (i integrationsHandler) List(w http.ResponseWriter, _ *http.Request) {
 	url := fmt.Sprintf("%v/integrations", i.orchestratorUrl)
 	integrations, err := i.client.Integrations(url)
 	if err != nil {

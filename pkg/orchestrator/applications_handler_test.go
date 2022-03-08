@@ -149,7 +149,7 @@ func (s *ApplicationsHandlerSuite) TestSetPolicies_withErroneousProvider() {
 	s.providers["google_cloud"] = &noopProvider
 
 	var buf bytes.Buffer
-	policy := orchestrator.Policy{Version: "v0.1", Action: "anAction", Subject: orchestrator.Subject{[]string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{Resources: []string{"/"}}}
+	policy := orchestrator.Policy{Version: "v0.1", Action: "anAction", Subject: orchestrator.Subject{AuthenticatedUsers: []string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{Resources: []string{"/"}}}
 	_ = json.NewEncoder(&buf).Encode(policy)
 
 	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)

@@ -11,16 +11,16 @@ type Status struct {
 	Status string
 }
 
-type statusHandler struct {
+type StatusHandler struct {
 	orchestratorUrl string
 	client          Client
 }
 
-func NewStatusHandler(orchestratorUrl string, client Client) statusHandler {
-	return statusHandler{orchestratorUrl, client}
+func NewStatusHandler(orchestratorUrl string, client Client) StatusHandler {
+	return StatusHandler{orchestratorUrl, client}
 }
 
-func (p statusHandler) StatusHandler(w http.ResponseWriter, r *http.Request) {
+func (p StatusHandler) StatusHandler(w http.ResponseWriter, _ *http.Request) {
 	url := fmt.Sprintf("%v/health", p.orchestratorUrl)
 	health, _ := p.client.Health(url)
 	status := Status{url, health}
