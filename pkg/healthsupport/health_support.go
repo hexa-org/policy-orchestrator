@@ -11,7 +11,7 @@ type HealthInfo struct {
 	Status string `json:"status"`
 }
 
-func HealthHandlerFunction(w http.ResponseWriter, r *http.Request) {
+func HealthHandlerFunction(w http.ResponseWriter, _ *http.Request) {
 	data, _ := json.Marshal(&HealthInfo{"pass"})
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)

@@ -49,7 +49,7 @@ func NewApplicationsHandler(orchestratorUrl string, client Client) ApplicationsH
 	return appsHandler{orchestratorUrl, client}
 }
 
-func (p appsHandler) List(w http.ResponseWriter, r *http.Request) {
+func (p appsHandler) List(w http.ResponseWriter, _ *http.Request) {
 	url := fmt.Sprintf("%v/applications", p.orchestratorUrl)
 	applications, err := p.client.Applications(url)
 	if err != nil {

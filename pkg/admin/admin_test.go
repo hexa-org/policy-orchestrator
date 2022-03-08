@@ -29,7 +29,7 @@ func TestAdminHandlers(t *testing.T) {
 	}
 	redirect, _ := noFollowClient.Get(fmt.Sprintf("http://%s", server.Addr))
 	assert.Equal(t, http.StatusPermanentRedirect, redirect.StatusCode)
-	assert.Equal(t, string(redirect.Header["Location"][0]), "/integrations")
+	assert.Equal(t, redirect.Header["Location"][0], "/integrations")
 
 	websupport.Stop(server)
 }

@@ -19,8 +19,8 @@ type AmazonCognitoConfiguration struct {
 }
 
 type AmazonCognitoClaims struct {
-	Email    string `json:email`
-	Username string `json:username`
+	Email    string `json:"email"`
+	Username string `json:"username"`
 	jwt.StandardClaims
 }
 
@@ -46,7 +46,7 @@ type ClaimsParser interface {
 type AmazonCognitoClaimsParser struct {
 }
 
-func (m AmazonCognitoClaimsParser) ParseWithClaims(tokenString string, region string, claims jwt.Claims) (*jwt.Token, error) {
+func (m AmazonCognitoClaimsParser) ParseWithClaims(tokenString string, _ string, claims jwt.Claims) (*jwt.Token, error) {
 	log.Println("Enabling amazon cognito middleware.")
 
 	// todo - currently unable to parse and verify the amazon elb token as the elb returns an un-parsable base64 token

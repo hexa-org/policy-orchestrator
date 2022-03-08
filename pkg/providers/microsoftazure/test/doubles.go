@@ -31,7 +31,7 @@ func (m *MockClient) Do(req *http.Request) (*http.Response, error) {
 	return nil, errors.New(fmt.Sprintf("Missing mock exchange for %s.", req.URL.String()))
 }
 
-func (m *MockClient) Post(url, contentType string, body io.Reader) (resp *http.Response, err error) {
+func (m *MockClient) Post(url, _ string, body io.Reader) (resp *http.Response, err error) {
 	for _, e := range m.Exchanges {
 		if e.Path == url {
 			e.RequestBody, _ = io.ReadAll(body)

@@ -22,7 +22,7 @@ type IntegrationsHandler struct {
 	worker  DiscoveryWorker
 }
 
-func (handler IntegrationsHandler) List(w http.ResponseWriter, r *http.Request) {
+func (handler IntegrationsHandler) List(w http.ResponseWriter, _ *http.Request) {
 	records, _ := handler.gateway.Find()
 	var list Integrations
 	for _, rec := range records {

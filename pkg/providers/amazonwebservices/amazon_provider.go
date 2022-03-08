@@ -188,7 +188,7 @@ type CredentialsInfo struct {
 	Region          string `json:"region"`
 }
 
-func (g *AmazonProvider) Credentials(key []byte) CredentialsInfo {
+func (a *AmazonProvider) Credentials(key []byte) CredentialsInfo {
 	var foundCredentials CredentialsInfo
 	_ = json.NewDecoder(bytes.NewReader(key)).Decode(&foundCredentials)
 	return foundCredentials

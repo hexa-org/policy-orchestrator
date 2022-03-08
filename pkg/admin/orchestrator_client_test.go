@@ -21,12 +21,12 @@ type MockClient struct {
 	err      error
 }
 
-func (m *MockClient) Do(req *http.Request) (*http.Response, error) {
+func (m *MockClient) Do(_ *http.Request) (*http.Response, error) {
 	r := ioutil.NopCloser(bytes.NewReader(m.response))
 	return &http.Response{StatusCode: 200, Body: r}, m.err
 }
 
-func (m *MockClient) Get(url string) (resp *http.Response, err error) {
+func (m *MockClient) Get(_ string) (resp *http.Response, err error) {
 	r := ioutil.NopCloser(bytes.NewReader(m.response))
 	return &http.Response{StatusCode: 200, Body: r}, m.err
 }

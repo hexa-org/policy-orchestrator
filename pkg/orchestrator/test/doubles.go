@@ -22,13 +22,13 @@ func (n *NoopProvider) DiscoverApplications(info provider.IntegrationInfo) (apps
 	return apps, n.Err
 }
 
-func (n *NoopProvider) GetPolicyInfo(info provider.IntegrationInfo, info2 provider.ApplicationInfo) ([]provider.PolicyInfo, error) {
+func (n *NoopProvider) GetPolicyInfo(_ provider.IntegrationInfo, _ provider.ApplicationInfo) ([]provider.PolicyInfo, error) {
 	return []provider.PolicyInfo{
 		{"aVersion", "anAction", provider.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, provider.ObjectInfo{Resources: []string{"/"}}},
 		{"aVersion", "anotherAction", provider.SubjectInfo{AuthenticatedUsers: []string{"anotherUser"}}, provider.ObjectInfo{Resources: []string{"/"}}},
 	}, n.Err
 }
 
-func (n *NoopProvider) SetPolicyInfo(p provider.IntegrationInfo, app provider.ApplicationInfo, policy provider.PolicyInfo) error {
+func (n *NoopProvider) SetPolicyInfo(_ provider.IntegrationInfo, _ provider.ApplicationInfo, _ provider.PolicyInfo) error {
 	return n.Err
 }

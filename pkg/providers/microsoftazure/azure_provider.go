@@ -11,7 +11,7 @@ type AzureProvider struct {
 	Http HTTPClient
 }
 
-func (g *AzureProvider) Name() string {
+func (a *AzureProvider) Name() string {
 	return "azure"
 }
 

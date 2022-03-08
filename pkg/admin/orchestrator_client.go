@@ -114,7 +114,7 @@ func (c orchestratorClient) Integrations(url string) (integrations []Integration
 	}
 
 	for _, in := range jsonResponse.Integrations {
-		integrations = append(integrations, Integration{in.ID, in.Name, in.Provider, []byte(in.Key)})
+		integrations = append(integrations, Integration{in.ID, in.Name, in.Provider, in.Key})
 	}
 
 	return integrations, nil
