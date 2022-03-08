@@ -30,6 +30,15 @@ services:
       PORT: 8886
       OPA_SERVER_URL: http://opa-agent:8887/v1/data/authz/allow
 
+  demo-app-config:
+    image: hexa
+    container_name: hexa-demo-config
+    ports:
+      - "8889:8889"
+    command: democonfig
+    environment:
+      PORT: 8889
+
   postgresql:
     image: postgres
     container_name: postgresql
@@ -59,6 +68,6 @@ services:
       - "8887:8887"
     command: run --server --addr :8887 -c /home/config/config.yaml
     environment:
-      HEXA_DEMO_URL: "http://hexa-demo:8886"
+      HEXA_DEMO_URL: "http://hexa-demo-config:8889"
     volumes:
-      - "./deployments/google-cloud/opa-server/config:/home/config:ro"
+      - "./deployments/opa-server/config:/home/config:ro"
