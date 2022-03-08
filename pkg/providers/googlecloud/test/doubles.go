@@ -15,11 +15,11 @@ type MockClient struct {
 	RequestBody  []byte
 }
 
-func (m *MockClient) Get(url string) (resp *http.Response, err error) {
+func (m *MockClient) Get(_ string) (resp *http.Response, err error) {
 	return &http.Response{StatusCode: 200, Body: ioutil.NopCloser(bytes.NewReader(m.ResponseBody))}, m.Err
 }
 
-func (m *MockClient) Post(url, contentType string, body io.Reader) (resp *http.Response, err error) {
+func (m *MockClient) Post(_, _ string, body io.Reader) (resp *http.Response, err error) {
 	m.RequestBody, _ = io.ReadAll(body)
 	return &http.Response{StatusCode: 200, Body: ioutil.NopCloser(bytes.NewReader(m.ResponseBody))}, m.Err
 }

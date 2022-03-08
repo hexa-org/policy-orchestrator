@@ -76,8 +76,6 @@ github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.3.0 h1:PO+HNeJBeRK0yVD9CQZ
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.3.0/go.mod h1:miRSv9l093jX/t/j+mBCaLqFHo9xKYzJ7DGm1BsGoJM=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.3.6 h1:c8s9EhIPVFMFS+R1+rtEghGrf7v83gSUWbcCYX/OPes=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.3.6/go.mod h1:o1ippSg3yJx5EuT4AOGXJCUcmt5vrcxla1cg6K1Q8Iw=
-github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.12.0 h1:sMUQrNvy48o9e59K64BovxzSbCR4XA8nOKIvUZwvwiM=
-github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.12.0/go.mod h1:pqE5s8CkrzHLKwCEykBuEikmgYnhTR2yvcpd9Dr6mcM=
 github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.13.0 h1:VWsgp/I1FW+UIJAYQ2rJeWGBeZ/HfNASPFVf7n9PYFU=
 github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.13.0/go.mod h1:4py6AdYqveywH69+7AklwJoG10nN6oSBHRE2B94S118=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.8.0 h1:JNMALY8/ZnFsfAzBHtC4gq8JeZPANmIoI2VaBgYzbf8=
@@ -183,7 +181,6 @@ github.com/google/go-cmp v0.5.2/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/
 github.com/google/go-cmp v0.5.3/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.4/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
-github.com/google/go-cmp v0.5.6 h1:BKbKCqvP6I+rmFHt06ZmyQtvB8xAkWdhFyr0ZUNZcxQ=
 github.com/google/go-cmp v0.5.6/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.7 h1:81/ik6ipDQS2aGcBfIN5dHDB36BwrStyeAQquSYCV4o=
 github.com/google/go-cmp v0.5.7/go.mod h1:n+brtR0CgQNWTVd5ZUFpTBC8YFBDLK/h/bpaJ8/DtOE=

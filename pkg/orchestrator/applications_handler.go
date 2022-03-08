@@ -41,7 +41,7 @@ type ApplicationsHandler struct {
 	providers           map[string]provider.Provider
 }
 
-func (handler ApplicationsHandler) List(w http.ResponseWriter, r *http.Request) {
+func (handler ApplicationsHandler) List(w http.ResponseWriter, _ *http.Request) {
 	records, err := handler.applicationsGateway.Find()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
