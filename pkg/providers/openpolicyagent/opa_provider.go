@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -40,6 +41,7 @@ func (o *OpaProvider) GetPolicyInfo(integration provider.IntegrationInfo, _ prov
 	dir := os.TempDir()
 	rego, err := o.Client.GetExpressionFromBundle(foundCredentials.BundleUrl, dir)
 	if err != nil {
+		log.Printf("open-policy-agent, unable to read expression file. %s\n", err)
 		return nil, err
 	}
 	return o.Service.ReadPolicies(bytes.NewReader(rego))
