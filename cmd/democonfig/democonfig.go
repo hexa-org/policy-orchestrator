@@ -27,7 +27,7 @@ func NewBasicApp() BasicApp {
 
 func (a *BasicApp) download(writer http.ResponseWriter, _ *http.Request) {
 	_, file, _, _ := runtime.Caller(0)
-	tar, _ := compressionsupport.TarFromPath(filepath.Join(file, "../resources/bundles/bundle"))
+	tar, _ := compressionsupport.TarFromPath(filepath.Join(file, "../resources/bundles"))
 	_ = compressionsupport.Gzip(writer, tar)
 }
 
