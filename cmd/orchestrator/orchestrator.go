@@ -9,6 +9,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/amazonwebservices"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/googlecloud"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/microsoftazure"
+	"github.com/hexa-org/policy-orchestrator/pkg/providers/openpolicyagent"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
 	"log"
@@ -24,6 +25,7 @@ func App(key string, addr string, hostPort string, dbUrl string) (*http.Server, 
 	providers["google_cloud"] = &googlecloud.GoogleProvider{}
 	providers["azure"] = &microsoftazure.AzureProvider{}
 	providers["amazon"] = &amazonwebservices.AmazonProvider{}
+	providers["open_policy_agent"] = &openpolicyagent.OpaProvider{}
 	handlers, scheduler := orchestrator.LoadHandlers(db, store, hostPort, providers)
 	return websupport.Create(addr, handlers, websupport.Options{}), scheduler
 }

@@ -2,7 +2,7 @@ package openpolicyagent_test
 
 import (
 	"bytes"
-	"github.com/hexa-org/policy-orchestrator/pkg/providers"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/openpolicyagent"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -14,13 +14,16 @@ import (
 )
 
 func TestWrite(t *testing.T) {
-	_, file, _, _ := runtime.Caller(0)
-	jsonFile, _ := os.Open(filepath.Join(file, "../../test/policy.json"))
-	jsonBytes, _ := ioutil.ReadAll(jsonFile)
-	policies, _ := providers.Decode(jsonBytes)
+	policies := []provider.PolicyInfo{
+		{Version: "0.1", Action: "GET", Subject: provider.SubjectInfo{AuthenticatedUsers: []string{"allusers"}}, Object: provider.ObjectInfo{Resources: []string{"/"}}},
+		{Version: "0.1", Action: "GET", Subject: provider.SubjectInfo{AuthenticatedUsers: []string{"sales@", "marketing@"}}, Object: provider.ObjectInfo{Resources: []string{"/sales", "/marketing"}}},
+		{Version: "0.1", Action: "GET", Subject: provider.SubjectInfo{AuthenticatedUsers: []string{"accounting@"}}, Object: provider.ObjectInfo{Resources: []string{"/accounting"}}},
+		{Version: "0.1", Action: "GET", Subject: provider.SubjectInfo{AuthenticatedUsers: []string{"humanresources@"}}, Object: provider.ObjectInfo{Resources: []string{"/humanresources"}}},
+	}
 
+	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../resources")
-	service := openpolicyagent.NewOpaService(resourcesDirectory)
+	service := openpolicyagent.OpaService{ResourcesDirectory: resourcesDirectory}
 
 	actualRegoBytes := new(strings.Builder)
 	_ = service.WritePolicies(policies, actualRegoBytes)
@@ -34,10 +37,10 @@ func TestWrite(t *testing.T) {
 func TestWriteEmpty(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../resources")
-	service := openpolicyagent.NewOpaService(resourcesDirectory)
+	service := openpolicyagent.OpaService{ResourcesDirectory: resourcesDirectory}
 
 	actualRegoBytes := new(strings.Builder)
-	_ = service.WritePolicies([]providers.Policy{}, actualRegoBytes)
+	_ = service.WritePolicies([]provider.PolicyInfo{}, actualRegoBytes)
 
 	assert.Equal(t, "package authz\nimport future.keywords.in\ndefault allow = false", actualRegoBytes.String())
 }
@@ -45,7 +48,7 @@ func TestWriteEmpty(t *testing.T) {
 func TestRead(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../resources")
-	service := openpolicyagent.NewOpaService(resourcesDirectory)
+	service := openpolicyagent.OpaService{ResourcesDirectory: resourcesDirectory}
 
 	regoFile, _ := os.Open(filepath.Join(resourcesDirectory, "./bundles/bundle/policy.rego"))
 	regoBytes, _ := ioutil.ReadAll(regoFile)
@@ -61,7 +64,7 @@ func TestRead(t *testing.T) {
 func TestRead_failed(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../resources")
-	service := openpolicyagent.NewOpaService(resourcesDirectory)
+	service := openpolicyagent.OpaService{ResourcesDirectory: resourcesDirectory}
 
 	reader := bytes.NewReader([]byte(""))
 	_, err := service.ReadPolicies(reader)
@@ -71,7 +74,7 @@ func TestRead_failed(t *testing.T) {
 func TestReadWrite(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../resources")
-	service := openpolicyagent.NewOpaService(resourcesDirectory)
+	service := openpolicyagent.OpaService{ResourcesDirectory: resourcesDirectory}
 
 	regoFile, _ := os.Open(filepath.Join(resourcesDirectory, "./bundles/bundle/policy.rego"))
 	regoBytes, _ := ioutil.ReadAll(regoFile)
