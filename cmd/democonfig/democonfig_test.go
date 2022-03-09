@@ -32,3 +32,18 @@ func TestApp(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	websupport.Stop(app)
 }
+
+func TestDownload(t *testing.T) {
+	_, file, _, _ := runtime.Caller(0)
+	resourcesDirectory := filepath.Join(file, "../../../cmd/demo/resources")
+	listener, _ := net.Listen("tcp", "localhost:0")
+	app := App(listener.Addr().String(), resourcesDirectory)
+	go func() {
+		websupport.Start(app, listener)
+	}()
+	healthsupport.WaitForHealthy(app)
+
+	response, _ := http.Get(fmt.Sprintf("http://%s/bundles/bundle.tar.gz", app.Addr))
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	websupport.Stop(app)
+}

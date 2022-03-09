@@ -2,41 +2,37 @@ package openpolicyagent
 
 import (
 	"github.com/alecthomas/participle/v2"
-	"github.com/hexa-org/policy-orchestrator/pkg/providers"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"html/template"
 	"io"
 	"path/filepath"
 )
 
 type OpaService struct {
-	resourcesDirectory string
+	ResourcesDirectory string
 }
 
-func NewOpaService(resourcesDirectory string) providers.Service {
-	return OpaService{resourcesDirectory}
-}
-
-func (o OpaService) WritePolicies(policies []providers.Policy, destination io.Writer) error {
-	templates := []string{filepath.Join(o.resourcesDirectory, "./template.gohtml")}
+func (o OpaService) WritePolicies(policies []provider.PolicyInfo, destination io.Writer) error {
+	templates := []string{filepath.Join(o.ResourcesDirectory, "./template.gohtml")}
 	must := template.Must(template.ParseFiles(templates...))
 	return must.Execute(destination, policies)
 }
 
-func (o OpaService) ReadPolicies(source io.Reader) ([]providers.Policy, error) {
+func (o OpaService) ReadPolicies(source io.Reader) ([]provider.PolicyInfo, error) {
 	var rego []byte
 	rego, err := io.ReadAll(source)
 	if err != nil {
-		return []providers.Policy{}, err
+		return []provider.PolicyInfo{}, err
 	}
 
 	ast := &Rego{}
 	parser, _ := participle.Build(&Rego{}, participle.Unquote())
 	err = parser.ParseString("policy.rego", string(rego), ast)
 	if err != nil {
-		return []providers.Policy{}, err
+		return []provider.PolicyInfo{}, err
 	}
 
-	var policies []providers.Policy
+	var policies []provider.PolicyInfo
 	for _, policy := range ast.Policies {
 
 		var resources []string
@@ -49,10 +45,11 @@ func (o OpaService) ReadPolicies(source io.Reader) ([]providers.Policy, error) {
 			principals = append(principals, principal.String())
 		}
 
-		found := providers.Policy{
+		found := provider.PolicyInfo{
+			Version: "0.4",
 			Action:  policy.Info.Method.String(),
-			Object:  providers.Object{Resources: resources},
-			Subject: providers.Subject{AuthenticatedUsers: principals},
+			Object:  provider.ObjectInfo{Resources: resources},
+			Subject: provider.SubjectInfo{AuthenticatedUsers: principals},
 		}
 		policies = append(policies, found)
 	}

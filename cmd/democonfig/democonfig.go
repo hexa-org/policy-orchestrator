@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/hexa-org/policy-orchestrator/cmd/democonfig/gzipsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"log"
 	"net"
@@ -27,7 +27,8 @@ func NewBasicApp() BasicApp {
 
 func (a *BasicApp) download(writer http.ResponseWriter, _ *http.Request) {
 	_, file, _, _ := runtime.Caller(0)
-	gzipsupport.Compress(writer, filepath.Join(file, "../resources/bundles/bundle"))
+	tar, _ := compressionsupport.TarFromPath(filepath.Join(file, "../resources/bundles/bundle"))
+	_ = compressionsupport.Gzip(writer, tar)
 }
 
 func (a *BasicApp) loadHandlers() func(router *mux.Router) {
