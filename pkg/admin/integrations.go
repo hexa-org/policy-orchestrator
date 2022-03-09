@@ -67,6 +67,10 @@ type amazonKeyFile struct {
 	Region string `json:"region"`
 }
 
+type bundleFile struct {
+	BundleUrl string `json:"bundle_url"`
+}
+
 func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Request) {
 	url := fmt.Sprintf("%v/integrations", i.orchestratorUrl)
 
@@ -126,6 +130,16 @@ func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Re
 		name = fmt.Sprintf("region:%s", foundKeyFile.Region)
 	}
 
+	if provider == "open_policy_agent" {
+		var foundKeyFile bundleFile
+		err = json.NewDecoder(bytes.NewReader(key)).Decode(&foundKeyFile)
+		if err != nil || foundKeyFile.BundleUrl == "" {
+			i.viewWithMessage(w, provider, "Unable to read key file, missing bundle url.", integrationView)
+			return
+		}
+		name = "bundle:open-policy-agent"
+	}
+
 	err = i.client.CreateIntegration(url, name, provider, key)
 	if err != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Unable to communicate with orchestrator."}}
@@ -154,6 +168,7 @@ func (i integrationsHandler) knownIntegrationViews(provider string) string {
 	integrationViews["google_cloud"] = "integrations_new_google_cloud"
 	integrationViews["azure"] = "integrations_new_azure"
 	integrationViews["amazon"] = "integrations_new_amazon"
+	integrationViews["open_policy_agent"] = "integrations_new_open_policy"
 	integrationView := integrationViews[strings.ToLower(provider)]
 	return integrationView
 }
