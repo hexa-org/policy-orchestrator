@@ -107,7 +107,7 @@ func (suite *IntegrationsSuite) TestCreateIntegration_withAmazon() {
 
 func (suite *IntegrationsSuite) TestCreateIntegrationMissingKey_withAmazon() {
 	suite.client.On("CreateIntegration", "http://noop/integrations").Return()
-	buf, contentType := suite.multipartformmissingfileForamazon()
+	buf, contentType := suite.multipartFormMissingFileForAmazon()
 	resp, _ := http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf)
 	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
 	all, _ := io.ReadAll(resp.Body)
@@ -205,7 +205,7 @@ func (suite *IntegrationsSuite) multipartFormSuccessAmazon() (*bytes.Buffer, str
 	})
 }
 
-func (suite *IntegrationsSuite) multipartformmissingfileForamazon() (*bytes.Buffer, string) {
+func (suite *IntegrationsSuite) multipartFormMissingFileForAmazon() (*bytes.Buffer, string) {
 	return suite.multipartForm(func(writer *multipart.Writer) {
 		provider, _ := writer.CreateFormField("provider")
 		_, _ = provider.Write([]byte("amazon"))
