@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
@@ -25,15 +26,27 @@ func NewBasicApp() BasicApp {
 	return BasicApp{}
 }
 
+// todo - ignoring errors in the demo app for the moment
+
 func (a *BasicApp) download(writer http.ResponseWriter, _ *http.Request) {
 	_, file, _, _ := runtime.Caller(0)
 	tar, _ := compressionsupport.TarFromPath(filepath.Join(file, "../resources/bundles"))
 	_ = compressionsupport.Gzip(writer, tar)
 }
 
+func (a *BasicApp) upload(writer http.ResponseWriter, r *http.Request) {
+	_ = r.ParseMultipartForm(32 << 20)
+	bundleFile, _, _ := r.FormFile("bundle")
+	gzip, _ := compressionsupport.UnGzip(bundleFile)
+	_, file, _, _ := runtime.Caller(0)
+	_ = compressionsupport.UnTarToPath(bytes.NewReader(gzip), filepath.Join(file, "../resources/bundles"))
+	writer.WriteHeader(http.StatusCreated)
+}
+
 func (a *BasicApp) loadHandlers() func(router *mux.Router) {
 	return func(router *mux.Router) {
 		router.HandleFunc("/bundles/bundle.tar.gz", a.download).Methods("GET")
+		router.HandleFunc("/bundles", a.upload).Methods("POST")
 	}
 }
 
