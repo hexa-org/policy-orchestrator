@@ -37,8 +37,5 @@ func (b *BundleClient) GetExpressionFromBundle(bundleUrl string, path string) ([
 	if tarErr != nil {
 		return nil, tarErr
 	}
-
-	join := filepath.Join(path, "bundle/policy.rego")
-
-	return os.ReadFile(join)
+	return os.ReadFile(filepath.Join(path, "bundle/policy.rego"))
 }
