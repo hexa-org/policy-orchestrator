@@ -48,6 +48,7 @@ func (o *OpaProvider) GetPolicyInfo(integration provider.IntegrationInfo, _ prov
 }
 
 func (o *OpaProvider) SetPolicyInfo(integration provider.IntegrationInfo, app provider.ApplicationInfo, policy provider.PolicyInfo) error {
+	o.ensureClientIsAvailable()
 	return nil
 }
 
