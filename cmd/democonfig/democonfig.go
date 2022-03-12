@@ -6,12 +6,16 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
+	"io/fs"
 	"log"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
+	"time"
 )
 
 func App(addr string, resourcesDirectory string) *http.Server {
@@ -30,8 +34,25 @@ func NewBasicApp() BasicApp {
 
 func (a *BasicApp) download(writer http.ResponseWriter, _ *http.Request) {
 	_, file, _, _ := runtime.Caller(0)
-	tar, _ := compressionsupport.TarFromPath(filepath.Join(file, "../resources/bundles"))
+	bundles := filepath.Join(file, "../resources/bundles")
+	tar, _ := compressionsupport.TarFromPath(fmt.Sprintf("%s/%s", bundles, a.latest(bundles)))
 	_ = compressionsupport.Gzip(writer, tar)
+}
+
+func (a *BasicApp) latest(dir string) string {
+	available := make([]fs.FileInfo, 0)
+	_ = fs.WalkDir(os.DirFS(dir), ".", func(path string, d fs.DirEntry, err error) error {
+		info, _ := d.Info()
+		if info.Name() == "." {
+			return nil
+		}
+		available = append(available, info)
+		return fs.SkipDir
+	})
+	sort.Slice(available, func(i, j int) bool {
+		return available[i].ModTime().Unix() > available[j].ModTime().Unix()
+	})
+	return available[0].Name()
 }
 
 func (a *BasicApp) upload(writer http.ResponseWriter, r *http.Request) {
@@ -39,7 +60,9 @@ func (a *BasicApp) upload(writer http.ResponseWriter, r *http.Request) {
 	bundleFile, _, _ := r.FormFile("bundle")
 	gzip, _ := compressionsupport.UnGzip(bundleFile)
 	_, file, _, _ := runtime.Caller(0)
-	_ = compressionsupport.UnTarToPath(bytes.NewReader(gzip), filepath.Join(file, "../resources/bundles"))
+	rand.Seed(time.Now().UnixNano())
+	path := filepath.Join(file, fmt.Sprintf("../resources/bundles/.bundle-%d", rand.Uint64()))
+	_ = compressionsupport.UnTarToPath(bytes.NewReader(gzip), path)
 	writer.WriteHeader(http.StatusCreated)
 }
 
