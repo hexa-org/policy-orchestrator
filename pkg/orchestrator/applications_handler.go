@@ -118,12 +118,14 @@ func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Re
 	integration := provider.IntegrationInfo{Name: integrationRecord.Name, Key: integrationRecord.Key}
 	application := provider.ApplicationInfo{ObjectID: applicationRecord.ObjectId, Name: applicationRecord.Name, Description: applicationRecord.Description}
 	pro := handler.providers[strings.ToLower(integrationRecord.Provider)] // todo - test for lower?
+	var policyInfos []provider.PolicyInfo
 	for _, policy := range policies {
 		info := provider.PolicyInfo{Version: policy.Version, Action: policy.Action,
 			Subject: provider.SubjectInfo{AuthenticatedUsers: policy.Subject.AuthenticatedUsers},
 			Object:  provider.ObjectInfo{Resources: policy.Object.Resources}}
-		err = pro.SetPolicyInfo(integration, application, info)
+		policyInfos = append(policyInfos, info)
 	}
+	err = pro.SetPolicyInfo(integration, application, policyInfos)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

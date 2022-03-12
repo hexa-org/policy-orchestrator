@@ -42,12 +42,18 @@ func (g *GoogleProvider) GetPolicyInfo(integration provider.IntegrationInfo, app
 	return googleClient.GetBackendPolicy(app.ObjectID)
 }
 
-func (g *GoogleProvider) SetPolicyInfo(integration provider.IntegrationInfo, app provider.ApplicationInfo, policy provider.PolicyInfo) error {
+func (g *GoogleProvider) SetPolicyInfo(integration provider.IntegrationInfo, app provider.ApplicationInfo, policies []provider.PolicyInfo) error {
 	key := integration.Key
 	foundCredentials := g.credentials(key)
 	g.ensureClientIsAvailable(key)
 	googleClient := GoogleClient{g.Http, foundCredentials.ProjectId}
-	return googleClient.SetBackendPolicy(app.ObjectID, policy)
+	for _, policyInfo := range policies {
+		err := googleClient.SetBackendPolicy(app.ObjectID, policyInfo)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (g *GoogleProvider) HttpClient(key []byte) (HTTPClient, error) {

@@ -29,6 +29,6 @@ func (n *NoopProvider) GetPolicyInfo(_ provider.IntegrationInfo, _ provider.Appl
 	}, n.Err
 }
 
-func (n *NoopProvider) SetPolicyInfo(_ provider.IntegrationInfo, _ provider.ApplicationInfo, _ provider.PolicyInfo) error {
+func (n *NoopProvider) SetPolicyInfo(_ provider.IntegrationInfo, _ provider.ApplicationInfo, _ []provider.PolicyInfo) error {
 	return n.Err
 }

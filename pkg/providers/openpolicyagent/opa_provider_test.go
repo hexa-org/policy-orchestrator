@@ -109,7 +109,7 @@ func TestSetPolicyInfo(t *testing.T) {
 	err := p.SetPolicyInfo(
 		provider.IntegrationInfo{Name: "open_policy_agent", Key: key},
 		provider.ApplicationInfo{},
-		provider.PolicyInfo{Version: "0.1", Action: "GET", Subject: provider.SubjectInfo{AuthenticatedUsers: []string{"allusers"}}, Object: provider.ObjectInfo{Resources: []string{"/"}}},
+		[]provider.PolicyInfo{{Version: "0.1", Action: "GET", Subject: provider.SubjectInfo{AuthenticatedUsers: []string{"allusers"}}, Object: provider.ObjectInfo{Resources: []string{"/"}}}},
 	)
 	assert.NoError(t, err)
 }

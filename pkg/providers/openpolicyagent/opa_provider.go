@@ -51,12 +51,12 @@ func (o *OpaProvider) GetPolicyInfo(integration provider.IntegrationInfo, _ prov
 	return o.Service.ReadPolicies(bytes.NewReader(rego))
 }
 
-func (o *OpaProvider) SetPolicyInfo(integration provider.IntegrationInfo, _ provider.ApplicationInfo, policy provider.PolicyInfo) error {
+func (o *OpaProvider) SetPolicyInfo(integration provider.IntegrationInfo, _ provider.ApplicationInfo, policyInfos []provider.PolicyInfo) error {
 	o.ensureClientIsAvailable()
 	key := integration.Key
 	foundCredentials := o.credentials(key)
 	var rego bytes.Buffer
-	writeErr := o.Service.WritePolicies([]provider.PolicyInfo{policy}, &rego)
+	writeErr := o.Service.WritePolicies(policyInfos, &rego)
 	if writeErr != nil {
 		log.Printf("open-policy-agent, unable to write expression file. %s\n", writeErr)
 		return writeErr
