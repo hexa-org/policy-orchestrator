@@ -4,9 +4,11 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func TarFromPath(path string) ([]byte, error) {
@@ -57,6 +59,9 @@ func UnTarToPath(r io.Reader, path string) error {
 		}
 		if err != nil {
 			return err
+		}
+		if strings.Contains(hdr.Name,"..") {
+			return errors.New("zip slip fix")
 		}
 		join := filepath.Join(path, hdr.Name)
 		if hdr.Typeflag == tar.TypeDir {
