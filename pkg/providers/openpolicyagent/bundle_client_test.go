@@ -5,28 +5,14 @@ import (
 	"errors"
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/openpolicyagent"
+	"github.com/hexa-org/policy-orchestrator/pkg/providers/openpolicyagent/test"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
 )
-
-type MockClient struct {
-	mock.Mock
-	response []byte
-	err      error
-}
-
-func (m *MockClient) Get(_ string) (resp *http.Response, err error) {
-	recorder := httptest.ResponseRecorder{}
-	recorder.Body = bytes.NewBuffer(m.response)
-	return recorder.Result(), m.err
-}
 
 func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
@@ -35,7 +21,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
 	var buffer bytes.Buffer
 	_ = compressionsupport.Gzip(&buffer, tar)
 
-	mockClient := MockClient{response: buffer.Bytes()}
+	mockClient := openpolicyagent_test.MockClient{Response: buffer.Bytes()}
 
 	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
 
@@ -46,8 +32,8 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
 }
 
 func TestBundleClient_GetExpressionFromBundle_withBadRequest(t *testing.T) {
-	mockClient := MockClient{}
-	mockClient.err = errors.New("oops")
+	mockClient := openpolicyagent_test.MockClient{}
+	mockClient.Err = errors.New("oops")
 	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
 	_, err := client.GetExpressionFromBundle("someUrl", os.TempDir())
 	assert.Error(t, err)
@@ -55,7 +41,7 @@ func TestBundleClient_GetExpressionFromBundle_withBadRequest(t *testing.T) {
 
 func TestBundleClient_GetExpressionFromBundle_withBadGzip(t *testing.T) {
 	var buffer bytes.Buffer
-	mockClient := MockClient{response: buffer.Bytes()}
+	mockClient := openpolicyagent_test.MockClient{Response: buffer.Bytes()}
 	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
 	_, err := client.GetExpressionFromBundle("someUrl", "")
 	assert.Error(t, err)
@@ -68,7 +54,7 @@ func TestBundleClient_GetExpressionFromBundle_withBadTar(t *testing.T) {
 	var buffer bytes.Buffer
 	_ = compressionsupport.Gzip(&buffer, tar)
 
-	mockClient := MockClient{response: buffer.Bytes()}
+	mockClient := openpolicyagent_test.MockClient{Response: buffer.Bytes()}
 
 	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
 	_, err := client.GetExpressionFromBundle("someUrl", "/badPath")

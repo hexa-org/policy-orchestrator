@@ -3,3 +3,4 @@
 .opa
 .env*
 .postgres
+.bundle*
