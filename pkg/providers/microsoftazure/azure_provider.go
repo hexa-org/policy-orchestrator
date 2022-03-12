@@ -54,21 +54,27 @@ func (a *AzureProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo, 
 	return policies, nil
 }
 
-func (a *AzureProvider) SetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo, policyInfo provider.PolicyInfo) error {
+func (a *AzureProvider) SetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo, policyInfos []provider.PolicyInfo) error {
 	key := integrationInfo.Key
 	a.ensureClientIsAvailable()
 	azureClient := AzureClient{a.Http}
 	principal, _ := azureClient.GetServicePrincipals(key, applicationInfo.Description) // todo - description is named poorly
-	var assignments []AzureAppRoleAssignment
-	resources := policyInfo.Object.Resources[0]
-	for _, user := range policyInfo.Subject.AuthenticatedUsers {
-		assignments = append(assignments, AzureAppRoleAssignment{
-			AppRoleId:   policyInfo.Action,
-			PrincipalId: strings.Split(user, ":")[0],
-			ResourceId:  strings.Split(resources, ":")[0],
-		})
+	for _, policyInfo := range policyInfos {
+		var assignments []AzureAppRoleAssignment
+		resources := policyInfo.Object.Resources[0]
+		for _, user := range policyInfo.Subject.AuthenticatedUsers {
+			assignments = append(assignments, AzureAppRoleAssignment{
+				AppRoleId:   policyInfo.Action,
+				PrincipalId: strings.Split(user, ":")[0],
+				ResourceId:  strings.Split(resources, ":")[0],
+			})
+		}
+		err := azureClient.SetAppRoleAssignedTo(key, principal.List[0].ID, assignments)
+		if err != nil {
+			return err
+		}
 	}
-	return azureClient.SetAppRoleAssignedTo(key, principal.List[0].ID, assignments)
+	return nil
 }
 
 func (a *AzureProvider) ensureClientIsAvailable() {
@@ -76,4 +82,3 @@ func (a *AzureProvider) ensureClientIsAvailable() {
 		a.Http = &http.Client{} // todo - for testing, might be a better way?
 	}
 }
-

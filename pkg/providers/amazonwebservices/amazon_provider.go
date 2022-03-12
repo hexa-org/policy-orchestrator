@@ -81,36 +81,38 @@ func (a *AmazonProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo,
 	return policies, nil
 }
 
-func (a *AmazonProvider) SetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo, policyInfo provider.PolicyInfo) error {
+func (a *AmazonProvider) SetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo, policyInfos []provider.PolicyInfo) error {
 	err := a.ensureClientIsAvailable(integrationInfo)
 	if err != nil {
 		return err
 	}
 
-	var newUsers []string
-	for _, user := range policyInfo.Subject.AuthenticatedUsers {
-		newUsers = append(newUsers, user)
-	}
+	for _, policyInfo := range policyInfos {
+		var newUsers []string
+		for _, user := range policyInfo.Subject.AuthenticatedUsers {
+			newUsers = append(newUsers, user)
+		}
 
-	filter := "status=\"Enabled\""
-	userInput := cognitoidentityprovider.ListUsersInput{UserPoolId: &applicationInfo.ObjectID, Filter: &filter}
-	users, listUsersErr := a.Client.ListUsers(context.Background(), &userInput)
-	if listUsersErr != nil {
-		log.Println("Unable to find amazon cognito users.")
-		return listUsersErr
-	}
-	existingUsers := a.authenticatedUsersFrom(users)
+		filter := "status=\"Enabled\""
+		userInput := cognitoidentityprovider.ListUsersInput{UserPoolId: &applicationInfo.ObjectID, Filter: &filter}
+		users, listUsersErr := a.Client.ListUsers(context.Background(), &userInput)
+		if listUsersErr != nil {
+			log.Println("Unable to find amazon cognito users.")
+			return listUsersErr
+		}
+		existingUsers := a.authenticatedUsersFrom(users)
 
-	enableErr := a.EnableUsers(applicationInfo.ObjectID, a.ShouldEnable(existingUsers, newUsers))
-	if enableErr != nil {
-		log.Println("Unable to enable amazon cognito users.")
-		return enableErr
-	}
+		enableErr := a.EnableUsers(applicationInfo.ObjectID, a.ShouldEnable(existingUsers, newUsers))
+		if enableErr != nil {
+			log.Println("Unable to enable amazon cognito users.")
+			return enableErr
+		}
 
-	disable := a.DisableUsers(applicationInfo.ObjectID, a.ShouldDisable(existingUsers, newUsers))
-	if disable != nil {
-		log.Println("Unable to disable amazon cognito users.")
-		return disable
+		disable := a.DisableUsers(applicationInfo.ObjectID, a.ShouldDisable(existingUsers, newUsers))
+		if disable != nil {
+			log.Println("Unable to disable amazon cognito users.")
+			return disable
+		}
 	}
 	return nil
 }

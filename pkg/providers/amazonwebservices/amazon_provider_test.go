@@ -94,10 +94,10 @@ func TestAmazonProvider_ShouldDisable(t *testing.T) {
 func TestAmazonProvider_SetPolicyInfo(t *testing.T) {
 	mockClient := &amazonwebservices_test.MockClient{}
 	p := &amazonwebservices.AmazonProvider{Client: mockClient}
-	err := p.SetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{}, provider.PolicyInfo{
+	err := p.SetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{}, []provider.PolicyInfo{{
 		Subject: provider.SubjectInfo{AuthenticatedUsers: []string{"aUser:aUser@amazon.com", "anotherUser:anotherUser@amazon.com"}},
-		Object: provider.ObjectInfo{Resources: []string{"aResource"}},
-	})
+		Object:  provider.ObjectInfo{Resources: []string{"aResource"}},
+	}})
 	assert.NoError(t, err)
 }
 
@@ -105,7 +105,7 @@ func TestAmazonProvider_SetPolicyInfo_withListErr(t *testing.T) {
 	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
 	mockClient.Errs["ListUsers"] = errors.New("oops")
 	p := &amazonwebservices.AmazonProvider{Client: mockClient}
-	err := p.SetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{}, provider.PolicyInfo{})
+	err := p.SetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{}, []provider.PolicyInfo{{}})
 	assert.Error(t, err)
 }
 
@@ -113,10 +113,10 @@ func TestAmazonProvider_SetPolicyInfo_withEnableErr(t *testing.T) {
 	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
 	mockClient.Errs["AdminEnableUser"] = errors.New("oops")
 	p := &amazonwebservices.AmazonProvider{Client: mockClient}
-	err := p.SetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{}, provider.PolicyInfo{
+	err := p.SetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{}, []provider.PolicyInfo{{
 		Subject: provider.SubjectInfo{AuthenticatedUsers: []string{"aUser:aUser@amazon.com", "anotherUser:anotherUser@amazon.com"}},
-		Object: provider.ObjectInfo{Resources: []string{"aResource"}},
-	})
+		Object:  provider.ObjectInfo{Resources: []string{"aResource"}},
+	}})
 	assert.Error(t, err)
 }
 
@@ -124,6 +124,6 @@ func TestAmazonProvider_SetPolicyInfo_withDisableErr(t *testing.T) {
 	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
 	mockClient.Errs["AdminDisableUser"] = errors.New("oops")
 	p := &amazonwebservices.AmazonProvider{Client: mockClient}
-	err := p.SetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{}, provider.PolicyInfo{})
+	err := p.SetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{}, []provider.PolicyInfo{{}})
 	assert.Error(t, err)
 }

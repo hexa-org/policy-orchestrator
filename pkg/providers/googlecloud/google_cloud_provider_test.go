@@ -91,6 +91,6 @@ func TestGoogleProvider_SetPolicy(t *testing.T) {
 
 	p := googlecloud.GoogleProvider{Http: m}
 	info := provider.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
-	err := p.SetPolicyInfo(info, provider.ApplicationInfo{ObjectID: "anObjectId"}, policy)
+	err := p.SetPolicyInfo(info, provider.ApplicationInfo{ObjectID: "anObjectId"}, []provider.PolicyInfo{policy})
 	assert.NoError(t, err)
 }
