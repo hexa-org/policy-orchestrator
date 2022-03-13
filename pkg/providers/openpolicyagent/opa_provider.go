@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 type OpaProvider struct {
@@ -42,6 +43,7 @@ func (o *OpaProvider) GetPolicyInfo(integration provider.IntegrationInfo, _ prov
 	o.ensureClientIsAvailable()
 	key := integration.Key
 	foundCredentials := o.credentials(key)
+	rand.Seed(time.Now().UnixNano())
 	path := filepath.Join(os.TempDir(), fmt.Sprintf("/test-bundle-%d", rand.Uint64()))
 	rego, err := o.Client.GetExpressionFromBundle(foundCredentials.BundleUrl, path)
 	if err != nil {
