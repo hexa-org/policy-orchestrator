@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+	"time"
 )
 
 func TestDiscoverApplications(t *testing.T) {
@@ -130,6 +131,7 @@ allow {
 	bundle, _ := p.MakeDefaultBundle(rego)
 
 	gzip, _ := compressionsupport.UnGzip(bytes.NewReader(bundle.Bytes()))
+	rand.Seed(time.Now().UnixNano())
 	path := filepath.Join(os.TempDir(), fmt.Sprintf("/test-bundle-%d", rand.Uint64()))
 	_ = compressionsupport.UnTarToPath(bytes.NewReader(gzip), path)
 
