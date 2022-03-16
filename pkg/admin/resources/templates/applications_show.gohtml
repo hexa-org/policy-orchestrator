@@ -9,7 +9,7 @@
         <table>
             <thead>
             <tr>
-                <th>ObjectId</th>
+                <th>Platform Identifier</th>
                 <th>Name</th>
                 <th>Description</th>
             </tr>
@@ -25,23 +25,23 @@
         </table>
     </div>
     <div class="card">
-        <h1>Policy Details</h1>
+        <h2>IDQL Policy Details</h2>
         <table>
             <thead>
-            <tr>
-                <th>Version</th>
-                <th>Action</th>
+            <tr class="strong">
                 <th>Subject</th>
+                <th>With these actions</th>
                 <th>Object</th>
+                <th>Within this scope</th>
+                <th>Version</th>
             </tr>
             </thead>
             <tbody>
             {{- range $policy := index .Map "policies"}}
                 <tr>
-                    <td>{{$policy.Version}}</td>
-                    <td>{{$policy.Action}}</td>
                     <td class="compact">
                         <table class="no-margin">
+                            <tr class="no-border"><td>Authenticated users</td></tr>
                             {{- range $user := $policy.Subject.AuthenticatedUsers}}
                                 <tr class="no-border">
                                     <td>{{$user}}</td>
@@ -49,18 +49,26 @@
                             {{- end}}
                         </table>
                     </td>
-                    <td>
-                        {{- range $resource := $policy.Object.Resources}}
-                            {{$resource}}
-                        {{- end}}
+                    <td>{{$policy.Action}}</td>
+                    <td class="compact">
+                        <table class="no-margin">
+                            <tr class="no-border"><td>Resources</td></tr>
+                            {{- range $resource := $policy.Object.Resources}}
+                                <tr class="no-border">
+                                    <td>{{$resource}}</td>
+                                </tr>
+                            {{- end}}
+                        </table>
                     </td>
+                    <td></td>
+                    <td>{{$policy.Version}}</td>
                 </tr>
             {{- end}}
             </tbody>
         </table>
     </div>
     <div class="card">
-        <h2>Policy JSON</h2>
+        <h2>IDQL Policy JSON</h2>
         <pre><code>{{- index .Map "rawJson"}}</code>
 </pre>
     </div>

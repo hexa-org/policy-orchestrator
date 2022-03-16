@@ -54,6 +54,15 @@ func (suite *ApplicationsSuite) TestApplications() {
 	assert.Contains(suite.T(), string(body), "aDescription")
 }
 
+func (suite *ApplicationsSuite) TestApplications_templateRenders() {
+	resp, _ := http.Get(fmt.Sprintf("http://%s/applications", suite.server.Addr))
+	body, _ := io.ReadAll(resp.Body)
+
+	assert.Contains(suite.T(), string(body), "Platform Identifier")
+	assert.Contains(suite.T(), string(body), "Name")
+	assert.Contains(suite.T(), string(body), "Description")
+}
+
 func (suite *ApplicationsSuite) TestApplications_with_error() {
 	suite.client.Err = errors.New("oops")
 	resp, _ := http.Get(fmt.Sprintf("http://%s/applications", suite.server.Addr))

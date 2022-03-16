@@ -17,7 +17,12 @@
             <tbody>
             {{- range index .Map "integrations"}}
                 <tr>
-                    <td>{{.Provider}}</td>
+                    <td>
+                        {{if eq .Provider "google_cloud"}}Google Cloud Platform{{end}}
+                        {{if eq .Provider "amazon"}}Amazon Web Services{{end}}
+                        {{if eq .Provider "azure"}}Azure Cloud Platform{{end}}
+                        {{if eq .Provider "open_policy_agent"}}Open Policy Agent{{end}}
+                    </td>
                     <td>{{.Name}}</td>
                     <td>
                         <form action="integrations/{{.ID}}"
