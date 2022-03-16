@@ -166,6 +166,10 @@ tr {
 tr.no-border {
     border-bottom: none;
 }
+tr.strong {
+    font-weight: 700;
+    color: var(--black);
+}
 
 th, td {
     padding: .75rem 1rem;
