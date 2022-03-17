@@ -14,12 +14,13 @@
         <h1 class="hexa-title">Hexa Industries</h1>
         {{- $email := index .Map "provider_email"}}
         {{- $logout := index .Map "logout"}}
-        {{- if $email }}
-            <div class="gray">
-                {{$email}}
+        <div class="gray">
+            group:sales@hexaindustries.io
+            {{- if $email }}
+                | {{$email}}
                 | <a href="{{$logout}}">Log out</a>
-            </div>
-        {{- end}}
+            {{- end}}
+        </div>
     </nav>
     <header class="top-bar">
         <div class="menu">
