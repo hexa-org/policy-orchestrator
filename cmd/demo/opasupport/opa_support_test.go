@@ -37,7 +37,7 @@ func TestAllow(t *testing.T) {
 	input := opasupport.OpaQuery{Input: map[string]interface{}{
 		"method":     "GET",
 		"path":       "/aUri",
-		"principals": []interface{}{"allusers", "allauthenticatedusers", "sales@", "accounting@"},
+		"principals": []interface{}{"allusers", "allauthenticatedusers", "sales@hexaindustries.io", "accounting@hexaindustries.io"},
 	}}
 	mockClient := new(MockClient)
 	mockClient.response = []byte("{\"result\":true}")

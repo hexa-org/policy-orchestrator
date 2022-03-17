@@ -42,7 +42,7 @@ migrate -verbose -path ./databases/orchestrator -database "postgres://orchestrat
 Ensure the test suite passes.
 
 ```bash
-go test -p 1 ./.../
+go test  ./.../
 ```
 
 Use the following command to clean up your test cache when needed.
@@ -51,7 +51,7 @@ Use the following command to clean up your test cache when needed.
 go clean -testcache
 ```
 
-### Run the applications
+### Run the hexa applications
 
 Create a development database similar to test.
 
@@ -73,14 +73,22 @@ Run the Hexa Policy Orchestrator server.
 go run cmd/orchestrator/orchestrator.go
 ```
 
+### Run the demo applications
+
 Run the demo web application locally.
 
 ```bash
-go run cmd/demo/demo.go
+OPA_SERVER_URL=http://opa-agent:8887/v1/data/authz/allow go run cmd/demo/demo.go
+```
+
+Run the demo web application locally.
+
+```bash
+go run cmd/democonfig/democonfig.go 
 ```
 
 Run the open policy agent server locally.
 
 ```bash
-opa run --server --addr :8887 -c deployments/opa-server/config/config.yaml
+HEXA_DEMO_URL=http://localhost:8889 opa run --server --addr :8887 -c deployments/opa-server/config/config.yaml
 ```
