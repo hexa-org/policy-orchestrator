@@ -92,3 +92,27 @@ Run the open policy agent server locally.
 ```bash
 HEXA_DEMO_URL=http://localhost:8889 opa run --server --addr :8887 -c deployments/opa-server/config/config.yaml
 ```
+
+### CodeQL locally
+
+Install via [Homebrew Formulae](https://formulae.brew.sh)
+
+```bash
+brew install codeql
+```
+Note - the below command references a local clone of the codeql-go repo.
+
+Be sure to install codeql-go dependencies. From the codeql-go directory, run `scripts/install-deps.sh`.
+
+Create a local database.
+
+```bash
+CODEQL_EXTRACTOR_GO_BUILD_TRACING=on codeql database create .codeql --language=go
+```
+
+Analyze the results.
+
+```bash
+codeql database analyze .codeql --off-heap-ram=0 --format=csv --output=codeql-results.csv ../codeql-go/ql/src/codeql-suites/go-code-scanning.qls  
+```
+

@@ -4,3 +4,4 @@
 .env*
 .postgres
 .bundle*
+.codeql
