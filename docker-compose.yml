@@ -39,6 +39,16 @@ services:
     environment:
       PORT: 8889
 
+  demo-app-proxy:
+    image: hexa
+    container_name: hexa-demo-proxy
+    ports:
+      - "8890:8890"
+    command: demoproxy
+    environment:
+      PORT: 8890
+      REMOTER_URL: http://demo-app:8886
+
   postgresql:
     image: postgres
     container_name: postgresql
