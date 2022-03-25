@@ -62,7 +62,7 @@ func makeGoCommand(cmdString string, envs []string, args []string) *exec.Cmd {
 }
 
 func start(cmd *exec.Cmd, port int) {
-	log.Printf("starting cmd %v\n", cmd)
+	log.Printf("Starting cmd %v\n", cmd)
 	go func() {
 		var stdOut, stdErr bytes.Buffer
 		cmd.Stdout = &stdOut
@@ -70,7 +70,7 @@ func start(cmd *exec.Cmd, port int) {
 		err := cmd.Run()
 		if err != nil {
 			fmt.Println(stdErr.String())
-			log.Printf("unable to makeGoCommand app. %v\n", err)
+			log.Printf("Unable to makeGoCommand. %v\n", err)
 		}
 		fmt.Println(stdOut.String())
 	}()
@@ -92,7 +92,7 @@ func stopAll(cmds ...*exec.Cmd) {
 	for _, cmd := range cmds {
 		err := cmd.Process.Kill()
 		if err != nil {
-			log.Println("shoot, lost the process.")
+			log.Println("Shoot, lost the process.")
 		}
 	}
 }
