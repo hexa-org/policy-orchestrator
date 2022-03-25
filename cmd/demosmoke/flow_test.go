@@ -22,14 +22,14 @@ func TestDemoFlow(t *testing.T) {
 
 	_, file, _, _ := runtime.Caller(0)
 	config := filepath.Join(file, "../../../deployments/opa-server/config/config.yaml")
-	openPolicyAgent := exec.Command("opa", "run", "--server", "--addr", ":8887", "-c", config)
+	openPolicyAgent := exec.Command("opa", "run", "--server", "--addr", "localhost:8887", "-c", config)
 	openPolicyAgent.Env = os.Environ()
 	openPolicyAgent.Env = append(openPolicyAgent.Env, "HEXA_DEMO_URL=http://localhost:8889")
 
-	start(demo, 8886)
 	start(demoConfig, 8889)
-	start(demoProxy, 8890)
 	start(openPolicyAgent, 8887)
+	start(demoProxy, 8890)
+	start(demo, 8886)
 
 	resp, _ := http.Get(fmt.Sprintf("http://%s/", fmt.Sprintf("localhost:%v", 8890)))
 	body, _ := io.ReadAll(resp.Body)
