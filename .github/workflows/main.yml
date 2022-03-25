@@ -44,7 +44,8 @@ jobs:
       - name: opa
         run: |
           curl -L -o opa https://github.com/open-policy-agent/opa/releases/download/v0.11.0/opa_linux_amd64
-          sudo mv ./opa /usr/bin/opa
+          chmod 755 opa
+          sudo mv opa /usr/bin/opa
       - name: test
         run: |
           go test -coverprofile=coverage.out -p 1 ./.../
