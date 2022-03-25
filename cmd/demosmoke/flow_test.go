@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+	"time"
 )
 
 func TestDemoFlow(t *testing.T) {
@@ -28,6 +29,7 @@ func TestDemoFlow(t *testing.T) {
 
 	start(demoConfig, 8889)
 	start(openPolicyAgent, 8887)
+	time.Sleep(time.Duration(500) * time.Millisecond)
 	start(demoProxy, 8890)
 	start(demo, 8886)
 
@@ -70,7 +72,7 @@ func start(cmd *exec.Cmd, port int) {
 		err := cmd.Run()
 		if err != nil {
 			fmt.Println(stdErr.String())
-			log.Printf("Unable to makeGoCommand. %v\n", err)
+			log.Printf("Unable to start cmd %v\n.", err)
 		}
 		fmt.Println(stdOut.String())
 	}()
