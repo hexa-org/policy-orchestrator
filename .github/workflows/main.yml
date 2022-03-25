@@ -48,6 +48,6 @@ jobs:
           sudo mv opa /usr/bin/opa
       - name: test
         run: |
-          go test -coverprofile=coverage.out -p 1 ./.../
+          go test -tags integration -coverprofile coverage.out  ./.../
       - name: Upload coverage to Codecov
         run: bash <(curl -s https://codecov.io/bash)
