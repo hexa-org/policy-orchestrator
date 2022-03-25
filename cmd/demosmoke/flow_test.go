@@ -3,7 +3,6 @@
 package demosmoke_test
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io"
@@ -13,8 +12,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"syscall"
 	"testing"
-	"time"
 )
 
 func TestDemoFlow(t *testing.T) {
@@ -29,11 +28,10 @@ func TestDemoFlow(t *testing.T) {
 	openPolicyAgent.Env = os.Environ()
 	openPolicyAgent.Env = append(openPolicyAgent.Env, "HEXA_DEMO_URL=http://localhost:8889")
 
-	start(demoConfig, 8889)
-	start(openPolicyAgent, 8887)
-	time.Sleep(time.Duration(500) * time.Millisecond)
-	start(demoProxy, 8890)
 	start(demo, 8886)
+	start(demoConfig, 8889)
+	start(demoProxy, 8890)
+	start(openPolicyAgent, 8887)
 
 	resp, _ := http.Get(fmt.Sprintf("http://%s/", fmt.Sprintf("localhost:%v", 8890)))
 	body, _ := io.ReadAll(resp.Body)
@@ -62,21 +60,19 @@ func makeGoCommand(cmdString string, envs []string, args []string) *exec.Cmd {
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, envs...)
 
+	// assigning parent and child processes to a process group to ensure all process receive stop signal
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
 	return cmd
 }
 
 func start(cmd *exec.Cmd, port int) {
 	log.Printf("Starting cmd %v\n", cmd)
 	go func() {
-		var stdOut, stdErr bytes.Buffer
-		cmd.Stdout = &stdOut
-		cmd.Stderr = &stdErr
 		err := cmd.Run()
 		if err != nil {
-			fmt.Println(stdErr.String())
 			log.Printf("Unable to start cmd %v\n.", err)
 		}
-		fmt.Println(stdOut.String())
 	}()
 	waitForHealthy(fmt.Sprintf("localhost:%v", port))
 }
@@ -94,7 +90,7 @@ func waitForHealthy(address string) {
 
 func stopAll(cmds ...*exec.Cmd) {
 	for _, cmd := range cmds {
-		err := cmd.Process.Kill()
+		err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 		if err != nil {
 			log.Println("Shoot, lost the process.")
 		}
