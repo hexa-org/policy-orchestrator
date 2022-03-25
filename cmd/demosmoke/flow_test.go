@@ -63,15 +63,16 @@ func makeGoCommand(cmdString string, envs []string, args []string) *exec.Cmd {
 
 func start(cmd *exec.Cmd, port int) {
 	log.Printf("starting cmd %v\n", cmd)
-	var stdErr bytes.Buffer
-	cmd.Stderr = &stdErr
 	go func() {
+		var stdOut, stdErr bytes.Buffer
+		cmd.Stdout = &stdOut
+		cmd.Stderr = &stdErr
 		err := cmd.Run()
 		if err != nil {
-			fmt.Println(err)
 			fmt.Println(stdErr.String())
-			log.Println("unable to makeGoCommand app.")
+			log.Printf("unable to makeGoCommand app. %v\n", err)
 		}
+		fmt.Println(stdOut.String())
 	}()
 	waitForHealthy(fmt.Sprintf("localhost:%v", port))
 }
