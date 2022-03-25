@@ -1,3 +1,5 @@
+// +build integration
+
 package demosmoke_test
 
 import (
