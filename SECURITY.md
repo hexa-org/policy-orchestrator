@@ -13,3 +13,8 @@ Hexa currently uses PostgreSQL to store provider service account credentials. Pl
 client connection is secure. More information can be found below -
 * [encryption-options](https://www.postgresql.org/docs/8.1/encryption-options.html)
 * [ssl-tcp](https://www.postgresql.org/docs/current/ssl-tcp.html)
+
+## Hawk
+
+Hexa currently uses [Hawk](https://github.com/mozilla/hawk) for HTTP authentication. The credentials used within this
+repository are for testing. Please create new credentials for your environment.
