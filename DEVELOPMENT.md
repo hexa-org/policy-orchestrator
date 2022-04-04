@@ -6,6 +6,7 @@ Clone or download the codebase from GitHub to your local machine and install the
 * [Pack](https://buildpacks.io)
 * [Docker Desktop](https://www.docker.com/products/docker-desktop)
 * [Open policy agent](https://www.openpolicyagent.org)
+* [postgresql](https://www.postgresql.org/)
 * [golang-migrate](https://github.com/golang-migrate/migrate)
 
 ```bash
@@ -16,7 +17,7 @@ git clone git@github.com:hexa-org/policy-orchestrator.git
 Install via [Homebrew Formulae](https://formulae.brew.sh)
 
 ```bash
-brew install go buildpacks/tap/pack opa docker docker-compose golang-migrate
+brew install go buildpacks/tap/pack opa docker docker-compose postgresql golang-migrate
 ```
 
 ## Run the migration
