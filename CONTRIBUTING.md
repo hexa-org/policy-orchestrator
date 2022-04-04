@@ -28,9 +28,30 @@ The project backlog is maintained at this [link](https://github.com/orgs/hexa-or
 work in progress as well as the list of items in our backlog. If you want to be assigned to a user story, contact the
 maintainers.
 
+### Golang coding conventions
+
+* Intentions should be clear - we highly recommend [Goland](https://www.jetbrains.com/go/) for real-time linting
+* Functions should _not_ be documented with comments unless describing why; described why, not what
+* Ignoring errors should be rare but explicit and marked with an underscore; `db.Exec(` versus `_, _ = db.Exec(`
+* Favor passing structs by value not reference; favor immutability
+* Avoid locking or sleeping
+* Avoid short, ambiguous names; favor clarity
+* Support package names should end in `*support`
+* Favor [Pack](https://buildpacks.io) for building containers
+* Ensure everything runs locally via `docker compose`
+* Favor a single repository; to move quickly
+* Favor replace-ability
+* Ensure all code is tested
+* Tests should be in their own package `package metricssupport_test` - with no access to private functions
+* Test package names should include `*_test`
+* Avoid mocking database tests
+* Avoid mocking HTTP tests
+* Local unit, integration, and acceptance tests should run within a few seconds, not minutes
+* Refactor ruthlessly
+
 ### Create a new provider
 
 The Hexa project has several providers for integrating with different cloud platforms or systems (Google, Microsoft,
 Amazon, etc.). If you would like to extend Hexa and build a new integration - go for it! We will be here to support your
-effort along the way. New providers an be added to an existing repo or we can create a separate repo if that makes
+effort along the way. New providers can be added to our existing repo or, we can create a separate repo if that makes
 sense.
