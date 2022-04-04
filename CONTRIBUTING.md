@@ -30,17 +30,18 @@ maintainers.
 
 ### Golang coding conventions
 
-* Intentions should be clear - we highly recommend [Goland](https://www.jetbrains.com/go/) for real-time linting
+* Intentions should be clear
+* We encourage real-time linting environments such as [Goland](https://www.jetbrains.com/go/)
 * Functions should _not_ be documented with comments unless describing why; described why, not what
 * Ignoring errors should be rare but explicit and marked with an underscore; `db.Exec(` versus `_, _ = db.Exec(`
 * Favor passing structs by value not reference; favor immutability
 * Avoid locking or sleeping
 * Avoid short, ambiguous names; favor clarity
-* Support package names should end in `*support`
-* Favor [Pack](https://buildpacks.io) for building containers
+* Support package names should end in `*support`; common pkgs that support your application code, replaceable by an open source framework or library
+* We use [Pack](https://buildpacks.io) for building containers
 * Ensure everything runs locally via `docker compose`
 * Favor a single repository; to move quickly
-* Favor replace-ability
+* Favor replace-ability aka low coupling high cohesion; cmds, pkgs, support pkgs could be replaced with something better over time
 * Ensure all code is tested
 * Tests should be in their own package `package metricssupport_test` - with no access to private functions
 * Test package names should include `*_test`
