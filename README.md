@@ -64,3 +64,14 @@ Remove the local postgres database files.
 ```bash
 rm -rf .postgres
 ```
+
+## Cloud Native Computing Foundation
+
+Hexa uses the below Cloud Native Computing Foundation ([CNCF](https://www.cncf.io/)) projects
+* [Contour](https://projectcontour.io/)
+* [Harbor](https://goharbor.io/)
+* [Helm](https://helm.sh/)
+* [Kubernetes](https://kubernetes.io/)
+* [Open Policy Agent](https://www.openpolicyagent.org/)
+* [Pack](https://buildpacks.io/)
+* [Prometheus](https://prometheus.io/)
