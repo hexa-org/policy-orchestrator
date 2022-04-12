@@ -3,6 +3,7 @@ package hawksupport
 import (
 	"github.com/hiyosi/hawk"
 	"io"
+	"log"
 	"net/http"
 	"time"
 )
@@ -34,8 +35,16 @@ func HawkMiddleware(next http.HandlerFunc, credentialStore hawk.CredentialStore,
 		s.AuthOption = &hawk.AuthOption{
 			CustomHostPort: hostPort,
 		}
+		if r.Header.Get("Authorization") == "" {
+			log.Println("Request missing authorization header")
+			w.Header().Set("www-authenticate", "hawk")
+			w.WriteHeader(401)
+			return
+		}
+
 		cred, err := s.Authenticate(r)
 		if err != nil {
+			log.Printf("HAWK authentication failed: %s", err.Error())
 			w.Header().Set("www-authenticate", "hawk")
 			w.WriteHeader(401)
 			return
