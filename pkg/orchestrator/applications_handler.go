@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -44,6 +45,7 @@ type ApplicationsHandler struct {
 func (handler ApplicationsHandler) List(w http.ResponseWriter, _ *http.Request) {
 	records, err := handler.applicationsGateway.Find()
 	if err != nil {
+		log.Println("Error accessing database: " + err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
