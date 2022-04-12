@@ -73,6 +73,18 @@ func TestGet_bad_url(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestGet_bad_hostname(t *testing.T) {
+	key := getKey()
+	app, teardownTestCase := setup(key)
+	defer teardownTestCase(t)
+
+	port := strings.Split(app.Addr, ":")[1]
+	hostport := "localhost:" + port
+	resp, err := hawksupport.HawkGet(&http.Client{}, "anId", key, fmt.Sprintf("http://%s/secure", hostport))
+	assert.Equal(t, err, nil)
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+}
+
 func TestPost(t *testing.T) {
 	key := getKey()
 	app, teardownTestCase := setup(key)
