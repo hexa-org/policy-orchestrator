@@ -20,7 +20,7 @@ type ErroneousWorker struct {
 	Err error
 }
 
-func (m *ErroneousWorker) Run(i interface{}) error {
+func (m *ErroneousWorker) Run(_ interface{}) error {
 	m.Err = errors.New("oops")
 	return m.Err
 }

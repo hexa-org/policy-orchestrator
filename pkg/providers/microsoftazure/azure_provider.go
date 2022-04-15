@@ -16,13 +16,15 @@ func (a *AzureProvider) Name() string {
 }
 
 func (a *AzureProvider) DiscoverApplications(info provider.IntegrationInfo) (apps []provider.ApplicationInfo, err error) {
-	key := info.Key
-	if strings.EqualFold(info.Name, a.Name()) {
-		a.ensureClientIsAvailable()
-		azureClient := AzureClient{a.Http}
-		found, _ := azureClient.GetWebApplications(key)
-		apps = append(apps, found...)
+	if !strings.EqualFold(info.Name, a.Name()) {
+		return apps, err
 	}
+
+	key := info.Key
+	a.ensureClientIsAvailable()
+	azureClient := AzureClient{a.Http}
+	found, _ := azureClient.GetWebApplications(key)
+	apps = append(apps, found...)
 	return apps, err
 }
 

@@ -23,14 +23,16 @@ func (g *GoogleProvider) Project(key []byte) string {
 }
 
 func (g *GoogleProvider) DiscoverApplications(info provider.IntegrationInfo) (apps []provider.ApplicationInfo, err error) {
+	if !strings.EqualFold(info.Name, g.Name()) {
+		return apps, err
+	}
+
 	key := info.Key
 	foundCredentials := g.credentials(key)
-	if strings.EqualFold(info.Name, g.Name()) {
-		g.ensureClientIsAvailable(key)
-		googleClient := GoogleClient{g.Http, foundCredentials.ProjectId}
-		found, _ := googleClient.GetBackendApplications()
-		apps = append(apps, found...)
-	}
+	g.ensureClientIsAvailable(key)
+	googleClient := GoogleClient{g.Http, foundCredentials.ProjectId}
+	found, _ := googleClient.GetBackendApplications()
+	apps = append(apps, found...)
 	return apps, err
 }
 
