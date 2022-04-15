@@ -24,7 +24,7 @@ func TestDiscoverApplications(t *testing.T) {
 }
 `)}}
 
-	providers := []provider.Provider{&microsoftazure.AzureProvider{Http: m}}
+	p := &microsoftazure.AzureProvider{HttpClientOverride: m}
 	key := []byte(`
 {
   "appId":"anAppId",
@@ -33,12 +33,10 @@ func TestDiscoverApplications(t *testing.T) {
   "subscription":"aSubscription"
 }
 `)
-	for _, p := range providers {
-		info := provider.IntegrationInfo{Name: "azure", Key: key}
-		applications, _ := p.DiscoverApplications(info)
-		assert.Equal(t, 1, len(applications))
-		assert.Equal(t, "azure", p.Name())
-	}
+	info := provider.IntegrationInfo{Name: "azure", Key: key}
+	applications, _ := p.DiscoverApplications(info)
+	assert.Equal(t, 1, len(applications))
+	assert.Equal(t, "azure", p.Name())
 }
 
 func TestGetPolicy(t *testing.T) {
@@ -62,7 +60,7 @@ func TestGetPolicy(t *testing.T) {
 }
 `)}}
 
-	providers := []provider.Provider{&microsoftazure.AzureProvider{Http: m}}
+	p := &microsoftazure.AzureProvider{HttpClientOverride: m}
 	key := []byte(`
 {
   "appId":"anAppId",
@@ -71,15 +69,13 @@ func TestGetPolicy(t *testing.T) {
   "subscription":"aSubscription"
 }
 `)
-	for _, p := range providers {
-		info := provider.IntegrationInfo{Name: "azure", Key: key}
-		appInfo := provider.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"}
-		policies, _ := p.GetPolicyInfo(info, appInfo)
-		assert.Equal(t, 1, len(policies))
-		assert.Equal(t, "anAppRoleId", policies[0].Action)
-		assert.Equal(t, "aPrincipalId:aPrincipalDisplayName", policies[0].Subject.AuthenticatedUsers[0])
-		assert.Equal(t, "aResourceId:aResourceDisplayName", policies[0].Object.Resources[0])
-	}
+	info := provider.IntegrationInfo{Name: "azure", Key: key}
+	appInfo := provider.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"}
+	policies, _ := p.GetPolicyInfo(info, appInfo)
+	assert.Equal(t, 1, len(policies))
+	assert.Equal(t, "anAppRoleId", policies[0].Action)
+	assert.Equal(t, "aPrincipalId:aPrincipalDisplayName", policies[0].Subject.AuthenticatedUsers[0])
+	assert.Equal(t, "aResourceId:aResourceDisplayName", policies[0].Object.Resources[0])
 }
 
 func TestSetPolicy(t *testing.T) {
@@ -118,7 +114,7 @@ func TestSetPolicy(t *testing.T) {
 		{Path: "https://graph.microsoft.com/v1.0/servicePrincipals/aToken/appRoleAssignedTo/anotherId"},
 	}
 
-	azureProvider := microsoftazure.AzureProvider{Http: m}
+	azureProvider := microsoftazure.AzureProvider{HttpClientOverride: m}
 	key := []byte(`
 {
   "appId":"anAppId",
@@ -133,6 +129,6 @@ func TestSetPolicy(t *testing.T) {
 		Action:  "anAppRoleId",
 		Subject: provider.SubjectInfo{AuthenticatedUsers: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
 		Object:  provider.ObjectInfo{Resources: []string{"aResourceId:aResourceDisplayName"}},
-		}})
+	}})
 	assert.NoError(t, err)
 }
