@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"google.golang.org/api/option"
 	"google.golang.org/api/transport/http"
@@ -11,7 +12,7 @@ import (
 )
 
 type GoogleProvider struct {
-	Http HTTPClient
+	HttpClientOverride HTTPClient
 }
 
 func (g *GoogleProvider) Name() string {
@@ -29,8 +30,12 @@ func (g *GoogleProvider) DiscoverApplications(info provider.IntegrationInfo) (ap
 
 	key := info.Key
 	foundCredentials := g.credentials(key)
-	g.ensureClientIsAvailable(key)
-	googleClient := GoogleClient{g.Http, foundCredentials.ProjectId}
+	client, createClientErr := g.getHttpClient(key)
+	if createClientErr != nil {
+		fmt.Println("Unable to create google http client.")
+		return apps, createClientErr
+	}
+	googleClient := GoogleClient{client, foundCredentials.ProjectId}
 	found, _ := googleClient.GetBackendApplications()
 	apps = append(apps, found...)
 	return apps, err
@@ -39,16 +44,24 @@ func (g *GoogleProvider) DiscoverApplications(info provider.IntegrationInfo) (ap
 func (g *GoogleProvider) GetPolicyInfo(integration provider.IntegrationInfo, app provider.ApplicationInfo) (infos []provider.PolicyInfo, err error) {
 	key := integration.Key
 	foundCredentials := g.credentials(key)
-	g.ensureClientIsAvailable(key)
-	googleClient := GoogleClient{g.Http, foundCredentials.ProjectId}
+	client, createClientErr := g.getHttpClient(key)
+	if createClientErr != nil {
+		fmt.Println("Unable to create google http client.")
+		return infos, createClientErr
+	}
+	googleClient := GoogleClient{client, foundCredentials.ProjectId}
 	return googleClient.GetBackendPolicy(app.ObjectID)
 }
 
 func (g *GoogleProvider) SetPolicyInfo(integration provider.IntegrationInfo, app provider.ApplicationInfo, policies []provider.PolicyInfo) error {
 	key := integration.Key
 	foundCredentials := g.credentials(key)
-	g.ensureClientIsAvailable(key)
-	googleClient := GoogleClient{g.Http, foundCredentials.ProjectId}
+	client, createClientErr := g.getHttpClient(key)
+	if createClientErr != nil {
+		fmt.Println("Unable to create google http client.")
+		return createClientErr
+	}
+	googleClient := GoogleClient{client, foundCredentials.ProjectId}
 	for _, policyInfo := range policies {
 		err := googleClient.SetBackendPolicy(app.ObjectID, policyInfo)
 		if err != nil {
@@ -58,7 +71,7 @@ func (g *GoogleProvider) SetPolicyInfo(integration provider.IntegrationInfo, app
 	return nil
 }
 
-func (g *GoogleProvider) HttpClient(key []byte) (HTTPClient, error) {
+func (g *GoogleProvider) NewHttpClient(key []byte) (HTTPClient, error) {
 	var opts []option.ClientOption
 	opt := option.WithCredentialsJSON(key)
 	opts = append([]option.ClientOption{option.WithScopes("https://www.googleapis.com/auth/cloud-platform")}, opt)
@@ -78,8 +91,9 @@ func (g *GoogleProvider) credentials(key []byte) credentials {
 	return foundCredentials
 }
 
-func (g *GoogleProvider) ensureClientIsAvailable(key []byte) {
-	if g.Http == nil {
-		g.Http, _ = g.HttpClient(key) // todo - for testing, might be a better way?
+func (g *GoogleProvider) getHttpClient(key []byte) (HTTPClient, error) {
+	if g.HttpClientOverride != nil {
+		return g.HttpClientOverride, nil
 	}
+	return g.NewHttpClient(key)
 }

@@ -22,7 +22,7 @@ type CognitoClient interface {
 }
 
 type AmazonProvider struct {
-	Client CognitoClient
+	CognitoClientOverride CognitoClient
 }
 
 func (a *AmazonProvider) Name() string {
@@ -33,18 +33,18 @@ func (a *AmazonProvider) DiscoverApplications(info provider.IntegrationInfo) ([]
 	if !strings.EqualFold(info.Name, a.Name()) {
 		return []provider.ApplicationInfo{}, nil
 	}
-
-	if err := a.ensureClientIsAvailable(info); err != nil {
-		return nil, err
-	}
-	return a.ListUserPools()
+	return a.ListUserPools(info)
 }
 
-func (a *AmazonProvider) ListUserPools() (apps []provider.ApplicationInfo, err error) {
+func (a *AmazonProvider) ListUserPools(info provider.IntegrationInfo) (apps []provider.ApplicationInfo, err error) {
+	client, clientErr := a.getHttpClient(info)
+	if clientErr != nil {
+		return nil, clientErr
+	}
 	poolsInput := cognitoidentityprovider.ListUserPoolsInput{MaxResults: 20}
-	pools, err := a.Client.ListUserPools(context.Background(), &poolsInput)
-	if err != nil {
-		return nil, err
+	pools, listErr := client.ListUserPools(context.Background(), &poolsInput)
+	if listErr != nil {
+		return nil, listErr
 	}
 	for _, p := range pools.UserPools {
 		apps = append(apps, provider.ApplicationInfo{
@@ -57,14 +57,14 @@ func (a *AmazonProvider) ListUserPools() (apps []provider.ApplicationInfo, err e
 }
 
 func (a *AmazonProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo) ([]provider.PolicyInfo, error) {
-	err := a.ensureClientIsAvailable(integrationInfo)
+	client, err := a.getHttpClient(integrationInfo)
 	if err != nil {
 		return nil, err
 	}
 
 	filter := "status=\"Enabled\""
 	userInput := cognitoidentityprovider.ListUsersInput{UserPoolId: &applicationInfo.ObjectID, Filter: &filter}
-	users, err := a.Client.ListUsers(context.Background(), &userInput)
+	users, err := client.ListUsers(context.Background(), &userInput)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (a *AmazonProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo,
 }
 
 func (a *AmazonProvider) SetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo, policyInfos []provider.PolicyInfo) error {
-	err := a.ensureClientIsAvailable(integrationInfo)
+	client, err := a.getHttpClient(integrationInfo)
 	if err != nil {
 		return err
 	}
@@ -94,20 +94,20 @@ func (a *AmazonProvider) SetPolicyInfo(integrationInfo provider.IntegrationInfo,
 
 		filter := "status=\"Enabled\""
 		userInput := cognitoidentityprovider.ListUsersInput{UserPoolId: &applicationInfo.ObjectID, Filter: &filter}
-		users, listUsersErr := a.Client.ListUsers(context.Background(), &userInput)
+		users, listUsersErr := client.ListUsers(context.Background(), &userInput)
 		if listUsersErr != nil {
 			log.Println("Unable to find amazon cognito users.")
 			return listUsersErr
 		}
 		existingUsers := a.authenticatedUsersFrom(users)
 
-		enableErr := a.EnableUsers(applicationInfo.ObjectID, a.ShouldEnable(existingUsers, newUsers))
+		enableErr := a.EnableUsers(client, applicationInfo.ObjectID, a.ShouldEnable(existingUsers, newUsers))
 		if enableErr != nil {
 			log.Println("Unable to enable amazon cognito users.")
 			return enableErr
 		}
 
-		disable := a.DisableUsers(applicationInfo.ObjectID, a.ShouldDisable(existingUsers, newUsers))
+		disable := a.DisableUsers(client, applicationInfo.ObjectID, a.ShouldDisable(existingUsers, newUsers))
 		if disable != nil {
 			log.Println("Unable to disable amazon cognito users.")
 			return disable
@@ -128,10 +128,10 @@ func (a *AmazonProvider) authenticatedUsersFrom(users *cognitoidentityprovider.L
 	return authenticatedUsers
 }
 
-func (a *AmazonProvider) EnableUsers(userPoolId string, shouldEnable []string) error {
+func (a *AmazonProvider) EnableUsers(client CognitoClient, userPoolId string, shouldEnable []string) error {
 	for _, enable := range shouldEnable {
 		enable := cognitoidentityprovider.AdminEnableUserInput{UserPoolId: &userPoolId, Username: &strings.Split(enable, ":")[0]}
-		_, err := a.Client.AdminEnableUser(context.Background(), &enable)
+		_, err := client.AdminEnableUser(context.Background(), &enable)
 		if err != nil {
 			return err
 		}
@@ -155,11 +155,11 @@ func (a *AmazonProvider) ShouldEnable(existingUsers []string, desiredUsers []str
 	return shouldEnable
 }
 
-func (a *AmazonProvider) DisableUsers(userPoolId string, shouldDisable []string) error {
+func (a *AmazonProvider) DisableUsers(client CognitoClient, userPoolId string, shouldDisable []string) error {
 	for _, disableUser := range shouldDisable {
 
 		disable := cognitoidentityprovider.AdminDisableUserInput{UserPoolId: &userPoolId, Username: &strings.Split(disableUser, ":")[0]}
-		_, err := a.Client.AdminDisableUser(context.Background(), &disable)
+		_, err := client.AdminDisableUser(context.Background(), &disable)
 		if err != nil {
 			return err
 		}
@@ -195,19 +195,20 @@ func (a *AmazonProvider) Credentials(key []byte) CredentialsInfo {
 	return foundCredentials
 }
 
-func (a *AmazonProvider) ensureClientIsAvailable(info provider.IntegrationInfo) error {
-	foundCredentials := a.Credentials(info.Key)
-	if a.Client == nil {
-		defaultConfig, err := config.LoadDefaultConfig(context.Background(),
-			config.WithCredentialsProvider(credentials.StaticCredentialsProvider{
-				Value: aws.Credentials{AccessKeyID: foundCredentials.AccessKeyID, SecretAccessKey: foundCredentials.SecretAccessKey},
-			}),
-			config.WithRegion(foundCredentials.Region),
-		)
-		if err != nil {
-			return err
-		}
-		a.Client = cognitoidentityprovider.NewFromConfig(defaultConfig)
+func (a *AmazonProvider) getHttpClient(info provider.IntegrationInfo) (CognitoClient, error) {
+	if a.CognitoClientOverride != nil {
+		return a.CognitoClientOverride, nil
 	}
-	return nil
+
+	foundCredentials := a.Credentials(info.Key)
+	defaultConfig, err := config.LoadDefaultConfig(context.Background(),
+		config.WithCredentialsProvider(credentials.StaticCredentialsProvider{
+			Value: aws.Credentials{AccessKeyID: foundCredentials.AccessKeyID, SecretAccessKey: foundCredentials.SecretAccessKey},
+		}),
+		config.WithRegion(foundCredentials.Region),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return cognitoidentityprovider.NewFromConfig(defaultConfig), nil
 }

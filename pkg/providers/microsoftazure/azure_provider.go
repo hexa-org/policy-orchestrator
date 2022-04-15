@@ -8,7 +8,7 @@ import (
 )
 
 type AzureProvider struct {
-	Http HTTPClient
+	HttpClientOverride HTTPClient
 }
 
 func (a *AzureProvider) Name() string {
@@ -21,8 +21,8 @@ func (a *AzureProvider) DiscoverApplications(info provider.IntegrationInfo) (app
 	}
 
 	key := info.Key
-	a.ensureClientIsAvailable()
-	azureClient := AzureClient{a.Http}
+	client := a.getHttpClient()
+	azureClient := AzureClient{client}
 	found, _ := azureClient.GetWebApplications(key)
 	apps = append(apps, found...)
 	return apps, err
@@ -31,8 +31,8 @@ func (a *AzureProvider) DiscoverApplications(info provider.IntegrationInfo) (app
 func (a *AzureProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo) ([]provider.PolicyInfo, error) {
 	key := integrationInfo.Key
 	var policies []provider.PolicyInfo
-	a.ensureClientIsAvailable()
-	azureClient := AzureClient{a.Http}
+	client := a.getHttpClient()
+	azureClient := AzureClient{client}
 	principal, _ := azureClient.GetServicePrincipals(key, applicationInfo.Description) // todo - description is named poorly
 	assignments, _ := azureClient.GetAppRoleAssignedTo(key, principal.List[0].ID)
 
@@ -58,8 +58,8 @@ func (a *AzureProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo, 
 
 func (a *AzureProvider) SetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo, policyInfos []provider.PolicyInfo) error {
 	key := integrationInfo.Key
-	a.ensureClientIsAvailable()
-	azureClient := AzureClient{a.Http}
+	client := a.getHttpClient()
+	azureClient := AzureClient{client}
 	principal, _ := azureClient.GetServicePrincipals(key, applicationInfo.Description) // todo - description is named poorly
 	for _, policyInfo := range policyInfos {
 		var assignments []AzureAppRoleAssignment
@@ -79,8 +79,9 @@ func (a *AzureProvider) SetPolicyInfo(integrationInfo provider.IntegrationInfo, 
 	return nil
 }
 
-func (a *AzureProvider) ensureClientIsAvailable() {
-	if a.Http == nil {
-		a.Http = &http.Client{} // todo - for testing, might be a better way?
+func (a *AzureProvider) getHttpClient() HTTPClient {
+	if a.HttpClientOverride != nil {
+		return a.HttpClientOverride
 	}
+	return &http.Client{}
 }

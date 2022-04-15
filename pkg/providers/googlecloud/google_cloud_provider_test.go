@@ -11,41 +11,49 @@ import (
 	"testing"
 )
 
+func TestGoogleProvider_BadClientKey(t *testing.T) {
+	p := googlecloud.GoogleProvider{}
+	info := provider.IntegrationInfo{Name: "google_cloud", Key: []byte("aKey")}
+
+	_, discoverErr := p.DiscoverApplications(info)
+	assert.Error(t, discoverErr)
+
+	_, getErr := p.GetPolicyInfo(info, provider.ApplicationInfo{})
+	assert.Error(t, getErr)
+
+	setErr := p.SetPolicyInfo(info, provider.ApplicationInfo{}, []provider.PolicyInfo{})
+	assert.Error(t, setErr)
+}
+
 func TestGoogleProvider_DiscoverApplications(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
 	m.ResponseBody = google_cloud_test.Resource("backends.json")
-	providers := []provider.Provider{&googlecloud.GoogleProvider{Http: m}}
+	p := &googlecloud.GoogleProvider{HttpClientOverride: m}
 
-	for _, p := range providers {
-		info := provider.IntegrationInfo{Name: "google_cloud", Key: []byte("aKey")}
-		applications, _ := p.DiscoverApplications(info)
-		assert.Equal(t, 2, len(applications))
-		assert.Equal(t, "google_cloud", p.Name())
-	}
+	info := provider.IntegrationInfo{Name: "google_cloud", Key: []byte("aKey")}
+	applications, _ := p.DiscoverApplications(info)
+	assert.Equal(t, 2, len(applications))
+	assert.Equal(t, "google_cloud", p.Name())
 }
 
 func TestGoogleProvider_DiscoverApplications_ignoresProviderCase(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
 	m.ResponseBody = google_cloud_test.Resource("backends.json")
-	providers := []provider.Provider{&googlecloud.GoogleProvider{Http: m}}
+	p := &googlecloud.GoogleProvider{HttpClientOverride: m}
 
-	for _, p := range providers {
-		info := provider.IntegrationInfo{Name: "Google_Cloud", Key: []byte("aKey")}
-		applications, _ := p.DiscoverApplications(info)
-		assert.Equal(t, 2, len(applications))
-		assert.Equal(t, "google_cloud", p.Name())
-	}
+	info := provider.IntegrationInfo{Name: "Google_Cloud", Key: []byte("aKey")}
+	applications, _ := p.DiscoverApplications(info)
+	assert.Equal(t, 2, len(applications))
+	assert.Equal(t, "google_cloud", p.Name())
 }
 
 func TestGoogleProvider_DiscoverApplications_emptyResponse(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
-	providers := []provider.Provider{&googlecloud.GoogleProvider{Http: m}}
+	p := &googlecloud.GoogleProvider{HttpClientOverride: m}
 
-	for _, p := range providers {
-		info := provider.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
-		applications, _ := p.DiscoverApplications(info)
-		assert.Equal(t, 0, len(applications))
-	}
+	info := provider.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
+	applications, _ := p.DiscoverApplications(info)
+	assert.Equal(t, 0, len(applications))
 }
 
 func TestGoogleProvider_Project(t *testing.T) {
@@ -63,13 +71,13 @@ func TestGoogleProvider_HttpClient(t *testing.T) {
 	key, _ := ioutil.ReadFile(jsonFile)
 
 	p := googlecloud.GoogleProvider{}
-	client, _ := p.HttpClient(key)
+	client, _ := p.NewHttpClient(key)
 	assert.NotNil(t, client)
 }
 
 func TestGoogleProvider_HttpClient_withBadKey(t *testing.T) {
 	p := googlecloud.GoogleProvider{}
-	_, err := p.HttpClient([]byte(""))
+	_, err := p.NewHttpClient([]byte(""))
 	assert.Error(t, err)
 }
 
@@ -77,7 +85,7 @@ func TestGoogleProvider_GetPolicy(t *testing.T) {
 	m := new(google_cloud_test.MockClient)
 	m.ResponseBody = google_cloud_test.Resource("policy.json")
 
-	p := googlecloud.GoogleProvider{Http: m}
+	p := googlecloud.GoogleProvider{HttpClientOverride: m}
 	info := provider.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
 	infos, _ := p.GetPolicyInfo(info, provider.ApplicationInfo{ObjectID: "anObjectId"})
 	assert.Equal(t, 2, len(infos))
@@ -89,7 +97,7 @@ func TestGoogleProvider_SetPolicy(t *testing.T) {
 	}
 	m := new(google_cloud_test.MockClient)
 
-	p := googlecloud.GoogleProvider{Http: m}
+	p := googlecloud.GoogleProvider{HttpClientOverride: m}
 	info := provider.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
 	err := p.SetPolicyInfo(info, provider.ApplicationInfo{ObjectID: "anObjectId"}, []provider.PolicyInfo{policy})
 	assert.NoError(t, err)
