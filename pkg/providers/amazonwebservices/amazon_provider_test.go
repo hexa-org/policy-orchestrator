@@ -42,6 +42,7 @@ func TestAmazonProvider_DiscoverApplications_withOtherProvider(t *testing.T) {
 	info := provider.IntegrationInfo{Name: "not_amazon", Key: []byte("aKey")}
 	_, err := p.DiscoverApplications(info)
 	assert.NoError(t, err)
+	assert.Nil(t, p.Client)
 }
 
 func TestAmazonProvider_ListUserPools(t *testing.T) {
