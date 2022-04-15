@@ -22,7 +22,7 @@ func (m *MockClient) Get(_ string) (resp *http.Response, err error) {
 	return recorder.Result(), m.Err
 }
 
-func (m *MockClient) Post(_, contentType string, body io.Reader) (resp *http.Response, err error) {
+func (m *MockClient) Post(_, _ string, body io.Reader) (resp *http.Response, err error) {
 	m.Request, _ = io.ReadAll(body)
 	return &http.Response{StatusCode: 200, Body: ioutil.NopCloser(bytes.NewReader(m.Response))}, m.Err
 }

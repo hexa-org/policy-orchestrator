@@ -30,15 +30,14 @@ func (a *AmazonProvider) Name() string {
 }
 
 func (a *AmazonProvider) DiscoverApplications(info provider.IntegrationInfo) ([]provider.ApplicationInfo, error) {
-	err := a.ensureClientIsAvailable(info)
-	if err != nil {
-		return nil, err
+	if !strings.EqualFold(info.Name, a.Name()) {
+		return []provider.ApplicationInfo{}, nil
 	}
 
-	if strings.EqualFold(info.Name, a.Name()) {
-		return a.ListUserPools()
+	if err := a.ensureClientIsAvailable(info); err != nil {
+		return nil, err
 	}
-	return []provider.ApplicationInfo{}, nil
+	return a.ListUserPools()
 }
 
 func (a *AmazonProvider) ListUserPools() (apps []provider.ApplicationInfo, err error) {
