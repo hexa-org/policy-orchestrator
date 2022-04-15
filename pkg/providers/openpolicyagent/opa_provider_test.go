@@ -48,7 +48,7 @@ func TestGetPolicyInfo(t *testing.T) {
 
 	resourcesDirectory := filepath.Join(file, "../resources")
 	service := openpolicyagent.OpaService{ResourcesDirectory: resourcesDirectory}
-	p := openpolicyagent.OpaProvider{Client: client, Service: service}
+	p := openpolicyagent.OpaProvider{BundleClientOverride: client, Service: service}
 
 	policies, _ := p.GetPolicyInfo(provider.IntegrationInfo{Name: "open_policy_agent", Key: key}, provider.ApplicationInfo{})
 	assert.Equal(t, 4, len(policies))
@@ -57,7 +57,7 @@ func TestGetPolicyInfo(t *testing.T) {
 func TestGetPolicyInfo_withBadKey(t *testing.T) {
 	client := openpolicyagent.BundleClient{}
 	service := openpolicyagent.OpaService{}
-	p := openpolicyagent.OpaProvider{Client: client, Service: service}
+	p := openpolicyagent.OpaProvider{BundleClientOverride: client, Service: service}
 	_, err := p.GetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{})
 	assert.Error(t, err)
 }
@@ -73,7 +73,7 @@ func TestGetPolicyInfo_withBadRequest(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
 	service := openpolicyagent.OpaService{ResourcesDirectory: filepath.Join(file, "../resources")}
-	p := openpolicyagent.OpaProvider{Client: client, Service: service}
+	p := openpolicyagent.OpaProvider{BundleClientOverride: client, Service: service}
 	_, err := p.GetPolicyInfo(provider.IntegrationInfo{Name: "open_policy_agent", Key: key}, provider.ApplicationInfo{})
 	assert.Error(t, err)
 }
@@ -88,7 +88,7 @@ func TestGetPolicyInfo_withBadResourceDir(t *testing.T) {
 	mockClient.Err = errors.New("oops")
 	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
 	service := openpolicyagent.OpaService{}
-	p := openpolicyagent.OpaProvider{Client: client, Service: service}
+	p := openpolicyagent.OpaProvider{BundleClientOverride: client, Service: service}
 	_, err := p.GetPolicyInfo(provider.IntegrationInfo{Name: "open_policy_agent", Key: key}, provider.ApplicationInfo{})
 	assert.Error(t, err)
 }
@@ -106,7 +106,7 @@ func TestSetPolicyInfo(t *testing.T) {
 	resourcesDirectory := filepath.Join(file, "../resources")
 	service := openpolicyagent.OpaService{ResourcesDirectory: resourcesDirectory}
 
-	p := openpolicyagent.OpaProvider{Client: client, Service: service}
+	p := openpolicyagent.OpaProvider{BundleClientOverride: client, Service: service}
 	err := p.SetPolicyInfo(
 		provider.IntegrationInfo{Name: "open_policy_agent", Key: key},
 		provider.ApplicationInfo{},
@@ -118,7 +118,7 @@ func TestSetPolicyInfo(t *testing.T) {
 func TestMakeDefaultBundle(t *testing.T) {
 	client := openpolicyagent.BundleClient{}
 	service := openpolicyagent.OpaService{}
-	p := openpolicyagent.OpaProvider{Client: client, Service: service}
+	p := openpolicyagent.OpaProvider{BundleClientOverride: client, Service: service}
 
 	rego := []byte(`package authz
 import future.keywords.in

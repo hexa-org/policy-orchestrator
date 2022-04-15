@@ -19,8 +19,8 @@ import (
 )
 
 type OpaProvider struct {
-	Client  BundleClient
-	Service OpaService
+	BundleClientOverride BundleClient
+	Service              OpaService
 }
 
 func (o *OpaProvider) Name() string {
@@ -40,12 +40,12 @@ func (o *OpaProvider) DiscoverApplications(info provider.IntegrationInfo) (apps 
 }
 
 func (o *OpaProvider) GetPolicyInfo(integration provider.IntegrationInfo, _ provider.ApplicationInfo) ([]provider.PolicyInfo, error) {
-	o.ensureClientIsAvailable()
+	client := o.ensureClientIsAvailable()
 	key := integration.Key
 	foundCredentials := o.credentials(key)
 	rand.Seed(time.Now().UnixNano())
 	path := filepath.Join(os.TempDir(), fmt.Sprintf("/test-bundle-%d", rand.Uint64()))
-	rego, err := o.Client.GetExpressionFromBundle(foundCredentials.BundleUrl, path)
+	rego, err := client.GetExpressionFromBundle(foundCredentials.BundleUrl, path)
 	if err != nil {
 		log.Printf("open-policy-agent, unable to read expression file. %s\n", err)
 		return nil, err
@@ -54,7 +54,7 @@ func (o *OpaProvider) GetPolicyInfo(integration provider.IntegrationInfo, _ prov
 }
 
 func (o *OpaProvider) SetPolicyInfo(integration provider.IntegrationInfo, _ provider.ApplicationInfo, policyInfos []provider.PolicyInfo) error {
-	o.ensureClientIsAvailable()
+	client := o.ensureClientIsAvailable()
 	key := integration.Key
 	foundCredentials := o.credentials(key)
 	var rego bytes.Buffer
@@ -69,7 +69,7 @@ func (o *OpaProvider) SetPolicyInfo(integration provider.IntegrationInfo, _ prov
 		log.Printf("open-policy-agent, unable to create default bundle. %s\n", copyErr)
 		return copyErr
 	}
-	return o.Client.PostBundle(foundCredentials.BundleUrl, bundle.Bytes())
+	return client.PostBundle(foundCredentials.BundleUrl, bundle.Bytes())
 }
 
 func (o *OpaProvider) MakeDefaultBundle(rego []byte) (bytes.Buffer, error) {
@@ -106,13 +106,15 @@ func (o *OpaProvider) credentials(key []byte) credentials {
 	return foundCredentials
 }
 
-func (o *OpaProvider) ensureClientIsAvailable() {
-	if o.Client.HttpClient == nil {
-		o.Client = BundleClient{HttpClient: &http.Client{}}
-	}
+func (o *OpaProvider) ensureClientIsAvailable() BundleClient {
 	if o.Service.ResourcesDirectory == "" {
 		_, file, _, _ := runtime.Caller(0)
 		resourcesDirectory := filepath.Join(file, "../resources")
 		o.Service = OpaService{resourcesDirectory}
 	}
+
+	if o.BundleClientOverride.HttpClient != nil {
+		return o.BundleClientOverride
+	}
+	return BundleClient{HttpClient: &http.Client{}}
 }
