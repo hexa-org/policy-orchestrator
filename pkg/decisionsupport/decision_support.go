@@ -20,14 +20,15 @@ func (d *DecisionSupport) Middleware(next http.Handler) http.Handler {
 				return
 			}
 		}
-		log.Println("Checking authorization.")
 
+		log.Println("Building decision request info.")
 		input, inputErr := d.Provider.BuildInput(r)
 		if inputErr != nil {
 			d.Unauthorized(w, r)
 			return
 		}
 
+		log.Println("Checking authorization.")
 		allow, err := d.Provider.Allow(input)
 		if !allow || err != nil {
 			d.Unauthorized(w, r)
