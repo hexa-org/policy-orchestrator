@@ -18,22 +18,24 @@ import (
 func TestMiddleware_allowed(t *testing.T) {
 	provider := providers.MockDecisionProvider{Decision: true}
 	support := decisionsupport.DecisionSupport{Provider: &provider, Skip: []string{"/health", "/metrics"}}
+	provider.On("BuildInput").Once()
+	provider.On("Allow").Once()
 
 	server := startNewServer(support)
 	defer websupport.Stop(server)
-
-	// todo - fix me
-	provider.On("BuildInput").Return().Times(42)
-	provider.On("Allow").Return().Times(42)
 
 	resp, _ := http.Get(fmt.Sprintf("http://%s/noop", server.Addr))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Equal(t, "success!", string(body))
+	provider.AssertExpectations(t)
 }
 
 func TestMiddleware_notAllowed(t *testing.T) {
 	provider := providers.MockDecisionProvider{Decision: false}
+	provider.On("BuildInput").Once()
+	provider.On("Allow").Once()
+
 	support := decisionsupport.DecisionSupport{
 		Provider: &provider,
 		Skip:     []string{"/health", "/metrics"},
@@ -45,17 +47,17 @@ func TestMiddleware_notAllowed(t *testing.T) {
 	server := startNewServer(support)
 	defer websupport.Stop(server)
 
-	provider.On("BuildInput")
-	provider.On("Allow")
-
 	resp, _ := http.Get(fmt.Sprintf("http://%s/noop", server.Addr))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 	assert.Equal(t, "", string(body))
+	provider.AssertExpectations(t)
 }
 
 func TestMiddleware_notAllowed_dueToBuildError(t *testing.T) {
 	provider := providers.MockDecisionProvider{Decision: true, BuildErr: errors.New("oops")}
+	provider.On("BuildInput").Once()
+
 	support := decisionsupport.DecisionSupport{
 		Provider: &provider,
 		Skip:     []string{"/health", "/metrics"},
@@ -67,17 +69,19 @@ func TestMiddleware_notAllowed_dueToBuildError(t *testing.T) {
 	server := startNewServer(support)
 	defer websupport.Stop(server)
 
-	provider.On("BuildInput")
-	provider.On("Allow")
-
 	resp, _ := http.Get(fmt.Sprintf("http://%s/noop", server.Addr))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 	assert.Equal(t, "", string(body))
+	provider.AssertExpectations(t)
+	provider.AssertNotCalled(t, "Allow")
 }
 
 func TestMiddleware_notAllowed_dueToAllowError(t *testing.T) {
 	provider := providers.MockDecisionProvider{Decision: true, AllowErr: errors.New("oops")}
+	provider.On("BuildInput").Once()
+	provider.On("Allow").Once()
+
 	support := decisionsupport.DecisionSupport{
 		Provider: &provider,
 		Skip:     []string{"/health", "/metrics"},
@@ -89,28 +93,29 @@ func TestMiddleware_notAllowed_dueToAllowError(t *testing.T) {
 	server := startNewServer(support)
 	defer websupport.Stop(server)
 
-	provider.On("BuildInput")
-	provider.On("Allow")
-
 	resp, _ := http.Get(fmt.Sprintf("http://%s/noop", server.Addr))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 	assert.Equal(t, "", string(body))
+	provider.AssertExpectations(t)
 }
 
 func TestMiddleware_skips(t *testing.T) {
 	provider := providers.MockDecisionProvider{}
+
 	support := decisionsupport.DecisionSupport{Provider: &provider, Skip: []string{"/health", "/metrics"}}
 
 	server := startNewServer(support)
 	defer websupport.Stop(server)
 
-	provider.On("BuildInput")
-	provider.On("Allow")
+	resp, _ := http.Get(fmt.Sprintf("http://%s/health", server.Addr))
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	// todo - fix me
-	_, _ = http.Get(fmt.Sprintf("http://%s/health", server.Addr))
-	_, _ = http.Get(fmt.Sprintf("http://%s/metrics", server.Addr))
+	resp, _ = http.Get(fmt.Sprintf("http://%s/metrics", server.Addr))
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	provider.AssertNotCalled(t, "BuildInput")
+	provider.AssertNotCalled(t, "Allow")
 }
 
 ///

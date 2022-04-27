@@ -9,7 +9,7 @@ import (
 
 func TestBuildInput(t *testing.T) {
 	provider := providers.MockDecisionProvider{}
-	provider.On("BuildInput")
+	provider.On("BuildInput").Once()
 
 	req, _ := http.NewRequest("GET", "/noop", nil)
 
@@ -18,12 +18,13 @@ func TestBuildInput(t *testing.T) {
 
 	assert.Equal(t, "GET", casted["method"])
 	assert.Equal(t, "/noop", casted["path"])
+	provider.AssertExpectations(t)
 }
 
 func TestAllow(t *testing.T) {
 	provider := providers.MockDecisionProvider{Decision: true}
-	provider.On("BuildInput")
-	provider.On("Allow")
+	provider.On("BuildInput").Once()
+	provider.On("Allow").Once()
 
 	req, _ := http.NewRequest("GET", "/noop", nil)
 
@@ -31,12 +32,13 @@ func TestAllow(t *testing.T) {
 	allow, _ := provider.Allow(input)
 
 	assert.True(t, allow)
+	provider.AssertExpectations(t)
 }
 
 func TestAllow_notAllowed(t *testing.T) {
 	provider := providers.MockDecisionProvider{Decision: false}
-	provider.On("BuildInput")
-	provider.On("Allow")
+	provider.On("BuildInput").Once()
+	provider.On("Allow").Once()
 
 	req, _ := http.NewRequest("GET", "/unauthorized", nil)
 
@@ -44,4 +46,5 @@ func TestAllow_notAllowed(t *testing.T) {
 	allow, _ := provider.Allow(input)
 
 	assert.False(t, allow)
+	provider.AssertExpectations(t)
 }
