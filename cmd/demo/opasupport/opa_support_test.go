@@ -103,6 +103,22 @@ func TestMiddlewareNotAllowed(t *testing.T) {
 	websupport.Stop(server)
 }
 
+func TestMiddlewareWithParams(t *testing.T) {
+	mockClient := new(MockClient)
+	mockClient.response = []byte("{\"result\":true}")
+	server := setupWithMockClient(mockClient)
+
+	resp, err := http.Get(fmt.Sprintf("http://%s/?param=oops", server.Addr))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	body, _ := io.ReadAll(resp.Body)
+	assert.Equal(t, "opa!", string(body))
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	websupport.Stop(server)
+}
+
 func setupWithMockClient(mockClient *MockClient) *http.Server {
 	support := opasupport.NewOpaSupport(mockClient, "aUrl", unauthorized)
 
