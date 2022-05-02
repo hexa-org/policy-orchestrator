@@ -7,7 +7,8 @@ import (
 	"github.com/hexa-org/policy-orchestrator/cmd/demo/amazonsupport"
 	"github.com/hexa-org/policy-orchestrator/cmd/demo/azuresupport"
 	"github.com/hexa-org/policy-orchestrator/cmd/demo/googlesupport"
-	"github.com/hexa-org/policy-orchestrator/cmd/demo/opasupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupport/providers"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"log"
 	"net"
@@ -26,7 +27,8 @@ func App(session *sessions.CookieStore, amazonConfig amazonsupport.AmazonCognito
 	googleSupport := googlesupport.NewGoogleSupport(session)
 	amazonSupport := amazonsupport.NewAmazonSupport(client, amazonConfig, amazonsupport.AmazonCognitoClaimsParser{}, session)
 	azureSupport := azuresupport.NewAzureSupport(session)
-	opaSupport := opasupport.NewOpaSupport(client, opaUrl, basic.unauthorized)
+	provider := providers.OpaDecisionProvider{Client: client, Url: opaUrl, Principals: []interface{}{"allusers", "allauthenticatedusers", "sales@hexaindustries.io"}}
+	opaSupport := decisionsupport.DecisionSupport{Provider: provider, Unauthorized: basic.unauthorized, Skip: []string{"/health", "/metrics", "/styles", "/images", "/bundle"}}
 	server := websupport.Create(addr, basic.loadHandlers(), websupport.Options{ResourceDirectory: resourcesDirectory})
 	router := server.Handler.(*mux.Router)
 	router.Use(googleSupport.Middleware, amazonSupport.Middleware, azureSupport.Middleware, opaSupport.Middleware)
@@ -85,7 +87,7 @@ func (a *BasicApp) principalAndLogout(req *http.Request) websupport.Model {
 	}
 	return websupport.Model{Map: map[string]interface{}{
 		"provider_email": principal.([]string),
-		"logout": session.Values["logout"].(string),
+		"logout":         session.Values["logout"].(string),
 	}}
 }
 
