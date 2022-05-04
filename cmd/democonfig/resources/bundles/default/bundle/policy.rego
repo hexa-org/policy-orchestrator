@@ -2,22 +2,14 @@ package authz
 import future.keywords.in
 default allow = false
 allow {
-    input.method = "GET"
-    input.path in ["/"]
-    input.principals[_] in ["allusers"]
+    anyMatching
 }
-allow {
-    input.method = "GET"
-    input.path in ["/sales", "/marketing"]
-    input.principals[_] in ["sales@hexaindustries.io", "marketing@hexaindustries.io"]
+anyMatching {
+    some i
+	matches(data.bundle.policies[i])
 }
-allow {
-    input.method = "GET"
-    input.path in ["/accounting"]
-    input.principals[_] in ["accounting@hexaindustries.io"]
-}
-allow {
-    input.method = "GET"
-    input.path in ["/humanresources"]
-    input.principals[_] in ["humanresources@hexaindustries.io"]
+matches(policy) {
+    input.method == policy.action
+    input.path in policy.object.resources
+    input.principals[_] in policy.subject.authenticated_users
 }
