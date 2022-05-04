@@ -20,7 +20,7 @@ import (
 
 type OpaProvider struct {
 	BundleClientOverride BundleClient
-	Service              OpaService
+	ResourcesDirectory   string
 }
 
 func (o *OpaProvider) Name() string {
@@ -39,32 +39,84 @@ func (o *OpaProvider) DiscoverApplications(info provider.IntegrationInfo) (apps 
 	return apps, err
 }
 
+type Wrapper struct {
+	Policies []Policy `json:"policies"`
+}
+
+type Policy struct {
+	Version string  `json:"version"`
+	Action  string  `json:"action"`
+	Subject Subject `json:"subject"`
+	Object  Object  `json:"object"`
+}
+
+type Subject struct {
+	AuthenticatedUsers []string `json:"authenticated_users"`
+}
+
+type Object struct {
+	Resources []string `json:"resources"`
+}
+
 func (o *OpaProvider) GetPolicyInfo(integration provider.IntegrationInfo, _ provider.ApplicationInfo) ([]provider.PolicyInfo, error) {
 	client := o.ensureClientIsAvailable()
 	key := integration.Key
 	foundCredentials := o.credentials(key)
 	rand.Seed(time.Now().UnixNano())
 	path := filepath.Join(os.TempDir(), fmt.Sprintf("/test-bundle-%d", rand.Uint64()))
-	rego, err := client.GetExpressionFromBundle(foundCredentials.BundleUrl, path)
+	data, err := client.GetDataFromBundle(foundCredentials.BundleUrl, path)
 	if err != nil {
 		log.Printf("open-policy-agent, unable to read expression file. %s\n", err)
 		return nil, err
 	}
-	return o.Service.ReadPolicies(bytes.NewReader(rego))
+
+	var policies Wrapper
+	unmarshalErr := json.Unmarshal(data, &policies)
+	if unmarshalErr != nil {
+		return nil, unmarshalErr
+	}
+
+	var hexaPolicies []provider.PolicyInfo
+	for _, p := range policies.Policies {
+		hexaPolicies = append(hexaPolicies, provider.PolicyInfo{
+			Version: p.Version,
+			Action:  p.Action,
+			Subject: provider.SubjectInfo{
+				AuthenticatedUsers: p.Subject.AuthenticatedUsers,
+			},
+			Object: provider.ObjectInfo{
+				Resources: p.Object.Resources,
+			},
+		})
+	}
+	return hexaPolicies, nil
 }
 
 func (o *OpaProvider) SetPolicyInfo(integration provider.IntegrationInfo, _ provider.ApplicationInfo, policyInfos []provider.PolicyInfo) error {
 	client := o.ensureClientIsAvailable()
 	key := integration.Key
 	foundCredentials := o.credentials(key)
-	var rego bytes.Buffer
-	writeErr := o.Service.WritePolicies(policyInfos, &rego)
-	if writeErr != nil {
-		log.Printf("open-policy-agent, unable to write expression file. %s\n", writeErr)
-		return writeErr
+
+	var policies []Policy
+	for _, p := range policyInfos {
+		policies = append(policies, Policy{
+			Version: p.Version,
+			Action:  p.Action,
+			Subject: Subject{
+				p.Subject.AuthenticatedUsers,
+			},
+			Object: Object{
+				p.Object.Resources,
+			},
+		})
+	}
+	data, marshalErr := json.Marshal(Wrapper{policies})
+	if marshalErr != nil {
+		log.Printf("open-policy-agent, unable to create data file. %s\n", marshalErr)
+		return marshalErr
 	}
 
-	bundle, copyErr := o.MakeDefaultBundle(rego.Bytes())
+	bundle, copyErr := o.MakeDefaultBundle(data)
 	if copyErr != nil {
 		log.Printf("open-policy-agent, unable to create default bundle. %s\n", copyErr)
 		return copyErr
@@ -72,11 +124,11 @@ func (o *OpaProvider) SetPolicyInfo(integration provider.IntegrationInfo, _ prov
 	return client.PostBundle(foundCredentials.BundleUrl, bundle.Bytes())
 }
 
-func (o *OpaProvider) MakeDefaultBundle(rego []byte) (bytes.Buffer, error) {
+func (o *OpaProvider) MakeDefaultBundle(data []byte) (bytes.Buffer, error) {
 	_, file, _, _ := runtime.Caller(0)
 	join := filepath.Join(file, "../resources/bundles/bundle")
 	manifest, _ := ioutil.ReadFile(filepath.Join(join, "/.manifest"))
-	data, _ := ioutil.ReadFile(filepath.Join(join, "/data.json"))
+	rego, _ := ioutil.ReadFile(filepath.Join(join, "/policy.rego"))
 
 	// todo - ignoring errors for the moment while spiking
 
@@ -107,10 +159,9 @@ func (o *OpaProvider) credentials(key []byte) credentials {
 }
 
 func (o *OpaProvider) ensureClientIsAvailable() BundleClient {
-	if o.Service.ResourcesDirectory == "" {
+	if o.ResourcesDirectory == "" {
 		_, file, _, _ := runtime.Caller(0)
-		resourcesDirectory := filepath.Join(file, "../resources")
-		o.Service = OpaService{resourcesDirectory}
+		o.ResourcesDirectory = filepath.Join(file, "../resources")
 	}
 
 	if o.BundleClientOverride.HttpClient != nil {

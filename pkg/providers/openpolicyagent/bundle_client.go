@@ -21,7 +21,7 @@ type BundleClient struct {
 	HttpClient HTTPClient
 }
 
-func (b *BundleClient) GetExpressionFromBundle(bundleUrl string, path string) ([]byte, error) {
+func (b *BundleClient) GetDataFromBundle(bundleUrl string, path string) ([]byte, error) {
 	get, getErr := b.HttpClient.Get(bundleUrl)
 	if getErr != nil {
 		return nil, getErr
@@ -41,7 +41,7 @@ func (b *BundleClient) GetExpressionFromBundle(bundleUrl string, path string) ([
 	if tarErr != nil {
 		return nil, tarErr
 	}
-	return os.ReadFile(filepath.Join(path, "/bundle/policy.rego"))
+	return os.ReadFile(filepath.Join(path, "/bundle/data.json"))
 }
 
 // todo - ignoring errors for the moment while spiking
