@@ -1,1 +1,62 @@
-{}
+{
+  "policies": [
+    {
+      "version": "0.4",
+      "action": "GET",
+      "subject": {
+        "authenticated_users": [
+          "allusers"
+        ]
+      },
+      "object": {
+        "resources": [
+          "/"
+        ]
+      }
+    },
+    {
+      "version": "0.4",
+      "action": "GET",
+      "subject": {
+        "authenticated_users": [
+          "sales@hexaindustries.io",
+          "marketing@hexaindustries.io"
+        ]
+      },
+      "object": {
+        "resources": [
+          "/sales",
+          "/marketing"
+        ]
+      }
+    },
+    {
+      "version": "0.4",
+      "action": "GET",
+      "subject": {
+        "authenticated_users": [
+          "accounting@hexaindustries.io"
+        ]
+      },
+      "object": {
+        "resources": [
+          "/accounting"
+        ]
+      }
+    },
+    {
+      "version": "0.4",
+      "action": "GET",
+      "subject": {
+        "authenticated_users": [
+          "humanresources@hexaindustries.io"
+        ]
+      },
+      "object": {
+        "resources": [
+          "/humanresources"
+        ]
+      }
+    }
+  ]
+}

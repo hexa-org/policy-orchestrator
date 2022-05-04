@@ -28,7 +28,7 @@ func App(session *sessions.CookieStore, amazonConfig amazonsupport.AmazonCognito
 	amazonSupport := amazonsupport.NewAmazonSupport(client, amazonConfig, amazonsupport.AmazonCognitoClaimsParser{}, session)
 	azureSupport := azuresupport.NewAzureSupport(session)
 	provider := providers.OpaDecisionProvider{Client: client, Url: opaUrl, Principals: []interface{}{"allusers", "allauthenticatedusers", "sales@hexaindustries.io"}}
-	opaSupport := decisionsupport.DecisionSupport{Provider: provider, Unauthorized: basic.unauthorized, Skip: []string{"/health", "/metrics", "/styles", "/images", "/bundle"}}
+	opaSupport := decisionsupport.DecisionSupport{Provider: provider, Unauthorized: basic.unauthorized, Skip: []string{"/health", "/metrics", "/styles", "/images", "/bundle", "/favicon.ico"}}
 	server := websupport.Create(addr, basic.loadHandlers(), websupport.Options{ResourceDirectory: resourcesDirectory})
 	router := server.Handler.(*mux.Router)
 	router.Use(googleSupport.Middleware, amazonSupport.Middleware, azureSupport.Middleware, opaSupport.Middleware)

@@ -47,8 +47,7 @@ func TestGetPolicyInfo(t *testing.T) {
 	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
 
 	resourcesDirectory := filepath.Join(file, "../resources")
-	service := openpolicyagent.OpaService{ResourcesDirectory: resourcesDirectory}
-	p := openpolicyagent.OpaProvider{BundleClientOverride: client, Service: service}
+	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: resourcesDirectory}
 
 	policies, _ := p.GetPolicyInfo(provider.IntegrationInfo{Name: "open_policy_agent", Key: key}, provider.ApplicationInfo{})
 	assert.Equal(t, 4, len(policies))
@@ -56,8 +55,8 @@ func TestGetPolicyInfo(t *testing.T) {
 
 func TestGetPolicyInfo_withBadKey(t *testing.T) {
 	client := openpolicyagent.BundleClient{}
-	service := openpolicyagent.OpaService{}
-	p := openpolicyagent.OpaProvider{BundleClientOverride: client, Service: service}
+	_, file, _, _ := runtime.Caller(0)
+	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
 	_, err := p.GetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{})
 	assert.Error(t, err)
 }
@@ -70,10 +69,9 @@ func TestGetPolicyInfo_withBadRequest(t *testing.T) {
 `)
 	mockClient := openpolicyagent_test.MockClient{}
 	mockClient.Err = errors.New("oops")
-	_, file, _, _ := runtime.Caller(0)
 	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
-	service := openpolicyagent.OpaService{ResourcesDirectory: filepath.Join(file, "../resources")}
-	p := openpolicyagent.OpaProvider{BundleClientOverride: client, Service: service}
+	_, file, _, _ := runtime.Caller(0)
+	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
 	_, err := p.GetPolicyInfo(provider.IntegrationInfo{Name: "open_policy_agent", Key: key}, provider.ApplicationInfo{})
 	assert.Error(t, err)
 }
@@ -87,8 +85,8 @@ func TestGetPolicyInfo_withBadResourceDir(t *testing.T) {
 	mockClient := openpolicyagent_test.MockClient{}
 	mockClient.Err = errors.New("oops")
 	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
-	service := openpolicyagent.OpaService{}
-	p := openpolicyagent.OpaProvider{BundleClientOverride: client, Service: service}
+	_, file, _, _ := runtime.Caller(0)
+	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
 	_, err := p.GetPolicyInfo(provider.IntegrationInfo{Name: "open_policy_agent", Key: key}, provider.ApplicationInfo{})
 	assert.Error(t, err)
 }
@@ -103,32 +101,47 @@ func TestSetPolicyInfo(t *testing.T) {
 	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
 
 	_, file, _, _ := runtime.Caller(0)
-	resourcesDirectory := filepath.Join(file, "../resources")
-	service := openpolicyagent.OpaService{ResourcesDirectory: resourcesDirectory}
-
-	p := openpolicyagent.OpaProvider{BundleClientOverride: client, Service: service}
+	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
 	err := p.SetPolicyInfo(
 		provider.IntegrationInfo{Name: "open_policy_agent", Key: key},
 		provider.ApplicationInfo{},
 		[]provider.PolicyInfo{{Version: "0.1", Action: "GET", Subject: provider.SubjectInfo{AuthenticatedUsers: []string{"allusers"}}, Object: provider.ObjectInfo{Resources: []string{"/"}}}},
 	)
 	assert.NoError(t, err)
+
+	gzip, _ := compressionsupport.UnGzip(bytes.NewReader(mockClient.Request))
+	rand.Seed(time.Now().UnixNano())
+	path := filepath.Join(file, fmt.Sprintf("../resources/bundles/.bundle-%d", rand.Uint64()))
+	_ = compressionsupport.UnTarToPath(bytes.NewReader(gzip), path)
+	readFile, _ := ioutil.ReadFile(path + "/bundle/data.json")
+	assert.Equal(t, `{"policies":[{"version":"0.1","action":"GET","subject":{"authenticated_users":["allusers"]},"object":{"resources":["/"]}}]}`, string(readFile))
 }
 
 func TestMakeDefaultBundle(t *testing.T) {
 	client := openpolicyagent.BundleClient{}
-	service := openpolicyagent.OpaService{}
-	p := openpolicyagent.OpaProvider{BundleClientOverride: client, Service: service}
+	_, file, _, _ := runtime.Caller(0)
+	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
 
-	rego := []byte(`package authz
-import future.keywords.in
-default allow = false
-allow {
-	input.method = "GET"
-	input.path in ["/"]
-	input.principals[_] in ["allusers"]
+	data := []byte(`{
+  "policies": [
+    {
+      "version": "0.4",
+      "action": "GET",
+      "subject": {
+        "authenticated_users": [
+          "allusers",
+          "allauthenticated"
+        ]
+      },
+      "object": {
+        "resources": [
+          "/"
+        ]
+      }
+    }
+  ]
 }`)
-	bundle, _ := p.MakeDefaultBundle(rego)
+	bundle, _ := p.MakeDefaultBundle(data)
 
 	gzip, _ := compressionsupport.UnGzip(bytes.NewReader(bundle.Bytes()))
 	rand.Seed(time.Now().UnixNano())
@@ -136,12 +149,29 @@ allow {
 	_ = compressionsupport.UnTarToPath(bytes.NewReader(gzip), path)
 
 	created, _ := ioutil.ReadFile(filepath.Join(path, "/bundle/policy.rego"))
-	assert.Contains(t, string(created), "input.principals[_] in [\"allusers\"]")
-	assert.NotContains(t, string(created), "input.principals[_] in [\"humanresources@\"]")
+	assert.Contains(t, string(created), "package authz")
 
 	mcreated, _ := ioutil.ReadFile(filepath.Join(path, "/bundle/.manifest"))
 	assert.Contains(t, string(mcreated), "{\"revision\":\"\",\"roots\":[\"\"]}")
 
 	dcreated, _ := ioutil.ReadFile(filepath.Join(path, "/bundle/data.json"))
-	assert.Contains(t, string(dcreated), "{}")
+	assert.Equal(t, `{
+  "policies": [
+    {
+      "version": "0.4",
+      "action": "GET",
+      "subject": {
+        "authenticated_users": [
+          "allusers",
+          "allauthenticated"
+        ]
+      },
+      "object": {
+        "resources": [
+          "/"
+        ]
+      }
+    }
+  ]
+}`, string(dcreated))
 }
