@@ -11,7 +11,6 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -43,7 +42,7 @@ func (s *HandlerSuite) SetupTest() {
 	hash := sha256.Sum256([]byte("aKey"))
 	s.key = hex.EncodeToString(hash[:])
 
-	handlers, _ := orchestrator.LoadHandlers(s.db, hawksupport.NewCredentialStore(s.key), addr, map[string]provider.Provider{})
+	handlers, _ := orchestrator.LoadHandlers(s.db, hawksupport.NewCredentialStore(s.key), addr, map[string]orchestrator.Provider{})
 	s.server = websupport.Create(addr, handlers, websupport.Options{})
 
 	go websupport.Start(s.server, listener)

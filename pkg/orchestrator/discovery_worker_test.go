@@ -4,7 +4,6 @@ import (
 	"errors"
 	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
 	"github.com/stretchr/testify/assert"
@@ -25,7 +24,7 @@ func TestWorkflow(t *testing.T) {
 	_, _ = gateway.Create("aName", "noop", []byte("aKey"))
 
 	noopProvider := orchestrator_test.NoopProvider{}
-	providers := make(map[string]provider.Provider)
+	providers := make(map[string]orchestrator.Provider)
 	providers["noop"] = &noopProvider
 	worker := orchestrator.DiscoveryWorker{Providers: providers, Gateway: appGateway}
 	finder := orchestrator.NewDiscoveryWorkFinder(gateway)

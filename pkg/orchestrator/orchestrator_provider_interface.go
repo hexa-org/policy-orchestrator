@@ -1,4 +1,4 @@
-package provider
+package orchestrator
 
 import "github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
 

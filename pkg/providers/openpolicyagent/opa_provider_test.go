@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/openpolicyagent"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/openpolicyagent/test"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +26,7 @@ func TestDiscoverApplications(t *testing.T) {
 }
 `)
 	p := openpolicyagent.OpaProvider{}
-	applications, _ := p.DiscoverApplications(provider.IntegrationInfo{Name: "open_policy_agent", Key: key})
+	applications, _ := p.DiscoverApplications(orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key})
 	assert.Equal(t, 1, len(applications))
 	assert.Equal(t, "package authz", applications[0].Name)
 	assert.Equal(t, "Open policy agent bundle", applications[0].Description)
@@ -50,7 +50,7 @@ func TestGetPolicyInfo(t *testing.T) {
 	resourcesDirectory := filepath.Join(file, "../resources")
 	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: resourcesDirectory}
 
-	policies, _ := p.GetPolicyInfo(provider.IntegrationInfo{Name: "open_policy_agent", Key: key}, provider.ApplicationInfo{})
+	policies, _ := p.GetPolicyInfo(orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key}, orchestrator.ApplicationInfo{})
 	assert.Equal(t, 4, len(policies))
 }
 
@@ -58,7 +58,7 @@ func TestGetPolicyInfo_withBadKey(t *testing.T) {
 	client := openpolicyagent.BundleClient{}
 	_, file, _, _ := runtime.Caller(0)
 	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
-	_, err := p.GetPolicyInfo(provider.IntegrationInfo{}, provider.ApplicationInfo{})
+	_, err := p.GetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{})
 	assert.Error(t, err)
 }
 
@@ -73,7 +73,7 @@ func TestGetPolicyInfo_withBadRequest(t *testing.T) {
 	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
 	_, file, _, _ := runtime.Caller(0)
 	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
-	_, err := p.GetPolicyInfo(provider.IntegrationInfo{Name: "open_policy_agent", Key: key}, provider.ApplicationInfo{})
+	_, err := p.GetPolicyInfo(orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key}, orchestrator.ApplicationInfo{})
 	assert.Error(t, err)
 }
 
@@ -88,7 +88,7 @@ func TestGetPolicyInfo_withBadResourceDir(t *testing.T) {
 	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
 	_, file, _, _ := runtime.Caller(0)
 	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
-	_, err := p.GetPolicyInfo(provider.IntegrationInfo{Name: "open_policy_agent", Key: key}, provider.ApplicationInfo{})
+	_, err := p.GetPolicyInfo(orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key}, orchestrator.ApplicationInfo{})
 	assert.Error(t, err)
 }
 
@@ -104,8 +104,8 @@ func TestSetPolicyInfo(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
 	err := p.SetPolicyInfo(
-		provider.IntegrationInfo{Name: "open_policy_agent", Key: key},
-		provider.ApplicationInfo{},
+		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
+		orchestrator.ApplicationInfo{},
 		[]identityquerylanguage.PolicyInfo{{Version: "0.1", Action: "GET", Subject: identityquerylanguage.SubjectInfo{AuthenticatedUsers: []string{"allusers"}}, Object: identityquerylanguage.ObjectInfo{Resources: []string{"/"}}}},
 	)
 	assert.NoError(t, err)

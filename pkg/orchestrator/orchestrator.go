@@ -4,12 +4,11 @@ import (
 	"database/sql"
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
 	"github.com/hiyosi/hawk"
 )
 
-func LoadHandlers(database *sql.DB, store hawk.CredentialStore, hostPort string, providers map[string]provider.Provider) (func(router *mux.Router), *workflowsupport.WorkScheduler) {
+func LoadHandlers(database *sql.DB, store hawk.CredentialStore, hostPort string, providers map[string]Provider) (func(router *mux.Router), *workflowsupport.WorkScheduler) {
 	applicationsGateway := ApplicationsDataGateway{database}
 	integrationsGateway := IntegrationsDataGateway{database}
 

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"io"
 	"log"
 	"net/http"
@@ -67,25 +67,25 @@ type AzureAppRoleAssignment struct {
 	ResourceId           string `json:"resourceId"`
 }
 
-func (c *AzureClient) GetWebApplications(key []byte) ([]provider.ApplicationInfo, error) {
+func (c *AzureClient) GetWebApplications(key []byte) ([]orchestrator.ApplicationInfo, error) {
 
 	request, _ := http.NewRequest("GET", "https://graph.microsoft.com/v1.0/applications", nil)
 	get, err := c.azureRequest(key, request)
 	if err != nil {
 		log.Println("Unable to get azure web applications.")
-		return []provider.ApplicationInfo{}, err
+		return []orchestrator.ApplicationInfo{}, err
 	}
 
 	var webapps azureWebApps
 	if err = json.NewDecoder(get.Body).Decode(&webapps); err != nil {
 		log.Println("Unable to decode azure web app response.")
-		return []provider.ApplicationInfo{}, err
+		return []orchestrator.ApplicationInfo{}, err
 	}
 
-	var apps []provider.ApplicationInfo
+	var apps []orchestrator.ApplicationInfo
 	for _, app := range webapps.List {
 		log.Printf("Found azure app service web app %s.\n", app.Name)
-		apps = append(apps, provider.ApplicationInfo{ObjectID: app.ID, Name: app.Name, Description: app.AppID})
+		apps = append(apps, orchestrator.ApplicationInfo{ObjectID: app.ID, Name: app.Name, Description: app.AppID})
 	}
 	return apps, err
 }

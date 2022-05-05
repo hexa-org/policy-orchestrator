@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -28,10 +28,10 @@ func (o *OpaProvider) Name() string {
 	return "open_policy_agent"
 }
 
-func (o *OpaProvider) DiscoverApplications(info provider.IntegrationInfo) (apps []provider.ApplicationInfo, err error) {
+func (o *OpaProvider) DiscoverApplications(info orchestrator.IntegrationInfo) (apps []orchestrator.ApplicationInfo, err error) {
 	c := o.credentials(info.Key)
 	if strings.EqualFold(info.Name, o.Name()) {
-		apps = append(apps, provider.ApplicationInfo{
+		apps = append(apps, orchestrator.ApplicationInfo{
 			ObjectID:    base64.StdEncoding.EncodeToString([]byte(c.BundleUrl)),
 			Name:        "package authz",
 			Description: "Open policy agent bundle",
@@ -59,7 +59,7 @@ type Object struct {
 	Resources []string `json:"resources"`
 }
 
-func (o *OpaProvider) GetPolicyInfo(integration provider.IntegrationInfo, _ provider.ApplicationInfo) ([]identityquerylanguage.PolicyInfo, error) {
+func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo) ([]identityquerylanguage.PolicyInfo, error) {
 	client := o.ensureClientIsAvailable()
 	key := integration.Key
 	foundCredentials := o.credentials(key)
@@ -93,7 +93,7 @@ func (o *OpaProvider) GetPolicyInfo(integration provider.IntegrationInfo, _ prov
 	return hexaPolicies, nil
 }
 
-func (o *OpaProvider) SetPolicyInfo(integration provider.IntegrationInfo, _ provider.ApplicationInfo, policyInfos []identityquerylanguage.PolicyInfo) error {
+func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo, policyInfos []identityquerylanguage.PolicyInfo) error {
 	client := o.ensureClientIsAvailable()
 	key := integration.Key
 	foundCredentials := o.credentials(key)
