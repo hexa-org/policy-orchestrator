@@ -1,6 +1,7 @@
 package googlecloud_test
 
 import (
+	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/googlecloud"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/googlecloud/test"
@@ -21,7 +22,7 @@ func TestGoogleProvider_BadClientKey(t *testing.T) {
 	_, getErr := p.GetPolicyInfo(info, provider.ApplicationInfo{})
 	assert.Error(t, getErr)
 
-	setErr := p.SetPolicyInfo(info, provider.ApplicationInfo{}, []provider.PolicyInfo{})
+	setErr := p.SetPolicyInfo(info, provider.ApplicationInfo{}, []identityquerylanguage.PolicyInfo{})
 	assert.Error(t, setErr)
 }
 
@@ -92,13 +93,13 @@ func TestGoogleProvider_GetPolicy(t *testing.T) {
 }
 
 func TestGoogleProvider_SetPolicy(t *testing.T) {
-	policy := provider.PolicyInfo{
-		Version: "aVersion", Action: "anAction", Subject: provider.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: provider.ObjectInfo{Resources: []string{"/"}},
+	policy := identityquerylanguage.PolicyInfo{
+		Version: "aVersion", Action: "anAction", Subject: identityquerylanguage.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: identityquerylanguage.ObjectInfo{Resources: []string{"/"}},
 	}
 	m := new(google_cloud_test.MockClient)
 
 	p := googlecloud.GoogleProvider{HttpClientOverride: m}
 	info := provider.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
-	err := p.SetPolicyInfo(info, provider.ApplicationInfo{ObjectID: "anObjectId"}, []provider.PolicyInfo{policy})
+	err := p.SetPolicyInfo(info, provider.ApplicationInfo{ObjectID: "anObjectId"}, []identityquerylanguage.PolicyInfo{policy})
 	assert.NoError(t, err)
 }

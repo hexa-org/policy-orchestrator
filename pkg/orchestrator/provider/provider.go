@@ -1,10 +1,12 @@
 package provider
 
+import "github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
+
 type Provider interface {
 	Name() string
 	DiscoverApplications(IntegrationInfo) ([]ApplicationInfo, error)
-	GetPolicyInfo(IntegrationInfo, ApplicationInfo) ([]PolicyInfo, error)
-	SetPolicyInfo(IntegrationInfo, ApplicationInfo, []PolicyInfo) error
+	GetPolicyInfo(IntegrationInfo, ApplicationInfo) ([]identityquerylanguage.PolicyInfo, error)
+	SetPolicyInfo(IntegrationInfo, ApplicationInfo, []identityquerylanguage.PolicyInfo) error
 }
 
 type IntegrationInfo struct {
@@ -16,19 +18,4 @@ type ApplicationInfo struct {
 	ObjectID    string
 	Name        string
 	Description string
-}
-
-type PolicyInfo struct {
-	Version string
-	Action  string
-	Subject SubjectInfo
-	Object  ObjectInfo
-}
-
-type SubjectInfo struct {
-	AuthenticatedUsers []string
-}
-
-type ObjectInfo struct {
-	Resources []string
 }

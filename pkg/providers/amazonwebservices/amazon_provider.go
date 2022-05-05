@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"log"
 	"strings"
@@ -56,7 +57,7 @@ func (a *AmazonProvider) ListUserPools(info provider.IntegrationInfo) (apps []pr
 	return apps, err
 }
 
-func (a *AmazonProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo) ([]provider.PolicyInfo, error) {
+func (a *AmazonProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo) ([]identityquerylanguage.PolicyInfo, error) {
 	client, err := a.getHttpClient(integrationInfo)
 	if err != nil {
 		return nil, err
@@ -70,17 +71,17 @@ func (a *AmazonProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo,
 	}
 	authenticatedUsers := a.authenticatedUsersFrom(users)
 
-	var policies []provider.PolicyInfo
-	policies = append(policies, provider.PolicyInfo{
+	var policies []identityquerylanguage.PolicyInfo
+	policies = append(policies, identityquerylanguage.PolicyInfo{
 		Version: "0.3",
 		Action:  "Access", // todo - not sure what this should be just yet.
-		Subject: provider.SubjectInfo{AuthenticatedUsers: authenticatedUsers},
-		Object:  provider.ObjectInfo{Resources: []string{applicationInfo.ObjectID}},
+		Subject: identityquerylanguage.SubjectInfo{AuthenticatedUsers: authenticatedUsers},
+		Object:  identityquerylanguage.ObjectInfo{Resources: []string{applicationInfo.ObjectID}},
 	})
 	return policies, nil
 }
 
-func (a *AmazonProvider) SetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo, policyInfos []provider.PolicyInfo) error {
+func (a *AmazonProvider) SetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo, policyInfos []identityquerylanguage.PolicyInfo) error {
 	client, err := a.getHttpClient(integrationInfo)
 	if err != nil {
 		return err
