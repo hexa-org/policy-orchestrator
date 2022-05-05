@@ -2,7 +2,7 @@ package microsoftazure_test
 
 import (
 	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/microsoftazure"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/microsoftazure/test"
 	"github.com/stretchr/testify/assert"
@@ -34,7 +34,7 @@ func TestDiscoverApplications(t *testing.T) {
   "subscription":"aSubscription"
 }
 `)
-	info := provider.IntegrationInfo{Name: "azure", Key: key}
+	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}
 	applications, _ := p.DiscoverApplications(info)
 	assert.Equal(t, 1, len(applications))
 	assert.Equal(t, "azure", p.Name())
@@ -70,8 +70,8 @@ func TestGetPolicy(t *testing.T) {
   "subscription":"aSubscription"
 }
 `)
-	info := provider.IntegrationInfo{Name: "azure", Key: key}
-	appInfo := provider.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"}
+	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}
+	appInfo := orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"}
 	policies, _ := p.GetPolicyInfo(info, appInfo)
 	assert.Equal(t, 1, len(policies))
 	assert.Equal(t, "anAppRoleId", policies[0].Action)
@@ -124,8 +124,8 @@ func TestSetPolicy(t *testing.T) {
   "subscription":"aSubscription"
 }
 `)
-	info := provider.IntegrationInfo{Name: "azure", Key: key}
-	appInfo := provider.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"}
+	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}
+	appInfo := orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"}
 	err := azureProvider.SetPolicyInfo(info, appInfo, []identityquerylanguage.PolicyInfo{{
 		Action:  "anAppRoleId",
 		Subject: identityquerylanguage.SubjectInfo{AuthenticatedUsers: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},

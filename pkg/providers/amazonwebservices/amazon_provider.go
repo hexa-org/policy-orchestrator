@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"log"
 	"strings"
 )
@@ -30,14 +30,14 @@ func (a *AmazonProvider) Name() string {
 	return "amazon"
 }
 
-func (a *AmazonProvider) DiscoverApplications(info provider.IntegrationInfo) ([]provider.ApplicationInfo, error) {
+func (a *AmazonProvider) DiscoverApplications(info orchestrator.IntegrationInfo) ([]orchestrator.ApplicationInfo, error) {
 	if !strings.EqualFold(info.Name, a.Name()) {
-		return []provider.ApplicationInfo{}, nil
+		return []orchestrator.ApplicationInfo{}, nil
 	}
 	return a.ListUserPools(info)
 }
 
-func (a *AmazonProvider) ListUserPools(info provider.IntegrationInfo) (apps []provider.ApplicationInfo, err error) {
+func (a *AmazonProvider) ListUserPools(info orchestrator.IntegrationInfo) (apps []orchestrator.ApplicationInfo, err error) {
 	client, clientErr := a.getHttpClient(info)
 	if clientErr != nil {
 		return nil, clientErr
@@ -48,7 +48,7 @@ func (a *AmazonProvider) ListUserPools(info provider.IntegrationInfo) (apps []pr
 		return nil, listErr
 	}
 	for _, p := range pools.UserPools {
-		apps = append(apps, provider.ApplicationInfo{
+		apps = append(apps, orchestrator.ApplicationInfo{
 			ObjectID:    aws.ToString(p.Id),
 			Name:        aws.ToString(p.Name),
 			Description: "Cognito identity provider user pool",
@@ -57,7 +57,7 @@ func (a *AmazonProvider) ListUserPools(info provider.IntegrationInfo) (apps []pr
 	return apps, err
 }
 
-func (a *AmazonProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo) ([]identityquerylanguage.PolicyInfo, error) {
+func (a *AmazonProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo) ([]identityquerylanguage.PolicyInfo, error) {
 	client, err := a.getHttpClient(integrationInfo)
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func (a *AmazonProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo,
 	return policies, nil
 }
 
-func (a *AmazonProvider) SetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo, policyInfos []identityquerylanguage.PolicyInfo) error {
+func (a *AmazonProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []identityquerylanguage.PolicyInfo) error {
 	client, err := a.getHttpClient(integrationInfo)
 	if err != nil {
 		return err
@@ -196,7 +196,7 @@ func (a *AmazonProvider) Credentials(key []byte) CredentialsInfo {
 	return foundCredentials
 }
 
-func (a *AmazonProvider) getHttpClient(info provider.IntegrationInfo) (CognitoClient, error) {
+func (a *AmazonProvider) getHttpClient(info orchestrator.IntegrationInfo) (CognitoClient, error) {
 	if a.CognitoClientOverride != nil {
 		return a.CognitoClientOverride, nil
 	}

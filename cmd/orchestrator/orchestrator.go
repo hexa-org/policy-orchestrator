@@ -5,7 +5,6 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/amazonwebservices"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/googlecloud"
 	"github.com/hexa-org/policy-orchestrator/pkg/providers/microsoftazure"
@@ -21,7 +20,7 @@ import (
 func App(key string, addr string, hostPort string, dbUrl string) (*http.Server, *workflowsupport.WorkScheduler) {
 	db, _ := databasesupport.Open(dbUrl)
 	store := hawksupport.NewCredentialStore(key)
-	providers := make(map[string]provider.Provider)
+	providers := make(map[string]orchestrator.Provider)
 	providers["google_cloud"] = &googlecloud.GoogleProvider{}
 	providers["azure"] = &microsoftazure.AzureProvider{}
 	providers["amazon"] = &amazonwebservices.AmazonProvider{}
