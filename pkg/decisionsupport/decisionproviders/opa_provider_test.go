@@ -1,9 +1,9 @@
-package providers_test
+package decisionproviders_test
 
 import (
 	"bytes"
 	"errors"
-	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupport/providers"
+	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupport/decisionproviders"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"io/ioutil"
@@ -12,14 +12,14 @@ import (
 )
 
 func TestOpaDecisionProvider_BuildInput_BuildInput(t *testing.T) {
-	provider := providers.OpaDecisionProvider{
+	provider := decisionproviders.OpaDecisionProvider{
 		Principals: []interface{}{"allusers", "allauthenticatedusers", "sales@hexaindustries.io"},
 	}
 
 	req, _ := http.NewRequest("GET", "http://aDomain.com/noop", nil)
 	req.RequestURI = "/noop"
 	query, _ := provider.BuildInput(req)
-	casted := query.(providers.OpaQuery).Input
+	casted := query.(decisionproviders.OpaQuery).Input
 	assert.Equal(t, "GET", casted["method"])
 	assert.Equal(t, "/noop", casted["path"])
 	assert.Equal(t, []interface{}{"allusers", "allauthenticatedusers", "sales@hexaindustries.io"}, casted["principals"])
@@ -39,7 +39,7 @@ func (m *MockClient) Do(_ *http.Request) (*http.Response, error) {
 func TestOpaDecisionProvider_Allow(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = []byte("{\"result\":true}")
-	provider := providers.OpaDecisionProvider{Client: mockClient, Url: "aUrl"}
+	provider := decisionproviders.OpaDecisionProvider{Client: mockClient, Url: "aUrl"}
 
 	req, _ := http.NewRequest("GET", "http://aDomain.com/noop", nil)
 	req.RequestURI = "/noop"
@@ -53,7 +53,7 @@ func TestOpaDecisionProvider_AllowWithRequestErr(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = []byte("{\"result\":true}")
 	mockClient.err = errors.New("oops")
-	provider := providers.OpaDecisionProvider{Client: mockClient, Url: "aUrl"}
+	provider := decisionproviders.OpaDecisionProvider{Client: mockClient, Url: "aUrl"}
 
 	req, _ := http.NewRequest("GET", "http://aDomain.com/noop", nil)
 	req.RequestURI = "/noop"
@@ -67,7 +67,7 @@ func TestOpaDecisionProvider_AllowWithRequestErr(t *testing.T) {
 func TestOpaDecisionProvider_AllowWithResponseErr(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = []byte("__bad__ {\"result\":true}")
-	provider := providers.OpaDecisionProvider{Client: mockClient, Url: "aUrl"}
+	provider := decisionproviders.OpaDecisionProvider{Client: mockClient, Url: "aUrl"}
 
 	req, _ := http.NewRequest("GET", "http://aDomain.com/noop", nil)
 	req.RequestURI = "/noop"
