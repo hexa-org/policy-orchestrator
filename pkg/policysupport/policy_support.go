@@ -1,4 +1,4 @@
-package identityquerylanguage // todo - longer name used here to simplify a refactoring
+package policysupport // todo - longer name used here to simplify a refactoring
 
 type PolicyInfo struct {
 	Version string

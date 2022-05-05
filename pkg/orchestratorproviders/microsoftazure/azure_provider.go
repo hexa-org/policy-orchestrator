@@ -2,8 +2,8 @@ package microsoftazure
 
 import (
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"net/http"
 	"strings"
 )
@@ -29,9 +29,9 @@ func (a *AzureProvider) DiscoverApplications(info orchestrator.IntegrationInfo) 
 	return apps, err
 }
 
-func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo) ([]identityquerylanguage.PolicyInfo, error) {
+func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
 	key := integrationInfo.Key
-	var policies []identityquerylanguage.PolicyInfo
+	var policies []policysupport.PolicyInfo
 	client := a.getHttpClient()
 	azureClient := AzureClient{client}
 	principal, _ := azureClient.GetServicePrincipals(key, applicationInfo.Description) // todo - description is named poorly
@@ -47,17 +47,17 @@ func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 		principalIdsAndDisplayNames = append(principalIdsAndDisplayNames, fmt.Sprintf("%s:%s", assignment.PrincipalId, assignment.PrincipalDisplayName))
 	}
 
-	policies = append(policies, identityquerylanguage.PolicyInfo{
+	policies = append(policies, policysupport.PolicyInfo{
 		Version: "0.2",
 		Action:  appRoleId,
-		Subject: identityquerylanguage.SubjectInfo{AuthenticatedUsers: principalIdsAndDisplayNames},
-		Object:  identityquerylanguage.ObjectInfo{Resources: []string{resourceIdAndDisplayName}},
+		Subject: policysupport.SubjectInfo{AuthenticatedUsers: principalIdsAndDisplayNames},
+		Object:  policysupport.ObjectInfo{Resources: []string{resourceIdAndDisplayName}},
 	})
 
 	return policies, nil
 }
 
-func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []identityquerylanguage.PolicyInfo) error {
+func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) error {
 	key := integrationInfo.Key
 	client := a.getHttpClient()
 	azureClient := AzureClient{client}

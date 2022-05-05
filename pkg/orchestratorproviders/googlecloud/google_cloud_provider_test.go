@@ -1,10 +1,10 @@
 package googlecloud_test
 
 import (
-	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/pkg/providers/googlecloud"
-	"github.com/hexa-org/policy-orchestrator/pkg/providers/googlecloud/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud/test"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"path/filepath"
@@ -22,7 +22,7 @@ func TestGoogleProvider_BadClientKey(t *testing.T) {
 	_, getErr := p.GetPolicyInfo(info, orchestrator.ApplicationInfo{})
 	assert.Error(t, getErr)
 
-	setErr := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{}, []identityquerylanguage.PolicyInfo{})
+	setErr := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{})
 	assert.Error(t, setErr)
 }
 
@@ -93,13 +93,13 @@ func TestGoogleProvider_GetPolicy(t *testing.T) {
 }
 
 func TestGoogleProvider_SetPolicy(t *testing.T) {
-	policy := identityquerylanguage.PolicyInfo{
-		Version: "aVersion", Action: "anAction", Subject: identityquerylanguage.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: identityquerylanguage.ObjectInfo{Resources: []string{"/"}},
+	policy := policysupport.PolicyInfo{
+		Version: "aVersion", Action: "anAction", Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
 	}
 	m := new(google_cloud_test.MockClient)
 
 	p := googlecloud.GoogleProvider{HttpClientOverride: m}
 	info := orchestrator.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
-	err := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []identityquerylanguage.PolicyInfo{policy})
+	err := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{policy})
 	assert.NoError(t, err)
 }

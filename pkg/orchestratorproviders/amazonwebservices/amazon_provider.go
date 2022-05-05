@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
-	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"log"
 	"strings"
 )
@@ -57,7 +57,7 @@ func (a *AmazonProvider) ListUserPools(info orchestrator.IntegrationInfo) (apps 
 	return apps, err
 }
 
-func (a *AmazonProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo) ([]identityquerylanguage.PolicyInfo, error) {
+func (a *AmazonProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
 	client, err := a.getHttpClient(integrationInfo)
 	if err != nil {
 		return nil, err
@@ -71,17 +71,17 @@ func (a *AmazonProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationI
 	}
 	authenticatedUsers := a.authenticatedUsersFrom(users)
 
-	var policies []identityquerylanguage.PolicyInfo
-	policies = append(policies, identityquerylanguage.PolicyInfo{
+	var policies []policysupport.PolicyInfo
+	policies = append(policies, policysupport.PolicyInfo{
 		Version: "0.3",
 		Action:  "Access", // todo - not sure what this should be just yet.
-		Subject: identityquerylanguage.SubjectInfo{AuthenticatedUsers: authenticatedUsers},
-		Object:  identityquerylanguage.ObjectInfo{Resources: []string{applicationInfo.ObjectID}},
+		Subject: policysupport.SubjectInfo{AuthenticatedUsers: authenticatedUsers},
+		Object:  policysupport.ObjectInfo{Resources: []string{applicationInfo.ObjectID}},
 	})
 	return policies, nil
 }
 
-func (a *AmazonProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []identityquerylanguage.PolicyInfo) error {
+func (a *AmazonProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) error {
 	client, err := a.getHttpClient(integrationInfo)
 	if err != nil {
 		return err
