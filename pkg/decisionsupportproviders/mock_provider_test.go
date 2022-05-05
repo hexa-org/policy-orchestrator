@@ -1,14 +1,14 @@
-package decisionproviders_test
+package decisionsupportproviders_test
 
 import (
-	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupport/decisionproviders"
+	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupportproviders"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 )
 
 func TestBuildInput(t *testing.T) {
-	provider := decisionproviders.MockDecisionProvider{}
+	provider := decisionsupportproviders.MockDecisionProvider{}
 	provider.On("BuildInput").Once()
 
 	req, _ := http.NewRequest("GET", "/noop", nil)
@@ -22,7 +22,7 @@ func TestBuildInput(t *testing.T) {
 }
 
 func TestAllow(t *testing.T) {
-	provider := decisionproviders.MockDecisionProvider{Decision: true}
+	provider := decisionsupportproviders.MockDecisionProvider{Decision: true}
 	provider.On("BuildInput").Once()
 	provider.On("Allow").Once()
 
@@ -36,7 +36,7 @@ func TestAllow(t *testing.T) {
 }
 
 func TestAllow_notAllowed(t *testing.T) {
-	provider := decisionproviders.MockDecisionProvider{Decision: false}
+	provider := decisionsupportproviders.MockDecisionProvider{Decision: false}
 	provider.On("BuildInput").Once()
 	provider.On("Allow").Once()
 

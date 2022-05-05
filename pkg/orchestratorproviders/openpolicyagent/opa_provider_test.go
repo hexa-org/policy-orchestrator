@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/pkg/providers/openpolicyagent"
-	"github.com/hexa-org/policy-orchestrator/pkg/providers/openpolicyagent/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent/test"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"math/rand"
@@ -106,7 +106,7 @@ func TestSetPolicyInfo(t *testing.T) {
 	err := p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
 		orchestrator.ApplicationInfo{},
-		[]identityquerylanguage.PolicyInfo{{Version: "0.1", Action: "GET", Subject: identityquerylanguage.SubjectInfo{AuthenticatedUsers: []string{"allusers"}}, Object: identityquerylanguage.ObjectInfo{Resources: []string{"/"}}}},
+		[]policysupport.PolicyInfo{{Version: "0.1", Action: "GET", Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"allusers"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}}}},
 	)
 	assert.NoError(t, err)
 

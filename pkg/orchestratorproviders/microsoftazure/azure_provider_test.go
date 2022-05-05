@@ -1,10 +1,10 @@
 package microsoftazure_test
 
 import (
-	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/pkg/providers/microsoftazure"
-	"github.com/hexa-org/policy-orchestrator/pkg/providers/microsoftazure/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/microsoftazure"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/microsoftazure/test"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -126,10 +126,10 @@ func TestSetPolicy(t *testing.T) {
 `)
 	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}
 	appInfo := orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"}
-	err := azureProvider.SetPolicyInfo(info, appInfo, []identityquerylanguage.PolicyInfo{{
+	err := azureProvider.SetPolicyInfo(info, appInfo, []policysupport.PolicyInfo{{
 		Action:  "anAppRoleId",
-		Subject: identityquerylanguage.SubjectInfo{AuthenticatedUsers: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
-		Object:  identityquerylanguage.ObjectInfo{Resources: []string{"aResourceId:aResourceDisplayName"}},
+		Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
+		Object:  policysupport.ObjectInfo{Resources: []string{"aResourceId:aResourceDisplayName"}},
 	}})
 	assert.NoError(t, err)
 }

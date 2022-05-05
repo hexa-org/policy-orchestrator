@@ -5,8 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"google.golang.org/api/option"
 	"google.golang.org/api/transport/http"
 	"strings"
@@ -42,7 +42,7 @@ func (g *GoogleProvider) DiscoverApplications(info orchestrator.IntegrationInfo)
 	return apps, err
 }
 
-func (g *GoogleProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, app orchestrator.ApplicationInfo) (infos []identityquerylanguage.PolicyInfo, err error) {
+func (g *GoogleProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, app orchestrator.ApplicationInfo) (infos []policysupport.PolicyInfo, err error) {
 	key := integration.Key
 	foundCredentials := g.credentials(key)
 	client, createClientErr := g.getHttpClient(key)
@@ -54,7 +54,7 @@ func (g *GoogleProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo,
 	return googleClient.GetBackendPolicy(app.ObjectID)
 }
 
-func (g *GoogleProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, app orchestrator.ApplicationInfo, policies []identityquerylanguage.PolicyInfo) error {
+func (g *GoogleProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, app orchestrator.ApplicationInfo, policies []policysupport.PolicyInfo) error {
 	key := integration.Key
 	foundCredentials := g.credentials(key)
 	client, createClientErr := g.getHttpClient(key)

@@ -1,8 +1,8 @@
 package orchestrator_test
 
 import (
-	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 )
 
 type NoopProvider struct {
@@ -23,13 +23,13 @@ func (n *NoopProvider) DiscoverApplications(info orchestrator.IntegrationInfo) (
 	return apps, n.Err
 }
 
-func (n *NoopProvider) GetPolicyInfo(_ orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo) ([]identityquerylanguage.PolicyInfo, error) {
-	return []identityquerylanguage.PolicyInfo{
-		{"aVersion", "anAction", identityquerylanguage.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, identityquerylanguage.ObjectInfo{Resources: []string{"/"}}},
-		{"aVersion", "anotherAction", identityquerylanguage.SubjectInfo{AuthenticatedUsers: []string{"anotherUser"}}, identityquerylanguage.ObjectInfo{Resources: []string{"/"}}},
+func (n *NoopProvider) GetPolicyInfo(_ orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
+	return []policysupport.PolicyInfo{
+		{"aVersion", "anAction", policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, policysupport.ObjectInfo{Resources: []string{"/"}}},
+		{"aVersion", "anotherAction", policysupport.SubjectInfo{AuthenticatedUsers: []string{"anotherUser"}}, policysupport.ObjectInfo{Resources: []string{"/"}}},
 	}, n.Err
 }
 
-func (n *NoopProvider) SetPolicyInfo(_ orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo, _ []identityquerylanguage.PolicyInfo) error {
+func (n *NoopProvider) SetPolicyInfo(_ orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo, _ []policysupport.PolicyInfo) error {
 	return n.Err
 }

@@ -1,12 +1,12 @@
-package decisionproviders_test
+package decisionsupportproviders_test
 
 import (
-	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupport/decisionproviders"
+	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupportproviders"
 	"testing"
 )
 
 func TestDefaultProvider_BuildInput(t *testing.T) {
-	provider := decisionproviders.DefaultProvider{}
+	provider := decisionsupportproviders.DefaultProvider{}
 	defer func() {
 		if recover() == nil {
 			t.Fail()
@@ -16,7 +16,7 @@ func TestDefaultProvider_BuildInput(t *testing.T) {
 }
 
 func TestDefaultProvider_Allow(t *testing.T) {
-	provider := decisionproviders.DefaultProvider{}
+	provider := decisionsupportproviders.DefaultProvider{}
 	defer func() {
 		if recover() == nil {
 			t.Fail()

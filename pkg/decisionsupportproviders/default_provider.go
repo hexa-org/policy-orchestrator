@@ -1,4 +1,4 @@
-package decisionproviders
+package decisionsupportproviders
 
 import "net/http"
 
