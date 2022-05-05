@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"io/ioutil"
 	"log"
@@ -58,7 +59,7 @@ type Object struct {
 	Resources []string `json:"resources"`
 }
 
-func (o *OpaProvider) GetPolicyInfo(integration provider.IntegrationInfo, _ provider.ApplicationInfo) ([]provider.PolicyInfo, error) {
+func (o *OpaProvider) GetPolicyInfo(integration provider.IntegrationInfo, _ provider.ApplicationInfo) ([]identityquerylanguage.PolicyInfo, error) {
 	client := o.ensureClientIsAvailable()
 	key := integration.Key
 	foundCredentials := o.credentials(key)
@@ -76,15 +77,15 @@ func (o *OpaProvider) GetPolicyInfo(integration provider.IntegrationInfo, _ prov
 		return nil, unmarshalErr
 	}
 
-	var hexaPolicies []provider.PolicyInfo
+	var hexaPolicies []identityquerylanguage.PolicyInfo
 	for _, p := range policies.Policies {
-		hexaPolicies = append(hexaPolicies, provider.PolicyInfo{
+		hexaPolicies = append(hexaPolicies, identityquerylanguage.PolicyInfo{
 			Version: p.Version,
 			Action:  p.Action,
-			Subject: provider.SubjectInfo{
+			Subject: identityquerylanguage.SubjectInfo{
 				AuthenticatedUsers: p.Subject.AuthenticatedUsers,
 			},
-			Object: provider.ObjectInfo{
+			Object: identityquerylanguage.ObjectInfo{
 				Resources: p.Object.Resources,
 			},
 		})
@@ -92,7 +93,7 @@ func (o *OpaProvider) GetPolicyInfo(integration provider.IntegrationInfo, _ prov
 	return hexaPolicies, nil
 }
 
-func (o *OpaProvider) SetPolicyInfo(integration provider.IntegrationInfo, _ provider.ApplicationInfo, policyInfos []provider.PolicyInfo) error {
+func (o *OpaProvider) SetPolicyInfo(integration provider.IntegrationInfo, _ provider.ApplicationInfo, policyInfos []identityquerylanguage.PolicyInfo) error {
 	client := o.ensureClientIsAvailable()
 	key := integration.Key
 	foundCredentials := o.credentials(key)

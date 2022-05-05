@@ -2,6 +2,7 @@ package microsoftazure
 
 import (
 	"fmt"
+	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"net/http"
 	"strings"
@@ -28,9 +29,9 @@ func (a *AzureProvider) DiscoverApplications(info provider.IntegrationInfo) (app
 	return apps, err
 }
 
-func (a *AzureProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo) ([]provider.PolicyInfo, error) {
+func (a *AzureProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo) ([]identityquerylanguage.PolicyInfo, error) {
 	key := integrationInfo.Key
-	var policies []provider.PolicyInfo
+	var policies []identityquerylanguage.PolicyInfo
 	client := a.getHttpClient()
 	azureClient := AzureClient{client}
 	principal, _ := azureClient.GetServicePrincipals(key, applicationInfo.Description) // todo - description is named poorly
@@ -46,17 +47,17 @@ func (a *AzureProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo, 
 		principalIdsAndDisplayNames = append(principalIdsAndDisplayNames, fmt.Sprintf("%s:%s", assignment.PrincipalId, assignment.PrincipalDisplayName))
 	}
 
-	policies = append(policies, provider.PolicyInfo{
+	policies = append(policies, identityquerylanguage.PolicyInfo{
 		Version: "0.2",
 		Action:  appRoleId,
-		Subject: provider.SubjectInfo{AuthenticatedUsers: principalIdsAndDisplayNames},
-		Object:  provider.ObjectInfo{Resources: []string{resourceIdAndDisplayName}},
+		Subject: identityquerylanguage.SubjectInfo{AuthenticatedUsers: principalIdsAndDisplayNames},
+		Object:  identityquerylanguage.ObjectInfo{Resources: []string{resourceIdAndDisplayName}},
 	})
 
 	return policies, nil
 }
 
-func (a *AzureProvider) SetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo, policyInfos []provider.PolicyInfo) error {
+func (a *AzureProvider) SetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo, policyInfos []identityquerylanguage.PolicyInfo) error {
 	key := integrationInfo.Key
 	client := a.getHttpClient()
 	azureClient := AzureClient{client}

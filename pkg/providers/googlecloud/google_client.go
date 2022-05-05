@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"io"
 	"log"
@@ -68,36 +69,36 @@ type bindingInfo struct {
 	Members []string `json:"members"`
 }
 
-func (c *GoogleClient) GetBackendPolicy(objectId string) ([]provider.PolicyInfo, error) {
+func (c *GoogleClient) GetBackendPolicy(objectId string) ([]identityquerylanguage.PolicyInfo, error) {
 	url := fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s:getIamPolicy", c.ProjectId, objectId)
 
 	post, err := c.HttpClient.Post(url, "application/json", bytes.NewReader([]byte{}))
 	if err != nil {
 		log.Println("Unable to find google cloud policy.")
-		return []provider.PolicyInfo{}, err
+		return []identityquerylanguage.PolicyInfo{}, err
 	}
 	log.Printf("Google cloud response %s.\n", post.Status)
 
 	var binds bindings
 	if err = json.NewDecoder(post.Body).Decode(&binds); err != nil {
 		log.Println("Unable to decode google cloud policy.")
-		return []provider.PolicyInfo{}, err
+		return []identityquerylanguage.PolicyInfo{}, err
 	}
 
-	var policies []provider.PolicyInfo
+	var policies []identityquerylanguage.PolicyInfo
 	for _, found := range binds.Bindings {
 		log.Printf("Found google cloud policy for role %s.\n", found.Role)
-		policies = append(policies, provider.PolicyInfo{
+		policies = append(policies, identityquerylanguage.PolicyInfo{
 			Version: "0.1",
 			Action:  found.Role,
-			Subject: provider.SubjectInfo{AuthenticatedUsers: found.Members},
-			Object:  provider.ObjectInfo{Resources: []string{"/"}},
+			Subject: identityquerylanguage.SubjectInfo{AuthenticatedUsers: found.Members},
+			Object:  identityquerylanguage.ObjectInfo{Resources: []string{"/"}},
 		})
 	}
 	return policies, err
 }
 
-func (c *GoogleClient) SetBackendPolicy(objectId string, p provider.PolicyInfo) error {
+func (c *GoogleClient) SetBackendPolicy(objectId string, p identityquerylanguage.PolicyInfo) error {
 	url := fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s:setIamPolicy", c.ProjectId, objectId)
 
 	body := policy{bindings{[]bindingInfo{{p.Action, p.Subject.AuthenticatedUsers}}}}
