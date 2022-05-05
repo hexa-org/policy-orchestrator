@@ -3,7 +3,7 @@ package microsoftazure
 import (
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"net/http"
 	"strings"
 )
@@ -16,7 +16,7 @@ func (a *AzureProvider) Name() string {
 	return "azure"
 }
 
-func (a *AzureProvider) DiscoverApplications(info provider.IntegrationInfo) (apps []provider.ApplicationInfo, err error) {
+func (a *AzureProvider) DiscoverApplications(info orchestrator.IntegrationInfo) (apps []orchestrator.ApplicationInfo, err error) {
 	if !strings.EqualFold(info.Name, a.Name()) {
 		return apps, err
 	}
@@ -29,7 +29,7 @@ func (a *AzureProvider) DiscoverApplications(info provider.IntegrationInfo) (app
 	return apps, err
 }
 
-func (a *AzureProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo) ([]identityquerylanguage.PolicyInfo, error) {
+func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo) ([]identityquerylanguage.PolicyInfo, error) {
 	key := integrationInfo.Key
 	var policies []identityquerylanguage.PolicyInfo
 	client := a.getHttpClient()
@@ -57,7 +57,7 @@ func (a *AzureProvider) GetPolicyInfo(integrationInfo provider.IntegrationInfo, 
 	return policies, nil
 }
 
-func (a *AzureProvider) SetPolicyInfo(integrationInfo provider.IntegrationInfo, applicationInfo provider.ApplicationInfo, policyInfos []identityquerylanguage.PolicyInfo) error {
+func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []identityquerylanguage.PolicyInfo) error {
 	key := integrationInfo.Key
 	client := a.getHttpClient()
 	azureClient := AzureClient{client}

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"io"
 	"log"
 	"net/http"
@@ -32,26 +32,26 @@ type backendInfo struct {
 	Description string `json:"description"`
 }
 
-func (c *GoogleClient) GetBackendApplications() ([]provider.ApplicationInfo, error) {
+func (c *GoogleClient) GetBackendApplications() ([]orchestrator.ApplicationInfo, error) {
 	url := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/backendServices", c.ProjectId)
 
 	get, err := c.HttpClient.Get(url)
 	if err != nil {
 		log.Println("Unable to find google cloud backend services.")
-		return []provider.ApplicationInfo{}, err
+		return []orchestrator.ApplicationInfo{}, err
 	}
 	log.Printf("Google cloud response %s.\n", get.Status)
 
 	var backend backends
 	if err = json.NewDecoder(get.Body).Decode(&backend); err != nil {
 		log.Println("Unable to decode google cloud backend services.")
-		return []provider.ApplicationInfo{}, err
+		return []orchestrator.ApplicationInfo{}, err
 	}
 
-	var apps []provider.ApplicationInfo
+	var apps []orchestrator.ApplicationInfo
 	for _, info := range backend.Resources {
 		log.Printf("Found google cloud backend services %s.\n", info.Name)
-		apps = append(apps, provider.ApplicationInfo{ObjectID: info.ID, Name: info.Name, Description: info.Description})
+		apps = append(apps, orchestrator.ApplicationInfo{ObjectID: info.ID, Name: info.Name, Description: info.Description})
 	}
 	return apps, nil
 }

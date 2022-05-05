@@ -1,12 +1,11 @@
 package orchestrator
 
 import (
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"log"
 )
 
 type DiscoveryWorker struct {
-	Providers map[string]provider.Provider
+	Providers map[string]Provider
 	Gateway   ApplicationsDataGateway
 }
 
@@ -16,7 +15,7 @@ func (n *DiscoveryWorker) Run(work interface{}) error {
 
 		for _, record := range work.([]IntegrationRecord) {
 			log.Printf("Finding applications for integration provider %s.", p.Name())
-			applications, _ := p.DiscoverApplications(provider.IntegrationInfo{Name: record.Provider, Key: record.Key})
+			applications, _ := p.DiscoverApplications(IntegrationInfo{Name: record.Provider, Key: record.Key})
 
 			log.Printf("Found %d applications for integration provider %s.", len(applications), p.Name())
 			for _, app := range applications {

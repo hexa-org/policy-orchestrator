@@ -8,7 +8,6 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +25,7 @@ func TestOrchestratorHandlers(t *testing.T) {
 
 	listener, _ := net.Listen("tcp", "localhost:0")
 
-	providers := make(map[string]provider.Provider)
+	providers := make(map[string]orchestrator.Provider)
 	providers["google_cloud"] = &orchestrator_test.NoopProvider{}
 
 	handlers, _ := orchestrator.LoadHandlers(db, store, listener.Addr().String(), providers)

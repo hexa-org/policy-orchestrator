@@ -12,7 +12,6 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/provider"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
@@ -29,7 +28,7 @@ type ApplicationsHandlerSuite struct {
 	server            *http.Server
 	scheduler         *workflowsupport.WorkScheduler
 	key               string
-	providers         map[string]provider.Provider
+	providers         map[string]orchestrator.Provider
 	applicationTestId string
 }
 
@@ -53,7 +52,7 @@ insert into applications (id, integration_id, object_id, name, description) valu
 	hash := sha256.Sum256([]byte("aKey"))
 	s.key = hex.EncodeToString(hash[:])
 
-	s.providers = make(map[string]provider.Provider)
+	s.providers = make(map[string]orchestrator.Provider)
 	s.providers["google_cloud"] = &orchestrator_test.NoopProvider{}
 
 	handlers, scheduler := orchestrator.LoadHandlers(s.db, hawksupport.NewCredentialStore(s.key), addr, s.providers)
