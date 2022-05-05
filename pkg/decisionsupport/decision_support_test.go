@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupport/decisionproviders"
+	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupportproviders"
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
@@ -16,7 +16,7 @@ import (
 )
 
 func TestMiddleware_allowed(t *testing.T) {
-	provider := decisionproviders.MockDecisionProvider{Decision: true}
+	provider := decisionsupportproviders.MockDecisionProvider{Decision: true}
 	support := decisionsupport.DecisionSupport{Provider: &provider, Skip: []string{"/health", "/metrics"}}
 	provider.On("BuildInput").Once()
 	provider.On("Allow").Once()
@@ -32,7 +32,7 @@ func TestMiddleware_allowed(t *testing.T) {
 }
 
 func TestMiddleware_notAllowed(t *testing.T) {
-	provider := decisionproviders.MockDecisionProvider{Decision: false}
+	provider := decisionsupportproviders.MockDecisionProvider{Decision: false}
 	provider.On("BuildInput").Once()
 	provider.On("Allow").Once()
 
@@ -55,7 +55,7 @@ func TestMiddleware_notAllowed(t *testing.T) {
 }
 
 func TestMiddleware_notAllowed_dueToBuildError(t *testing.T) {
-	provider := decisionproviders.MockDecisionProvider{Decision: true, BuildErr: errors.New("oops")}
+	provider := decisionsupportproviders.MockDecisionProvider{Decision: true, BuildErr: errors.New("oops")}
 	provider.On("BuildInput").Once()
 
 	support := decisionsupport.DecisionSupport{
@@ -78,7 +78,7 @@ func TestMiddleware_notAllowed_dueToBuildError(t *testing.T) {
 }
 
 func TestMiddleware_notAllowed_dueToAllowError(t *testing.T) {
-	provider := decisionproviders.MockDecisionProvider{Decision: true, AllowErr: errors.New("oops")}
+	provider := decisionsupportproviders.MockDecisionProvider{Decision: true, AllowErr: errors.New("oops")}
 	provider.On("BuildInput").Once()
 	provider.On("Allow").Once()
 
@@ -101,7 +101,7 @@ func TestMiddleware_notAllowed_dueToAllowError(t *testing.T) {
 }
 
 func TestMiddleware_skips(t *testing.T) {
-	provider := decisionproviders.MockDecisionProvider{}
+	provider := decisionsupportproviders.MockDecisionProvider{}
 
 	support := decisionsupport.DecisionSupport{Provider: &provider, Skip: []string{"/health", "/metrics"}}
 

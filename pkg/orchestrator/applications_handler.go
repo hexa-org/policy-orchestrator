@@ -3,7 +3,7 @@ package orchestrator
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
+	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"log"
 	"net/http"
 	"strings"
@@ -120,11 +120,11 @@ func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Re
 	integration := IntegrationInfo{Name: integrationRecord.Name, Key: integrationRecord.Key}
 	application := ApplicationInfo{ObjectID: applicationRecord.ObjectId, Name: applicationRecord.Name, Description: applicationRecord.Description}
 	pro := handler.providers[strings.ToLower(integrationRecord.Provider)] // todo - test for lower?
-	var policyInfos []identityquerylanguage.PolicyInfo
+	var policyInfos []policysupport.PolicyInfo
 	for _, policy := range policies {
-		info := identityquerylanguage.PolicyInfo{Version: policy.Version, Action: policy.Action,
-			Subject: identityquerylanguage.SubjectInfo{AuthenticatedUsers: policy.Subject.AuthenticatedUsers},
-			Object:  identityquerylanguage.ObjectInfo{Resources: policy.Object.Resources}}
+		info := policysupport.PolicyInfo{Version: policy.Version, Action: policy.Action,
+			Subject: policysupport.SubjectInfo{AuthenticatedUsers: policy.Subject.AuthenticatedUsers},
+			Object:  policysupport.ObjectInfo{Resources: policy.Object.Resources}}
 		policyInfos = append(policyInfos, info)
 	}
 	err = pro.SetPolicyInfo(integration, application, policyInfos)

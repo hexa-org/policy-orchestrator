@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -59,7 +59,7 @@ type Object struct {
 	Resources []string `json:"resources"`
 }
 
-func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo) ([]identityquerylanguage.PolicyInfo, error) {
+func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
 	client := o.ensureClientIsAvailable()
 	key := integration.Key
 	foundCredentials := o.credentials(key)
@@ -77,15 +77,15 @@ func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, _ 
 		return nil, unmarshalErr
 	}
 
-	var hexaPolicies []identityquerylanguage.PolicyInfo
+	var hexaPolicies []policysupport.PolicyInfo
 	for _, p := range policies.Policies {
-		hexaPolicies = append(hexaPolicies, identityquerylanguage.PolicyInfo{
+		hexaPolicies = append(hexaPolicies, policysupport.PolicyInfo{
 			Version: p.Version,
 			Action:  p.Action,
-			Subject: identityquerylanguage.SubjectInfo{
+			Subject: policysupport.SubjectInfo{
 				AuthenticatedUsers: p.Subject.AuthenticatedUsers,
 			},
-			Object: identityquerylanguage.ObjectInfo{
+			Object: policysupport.ObjectInfo{
 				Resources: p.Object.Resources,
 			},
 		})
@@ -93,7 +93,7 @@ func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, _ 
 	return hexaPolicies, nil
 }
 
-func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo, policyInfos []identityquerylanguage.PolicyInfo) error {
+func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) error {
 	client := o.ensureClientIsAvailable()
 	key := integration.Key
 	foundCredentials := o.credentials(key)

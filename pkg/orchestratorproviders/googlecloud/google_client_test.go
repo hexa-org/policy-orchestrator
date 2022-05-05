@@ -2,9 +2,9 @@ package googlecloud_test
 
 import (
 	"errors"
-	"github.com/hexa-org/policy-orchestrator/pkg/identityquerylanguage"
-	"github.com/hexa-org/policy-orchestrator/pkg/providers/googlecloud"
-	"github.com/hexa-org/policy-orchestrator/pkg/providers/googlecloud/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud/test"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -72,8 +72,8 @@ func TestGoogleClient_GetBackendPolicies_withBadJson(t *testing.T) {
 }
 
 func TestGoogleClient_SetBackendPolicies(t *testing.T) {
-	policy := identityquerylanguage.PolicyInfo{
-		Version: "aVersion", Action: "anAction", Subject: identityquerylanguage.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: identityquerylanguage.ObjectInfo{Resources: []string{"/"}},
+	policy := policysupport.PolicyInfo{
+		Version: "aVersion", Action: "anAction", Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
 	}
 	m := new(google_cloud_test.MockClient)
 	client := googlecloud.GoogleClient{HttpClient: m}
@@ -83,8 +83,8 @@ func TestGoogleClient_SetBackendPolicies(t *testing.T) {
 }
 
 func TestGoogleClient_SetBackendPolicies_withRequestError(t *testing.T) {
-	policy := identityquerylanguage.PolicyInfo{
-		Version: "aVersion", Action: "anAction", Subject: identityquerylanguage.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: identityquerylanguage.ObjectInfo{Resources: []string{"/"}},
+	policy := policysupport.PolicyInfo{
+		Version: "aVersion", Action: "anAction", Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
 	}
 	m := new(google_cloud_test.MockClient)
 	m.Err = errors.New("oops")

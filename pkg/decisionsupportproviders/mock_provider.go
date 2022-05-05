@@ -1,4 +1,4 @@
-package decisionproviders
+package decisionsupportproviders
 
 import (
 	"github.com/stretchr/testify/mock"

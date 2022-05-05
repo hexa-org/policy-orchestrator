@@ -2,8 +2,8 @@ package microsoftazure_test
 
 import (
 	"errors"
-	"github.com/hexa-org/policy-orchestrator/pkg/providers/microsoftazure"
-	"github.com/hexa-org/policy-orchestrator/pkg/providers/microsoftazure/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/microsoftazure"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/microsoftazure/test"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
