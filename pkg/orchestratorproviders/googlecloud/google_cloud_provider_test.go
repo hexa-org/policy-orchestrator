@@ -2,9 +2,9 @@ package googlecloud_test
 
 import (
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"path/filepath"
@@ -27,29 +27,31 @@ func TestGoogleProvider_BadClientKey(t *testing.T) {
 }
 
 func TestGoogleProvider_DiscoverApplications(t *testing.T) {
-	m := new(google_cloud_test.MockClient)
-	m.ResponseBody = google_cloud_test.Resource("backends.json")
+	m := google_cloud_test.NewMockClient()
+	m.ResponseBody["compute"] = google_cloud_test.Resource("backends.json")
+	m.ResponseBody["appengine"] = google_cloud_test.Resource("appengine.json")
 	p := &googlecloud.GoogleProvider{HttpClientOverride: m}
 
 	info := orchestrator.IntegrationInfo{Name: "google_cloud", Key: []byte("aKey")}
 	applications, _ := p.DiscoverApplications(info)
-	assert.Equal(t, 2, len(applications))
+	assert.Equal(t, 3, len(applications))
 	assert.Equal(t, "google_cloud", p.Name())
 }
 
 func TestGoogleProvider_DiscoverApplications_ignoresProviderCase(t *testing.T) {
-	m := new(google_cloud_test.MockClient)
-	m.ResponseBody = google_cloud_test.Resource("backends.json")
+	m := google_cloud_test.NewMockClient()
+	m.ResponseBody["compute"] = google_cloud_test.Resource("backends.json")
+	m.ResponseBody["appengine"] = google_cloud_test.Resource("appengine.json")
 	p := &googlecloud.GoogleProvider{HttpClientOverride: m}
 
 	info := orchestrator.IntegrationInfo{Name: "Google_Cloud", Key: []byte("aKey")}
 	applications, _ := p.DiscoverApplications(info)
-	assert.Equal(t, 2, len(applications))
+	assert.Equal(t, 3, len(applications))
 	assert.Equal(t, "google_cloud", p.Name())
 }
 
 func TestGoogleProvider_DiscoverApplications_emptyResponse(t *testing.T) {
-	m := new(google_cloud_test.MockClient)
+	m := google_cloud_test.NewMockClient()
 	p := &googlecloud.GoogleProvider{HttpClientOverride: m}
 
 	info := orchestrator.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
@@ -83,8 +85,8 @@ func TestGoogleProvider_HttpClient_withBadKey(t *testing.T) {
 }
 
 func TestGoogleProvider_GetPolicy(t *testing.T) {
-	m := new(google_cloud_test.MockClient)
-	m.ResponseBody = google_cloud_test.Resource("policy.json")
+	m := google_cloud_test.NewMockClient()
+	m.ResponseBody["compute"] = google_cloud_test.Resource("policy.json")
 
 	p := googlecloud.GoogleProvider{HttpClientOverride: m}
 	info := orchestrator.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
@@ -96,7 +98,7 @@ func TestGoogleProvider_SetPolicy(t *testing.T) {
 	policy := policysupport.PolicyInfo{
 		Version: "aVersion", Action: "anAction", Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
 	}
-	m := new(google_cloud_test.MockClient)
+	m := google_cloud_test.NewMockClient()
 
 	p := googlecloud.GoogleProvider{HttpClientOverride: m}
 	info := orchestrator.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
