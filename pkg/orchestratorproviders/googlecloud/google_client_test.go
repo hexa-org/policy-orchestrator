@@ -66,11 +66,11 @@ func TestClient_GetBackendApplications_withBadJson(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestGoogleClient_GetBackendPolicies(t *testing.T) {
+func TestGoogleClient_GetAppEnginePolicies(t *testing.T) {
 	m := google_cloud_test.NewMockClient()
-	m.ResponseBody["compute"] = google_cloud_test.Resource("policy.json")
-	client := googlecloud.GoogleClient{HttpClient: m}
-	infos, _ := client.GetBackendPolicy("anObjectId")
+	m.ResponseBody["appengine"] = google_cloud_test.Resource("policy.json")
+	client := googlecloud.GoogleClient{HttpClient: m, ProjectId: "appengineproject"}
+	infos, _ := client.GetBackendPolicy("appEngineObjectId")
 
 	expectedUsers := []string{
 		"user:phil@example.com",
@@ -81,6 +81,25 @@ func TestGoogleClient_GetBackendPolicies(t *testing.T) {
 	assert.Equal(t, 2, len(infos))
 	assert.Equal(t, expectedUsers, infos[0].Subject.AuthenticatedUsers)
 	assert.Equal(t, []string{"/"}, infos[1].Object.Resources)
+	assert.Equal(t, "https://iap.googleapis.com/v1/projects/appengineproject/iap_web/appengine-appEngineObjectId/services/default:getIamPolicy", m.Url)
+}
+
+func TestGoogleClient_GetBackendPolicies(t *testing.T) {
+	m := google_cloud_test.NewMockClient()
+	m.ResponseBody["compute"] = google_cloud_test.Resource("policy.json")
+	client := googlecloud.GoogleClient{HttpClient: m, ProjectId: "k8sproject"}
+	infos, _ := client.GetBackendPolicy("k8sObjectId")
+
+	expectedUsers := []string{
+		"user:phil@example.com",
+		"group:admins@example.com",
+		"domain:google.com",
+		"serviceAccount:my-project-id@appspot.gserviceaccount.com",
+	}
+	assert.Equal(t, 2, len(infos))
+	assert.Equal(t, expectedUsers, infos[0].Subject.AuthenticatedUsers)
+	assert.Equal(t, []string{"/"}, infos[1].Object.Resources)
+	assert.Equal(t, "https://iap.googleapis.com/v1/projects/k8sproject/iap_web/compute/services/k8sObjectId:getIamPolicy", m.Url)
 }
 
 func TestGoogleClient_GetBackendPolicies_withRequestError(t *testing.T) {
@@ -100,15 +119,28 @@ func TestGoogleClient_GetBackendPolicies_withBadJson(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestGoogleClient_SetAppEnginePolicies(t *testing.T) {
+	policy := policysupport.PolicyInfo{
+		Version: "aVersion", Action: "anAction", Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
+	}
+	m := google_cloud_test.NewMockClient()
+	client := googlecloud.GoogleClient{HttpClient: m, ProjectId: "appengineproject"}
+	err := client.SetBackendPolicy("anObjectId", policy)
+	assert.NoError(t, err)
+	assert.Equal(t, "{\"policy\":{\"bindings\":[{\"role\":\"anAction\",\"members\":[\"aUser\"]}]}}\n", string(m.RequestBody))
+	assert.Equal(t, "https://iap.googleapis.com/v1/projects/appengineproject/iap_web/appengine-anObjectId/services/default:setIamPolicy", m.Url)
+}
+
 func TestGoogleClient_SetBackendPolicies(t *testing.T) {
 	policy := policysupport.PolicyInfo{
 		Version: "aVersion", Action: "anAction", Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
 	}
 	m := google_cloud_test.NewMockClient()
-	client := googlecloud.GoogleClient{HttpClient: m}
+	client := googlecloud.GoogleClient{HttpClient: m, ProjectId: "k8sproject"}
 	err := client.SetBackendPolicy("anObjectId", policy)
 	assert.NoError(t, err)
 	assert.Equal(t, "{\"policy\":{\"bindings\":[{\"role\":\"anAction\",\"members\":[\"aUser\"]}]}}\n", string(m.RequestBody))
+	assert.Equal(t, "https://iap.googleapis.com/v1/projects/k8sproject/iap_web/appengine-anObjectId/services/default:setIamPolicy", m.Url)
 }
 
 func TestGoogleClient_SetBackendPolicies_withRequestError(t *testing.T) {
