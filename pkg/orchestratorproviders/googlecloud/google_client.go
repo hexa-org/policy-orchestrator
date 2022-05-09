@@ -100,9 +100,9 @@ type bindingInfo struct {
 	Members []string `json:"members"`
 }
 
-func (c *GoogleClient) GetBackendPolicy(objectId string) ([]policysupport.PolicyInfo, error) {
+func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]policysupport.PolicyInfo, error) {
 	var url string
-	if strings.HasPrefix(objectId, "k8s") { // todo - revisit and improve the decision here
+	if strings.HasPrefix(name, "k8s") { // todo - revisit and improve the decision here
 		url = fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s:getIamPolicy", c.ProjectId, objectId)
 	} else {
 		url = fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/appengine-%s/services/default:getIamPolicy", c.ProjectId, objectId)
@@ -134,9 +134,9 @@ func (c *GoogleClient) GetBackendPolicy(objectId string) ([]policysupport.Policy
 	return policies, err
 }
 
-func (c *GoogleClient) SetBackendPolicy(objectId string, p policysupport.PolicyInfo) error {
+func (c *GoogleClient) SetBackendPolicy(name, objectId string, p policysupport.PolicyInfo) error {
 	var url string
-	if strings.HasPrefix(objectId, "k8s") { // todo - revisit and improve the decision here
+	if strings.HasPrefix(name, "k8s") { // todo - revisit and improve the decision here
 		url = fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s:setIamPolicy", c.ProjectId, objectId)
 	} else {
 		url = fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/appengine-%s/services/default:setIamPolicy", c.ProjectId, objectId)

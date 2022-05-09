@@ -56,7 +56,7 @@ func (g *GoogleProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo,
 		return infos, createClientErr
 	}
 	googleClient := GoogleClient{client, foundCredentials.ProjectId}
-	return googleClient.GetBackendPolicy(app.ObjectID)
+	return googleClient.GetBackendPolicy(app.Name, app.ObjectID)
 }
 
 func (g *GoogleProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, app orchestrator.ApplicationInfo, policies []policysupport.PolicyInfo) error {
@@ -69,7 +69,7 @@ func (g *GoogleProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo,
 	}
 	googleClient := GoogleClient{client, foundCredentials.ProjectId}
 	for _, policyInfo := range policies {
-		err := googleClient.SetBackendPolicy(app.ObjectID, policyInfo)
+		err := googleClient.SetBackendPolicy(app.Name, app.ObjectID, policyInfo)
 		if err != nil {
 			return err
 		}
