@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type HTTPClient interface {
@@ -100,7 +101,12 @@ type bindingInfo struct {
 }
 
 func (c *GoogleClient) GetBackendPolicy(objectId string) ([]policysupport.PolicyInfo, error) {
-	url := fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s:getIamPolicy", c.ProjectId, objectId)
+	var url string
+	if strings.HasPrefix(objectId, "k8s") { // todo - revisit and improve the decision here
+		url = fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s:getIamPolicy", c.ProjectId, objectId)
+	} else {
+		url = fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/appengine-%s/services/default:getIamPolicy", c.ProjectId, objectId)
+	}
 
 	post, err := c.HttpClient.Post(url, "application/json", bytes.NewReader([]byte{}))
 	if err != nil {
@@ -129,7 +135,12 @@ func (c *GoogleClient) GetBackendPolicy(objectId string) ([]policysupport.Policy
 }
 
 func (c *GoogleClient) SetBackendPolicy(objectId string, p policysupport.PolicyInfo) error {
-	url := fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s:setIamPolicy", c.ProjectId, objectId)
+	var url string
+	if strings.HasPrefix(objectId, "k8s") { // todo - revisit and improve the decision here
+		url = fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s:setIamPolicy", c.ProjectId, objectId)
+	} else {
+		url = fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/appengine-%s/services/default:setIamPolicy", c.ProjectId, objectId)
+	}
 
 	body := policy{bindings{[]bindingInfo{{p.Action, p.Subject.AuthenticatedUsers}}}}
 	b := new(bytes.Buffer)
