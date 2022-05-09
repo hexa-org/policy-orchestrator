@@ -32,6 +32,36 @@ type backendInfo struct {
 	Description string `json:"description"`
 }
 
+type engines struct {
+	ID              string `json:"id"`
+	Name            string `json:"name"`
+	DefaultHostname string `json:"defaultHostname"`
+}
+
+func (c *GoogleClient) GetAppEngineApplications() ([]orchestrator.ApplicationInfo, error) {
+	url := fmt.Sprintf("https://appengine.googleapis.com/v1/apps/%s", c.ProjectId)
+	var appEngines engines
+
+	get, err := c.HttpClient.Get(url)
+	if err != nil {
+		log.Println("Unable to find google cloud app engine applications.")
+		return []orchestrator.ApplicationInfo{}, err
+	}
+	log.Printf("Google cloud response %s.\n", get.Status)
+
+	if err = json.NewDecoder(get.Body).Decode(&appEngines); err != nil {
+		log.Println("Unable to decode google cloud app engine applications.")
+		return []orchestrator.ApplicationInfo{}, err
+	}
+
+	log.Printf("Found google cloud backend app engine applications %s.\n", appEngines.Name)
+
+	apps := []orchestrator.ApplicationInfo{
+		{ObjectID: appEngines.ID, Name: appEngines.Name, Description: appEngines.DefaultHostname},
+	}
+	return apps, nil
+}
+
 func (c *GoogleClient) GetBackendApplications() ([]orchestrator.ApplicationInfo, error) {
 	url := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/backendServices", c.ProjectId)
 
