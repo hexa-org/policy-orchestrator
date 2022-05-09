@@ -37,8 +37,13 @@ func (g *GoogleProvider) DiscoverApplications(info orchestrator.IntegrationInfo)
 		return apps, createClientErr
 	}
 	googleClient := GoogleClient{client, foundCredentials.ProjectId}
-	found, _ := googleClient.GetBackendApplications()
-	apps = append(apps, found...)
+
+	backendApplications, _ := googleClient.GetBackendApplications()
+	apps = append(apps, backendApplications...)
+
+	appEngineApplications, _ := googleClient.GetAppEngineApplications()
+	apps = append(apps, appEngineApplications...)
+
 	return apps, err
 }
 

@@ -2,16 +2,45 @@ package googlecloud_test
 
 import (
 	"errors"
-	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
+func TestGoogleClient_GetAppEngineApplications(t *testing.T) {
+	m := google_cloud_test.NewMockClient()
+	m.ResponseBody["appengine"] = google_cloud_test.Resource("appengine.json")
+	client := googlecloud.GoogleClient{HttpClient: m}
+	applications, _ := client.GetAppEngineApplications()
+
+	assert.Equal(t, 1, len(applications))
+	assert.Equal(t, "hexa-demo", applications[0].ObjectID)
+	assert.Equal(t, "apps/hexa-demo", applications[0].Name)
+	assert.Equal(t, "hexa-demo.uc.r.appspot.com", applications[0].Description)
+}
+
+func TestClient_GetAppEngineApplications_withRequestError(t *testing.T) {
+	m := google_cloud_test.NewMockClient()
+	m.Err = errors.New("oops")
+
+	client := googlecloud.GoogleClient{HttpClient: m}
+	_, err := client.GetAppEngineApplications()
+	assert.Error(t, err)
+}
+
+func TestClient_GetAppEngineApplications_withBadJson(t *testing.T) {
+	m := google_cloud_test.NewMockClient()
+	m.ResponseBody["compute"] = []byte("-")
+	client := googlecloud.GoogleClient{HttpClient: m}
+	_, err := client.GetAppEngineApplications()
+	assert.Error(t, err)
+}
+
 func TestClient_GetBackendApplications(t *testing.T) {
-	m := new(google_cloud_test.MockClient)
-	m.ResponseBody = google_cloud_test.Resource("backends.json")
+	m := google_cloud_test.NewMockClient()
+	m.ResponseBody["compute"] = google_cloud_test.Resource("backends.json")
 	client := googlecloud.GoogleClient{HttpClient: m}
 	applications, _ := client.GetBackendApplications()
 
@@ -21,7 +50,7 @@ func TestClient_GetBackendApplications(t *testing.T) {
 }
 
 func TestClient_GetBackendApplications_withRequestError(t *testing.T) {
-	m := new(google_cloud_test.MockClient)
+	m := google_cloud_test.NewMockClient()
 	m.Err = errors.New("oops")
 
 	client := googlecloud.GoogleClient{HttpClient: m}
@@ -30,16 +59,16 @@ func TestClient_GetBackendApplications_withRequestError(t *testing.T) {
 }
 
 func TestClient_GetBackendApplications_withBadJson(t *testing.T) {
-	m := new(google_cloud_test.MockClient)
-	m.ResponseBody = []byte("-")
+	m := google_cloud_test.NewMockClient()
+	m.ResponseBody["compute"] = []byte("-")
 	client := googlecloud.GoogleClient{HttpClient: m}
 	_, err := client.GetBackendApplications()
 	assert.Error(t, err)
 }
 
 func TestGoogleClient_GetBackendPolicies(t *testing.T) {
-	m := new(google_cloud_test.MockClient)
-	m.ResponseBody = google_cloud_test.Resource("policy.json")
+	m := google_cloud_test.NewMockClient()
+	m.ResponseBody["compute"] = google_cloud_test.Resource("policy.json")
 	client := googlecloud.GoogleClient{HttpClient: m}
 	infos, _ := client.GetBackendPolicy("anObjectId")
 
@@ -55,7 +84,7 @@ func TestGoogleClient_GetBackendPolicies(t *testing.T) {
 }
 
 func TestGoogleClient_GetBackendPolicies_withRequestError(t *testing.T) {
-	m := new(google_cloud_test.MockClient)
+	m := google_cloud_test.NewMockClient()
 	m.Err = errors.New("oops")
 
 	client := googlecloud.GoogleClient{HttpClient: m}
@@ -64,8 +93,8 @@ func TestGoogleClient_GetBackendPolicies_withRequestError(t *testing.T) {
 }
 
 func TestGoogleClient_GetBackendPolicies_withBadJson(t *testing.T) {
-	m := new(google_cloud_test.MockClient)
-	m.ResponseBody = []byte("-")
+	m := google_cloud_test.NewMockClient()
+	m.ResponseBody["compute"] = []byte("-")
 	client := googlecloud.GoogleClient{HttpClient: m}
 	_, err := client.GetBackendPolicy("anObjectId")
 	assert.Error(t, err)
@@ -75,7 +104,7 @@ func TestGoogleClient_SetBackendPolicies(t *testing.T) {
 	policy := policysupport.PolicyInfo{
 		Version: "aVersion", Action: "anAction", Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
 	}
-	m := new(google_cloud_test.MockClient)
+	m := google_cloud_test.NewMockClient()
 	client := googlecloud.GoogleClient{HttpClient: m}
 	err := client.SetBackendPolicy("anObjectId", policy)
 	assert.NoError(t, err)
@@ -86,7 +115,7 @@ func TestGoogleClient_SetBackendPolicies_withRequestError(t *testing.T) {
 	policy := policysupport.PolicyInfo{
 		Version: "aVersion", Action: "anAction", Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
 	}
-	m := new(google_cloud_test.MockClient)
+	m := google_cloud_test.NewMockClient()
 	m.Err = errors.New("oops")
 	client := googlecloud.GoogleClient{HttpClient: m}
 	err := client.SetBackendPolicy("anObjectId", policy)
