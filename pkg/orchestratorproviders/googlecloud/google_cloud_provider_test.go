@@ -90,7 +90,7 @@ func TestGoogleProvider_GetPolicy(t *testing.T) {
 
 	p := googlecloud.GoogleProvider{HttpClientOverride: m}
 	info := orchestrator.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
-	infos, _ := p.GetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "anObjectId"})
+	infos, _ := p.GetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "k8sObjectId"})
 	assert.Equal(t, 2, len(infos))
 }
 
