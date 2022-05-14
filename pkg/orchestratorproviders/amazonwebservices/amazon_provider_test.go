@@ -8,6 +8,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/amazonwebservices/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"github.com/stretchr/testify/assert"
+	"net/http"
 	"testing"
 )
 
@@ -112,10 +113,11 @@ func TestAmazonProvider_ShouldDisable(t *testing.T) {
 func TestAmazonProvider_SetPolicyInfo(t *testing.T) {
 	mockClient := &amazonwebservices_test.MockClient{}
 	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
-	err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{{
+	status, err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{{
 		Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser:aUser@amazon.com", "anotherUser:anotherUser@amazon.com"}},
 		Object:  policysupport.ObjectInfo{Resources: []string{"aResource"}},
 	}})
+	assert.Equal(t, http.StatusCreated, status)
 	assert.NoError(t, err)
 }
 
@@ -123,7 +125,8 @@ func TestAmazonProvider_SetPolicyInfo_withListErr(t *testing.T) {
 	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
 	mockClient.Errs["ListUsers"] = errors.New("oops")
 	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
-	err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{{}})
+	status, err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{{}})
+	assert.Equal(t, http.StatusInternalServerError, status)
 	assert.Error(t, err)
 }
 
@@ -131,10 +134,11 @@ func TestAmazonProvider_SetPolicyInfo_withEnableErr(t *testing.T) {
 	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
 	mockClient.Errs["AdminEnableUser"] = errors.New("oops")
 	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
-	err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{{
+	status, err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{{
 		Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser:aUser@amazon.com", "anotherUser:anotherUser@amazon.com"}},
 		Object:  policysupport.ObjectInfo{Resources: []string{"aResource"}},
 	}})
+	assert.Equal(t, http.StatusInternalServerError, status)
 	assert.Error(t, err)
 }
 
@@ -142,6 +146,7 @@ func TestAmazonProvider_SetPolicyInfo_withDisableErr(t *testing.T) {
 	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
 	mockClient.Errs["AdminDisableUser"] = errors.New("oops")
 	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
-	err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{{}})
+	status, err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{{}})
+	assert.Equal(t, http.StatusInternalServerError, status)
 	assert.Error(t, err)
 }

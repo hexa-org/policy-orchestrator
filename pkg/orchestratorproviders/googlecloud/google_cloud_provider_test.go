@@ -22,7 +22,8 @@ func TestGoogleProvider_BadClientKey(t *testing.T) {
 	_, getErr := p.GetPolicyInfo(info, orchestrator.ApplicationInfo{})
 	assert.Error(t, getErr)
 
-	setErr := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{})
+	status, setErr := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{})
+	assert.Equal(t, 500, status)
 	assert.Error(t, setErr)
 }
 
@@ -102,6 +103,7 @@ func TestGoogleProvider_SetPolicy(t *testing.T) {
 
 	p := googlecloud.GoogleProvider{HttpClientOverride: m}
 	info := orchestrator.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
-	err := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{policy})
+	status, err := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{policy})
+	assert.Equal(t, 201, status)
 	assert.NoError(t, err)
 }

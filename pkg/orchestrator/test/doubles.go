@@ -3,6 +3,7 @@ package orchestrator_test
 import (
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
+	"net/http"
 )
 
 type NoopProvider struct {
@@ -30,6 +31,6 @@ func (n *NoopProvider) GetPolicyInfo(_ orchestrator.IntegrationInfo, _ orchestra
 	}, n.Err
 }
 
-func (n *NoopProvider) SetPolicyInfo(_ orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo, _ []policysupport.PolicyInfo) error {
-	return n.Err
+func (n *NoopProvider) SetPolicyInfo(_ orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo, _ []policysupport.PolicyInfo) (int, error) {
+	return http.StatusCreated, n.Err
 }

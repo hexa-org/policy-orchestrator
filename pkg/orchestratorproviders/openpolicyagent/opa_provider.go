@@ -93,7 +93,7 @@ func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, _ 
 	return hexaPolicies, nil
 }
 
-func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) error {
+func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) (int, error) {
 	client := o.ensureClientIsAvailable()
 	key := integration.Key
 	foundCredentials := o.credentials(key)
@@ -114,14 +114,19 @@ func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, _ 
 	data, marshalErr := json.Marshal(Wrapper{policies})
 	if marshalErr != nil {
 		log.Printf("open-policy-agent, unable to create data file. %s\n", marshalErr)
-		return marshalErr
+		return http.StatusInternalServerError, marshalErr
 	}
 
 	bundle, copyErr := o.MakeDefaultBundle(data)
 	if copyErr != nil {
 		log.Printf("open-policy-agent, unable to create default bundle. %s\n", copyErr)
-		return copyErr
+		return http.StatusInternalServerError, copyErr
 	}
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("unable to set policy.")
+		}
+	}()
 	return client.PostBundle(foundCredentials.BundleUrl, bundle.Bytes())
 }
 
