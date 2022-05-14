@@ -12,6 +12,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"log"
+	"net/http"
 	"strings"
 )
 
@@ -81,10 +82,10 @@ func (a *AmazonProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationI
 	return policies, nil
 }
 
-func (a *AmazonProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) error {
+func (a *AmazonProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) (int, error) {
 	client, err := a.getHttpClient(integrationInfo)
 	if err != nil {
-		return err
+		return http.StatusInternalServerError, err
 	}
 
 	for _, policyInfo := range policyInfos {
@@ -98,23 +99,23 @@ func (a *AmazonProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationI
 		users, listUsersErr := client.ListUsers(context.Background(), &userInput)
 		if listUsersErr != nil {
 			log.Println("Unable to find amazon cognito users.")
-			return listUsersErr
+			return http.StatusInternalServerError, listUsersErr
 		}
 		existingUsers := a.authenticatedUsersFrom(users)
 
 		enableErr := a.EnableUsers(client, applicationInfo.ObjectID, a.ShouldEnable(existingUsers, newUsers))
 		if enableErr != nil {
 			log.Println("Unable to enable amazon cognito users.")
-			return enableErr
+			return http.StatusInternalServerError, enableErr
 		}
 
 		disable := a.DisableUsers(client, applicationInfo.ObjectID, a.ShouldDisable(existingUsers, newUsers))
 		if disable != nil {
 			log.Println("Unable to disable amazon cognito users.")
-			return disable
+			return http.StatusInternalServerError, disable
 		}
 	}
-	return nil
+	return http.StatusCreated, nil
 }
 
 func (a *AmazonProvider) authenticatedUsersFrom(users *cognitoidentityprovider.ListUsersOutput) []string {

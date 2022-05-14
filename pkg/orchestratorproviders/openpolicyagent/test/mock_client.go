@@ -15,6 +15,7 @@ type MockClient struct {
 	mock.Mock
 	Request  []byte
 	Response []byte
+	Status   int
 	Err      error
 	Bundle   bytes.Buffer
 }
@@ -33,6 +34,8 @@ func (m *MockClient) Post(_, contentType string, body io.Reader) (resp *http.Res
 	bundle := form.File["bundle"][0]
 	file, err := bundle.Open()
 	m.Request, _ = io.ReadAll(file)
-
-	return &http.Response{StatusCode: 200, Body: ioutil.NopCloser(bytes.NewReader(m.Response))}, m.Err
+	if m.Status == -1 {
+		panic("shoot")
+	}
+	return &http.Response{StatusCode: m.Status, Body: ioutil.NopCloser(bytes.NewReader(m.Response))}, m.Err
 }

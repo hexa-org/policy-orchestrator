@@ -24,7 +24,7 @@ import (
 func TestDemoFlow(t *testing.T) {
 
 	db, _ := databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
-	_, _ = db.Exec("delete from integrations; delete from applications;")
+	deleteAll := "delete from integrations; delete from applications;"
 
 	demo := makeCmd("/cmd/demo/demo.go", []string{"PORT=8886", "OPA_SERVER_URL: http://localhost:8887/v1/data/authz/allow"})
 	demoConfig := makeCmd("/cmd/democonfig/democonfig.go", []string{"PORT=8889"})
@@ -60,13 +60,21 @@ func TestDemoFlow(t *testing.T) {
 
 	assertContains(t, "http://localhost:8890/humanresources", "Sorry, you're not able to access this page.")
 
+	_, _ = db.Exec(deleteAll)
 	createAnIntegration()
 
-	updateAPolicy()
+	status, _ := updateAPolicy()
+	assert.Equal(t, http.StatusCreated, status)
 
 	time.Sleep(time.Duration(3) * time.Second) // waiting for opa to refresh the bundle
 
 	assertContains(t, "http://localhost:8890/accounting", "Great news, you're able to access this page.")
+
+	_, _ = db.Exec(deleteAll)
+	createAnErroneousIntegration()
+
+	status, _ = updateAPolicy()
+	assert.Equal(t, http.StatusInternalServerError, status)
 }
 
 func assertContains(t *testing.T, url string, contains string) {
@@ -84,7 +92,16 @@ func createAnIntegration() {
 		"http://localhost:8885/integrations", bytes.NewReader(integrationInfo))
 }
 
-func updateAPolicy() {
+func createAnErroneousIntegration() {
+	integrationInfo, _ := json.Marshal(Integration{Name: "bundle:open-policy-agent", Provider: "open_policy_agent",
+		Key: []byte(`{ "bundle_url":"http://localhost:8800" }`)})
+
+	_, _ = hawksupport.HawkPost(&http.Client{},
+		"anId", "0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb",
+		"http://localhost:8885/integrations", bytes.NewReader(integrationInfo))
+}
+
+func updateAPolicy() (int, error) {
 	var apps Applications
 	resp, _ := hawksupport.HawkGet(&http.Client{},
 		"anId", "0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb",
@@ -99,9 +116,10 @@ func updateAPolicy() {
 	_ = json.NewEncoder(&policies).Encode([]Policy{policy})
 
 	url := fmt.Sprintf("http://localhost:8885/applications/%s/policies", apps.Applications[0].ID)
-	_, _ = hawksupport.HawkPost(&http.Client{},
+	resp, err := hawksupport.HawkPost(&http.Client{},
 		"anId", "0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb",
 		url, bytes.NewReader(policies.Bytes()))
+	return resp.StatusCode, err
 }
 
 /// supporting structs
@@ -150,6 +168,8 @@ func makeCmd(cmdString string, envs []string) *exec.Cmd {
 	cmd := exec.Command("go", args...)
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, envs...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
 	// assigning parent and child processes to a process group to ensure all process receive stop signal
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}

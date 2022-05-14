@@ -57,7 +57,7 @@ func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 	return policies, nil
 }
 
-func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) error {
+func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) (int, error) {
 	key := integrationInfo.Key
 	client := a.getHttpClient()
 	azureClient := AzureClient{client}
@@ -74,10 +74,10 @@ func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 		}
 		err := azureClient.SetAppRoleAssignedTo(key, principal.List[0].ID, assignments)
 		if err != nil {
-			return err
+			return http.StatusInternalServerError, err
 		}
 	}
-	return nil
+	return http.StatusCreated, nil
 }
 
 func (a *AzureProvider) getHttpClient() HTTPClient {
