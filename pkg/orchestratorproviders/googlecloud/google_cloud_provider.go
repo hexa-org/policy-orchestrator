@@ -59,22 +59,22 @@ func (g *GoogleProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo,
 	return googleClient.GetBackendPolicy(app.Name, app.ObjectID)
 }
 
-func (g *GoogleProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, app orchestrator.ApplicationInfo, policies []policysupport.PolicyInfo) error {
+func (g *GoogleProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, app orchestrator.ApplicationInfo, policies []policysupport.PolicyInfo) (int, error) {
 	key := integration.Key
 	foundCredentials := g.credentials(key)
 	client, createClientErr := g.getHttpClient(key)
 	if createClientErr != nil {
 		fmt.Println("Unable to create google http client.")
-		return createClientErr
+		return 500, createClientErr
 	}
 	googleClient := GoogleClient{client, foundCredentials.ProjectId}
 	for _, policyInfo := range policies {
 		err := googleClient.SetBackendPolicy(app.Name, app.ObjectID, policyInfo)
 		if err != nil {
-			return err
+			return 500, err
 		}
 	}
-	return nil
+	return 201, nil
 }
 
 func (g *GoogleProvider) NewHttpClient(key []byte) (HTTPClient, error) {

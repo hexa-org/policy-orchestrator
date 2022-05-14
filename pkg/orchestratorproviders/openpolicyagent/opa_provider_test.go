@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"math/rand"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -98,16 +99,17 @@ func TestSetPolicyInfo(t *testing.T) {
   "bundle_url": "aBigUrl"
 }
 `)
-	mockClient := openpolicyagent_test.MockClient{}
+	mockClient := openpolicyagent_test.MockClient{Status: http.StatusCreated}
 	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
 
 	_, file, _, _ := runtime.Caller(0)
 	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
-	err := p.SetPolicyInfo(
+	status, err := p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
 		orchestrator.ApplicationInfo{},
 		[]policysupport.PolicyInfo{{Version: "0.1", Action: "GET", Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"allusers"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}}}},
 	)
+	assert.Equal(t, http.StatusCreated, status)
 	assert.NoError(t, err)
 
 	gzip, _ := compressionsupport.UnGzip(bytes.NewReader(mockClient.Request))
@@ -116,6 +118,25 @@ func TestSetPolicyInfo(t *testing.T) {
 	_ = compressionsupport.UnTarToPath(bytes.NewReader(gzip), path)
 	readFile, _ := ioutil.ReadFile(path + "/bundle/data.json")
 	assert.Equal(t, `{"policies":[{"version":"0.1","action":"GET","subject":{"authenticated_users":["allusers"]},"object":{"resources":["/"]}}]}`, string(readFile))
+}
+
+func TestSetPolicyInfo_withBadResponse(t *testing.T) {
+	key := []byte(`
+{
+  "bundle_url": "aBigUrl"
+}
+`)
+	mockClient := openpolicyagent_test.MockClient{Status: -1}
+	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
+
+	_, file, _, _ := runtime.Caller(0)
+	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
+	status, _ := p.SetPolicyInfo(
+		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
+		orchestrator.ApplicationInfo{},
+		[]policysupport.PolicyInfo{{Version: "0.1", Action: "GET", Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"allusers"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}}}},
+	)
+	assert.Equal(t, 0, status)
 }
 
 func TestMakeDefaultBundle(t *testing.T) {

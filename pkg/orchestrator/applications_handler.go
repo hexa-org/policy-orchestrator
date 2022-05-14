@@ -127,12 +127,12 @@ func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Re
 			Object:  policysupport.ObjectInfo{Resources: policy.Object.Resources}}
 		policyInfos = append(policyInfos, info)
 	}
-	err = pro.SetPolicyInfo(integration, application, policyInfos)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	status, setErr := pro.SetPolicyInfo(integration, application, policyInfos)
+	if setErr != nil || status != 201 {
+		http.Error(w, "unable to update policy.", http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(status)
 }
 
 func (handler ApplicationsHandler) gatherRecords(r *http.Request) (ApplicationRecord, IntegrationRecord, error) {

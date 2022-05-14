@@ -139,7 +139,7 @@ func (s *ApplicationsHandlerSuite) TestSetPolicies() {
 
 	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)
 	resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", s.key, url, bytes.NewReader(buf.Bytes()))
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+	assert.Equal(s.T(), http.StatusCreated, resp.StatusCode)
 }
 
 func (s *ApplicationsHandlerSuite) TestSetPolicies_withErroneousProvider() {

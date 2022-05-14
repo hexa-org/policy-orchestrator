@@ -46,7 +46,7 @@ func (b *BundleClient) GetDataFromBundle(bundleUrl string, path string) ([]byte,
 
 // todo - ignoring errors for the moment while spiking
 
-func (b *BundleClient) PostBundle(bundleUrl string, bundle []byte) error {
+func (b *BundleClient) PostBundle(bundleUrl string, bundle []byte) (int, error) {
 	buf := new(bytes.Buffer)
 	writer := multipart.NewWriter(buf)
 	formFile, _ := writer.CreateFormFile("bundle", "bundle.tar.gz")
@@ -54,6 +54,6 @@ func (b *BundleClient) PostBundle(bundleUrl string, bundle []byte) error {
 	_ = writer.Close()
 	parse, _ := url.Parse(bundleUrl)
 	contentType := writer.FormDataContentType()
-	_, err := b.HttpClient.Post(fmt.Sprintf("http://%s/bundles", parse.Host), contentType, buf)
-	return err
+	resp, err := b.HttpClient.Post(fmt.Sprintf("%s://%s/bundles", parse.Scheme, parse.Host), contentType, buf)
+	return resp.StatusCode, err
 }
