@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 )
 
 type OpaDecisionProvider struct {
@@ -20,7 +21,7 @@ type OpaQuery struct {
 func (o OpaDecisionProvider) BuildInput(r *http.Request) (any interface{}, err error) {
 	return OpaQuery{map[string]interface{}{
 		"method":     "GET",
-		"path":       r.URL.Path,
+		"path":       strings.Split(r.RequestURI, "?")[0],
 		"principals": o.Principals,
 	}}, nil
 }
