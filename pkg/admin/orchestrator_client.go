@@ -3,6 +3,7 @@ package admin
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
 	"io"
 	"log"
@@ -169,9 +170,12 @@ func (c orchestratorClient) GetPolicies(url string) (policies []Policy, rawJson 
 }
 
 func (c orchestratorClient) SetPolicies(url string, policies string) error {
-	_, err := hawksupport.HawkPost(c.client, "anId", c.key, url, strings.NewReader(policies))
+	response, err := hawksupport.HawkPost(c.client, "anId", c.key, url, strings.NewReader(policies))
 	if err != nil {
 		return err
+	}
+	if response.StatusCode != http.StatusCreated {
+		return errors.New("unable to update policies.")
 	}
 	return nil
 }
