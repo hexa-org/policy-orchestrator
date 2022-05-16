@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestOpaDecisionProvider_BuildInput_BuildInput(t *testing.T) {
+func TestOpaDecisionProvider_BuildInput(t *testing.T) {
 	provider := decisionsupportproviders.OpaDecisionProvider{
 		Principals: []interface{}{"allusers", "allauthenticatedusers", "sales@hexaindustries.io"},
 	}
@@ -23,6 +23,18 @@ func TestOpaDecisionProvider_BuildInput_BuildInput(t *testing.T) {
 	assert.Equal(t, "GET", casted["method"])
 	assert.Equal(t, "/noop", casted["path"])
 	assert.Equal(t, []interface{}{"allusers", "allauthenticatedusers", "sales@hexaindustries.io"}, casted["principals"])
+}
+
+func TestOpaDecisionProvider_BuildInput_RemovesQueryParams(t *testing.T) {
+	mockClient := new(MockClient)
+	mockClient.response = []byte("{\"result\":true}")
+	provider := decisionsupportproviders.OpaDecisionProvider{Client: mockClient, Url: "aUrl"}
+
+	req, _ := http.NewRequest("GET", "http://aDomain.com/noop/?param=aParam", nil)
+	req.RequestURI = "/noop"
+	query, _ := provider.BuildInput(req)
+
+	assert.Equal(t, "/noop", query.(decisionsupportproviders.OpaQuery).Input["path"])
 }
 
 type MockClient struct {
