@@ -175,7 +175,7 @@ func (c orchestratorClient) SetPolicies(url string, policies string) error {
 		return err
 	}
 	if response.StatusCode != http.StatusCreated {
-		return errors.New("unable to update policies.")
+		return errors.New("unable to update policies")
 	}
 	return nil
 }
