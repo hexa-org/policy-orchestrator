@@ -89,7 +89,8 @@ func (p appsHandler) Edit(w http.ResponseWriter, r *http.Request) {
 	orchestratorPolicyEndpoint := fmt.Sprintf("%v/applications/%s/policies", p.orchestratorUrl, identifier)
 	policies, rawJson, anotherPossibleErr := p.client.GetPolicies(orchestratorPolicyEndpoint)
 	if err != nil || anotherPossibleErr != nil {
-		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": app, "message": "Unable to contact orchestrator."}}
+		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": app,
+			"message": "Unable to contact orchestrator."}}
 		_ = websupport.ModelAndView(w, "applications_edit", model)
 		log.Println(err)
 		return
