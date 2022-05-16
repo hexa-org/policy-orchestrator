@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: hexa-demo-opa-server-agent
-          image: hexaregistry.azurecr.io/opa-server:latest
+          image: ${AZ_ACR_NAME}.azurecr.io/hexa-opa-server:latest
           args:
             - "run"
             - "--server"
@@ -33,7 +33,7 @@ spec:
             - name: PORT
               value: "8887"
             - name: HEXA_DEMO_URL
-              value: http://hexa-demo.default.svc.cluster.local:8886
+              value: http://hexa-demo-config.default.svc.cluster.local:8889
 
           ports:
             - containerPort: 8887
