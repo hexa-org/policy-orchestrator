@@ -110,6 +110,23 @@ az webapp restart --name ${APP_NAME} \
   --resource-group ${AZ_RESOURCE_GROUP}
 ```
 
+Deploy the Hexa Demo Config App.
+
+```bash
+az webapp create --name ${APP_NAME}-config \
+  --resource-group ${AZ_RESOURCE_GROUP} \
+  --plan ${APP_NAME}plan \
+  --startup-file="democonfig" \
+  --deployment-container-image-name ${AZ_ACR_NAME}.azurecr.io/hexa:tag1
+
+az webapp config appsettings set --name ${APP_NAME}-config \
+  --resource-group ${AZ_RESOURCE_GROUP} \
+  --settings PORT=8889
+
+az webapp restart --name ${APP_NAME}-config \
+  --resource-group ${AZ_RESOURCE_GROUP}
+```
+
 Deploy the OPA Server.
 
 ```bash
@@ -125,7 +142,7 @@ az webapp config appsettings set --name ${APP_NAME}-opa-server \
 
 az webapp config appsettings set --name ${APP_NAME}-opa-server \
   --resource-group ${AZ_RESOURCE_GROUP} \
-  --settings HEXA_DEMO_URL=https://$(az webapp show --name ${APP_NAME} --resource-group ${AZ_RESOURCE_GROUP} | jq -r '.defaultHostName')
+  --settings HEXA_DEMO_URL=https://$(az webapp show --name ${APP_NAME}-config --resource-group ${AZ_RESOURCE_GROUP} | jq -r '.defaultHostName')
 
 az webapp restart --name ${APP_NAME}-opa-server \
   --resource-group ${AZ_RESOURCE_GROUP}
@@ -146,15 +163,30 @@ az webapp restart --name ${APP_NAME} \
 
 _Below is work in progress_
 
+https://medium.com/microsoftazure/azure-kubernetes-service-aks-authentication-and-authorization-between-azure-rbac-and-k8s-rbac-eab57ab8345d
+
+Create the group.
+
+```bash
+az ad group create --display-name AKSAdmin --mail-nickname AKSAdmin
+az ad user list --filter "mail eq 'your@email.com'"
+az ad group member add --group AKSAdmin --member-id your_object_id
+```
+
 Create cluster.
 
 ```bash
+groupid=$(az ad group show --group AKSAdmin --query objectId --output tsv)
+tenantid=$(az account show --query tenantId --output tsv)
 az aks create \
   --resource-group ${AZ_RESOURCE_GROUP} \
   --name ${AZ_AKS_CLUSTER_NAME} \
   --node-count 2 \
   --generate-ssh-keys \
-  --attach-acr ${AZ_ACR_NAME}
+  --attach-acr ${AZ_ACR_NAME} \
+  --enable-aad \
+  --enable-aad --aad-admin-group-object-ids $groupid \
+  --aad-tenant-id $tenantid
 ```
 
 View cluster.
@@ -176,6 +208,13 @@ envsubst < kubernetes/demo/deployment.yaml | kubectl apply -f -
 envsubst < kubernetes/demo/service.yaml | kubectl apply -f -
 ```
 
+Deploy demo config app objects.
+
+```bash
+envsubst < kubernetes/demo-config/deployment.yaml | kubectl apply -f -
+envsubst < kubernetes/demo-config/service.yaml | kubectl apply -f -
+```
+
 Deploy OPA Agent objects.
 
 ```bash
@@ -188,7 +227,7 @@ envsubst < kubernetes/opa-server/service.yaml | kubectl apply -f -
 _Below is work in progress_
 
 Here is a [link](https://www.shawntabrizi.com/aad/common-microsoft-resources-azure-active-directory)
-describing the required-resource-accesses file  resourceAccess and resourceAppId are specific to associated apis
+describing the required-resource-accesses file resourceAccess and resourceAppId are specific to associated apis
 look for User.Read (az ad sp list | grep User.Read)
 
 Create an Azure Active Directory app.

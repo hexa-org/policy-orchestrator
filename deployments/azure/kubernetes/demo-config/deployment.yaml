@@ -1,34 +1,31 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hexa-demo
+  name: hexa-demo-config
 spec:
   selector:
     matchLabels:
-      app: hexa-demo
+      app: hexa-demo-config
       tier: frontend
   replicas: 1
   template:
     metadata:
       labels:
-        app: hexa-demo
+        app: hexa-demo-config
         tier: frontend
     spec:
       containers:
-        - name: hexa-demo
+        - name: hexa-demo-config
           image: ${AZ_ACR_NAME}.azurecr.io/hexa:tag1
           imagePullPolicy: Always
           command:
-            - demo
+            - democonfig
           resources:
             requests:
               cpu: 100m
               memory: 100Mi
           env:
             - name: PORT
-              value: "8886"
-            - name: OPA_SERVER_URL
-              value: http://hexa-demo-opa-server-agent.default.svc.cluster.local:8887/v1/data/authz/allow
-
+              value: "8889"
           ports:
-            - containerPort: 8881
+            - containerPort: 8889
