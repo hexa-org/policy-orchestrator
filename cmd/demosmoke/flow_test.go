@@ -64,7 +64,7 @@ func TestDemoFlow(t *testing.T) {
 	createAnIntegration()
 
 	status, _ := updateAPolicy()
-	assert.Equal(t, http.StatusCreated, status)
+	assert.Equal(t, http.StatusCreated, status.StatusCode)
 
 	time.Sleep(time.Duration(3) * time.Second) // waiting for opa to refresh the bundle
 
@@ -73,8 +73,11 @@ func TestDemoFlow(t *testing.T) {
 	_, _ = db.Exec(deleteAll)
 	createAnErroneousIntegration()
 
-	status, _ = updateAPolicy()
-	assert.Equal(t, http.StatusInternalServerError, status)
+	resp, _ := updateAPolicy()
+	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+
+	body, _ := io.ReadAll(resp.Body)
+	assert.Equal(t, "unable to update policy.\n", string(body))
 }
 
 func assertContains(t *testing.T, url string, contains string) {
@@ -101,7 +104,7 @@ func createAnErroneousIntegration() {
 		"http://localhost:8885/integrations", bytes.NewReader(integrationInfo))
 }
 
-func updateAPolicy() (int, error) {
+func updateAPolicy() (*http.Response, error) {
 	var apps Applications
 	resp, _ := hawksupport.HawkGet(&http.Client{},
 		"anId", "0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb",
@@ -119,7 +122,7 @@ func updateAPolicy() (int, error) {
 	resp, err := hawksupport.HawkPost(&http.Client{},
 		"anId", "0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb",
 		url, bytes.NewReader(policies.Bytes()))
-	return resp.StatusCode, err
+	return resp, err
 }
 
 /// supporting structs
