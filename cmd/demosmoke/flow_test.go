@@ -18,6 +18,7 @@ import (
 	"runtime"
 	"syscall"
 	"testing"
+	"time"
 )
 
 func TestDemoFlow(t *testing.T) {
@@ -47,6 +48,9 @@ func TestDemoFlow(t *testing.T) {
 	openPolicyAgent := exec.Command("opa", "run", "--server", "--addr", "localhost:8887", "-c", config)
 	openPolicyAgent.Env = os.Environ()
 	openPolicyAgent.Env = append(openPolicyAgent.Env, "HEXA_DEMO_URL=http://localhost:8889")
+	openPolicyAgent.Stdout = os.Stdout
+	openPolicyAgent.Stderr = os.Stderr
+	openPolicyAgent.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
 	startCmd(demo, 8886)
 	startCmd(demoConfig, 8889)
@@ -69,27 +73,29 @@ func TestDemoFlow(t *testing.T) {
 	_, _ = db.Exec(deleteAll)
 	createAnIntegration()
 
-	//status, _ := updateAPolicy()
-	//assert.Equal(t, http.StatusCreated, status.StatusCode)
-	//
-	//time.Sleep(time.Duration(3) * time.Second) // waiting for opa to refresh the bundle
-	//
-	//assertContains(t, "http://localhost:8890/accounting", "Great news, you're able to access this page.")
-	//
-	//_, _ = db.Exec(deleteAll)
-	//createAnErroneousIntegration()
-	//
-	//resp, _ := updateAPolicy()
-	//assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
-	//
-	//body, _ := io.ReadAll(resp.Body)
-	//assert.Equal(t, "unable to update policy.\n", string(body))
+	status, updateErr := updateAPolicy()
+	assert.Equal(t, http.StatusCreated, status.StatusCode)
+	assert.NoError(t, updateErr)
+
+	time.Sleep(time.Duration(3) * time.Second) // waiting for opa to refresh the bundle
+
+	assertContains(t, "http://localhost:8890/accounting", "Great news, you're able to access this page.")
+
+	_, _ = db.Exec(deleteAll)
+	createAnErroneousIntegration()
+
+	resp, secondUpdateErr := updateAPolicy()
+	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+	assert.NoError(t, secondUpdateErr)
+
+	body, _ := io.ReadAll(resp.Body)
+	assert.Equal(t, "unable to update policy.\n", string(body))
 }
 
 func assertContains(t *testing.T, url string, contains string) {
 	resp, _ := http.Get(url)
 	body, _ := io.ReadAll(resp.Body)
-	assert.Contains(t, string(body), contains)
+	assert.Contains(t, string(body), contains, url)
 }
 
 func createAnIntegration() {
@@ -118,7 +124,7 @@ func updateAPolicy() (*http.Response, error) {
 	_ = json.NewDecoder(resp.Body).Decode(&apps)
 
 	var policies bytes.Buffer
-	policy := Policy{Version: "v0.4", Actions: []Action{{"GET"}},
+	policy := Policy{Version: "0.4", Actions: []Action{{"GET"}},
 		Subject: Subject{AuthenticatedUsers: []string{"accounting@hexaindustries.io", "sales@hexaindustries.io"}},
 		Object:  Object{Resources: []string{"/accounting"}},
 	}
@@ -147,8 +153,9 @@ type Applications struct {
 type Application struct {
 	ID string `json:"id"`
 }
+
 type Policies struct {
-	Policies []Policy
+	Policies []Policy `json:"policies"`
 }
 
 type Policy struct {
@@ -159,8 +166,9 @@ type Policy struct {
 }
 
 type Action struct {
-	URI string
+	URI string `json:"uri"`
 }
+
 type Subject struct {
 	AuthenticatedUsers []string `json:"authenticated_users"`
 }

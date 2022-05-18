@@ -145,7 +145,7 @@ type policy struct {
 }
 
 type action struct {
-	URI string
+	URI string `json:"uri"`
 }
 
 type subject struct {

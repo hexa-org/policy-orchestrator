@@ -13,6 +13,6 @@ matches(policy) {
     input.path in policy.object.resources
     input.principals[_] in policy.subject.authenticated_users
 }
-matches(action) {
+matchesAction(action) {
     input.method == action.uri
 }
