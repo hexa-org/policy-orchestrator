@@ -110,11 +110,11 @@ func (s *ApplicationsHandlerSuite) TestGetPolicies() {
 	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, url)
 	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
 
-	var policies []orchestrator.Policy
+	var policies orchestrator.Policies
 	_ = json.NewDecoder(resp.Body).Decode(&policies)
-	assert.Equal(s.T(), 2, len(policies))
+	assert.Equal(s.T(), 2, len(policies.Policies))
 
-	policy := policies[0]
+	policy := policies.Policies[0]
 	assert.Equal(s.T(), "anAction", policy.Action)
 	assert.Equal(s.T(), "aVersion", policy.Version)
 	assert.Equal(s.T(), []string{"aUser"}, policy.Subject.AuthenticatedUsers)
@@ -135,7 +135,7 @@ func (s *ApplicationsHandlerSuite) TestGetPolicies_withRequestFails() {
 func (s *ApplicationsHandlerSuite) TestSetPolicies() {
 	var buf bytes.Buffer
 	policy := orchestrator.Policy{Version: "v0.1", Action: "anAction", Subject: orchestrator.Subject{AuthenticatedUsers: []string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{Resources: []string{"/"}}}
-	_ = json.NewEncoder(&buf).Encode([]orchestrator.Policy{policy})
+	_ = json.NewEncoder(&buf).Encode(orchestrator.Policies{Policies: []orchestrator.Policy{policy}})
 
 	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)
 	resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", s.key, url, bytes.NewReader(buf.Bytes()))

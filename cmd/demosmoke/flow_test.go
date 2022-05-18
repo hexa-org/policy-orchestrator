@@ -116,7 +116,7 @@ func updateAPolicy() (*http.Response, error) {
 		Subject: Subject{AuthenticatedUsers: []string{"accounting@hexaindustries.io", "sales@hexaindustries.io"}},
 		Object:  Object{Resources: []string{"/accounting"}},
 	}
-	_ = json.NewEncoder(&policies).Encode([]Policy{policy})
+	_ = json.NewEncoder(&policies).Encode(Policies{[]Policy{policy}})
 
 	url := fmt.Sprintf("http://localhost:8885/applications/%s/policies", apps.Applications[0].ID)
 	resp, err := hawksupport.HawkPost(&http.Client{},
@@ -140,6 +140,9 @@ type Applications struct {
 
 type Application struct {
 	ID string `json:"id"`
+}
+type Policies struct {
+	Policies []Policy
 }
 
 type Policy struct {

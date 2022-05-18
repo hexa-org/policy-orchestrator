@@ -144,7 +144,7 @@ func TestOrchestratorClient_DeleteIntegrations(t *testing.T) {
 
 func TestOrchestratorClient_GetPolicy(t *testing.T) {
 	mockClient := new(MockClient)
-	rawJson := "[{\"version\":\"aVersion\",\"action\":\"anAction\",\"subject\":{\"authenticated_users\":[\"aUser\"]},\"object\":{\"resources\":[\"/\"]}},{\"version\":\"aVersion\",\"action\":\"anotherAction\",\"subject\":{\"authenticated_users\":[\"anotherUser\"]},\"object\":{\"resources\":[\"/\"]}}]"
+	rawJson := "{\"policies\":[{\"version\":\"aVersion\",\"action\":\"anAction\",\"subject\":{\"authenticated_users\":[\"aUser\"]},\"object\":{\"resources\":[\"/\"]}},{\"version\":\"aVersion\",\"action\":\"anotherAction\",\"subject\":{\"authenticated_users\":[\"anotherUser\"]},\"object\":{\"resources\":[\"/\"]}}]}"
 	mockClient.response = []byte(rawJson)
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 
@@ -177,7 +177,7 @@ func TestOrchestratorClient_GetPolicy_withBadJson(t *testing.T) {
 
 func TestOrchestratorClient_SetPolicy(t *testing.T) {
 	mockClient := new(MockClient)
-	policies := "[{\"version\":\"aVersion\",\"action\":\"anAction\",\"subject\":{\"authenticated_users\":[\"aUser\"]},\"object\":{\"resources\":[\"/\"]}},{\"version\":\"aVersion\",\"action\":\"anotherAction\",\"subject\":{\"authenticated_users\":[\"anotherUser\"]},\"object\":{\"resources\":[\"/\"]}}]"
+	policies := "{\"policies\":[[{\"version\":\"aVersion\",\"action\":\"anAction\",\"subject\":{\"authenticated_users\":[\"aUser\"]},\"object\":{\"resources\":[\"/\"]}},{\"version\":\"aVersion\",\"action\":\"anotherAction\",\"subject\":{\"authenticated_users\":[\"anotherUser\"]},\"object\":{\"resources\":[\"/\"]}}]}"
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 	err := client.SetPolicies("localhost:8883/applications/anId/policies", policies)
 	assert.NoError(t, err)

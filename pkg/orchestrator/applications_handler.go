@@ -21,6 +21,10 @@ type Application struct {
 	Description   string `json:"description"`
 }
 
+type Policies struct {
+	Policies []Policy `json:"policies"`
+}
+
 type Policy struct {
 	Version string  `json:"version"`
 	Action  string  `json:"action"`
@@ -98,7 +102,7 @@ func (handler ApplicationsHandler) GetPolicies(w http.ResponseWriter, r *http.Re
 				Object{rec.Object.Resources},
 			})
 	}
-	data, _ := json.Marshal(list)
+	data, _ := json.Marshal(Policies{list})
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(data)
@@ -111,7 +115,7 @@ func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	var policies []Policy
+	var policies Policies
 	if erroneousDecode := json.NewDecoder(r.Body).Decode(&policies); erroneousDecode != nil {
 		http.Error(w, erroneousDecode.Error(), http.StatusInternalServerError)
 		return
@@ -121,7 +125,7 @@ func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Re
 	application := ApplicationInfo{ObjectID: applicationRecord.ObjectId, Name: applicationRecord.Name, Description: applicationRecord.Description}
 	pro := handler.providers[strings.ToLower(integrationRecord.Provider)] // todo - test for lower?
 	var policyInfos []policysupport.PolicyInfo
-	for _, policy := range policies {
+	for _, policy := range policies.Policies {
 		info := policysupport.PolicyInfo{Version: policy.Version, Action: policy.Action,
 			Subject: policysupport.SubjectInfo{AuthenticatedUsers: policy.Subject.AuthenticatedUsers},
 			Object:  policysupport.ObjectInfo{Resources: policy.Object.Resources}}
