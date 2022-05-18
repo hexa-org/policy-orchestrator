@@ -66,19 +66,22 @@ func (p appsHandler) Show(w http.ResponseWriter, r *http.Request) {
 	identifier := mux.Vars(r)["id"]
 	orchestratorAppEndpoint := fmt.Sprintf("%v/applications/%s", p.orchestratorUrl, identifier)
 	app, err := p.client.Application(orchestratorAppEndpoint)
+
 	orchestratorPolicyEndpoint := fmt.Sprintf("%v/applications/%s/policies", p.orchestratorUrl, identifier)
-	policies, rawJson, anotherPossibleErr := p.client.GetPolicies(orchestratorPolicyEndpoint)
+	foundPolicies, rawJson, anotherPossibleErr := p.client.GetPolicies(orchestratorPolicyEndpoint)
+
 	if err != nil || anotherPossibleErr != nil {
-		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "message": "Unable to contact orchestrator."}}
+		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "message": "Error communicating with the orchestrator."}}
 		_ = websupport.ModelAndView(w, "applications_show", model)
 		log.Println(err)
 		return
 	}
+
 	var buffer bytes.Buffer
 	_ = json.Indent(&buffer, []byte(rawJson), "", "  ")
 	resourceLink := fmt.Sprintf("/applications/%v", identifier)
 	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "resource_link": resourceLink,
-		"application": app, "policies": policies, "rawJson": buffer.String()}}
+		"application": app, "policies": foundPolicies, "rawJson": buffer.String()}}
 	_ = websupport.ModelAndView(w, "applications_show", model)
 }
 
@@ -86,18 +89,21 @@ func (p appsHandler) Edit(w http.ResponseWriter, r *http.Request) {
 	identifier := mux.Vars(r)["id"]
 	orchestratorAppsEndpoint := fmt.Sprintf("%v/applications/%s", p.orchestratorUrl, identifier)
 	app, err := p.client.Application(orchestratorAppsEndpoint)
+
 	orchestratorPolicyEndpoint := fmt.Sprintf("%v/applications/%s/policies", p.orchestratorUrl, identifier)
-	policies, rawJson, anotherPossibleErr := p.client.GetPolicies(orchestratorPolicyEndpoint)
+	foundPolicies, rawJson, anotherPossibleErr := p.client.GetPolicies(orchestratorPolicyEndpoint)
+
 	if err != nil || anotherPossibleErr != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": app,
-			"message": "Unable to contact orchestrator."}}
+			"message": "Error communicating with the orchestrator."}}
 		_ = websupport.ModelAndView(w, "applications_edit", model)
 		log.Println(err)
 		return
 	}
+
 	var buffer bytes.Buffer
 	_ = json.Indent(&buffer, []byte(rawJson), "", "  ")
-	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": app, "policies": policies, "rawJson": buffer.String()}}
+	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": app, "policies": foundPolicies, "rawJson": buffer.String()}}
 	_ = websupport.ModelAndView(w, "applications_edit", model)
 }
 
@@ -106,10 +112,11 @@ func (p appsHandler) Update(w http.ResponseWriter, r *http.Request) {
 	orchestratorPolicyEndpoint := fmt.Sprintf("%v/applications/%s/policies", p.orchestratorUrl, identifier)
 	value := r.FormValue("policy")
 	err := p.client.SetPolicies(orchestratorPolicyEndpoint, value)
+
 	if err != nil {
 		orchestratorAppsEndpoint := fmt.Sprintf("%v/applications/%s", p.orchestratorUrl, identifier)
 		app, _ := p.client.Application(orchestratorAppsEndpoint)
-		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": app, "message": "Unable to contact orchestrator."}}
+		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": app, "message": "Error communicating with the orchestrator."}}
 		_ = websupport.ModelAndView(w, "applications_edit", model)
 		log.Println(err)
 		return

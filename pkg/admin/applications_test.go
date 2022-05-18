@@ -89,7 +89,7 @@ func (suite *ApplicationsSuite) TestApplication_withErroneousGet() {
 	resp, _ := http.Get(fmt.Sprintf("http://%s/applications/000", suite.server.Addr))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Something went wrong.")
-	assert.Contains(suite.T(), string(body), "Unable to contact orchestrator.")
+	assert.Contains(suite.T(), string(body), "Error communicating with the orchestrator.")
 }
 
 func (suite *ApplicationsSuite) TestApplication_Edit() {
@@ -110,7 +110,7 @@ func (suite *ApplicationsSuite) TestApplication_Edit_withErroneousGet() {
 	resp, _ := http.Get(fmt.Sprintf("http://%s/applications/%s/edit", suite.server.Addr, identifier))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Something went wrong.")
-	assert.Contains(suite.T(), string(body), "Unable to contact orchestrator.")
+	assert.Contains(suite.T(), string(body), "Error communicating with the orchestrator.")
 }
 
 func (suite *ApplicationsSuite) TestApplication_Update() {
@@ -133,5 +133,5 @@ func (suite *ApplicationsSuite) TestApplication_Update_withErroneousGet() {
 	resp, _ := http.Post(fmt.Sprintf("http://%s/applications/%s", suite.server.Addr, identifier), "application/json", nil)
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Something went wrong.")
-	assert.Contains(suite.T(), string(body), "Unable to contact orchestrator.")
+	assert.Contains(suite.T(), string(body), "Error communicating with the orchestrator.")
 }

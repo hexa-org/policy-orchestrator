@@ -40,7 +40,7 @@ func (o *OpaProvider) DiscoverApplications(info orchestrator.IntegrationInfo) (a
 	return apps, err
 }
 
-type Wrapper struct {
+type Policies struct {
 	Policies []Policy `json:"policies"`
 }
 
@@ -71,7 +71,7 @@ func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, _ 
 		return nil, err
 	}
 
-	var policies Wrapper
+	var policies Policies
 	unmarshalErr := json.Unmarshal(data, &policies)
 	if unmarshalErr != nil {
 		return nil, unmarshalErr
@@ -111,7 +111,7 @@ func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, _ 
 			},
 		})
 	}
-	data, marshalErr := json.Marshal(Wrapper{policies})
+	data, marshalErr := json.Marshal(Policies{policies})
 	if marshalErr != nil {
 		log.Printf("open-policy-agent, unable to create data file. %s\n", marshalErr)
 		return http.StatusInternalServerError, marshalErr

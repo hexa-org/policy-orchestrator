@@ -133,6 +133,10 @@ func (c orchestratorClient) DeleteIntegration(url string) error {
 	return err
 }
 
+type policies struct {
+	Policies []policy `json:"policies"`
+}
+
 type policy struct {
 	Version string  `json:"version"`
 	Action  string  `json:"action"`
@@ -148,25 +152,26 @@ type object struct {
 	Resources []string `json:"resources"`
 }
 
-func (c orchestratorClient) GetPolicies(url string) (policies []Policy, rawJson string, err error) {
-	resp, err := hawksupport.HawkGet(c.client, "anId", c.key, url)
-	if err != nil {
-		return []Policy{}, rawJson, err
+func (c orchestratorClient) GetPolicies(url string) ([]Policy, string, error) {
+	resp, getErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
+	if getErr != nil {
+		return []Policy{}, "", getErr
 	}
 
-	var jsonResponse []policy
-	all, err := io.ReadAll(resp.Body)
-	rawJson = string(all)
+	var jsonResponse policies
+	all, readErr := io.ReadAll(resp.Body)
+	rawJson := string(all)
 	decoder := json.NewDecoder(bytes.NewReader(all))
-	err = decoder.Decode(&jsonResponse)
-	if err != nil {
-		return []Policy{}, rawJson, err
+	readErr = decoder.Decode(&jsonResponse)
+	if readErr != nil {
+		return []Policy{}, rawJson, readErr
 	}
 
-	for _, p := range jsonResponse {
-		policies = append(policies, Policy{Version: p.Version, Action: p.Action, Subject: Subject{AuthenticatedUsers: p.Subject.AuthenticatedUsers}, Object: Object{Resources: p.Object.Resources}})
+	var foundPolicies []Policy
+	for _, p := range jsonResponse.Policies {
+		foundPolicies = append(foundPolicies, Policy{Version: p.Version, Action: p.Action, Subject: Subject{AuthenticatedUsers: p.Subject.AuthenticatedUsers}, Object: Object{Resources: p.Object.Resources}})
 	}
-	return policies, rawJson, nil
+	return foundPolicies, rawJson, nil
 }
 
 func (c orchestratorClient) SetPolicies(url string, policies string) error {
