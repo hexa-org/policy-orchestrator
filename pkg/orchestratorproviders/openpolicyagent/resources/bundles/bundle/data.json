@@ -2,7 +2,7 @@
   "policies": [
     {
       "version": "0.4",
-      "action": "GET",
+      "actions": [{"uri": "GET"}],
       "subject": {
         "authenticated_users": [
           "allusers"
@@ -16,7 +16,7 @@
     },
     {
       "version": "0.4",
-      "action": "GET",
+      "actions": [{"uri": "GET"}],
       "subject": {
         "authenticated_users": [
           "sales@hexaindustries.io",
@@ -32,7 +32,7 @@
     },
     {
       "version": "0.4",
-      "action": "GET",
+      "actions": [{"uri": "GET"}],
       "subject": {
         "authenticated_users": [
           "accounting@hexaindustries.io"
@@ -46,7 +46,7 @@
     },
     {
       "version": "0.4",
-      "action": "GET",
+      "actions": [{"uri": "GET"}],
       "subject": {
         "authenticated_users": [
           "humanresources@hexaindustries.io"

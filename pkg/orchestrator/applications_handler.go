@@ -26,10 +26,14 @@ type Policies struct {
 }
 
 type Policy struct {
-	Version string  `json:"version"`
-	Action  string  `json:"action"`
-	Subject Subject `json:"subject"`
-	Object  Object  `json:"object"`
+	Version string   `json:"version"`
+	Actions []Action `json:"actions"`
+	Subject Subject  `json:"subject"`
+	Object  Object   `json:"object"`
+}
+
+type Action struct {
+	URI string
 }
 
 type Subject struct {
@@ -94,10 +98,14 @@ func (handler ApplicationsHandler) GetPolicies(w http.ResponseWriter, r *http.Re
 
 	var list []Policy
 	for _, rec := range records {
+		var actions []Action
+		for _, a := range rec.Actions {
+			actions = append(actions, Action{a.URI})
+		}
 		list = append(
 			list, Policy{
 				rec.Version,
-				rec.Action,
+				actions,
 				Subject{rec.Subject.AuthenticatedUsers},
 				Object{rec.Object.Resources},
 			})
@@ -126,7 +134,11 @@ func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Re
 	pro := handler.providers[strings.ToLower(integrationRecord.Provider)] // todo - test for lower?
 	var policyInfos []policysupport.PolicyInfo
 	for _, policy := range policies.Policies {
-		info := policysupport.PolicyInfo{Version: policy.Version, Action: policy.Action,
+		var actionInfos []policysupport.ActionInfo
+		for _, a := range policy.Actions {
+			actionInfos = append(actionInfos, policysupport.ActionInfo{a.URI})
+		}
+		info := policysupport.PolicyInfo{Version: policy.Version, Actions: actionInfos,
 			Subject: policysupport.SubjectInfo{AuthenticatedUsers: policy.Subject.AuthenticatedUsers},
 			Object:  policysupport.ObjectInfo{Resources: policy.Object.Resources}}
 		policyInfos = append(policyInfos, info)

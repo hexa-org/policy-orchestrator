@@ -121,7 +121,7 @@ func TestGoogleClient_GetBackendPolicies_withBadJson(t *testing.T) {
 
 func TestGoogleClient_SetAppEnginePolicies(t *testing.T) {
 	policy := policysupport.PolicyInfo{
-		Version: "aVersion", Action: "anAction", Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
+		Version: "aVersion", Actions: []policysupport.ActionInfo{{"anAction"}}, Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
 	}
 	m := google_cloud_test.NewMockClient()
 	client := googlecloud.GoogleClient{HttpClient: m, ProjectId: "appengineproject"}
@@ -133,7 +133,7 @@ func TestGoogleClient_SetAppEnginePolicies(t *testing.T) {
 
 func TestGoogleClient_SetBackendPolicies(t *testing.T) {
 	policy := policysupport.PolicyInfo{
-		Version: "aVersion", Action: "anAction", Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
+		Version: "aVersion", Actions: []policysupport.ActionInfo{{"anAction"}}, Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
 	}
 	m := google_cloud_test.NewMockClient()
 	client := googlecloud.GoogleClient{HttpClient: m, ProjectId: "k8sproject"}
@@ -145,7 +145,7 @@ func TestGoogleClient_SetBackendPolicies(t *testing.T) {
 
 func TestGoogleClient_SetBackendPolicies_withRequestError(t *testing.T) {
 	policy := policysupport.PolicyInfo{
-		Version: "aVersion", Action: "anAction", Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
+		Version: "aVersion", Actions: []policysupport.ActionInfo{{"anAction"}}, Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
 	}
 	m := google_cloud_test.NewMockClient()
 	m.Err = errors.New("oops")

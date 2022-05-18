@@ -20,9 +20,13 @@ type Application struct {
 
 type Policy struct {
 	Version string
-	Action  string
+	Actions []Action
 	Subject Subject
 	Object  Object
+}
+
+type Action struct {
+	URI string
 }
 
 type Subject struct {

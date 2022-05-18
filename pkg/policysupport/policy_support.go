@@ -4,9 +4,13 @@ package policysupport
 
 type PolicyInfo struct {
 	Version string
-	Action  string
+	Actions []ActionInfo
 	Subject SubjectInfo
 	Object  ObjectInfo
+}
+
+type ActionInfo struct {
+	URI string
 }
 
 type SubjectInfo struct {
