@@ -34,7 +34,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
       "actions": [{"uri": "GET"}],
       "subject": {
         "authenticated_users": [
-          "allusers"
+          "allusers", "allauthenticated"
         ]
       },
       "object": {
