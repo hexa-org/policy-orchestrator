@@ -9,7 +9,10 @@ anyMatching {
 	matches(data.bundle.policies[i])
 }
 matches(policy) {
-    input.method == policy.action
+    matchesAction(policy.actions[i])
     input.path in policy.object.resources
     input.principals[_] in policy.subject.authenticated_users
+}
+matches(action) {
+    input.method == action.uri
 }

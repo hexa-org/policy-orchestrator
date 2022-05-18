@@ -49,7 +49,16 @@
                             {{- end}}
                         </table>
                     </td>
-                    <td>{{$policy.Action}}</td>
+                    <td class="compact">
+                        <table class="no-margin">
+                            <tr class="no-border"><td>Actions</td></tr>
+                            {{- range $action := $policy.Actions}}
+                                <tr class="no-border">
+                                    <td>{{$action}}</td>
+                                </tr>
+                            {{- end}}
+                        </table>
+                    </td>
                     <td class="compact">
                         <table class="no-margin">
                             <tr class="no-border"><td>Resources</td></tr>

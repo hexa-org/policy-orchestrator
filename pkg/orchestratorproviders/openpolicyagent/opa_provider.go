@@ -45,10 +45,14 @@ type Policies struct {
 }
 
 type Policy struct {
-	Version string  `json:"version"`
-	Action  string  `json:"action"`
-	Subject Subject `json:"subject"`
-	Object  Object  `json:"object"`
+	Version string   `json:"version"`
+	Actions []Action `json:"actions"`
+	Subject Subject  `json:"subject"`
+	Object  Object   `json:"object"`
+}
+
+type Action struct {
+	URI string
 }
 
 type Subject struct {
@@ -79,9 +83,13 @@ func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, _ 
 
 	var hexaPolicies []policysupport.PolicyInfo
 	for _, p := range policies.Policies {
+		var actions []policysupport.ActionInfo
+		for _, a := range p.Actions {
+			actions = append(actions, policysupport.ActionInfo{a.URI})
+		}
 		hexaPolicies = append(hexaPolicies, policysupport.PolicyInfo{
 			Version: p.Version,
-			Action:  p.Action,
+			Actions: actions,
 			Subject: policysupport.SubjectInfo{
 				AuthenticatedUsers: p.Subject.AuthenticatedUsers,
 			},
@@ -100,9 +108,13 @@ func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, _ 
 
 	var policies []Policy
 	for _, p := range policyInfos {
+		var actions []Action
+		for _, a := range p.Actions {
+			actions = append(actions, Action{a.URI})
+		}
 		policies = append(policies, Policy{
 			Version: p.Version,
-			Action:  p.Action,
+			Actions: actions,
 			Subject: Subject{
 				p.Subject.AuthenticatedUsers,
 			},

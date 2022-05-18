@@ -49,7 +49,7 @@ func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 
 	policies = append(policies, policysupport.PolicyInfo{
 		Version: "0.2",
-		Action:  appRoleId,
+		Actions: []policysupport.ActionInfo{{appRoleId}},
 		Subject: policysupport.SubjectInfo{AuthenticatedUsers: principalIdsAndDisplayNames},
 		Object:  policysupport.ObjectInfo{Resources: []string{resourceIdAndDisplayName}},
 	})
@@ -67,7 +67,7 @@ func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 		resources := policyInfo.Object.Resources[0]
 		for _, user := range policyInfo.Subject.AuthenticatedUsers {
 			assignments = append(assignments, AzureAppRoleAssignment{
-				AppRoleId:   policyInfo.Action,
+				AppRoleId:   policyInfo.Actions[0].URI,
 				PrincipalId: strings.Split(user, ":")[0],
 				ResourceId:  strings.Split(resources, ":")[0],
 			})

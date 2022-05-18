@@ -138,10 +138,14 @@ type policies struct {
 }
 
 type policy struct {
-	Version string  `json:"version"`
-	Action  string  `json:"action"`
-	Subject subject `json:"subject"`
-	Object  object  `json:"object"`
+	Version string   `json:"version"`
+	Actions []action `json:"actions"`
+	Subject subject  `json:"subject"`
+	Object  object   `json:"object"`
+}
+
+type action struct {
+	URI string
 }
 
 type subject struct {
@@ -169,7 +173,15 @@ func (c orchestratorClient) GetPolicies(url string) ([]Policy, string, error) {
 
 	var foundPolicies []Policy
 	for _, p := range jsonResponse.Policies {
-		foundPolicies = append(foundPolicies, Policy{Version: p.Version, Action: p.Action, Subject: Subject{AuthenticatedUsers: p.Subject.AuthenticatedUsers}, Object: Object{Resources: p.Object.Resources}})
+		var actions []Action
+		for _, a := range p.Actions {
+			actions = append(actions, Action{a.URI})
+		}
+		foundPolicies = append(foundPolicies, Policy{
+			Version: p.Version,
+			Actions: actions,
+			Subject: Subject{AuthenticatedUsers: p.Subject.AuthenticatedUsers},
+			Object:  Object{Resources: p.Object.Resources}})
 	}
 	return foundPolicies, rawJson, nil
 }

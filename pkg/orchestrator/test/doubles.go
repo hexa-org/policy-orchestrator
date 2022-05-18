@@ -26,8 +26,8 @@ func (n *NoopProvider) DiscoverApplications(info orchestrator.IntegrationInfo) (
 
 func (n *NoopProvider) GetPolicyInfo(_ orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
 	return []policysupport.PolicyInfo{
-		{"aVersion", "anAction", policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, policysupport.ObjectInfo{Resources: []string{"/"}}},
-		{"aVersion", "anotherAction", policysupport.SubjectInfo{AuthenticatedUsers: []string{"anotherUser"}}, policysupport.ObjectInfo{Resources: []string{"/"}}},
+		{"aVersion", []policysupport.ActionInfo{{"anAction"}}, policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, policysupport.ObjectInfo{Resources: []string{"/"}}},
+		{"aVersion", []policysupport.ActionInfo{{"anotherAction"}}, policysupport.SubjectInfo{AuthenticatedUsers: []string{"anotherUser"}}, policysupport.ObjectInfo{Resources: []string{"/"}}},
 	}, n.Err
 }
 

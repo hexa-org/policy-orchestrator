@@ -59,7 +59,7 @@ func TestUpload(t *testing.T) {
 
 	buf := new(bytes.Buffer)
 	writer := multipart.NewWriter(buf)
-	formFile,_ := writer.CreateFormFile("bundle", "bundle.tar.gz")
+	formFile, _ := writer.CreateFormFile("bundle", "bundle.tar.gz")
 	_, _ = formFile.Write(buffer.Bytes())
 	_ = writer.Close()
 
@@ -69,7 +69,7 @@ func TestUpload(t *testing.T) {
 
 	glob, _ := filepath.Glob(fmt.Sprintf("%s/*", bundleDir))
 	for _, item := range glob {
-		if strings.Contains(item,".bundle") {
+		if strings.Contains(item, ".bundle") {
 			_ = os.RemoveAll(item)
 		}
 	}

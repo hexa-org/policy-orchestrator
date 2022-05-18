@@ -126,7 +126,7 @@ func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]policysupport.
 		log.Printf("Found google cloud policy for role %s.\n", found.Role)
 		policies = append(policies, policysupport.PolicyInfo{
 			Version: "0.1",
-			Action:  found.Role,
+			Actions: []policysupport.ActionInfo{{found.Role}},
 			Subject: policysupport.SubjectInfo{AuthenticatedUsers: found.Members},
 			Object:  policysupport.ObjectInfo{Resources: []string{"/"}},
 		})
@@ -142,7 +142,7 @@ func (c *GoogleClient) SetBackendPolicy(name, objectId string, p policysupport.P
 		url = fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/appengine-%s/services/default:setIamPolicy", c.ProjectId, objectId)
 	}
 
-	body := policy{bindings{[]bindingInfo{{p.Action, p.Subject.AuthenticatedUsers}}}}
+	body := policy{bindings{[]bindingInfo{{p.Actions[0].URI, p.Subject.AuthenticatedUsers}}}}
 	b := new(bytes.Buffer)
 	_ = json.NewEncoder(b).Encode(body)
 
