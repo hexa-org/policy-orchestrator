@@ -144,14 +144,14 @@ func TestOrchestratorClient_DeleteIntegrations(t *testing.T) {
 
 func TestOrchestratorClient_GetPolicy(t *testing.T) {
 	mockClient := new(MockClient)
-	rawJson := "{\"policies\":[{\"version\":\"aVersion\",\"actions\":[{\"uri\": \"anAction\"}],\"subject\":{\"authenticated_users\":[\"aUser\"]},\"object\":{\"resources\":[\"/\"]}},{\"version\":\"aVersion\",\"actions\":[{\"uri\": \"anotherAction\"}],\"subject\":{\"authenticated_users\":[\"anotherUser\"]},\"object\":{\"resources\":[\"/\"]}}]}"
+	rawJson := "{\"policies\":[{\"version\":\"aVersion\",\"actions\":[{\"action\": \"anAction\"}],\"subject\":{\"authenticated_users\":[\"aUser\"]},\"object\":{\"resources\":[\"/\"]}},{\"version\":\"aVersion\",\"actions\":[{\"action\": \"anotherAction\"}],\"subject\":{\"authenticated_users\":[\"anotherUser\"]},\"object\":{\"resources\":[\"/\"]}}]}"
 	mockClient.response = []byte(rawJson)
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 
 	resp, raw, _ := client.GetPolicies("localhost:8883/applications/anId/policies")
 	assert.Equal(t, rawJson, raw)
 	assert.Equal(t, "aVersion", resp[0].Version)
-	assert.Equal(t, "anAction", resp[0].Actions[0].URI)
+	assert.Equal(t, "anAction", resp[0].Actions[0].Action)
 	assert.Equal(t, []string{"aUser"}, resp[0].Subject.AuthenticatedUsers)
 	assert.Equal(t, []string{"/"}, resp[0].Object.Resources)
 }

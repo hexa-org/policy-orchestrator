@@ -10,7 +10,7 @@ type PolicyInfo struct {
 }
 
 type ActionInfo struct {
-	URI string
+	Action string
 }
 
 type SubjectInfo struct {

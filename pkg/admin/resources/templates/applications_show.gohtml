@@ -54,7 +54,7 @@
                             <tr class="no-border"><td>Actions</td></tr>
                             {{- range $action := $policy.Actions}}
                                 <tr class="no-border">
-                                    <td>{{$action}}</td>
+                                    <td>{{$action.Action}}</td>
                                 </tr>
                             {{- end}}
                         </table>
