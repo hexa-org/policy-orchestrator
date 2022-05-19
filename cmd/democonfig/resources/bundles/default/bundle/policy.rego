@@ -14,5 +14,5 @@ matches(policy) {
     input.principals[_] in policy.subject.authenticated_users
 }
 matchesAction(action) {
-    input.method == action.uri
+    input.method == action.action
 }

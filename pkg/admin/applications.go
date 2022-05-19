@@ -26,7 +26,7 @@ type Policy struct {
 }
 
 type Action struct {
-	URI string
+	Action string
 }
 
 type Subject struct {

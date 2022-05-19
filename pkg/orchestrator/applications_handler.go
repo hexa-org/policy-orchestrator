@@ -33,7 +33,7 @@ type Policy struct {
 }
 
 type Action struct {
-	URI string `json:"uri"`
+	Action string `json:"action"`
 }
 
 type Subject struct {
@@ -100,7 +100,7 @@ func (handler ApplicationsHandler) GetPolicies(w http.ResponseWriter, r *http.Re
 	for _, rec := range records {
 		var actions []Action
 		for _, a := range rec.Actions {
-			actions = append(actions, Action{a.URI})
+			actions = append(actions, Action{a.Action})
 		}
 		list = append(
 			list, Policy{
@@ -136,7 +136,7 @@ func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Re
 	for _, policy := range policies.Policies {
 		var actionInfos []policysupport.ActionInfo
 		for _, a := range policy.Actions {
-			actionInfos = append(actionInfos, policysupport.ActionInfo{a.URI})
+			actionInfos = append(actionInfos, policysupport.ActionInfo{a.Action})
 		}
 		info := policysupport.PolicyInfo{Version: policy.Version, Actions: actionInfos,
 			Subject: policysupport.SubjectInfo{AuthenticatedUsers: policy.Subject.AuthenticatedUsers},

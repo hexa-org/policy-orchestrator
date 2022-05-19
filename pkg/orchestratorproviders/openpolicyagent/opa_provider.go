@@ -52,7 +52,7 @@ type Policy struct {
 }
 
 type Action struct {
-	URI string `json:"uri"`
+	Action string `json:"action"`
 }
 
 type Subject struct {
@@ -85,7 +85,7 @@ func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, _ 
 	for _, p := range policies.Policies {
 		var actions []policysupport.ActionInfo
 		for _, a := range p.Actions {
-			actions = append(actions, policysupport.ActionInfo{a.URI})
+			actions = append(actions, policysupport.ActionInfo{Action: a.Action})
 		}
 		hexaPolicies = append(hexaPolicies, policysupport.PolicyInfo{
 			Version: p.Version,
@@ -110,7 +110,7 @@ func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, _ 
 	for _, p := range policyInfos {
 		var actions []Action
 		for _, a := range p.Actions {
-			actions = append(actions, Action{a.URI})
+			actions = append(actions, Action{a.Action})
 		}
 		policies = append(policies, Policy{
 			Version: p.Version,

@@ -75,7 +75,7 @@ func (a *AmazonProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationI
 	var policies []policysupport.PolicyInfo
 	policies = append(policies, policysupport.PolicyInfo{
 		Version: "0.3",
-		Actions: []policysupport.ActionInfo{{"Access"}}, // todo - not sure what this should be just yet.
+		Actions: []policysupport.ActionInfo{{"aws:amazon.cognito/access"}}, // todo - not sure what this should be just yet.
 		Subject: policysupport.SubjectInfo{AuthenticatedUsers: authenticatedUsers},
 		Object:  policysupport.ObjectInfo{Resources: []string{applicationInfo.ObjectID}},
 	})

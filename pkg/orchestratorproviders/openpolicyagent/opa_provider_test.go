@@ -117,7 +117,7 @@ func TestSetPolicyInfo(t *testing.T) {
 	path := filepath.Join(file, fmt.Sprintf("../resources/bundles/.bundle-%d", rand.Uint64()))
 	_ = compressionsupport.UnTarToPath(bytes.NewReader(gzip), path)
 	readFile, _ := ioutil.ReadFile(path + "/bundle/data.json")
-	assert.Equal(t, `{"policies":[{"version":"0.1","actions":[{"uri":"GET"}],"subject":{"authenticated_users":["allusers"]},"object":{"resources":["/"]}}]}`, string(readFile))
+	assert.Equal(t, `{"policies":[{"version":"0.1","actions":[{"action":"GET"}],"subject":{"authenticated_users":["allusers"]},"object":{"resources":["/"]}}]}`, string(readFile))
 }
 
 func TestSetPolicyInfo_withBadResponse(t *testing.T) {
