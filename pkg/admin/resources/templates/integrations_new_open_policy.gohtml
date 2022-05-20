@@ -9,9 +9,10 @@
             <h2 class="gcp-title">Open Policy Agent (OPA)</h2>
             <fieldset class="flex">
                 <p>
-                    Add Open Policy Agent support by uploading your bundle configuration file.
+                    Add Open Policy Agent support by uploading your hexa-open-policy-agent integration configuration
+                    file.
                 </p>
-                <label class="file">Choose a bundle configuration file<input type="file" name="key"/>
+                <label class="file">Choose a integration configuration file<input type="file" name="key"/>
                 </label>
             </fieldset>
 
@@ -20,5 +21,13 @@
                 <div class="message">Something went wrong. {{$m}}</div>
             {{- end }}
         </form>
+    </div>
+    <div class="card">
+        <h2>Example integration file</h2>
+        <h3>hexa-open-policy-agent.json</h3>
+        <pre><code>{
+  "bundle_url":"http://localhost:8889/bundles/bundle.tar.gz"
+}</code>
+</pre>
     </div>
 {{- end}}
