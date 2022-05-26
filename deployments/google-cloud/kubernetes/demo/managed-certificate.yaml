@@ -1,7 +1,0 @@
-apiVersion: networking.gke.io/v1
-kind: ManagedCertificate
-metadata:
-  name: ${GCP_PROJECT_NAME}-certificate
-spec:
-  domains:
-  - www.hexaorchestrationdemo.com
