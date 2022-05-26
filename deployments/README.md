@@ -1,8 +1,9 @@
 # Hexa applications
 
-_Pardon the dust - the below is work in progress_
+Hexa uses fresh cloud to deploy the hexa-demo applications. You could find
+out more about [fresh cloud](https://github.com/initialcapacity/freshcloud) on the GitHub page.
 
-We are using [fresh cloud](https://github.com/initialcapacity/freshcloud) to help deploy the hexa suite of applications.
+The below notes summarize the steps used to deploy application pipelines.
 
 ## Google Cloud
 
@@ -75,7 +76,7 @@ kubectl create secret generic hexa-demo-secret \
   --namespace='hexa-demo'
 ```
 
-We'll need a static IP address for the cluster.
+Create a static IP address for the cluster.
 
 ```bash
 gcloud compute addresses create hexa-demo-static-ip --global --ip-version IPV4

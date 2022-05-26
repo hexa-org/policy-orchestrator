@@ -1,8 +1,14 @@
 # Hexa infrastructure
 
-_Pardon the dust - the below is work in progress_
+Hexa uses fresh cloud to deploy the hexa-demo infrastructure. You could find
+out more about [fresh cloud](https://github.com/initialcapacity/freshcloud) on the GitHub page. 
 
-We are using [fresh cloud](https://github.com/initialcapacity/freshcloud) to help stand up our hexa infrastructure. 
+The below notes summarize the steps used to create the infrastructure management cluster.
+
+## Install Google Cloud SDK
+
+Install the Google Cloud SDK CLI following [these instructions](https://cloud.google.com/sdk/docs/install) or with
+[Homebrew](https://formulae.brew.sh/cask/google-cloud-sdk).
 
 ## Management cluster
 
@@ -22,6 +28,12 @@ Next, source environment the file.
 
 ```bash
 source .env_infra.sh
+```
+
+Log in to Google Cloud.
+
+```bash
+gcloud auth login
 ```
 
 Configure your google cloud project.
@@ -61,7 +73,7 @@ freshctl clusters gcp list
 freshctl services contour
 ```
 
-Create a DNS entry for your load balancer. Re-run the below command to show your ip address.
+Create a DNS entry for your load balancer. Re-run the below command to show your ip address as needed.
 
 ```bash
 kubectl describe svc ingress-contour-envoy --namespace projectcontour | grep Ingress | awk '{print $3}'
@@ -79,7 +91,6 @@ freshctl services kpack
 Confirm the management cluster services are deployed.
 
 * Harbor https://registry.your_domain
-* Concourse  https://ci.your_domain
-
+* Concourse https://ci.your_domain
 
 That's a wrap for now.
