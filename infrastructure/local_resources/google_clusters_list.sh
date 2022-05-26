@@ -1,0 +1,1 @@
+gcloud container clusters list --project '{{index . "GCP_PROJECT_ID"}}' --zone '{{index . "GCP_ZONE"}}' --quiet

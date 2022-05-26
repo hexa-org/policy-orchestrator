@@ -1,0 +1,1 @@
+gcloud container clusters get-credentials '{{index . "GCP_CLUSTER_NAME"}}' --project '{{index . "GCP_PROJECT_ID"}}' --zone '{{index . "GCP_ZONE"}}' --quiet
