@@ -25,7 +25,8 @@ EOF
 kubectl create namespace harbor
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
-helm install harbor bitnami/harbor -f .freshcloud/harbor-values.yaml -n harbor --version 11.2.4
+helm udpate harbor bitnami/harbor -f .freshcloud/harbor-values.yaml -n harbor --version 11.2.4 \
+    --set persistence.persistentVolumeClaim.registry.size=40Gi
 if [ $? != 0 ]; then
   echo "Failed to install Harbor. Bummer"
   exit 1

@@ -3,7 +3,7 @@
 Hexa uses fresh cloud to deploy the hexa-demo applications. You could find
 out more about [fresh cloud](https://github.com/initialcapacity/freshcloud) on the GitHub page.
 
-The below notes summarize the steps used to deploy application pipelines.
+The below notes summarize the steps used to deploy hexa applications.
 
 ## Google Cloud
 
@@ -47,8 +47,6 @@ export PASSWORD=your_password
 export APP_NAME='hexa-demo'
 export APP_IMAGE_NAME='hexa'
 export APP_CONFIGURATION_PATH='deployments/google-cloud/hexa-demo.yaml'
-export APP_PIPELINE_PATH='deployments/google-cloud/hexa-demo-pipeline.yaml'
-export APP_PIPELINE_CONFIGURATION_PATH='deployments/google-cloud/hexa-demo-pipeline-configuration.yaml'
 ```
 
 Next, source environment the file.
@@ -69,7 +67,7 @@ Create an oauth client.
 gcloud alpha iap oauth-clients create $(gcloud alpha iap oauth-brands list | grep name | sed -e "s/^name: //") --display_name=${APP_NAME}
 ```
 
-Create a kubernetes secret for your oauth client using the newly generated `client_id` and `client_secret`.
+Create a kubernetes namespace and secret for your oauth client using the newly generated `client_id` and `client_secret`.
 
 ```bash
 kubectl create namespace ${APP_NAME}
@@ -102,7 +100,9 @@ freshctl applications deploy
 Follow the above steps for the hexa-admin application - although, select a different name for your environment file
 `.env_google_cloud_admin.sh` file similar to the below.
 
-Install a postgresql database for the orchestrator.
+_Note: the below automation is work in progress_
+
+Once completed, install a postgresql database for the orchestrator.
 
 ```bash
 helm repo add bitnami https://charts.bitnami.com/bitnami
