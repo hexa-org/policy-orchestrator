@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hexa-admin-service-account
+  namespace: hexa-admin
+secrets:
+  - name: hexa-admin-registry-credentials
+imagePullSecrets:
+  - name: hexa-admin-registry-credentials
+---
+apiVersion: kpack.io/v1alpha1
+kind: Builder
+metadata:
+  name: hexa-admin-builder
+  namespace: hexa-admin
+spec:
+  serviceAccount: hexa-admin-service-account
+  tag: registry.${REGISTRY_DOMAIN}/kpack/builder
+  stack:
+    name: base
+    kind: ClusterStack
+  store:
+    name: default
+    kind: ClusterStore
+  order:
+    - group:
+        - id: heroku/go
+---
+apiVersion: kpack.io/v1alpha1
+kind: Image
+metadata:
+  name: hexa-admin-image
+  namespace: hexa-admin
+spec:
+  tag: registry.${REGISTRY_DOMAIN}/kpack/hexa-admin
+  serviceAccount: hexa-admin-service-account
+  builder:
+    name: hexa-admin-builder
+    kind: Builder
+  source:
+    git:
+      url: https://github.com/hexa-org/policy-orchestrator
+      revision: main
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: hexa-admin
+  name: hexa-admin-image-role
+rules:
+  - apiGroups: [ "kpack.io", "", "networking.k8s.io", "apps" ]
+    resources: [ "images", "builds", "pods", "pods/log", "services", "ingresses", "deployments" ]
+    verbs: [ "get", "list", "watch", "create", "update", "patch", "delete" ]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: hexa-admin-image-role-binding
+  namespace: hexa-admin
+subjects:
+  - kind: ServiceAccount
+    name: hexa-admin-service-account
+    apiGroup: ""
+roleRef:
+  kind: Role
+  name: hexa-admin-image-role
+  apiGroup: ""

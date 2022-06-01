@@ -26,7 +26,9 @@ Create a service account.
 freshctl clusters gcp create-service-account
 ```
 
-Create a `.env_apps_google_cloud.sh` file similar to the below.
+## Hexa-demo
+
+Create a `.env_google_cloud_demo.sh` file similar to the below.
 
 ```bash
 export GCP_PROJECT_ID=your_project_id
@@ -52,7 +54,7 @@ export APP_PIPELINE_CONFIGURATION_PATH='deployments/google-cloud/hexa-demo-pipel
 Next, source environment the file.
 
 ```bash
-source .env_apps_google_cloud.sh
+source .env_google_cloud_demo.sh
 ```
 
 Create an application cluster.
@@ -64,22 +66,23 @@ freshctl clusters gcp create
 Create an oauth client.
 
 ```bash
-gcloud alpha iap oauth-clients create $(gcloud alpha iap oauth-brands list | grep name | sed -e "s/^name: //") --display_name=hexa-demo
+gcloud alpha iap oauth-clients create $(gcloud alpha iap oauth-brands list | grep name | sed -e "s/^name: //") --display_name=${APP_NAME}
 ```
 
 Create a kubernetes secret for your oauth client using the newly generated `client_id` and `client_secret`.
 
 ```bash
-kubectl create secret generic hexa-demo-secret \
+kubectl create namespace ${APP_NAME}
+kubectl create secret generic ${APP_NAME}-secret \
   --from-literal=client_id=your_client_id \
   --from-literal=client_secret=your_client_secret \
-  --namespace='hexa-demo'
+  --namespace=${APP_NAME}
 ```
 
 Create a static IP address for the cluster.
 
 ```bash
-gcloud compute addresses create hexa-demo-static-ip --global --ip-version IPV4
+gcloud compute addresses create ${APP_NAME}-static-ip --global --ip-version IPV4
 ```
 
 Configure the cluster.
@@ -91,7 +94,51 @@ freshctl clusters gcp configure
 Deploy the demo application.
 
 ```bash
-freshctl applications deploy  
+freshctl applications deploy
+```
+
+## Hexa-admin
+
+Follow the above steps for the hexa-admin application - although, select a different name for your environment file
+`.env_google_cloud_admin.sh` file similar to the below.
+
+Install a postgresql database for the orchestrator.
+
+```bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update
+helm install ${APP_NAME}-db bitnami/postgresql \
+    --namespace ${APP_NAME} \
+    --set persistence.existingClaim=${APP_NAME}-pvc \
+    --set primary.resources.requests.cpu=0 \
+    --set volumePermissions.enabled=true
+```
+
+Create a database for the orchestrator.
+
+```bash
+export POSTGRES_PASSWORD=$(kubectl get secret --namespace ${APP_NAME} ${APP_NAME}-db-postgresql -o jsonpath="{.data.postgres-password}" | base64 -d)
+```
+
+```bash
+kubectl run ${APP_NAME}-db-postgresql-client --rm --tty -i --restart='Never' --namespace ${APP_NAME} --image docker.io/bitnami/postgresql:14.3.0-debian-10-r17 \
+  --env="PGPASSWORD=$POSTGRES_PASSWORD" \
+  --command -- psql --host ${APP_NAME}-db-postgresql -U postgres -d postgres -p 5432   
+```
+
+```sql
+create database orchestrator_development;
+create user orchestrator with password 'orchestrator';
+grant all privileges on database orchestrator_development to orchestrator;
+```
+
+Run the database schema migration scripts.
+
+```bash
+kubectl run ${APP_NAME}-db-postgresql-migrate -it --namespace ${APP_NAME} --image migrate/migrate --command sh 
+kubectl cp databases/orchestrator ${APP_NAME}/${APP_NAME}-db-postgresql-migrate:/home/orchestrator --namespace ${APP_NAME} 
+kubectl exec ${APP_NAME}-db-postgresql-migrate -it --namespace ${APP_NAME} sh
+/  migrate -verbose -path /home/orchestrator -database postgres://orchestrator:orchestrator@hexa-admin-db-postgresql:5432/orchestrator_development?sslmode=disable up
 ```
 
 That's a wrap for now.
