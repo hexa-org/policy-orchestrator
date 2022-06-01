@@ -30,9 +30,10 @@ Clone or download the codebase from GitHub to your local machine and install the
 cd /home/user/workspace/
 git clone git@github.com:hexa-org/policy-orchestrator.git
 ```
+### Build
 
-Build a Hexa image with Pack. The newly created image will contain the policy administrator web application,
-policy orchestrator server, and demo application.
+Build a Hexa image with Pack. The newly created image will contain the policy
+administrator web application, policy orchestrator server, and demo application.
 
 ```bash
 pack build hexa --builder heroku/buildpacks:20
@@ -45,12 +46,60 @@ chmod 775 ./databases/docker_support/initdb.d/create-databases.sh
 chmod 775 ./databases/docker_support/migrate-databases.sh
 ```
 
-Run all three applications with docker compose.
+### Run
+Run all the applications with docker compose.
 
 ```bash
 docker-compose up
 ```
 
+The docker-compose spins up a few applications. A few of them are described below.
+
+_hexa-admin_
+
+This runs on http://localhost:8884/. This is the application used to manage and
+configure IDQL policy across the various integrations.
+
+_hexa-orchestrator_
+
+This runs on http://localhost:8885/health. This is the orchestrator which
+communicates with the various integrations to convert the IDQL policy to the
+respective types.
+
+_hexa-demo_
+
+This runs on http://localhost:8886/. This is the demo application against which
+we can enforce policy. It reads its policy from the OPA server.
+
+_OPA server_
+
+This runs on http://localhost:8887/. This is the OPA server from which the
+hexa-demo application reads its policies from. As an additional layer of
+indirection, it gets the policies from a bundle server.
+
+_hexa-demo-config_
+
+This runs on http://localhost:8889/health. This is bundle HTTP server from which the
+OPA server can download the bundles of policy and data from. See [OPA bundles]
+[opa-bundles] for more info.
+
+#### Workflow
+
+In the _hexa-admin_ application, we can specify an Open Policy Agent integration
+configuration file which defines the bundle HTTP server where the actual OPA rego
+policy lives.
+
+Once configured, IDQL policy for the _hexa-demo_ application can be defined on
+the Applications page. The _hexa-admin_ communicates the changes to the
+_hexa-orchestrator_ which makes the translation to OPA rego and updates the
+_hexa-demo-config_ bundle server.
+
+The _OPA server_ periodically reads config from the _hexa-demo-config_ bundle
+server and updates access to the _hexa-demo_ application.
+
+![Hexa Demo Architecture](docs/img/Hexa-Demo-Architecture.png "hexa demo architecture")
+
+### Cleanup
 Cleaning up. Remove all docker containers and volumes.
 
 ```bash
@@ -75,3 +124,6 @@ Hexa uses the below Cloud Native Computing Foundation ([CNCF](https://www.cncf.i
 * [Open Policy Agent](https://www.openpolicyagent.org/)
 * [Pack](https://buildpacks.io/)
 * [Prometheus](https://prometheus.io/)
+
+
+[opa-bundles]: https://www.openpolicyagent.org/docs/latest/management-bundles/
