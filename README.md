@@ -30,6 +30,7 @@ Clone or download the codebase from GitHub to your local machine and install the
 cd /home/user/workspace/
 git clone git@github.com:hexa-org/policy-orchestrator.git
 ```
+
 ### Build
 
 Build a Hexa image with Pack. The newly created image will contain the policy
@@ -54,29 +55,34 @@ Run all the applications with docker compose.
 docker-compose up
 ```
 
-The docker-compose spins up a few applications. A few of them are described below.
+Docker runs the applications described below.
 
-**hexa-admin** runs on [localhost:8884](http://localhost:8884/). This is the application used to manage and
-configure IDQL policy across the various integrations.
+**hexa-orchestrator** runs on [localhost:8885](http://localhost:8885/health). The main application
+that manages IDQL policy across various platforms and communicates with the various platform interfaces;
+converting IDQL policy to and from the respective platform types.
 
-**hexa-orchestrator** runs on [localhost:8884](http://localhost:8885/health). This is the policy orchestrator which
-communicates with the various providers to convert the IDQL policy to the respective types.
+**hexa-admin** runs on [localhost:8884](http://localhost:8884/). An example application
+demonstrating the latest interactions with the policy orchestrator.
 
-**hexa-demo** runs on [localhost:8886](http://localhost:8886/). This is the demo application against which
-we can enforce policy. It reads its policy from the OPA server.
+**hexa-demo** runs on [localhost:8886](http://localhost:8886/). A demo application against which
+we can enforce both coarse and fine-grained policy. The demo application integrates with platform
+authentication/ authorization proxies, [Google IAP](https://cloud.google.com/iap) for example,
+for coarse grained access and the [Open Policy Agent (OPA)](https://www.openpolicyagent.org/)
+for fine-grained policy access.
 
-**OPA server** runs on [localhost:8887](http://localhost:8887/). This is the OPA server from which the
+**OPA server** runs on [localhost:8887](http://localhost:8887/). The OPA server - from which the
 hexa-demo application reads its policies from. As an additional layer of
-indirection, it gets the policies from a bundle server.
+indirection, OPA gets the policies from a bundle server. IDQL policy is represented as data and interpreted by
+the rego expression language.
 
-**hexa-demo-config** runs on [localhost:8889](http://localhost:8889/health). This is bundle HTTP server from which the
+**hexa-demo-config** runs on [localhost:8889](http://localhost:8889/health). The bundle HTTP server from which the
 OPA server can download the bundles of policy and data from.
-See [OPA bundles](https://www.openpolicyagent.org/docs/latest/management-bundles/) for more info.
+See [OPA bundles][opa-bundles] for more info.
 
 ### Workflow
 
-In the hexa-admin application, we can specify an Open Policy Agent integration
-configuration file which defines the bundle HTTP server where the actual OPA rego
+Using the hexa-admin application, we can specify an Open Policy Agent integration
+configuration file which defines the bundle HTTP server where the actual OPA rego and
 policy lives.
 
 Once configured, IDQL policy for the hexa-demo application can be defined on
@@ -84,7 +90,7 @@ the Applications page. The hexa-admin communicates the changes to the
 hexa-orchestrator which makes the translation to OPA rego and updates the
 hexa-demo-config bundle server.
 
-The OPA server periodically reads config from the _hexa-demo-config_ bundle
+The OPA server periodically reads config from the hexa-demo-config bundle
 server and updates access to the hexa-demo application.
 
 ![Hexa Demo Architecture](docs/img/Hexa-Demo-Architecture.png "hexa demo architecture")
