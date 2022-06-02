@@ -114,6 +114,7 @@ rm -rf .postgres
 ## Cloud Native Computing Foundation
 
 Hexa uses the below Cloud Native Computing Foundation ([CNCF](https://www.cncf.io/)) projects
+
 * [Contour](https://projectcontour.io/)
 * [Harbor](https://goharbor.io/)
 * [Helm](https://helm.sh/)
@@ -122,5 +123,6 @@ Hexa uses the below Cloud Native Computing Foundation ([CNCF](https://www.cncf.i
 * [Pack](https://buildpacks.io/)
 * [Prometheus](https://prometheus.io/)
 
+The current demo deployment infrastructure can be found at this [link](infrastructure/README.md).
 
 [opa-bundles]: https://www.openpolicyagent.org/docs/latest/management-bundles/

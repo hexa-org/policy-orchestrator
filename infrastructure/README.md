@@ -3,6 +3,50 @@
 Hexa uses fresh cloud to deploy the hexa-demo infrastructure. You could find
 out more about [fresh cloud](https://github.com/initialcapacity/freshcloud) on the GitHub page. 
 
+<details>
+<summary>Current demo topology</summary>
+
+| Platform            |               |                                         |
+|---------------------|---------------|-----------------------------------------|
+| [Google GKE]        |               |                                         |
+|                     | Use case      | cloud based hexa-admin                  |
+|                     | Apps deployed | hexa-admin and hexa-orchestrator        |
+|                     | Deployed      | within a kubernetes clusters            |
+|                     | Authorization | not available                           |
+|                     | Automation    | concourse pipeline deployed             |
+| [Google Cloud IAP]  |               |                                         |
+|                     | Use case      | Google's Identity Aware Proxy           |
+|                     | Apps deployed | hexa-demo, hexa-demo-config, opa server |
+|                     | Deployed      | within a kubernetes clusters            |
+|                     | Authorization | reads IAP forward headers               |
+|                     | Automation    | concourse pipeline deployed             |
+| [Azure AKS]         |               |                                         |
+|                     | Use case      | fine-grained policy with OPA            |
+|                     | Apps deployed | hexa-demo, hexa-demo-config, opa server |
+|                     | Deployed      | within a kubernetes clusters            |
+|                     | Authorization | not available                           |
+|                     | Automation    | (pending) concourse pipeline deployed   |
+| [Azure Authn/Authz] |               |                                         |
+|                     | Use case      | coarse grained policy with authn/authz  |
+|                     | Apps deployed | hexa-demo, hexa-demo-config, opa server |
+|                     | Deployed      | via app services                        |
+|                     | Authorization | reads Azure forward headers             |
+|                     | Automation    | (pending) manual steps via readme       |
+| [AWS Cognito]       |               |                                         |
+|                     | Use case      | coarse grained policy with cognito      |
+|                     | Apps deployed | hexa-demo, hexa-demo-config, opa server |
+|                     | Deployed      | via a kubernetes cluster                |
+|                     | Authorization | reads Cognito forward headers           |
+|                     | Automation    | concourse pipeline deployed             |
+| Local               |               |                                         |
+|                     | Use case      | fine-grained policy with OPA            |
+|                     | Apps deployed | hexa-demo, hexa-demo-config, opa server |
+|                     | Deployed      | via docker compose                      |
+|                     | Authorization | not available                           |
+|                     | Automation    | via pack locally                        |
+
+</details>
+
 The below notes summarize the steps used to create the infrastructure management cluster.
 
 ## Install Google Cloud SDK
@@ -93,3 +137,9 @@ Confirm the management cluster services are deployed.
 * Concourse https://ci.your_domain
 
 That's a wrap for now.
+
+[Google GKE]:https://cloud.google.com/kubernetes-engine
+[Google Cloud IAP]:https://cloud.google.com/iap
+[Azure AKS]:https://azure.microsoft.com/en-us/services/kubernetes-service/#overview
+[Azure Authn/Authz]:https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization
+[AWS Cognito]:https://aws.amazon.com/cognito/
