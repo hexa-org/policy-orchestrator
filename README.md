@@ -47,6 +47,7 @@ chmod 775 ./databases/docker_support/migrate-databases.sh
 ```
 
 ### Run
+
 Run all the applications with docker compose.
 
 ```bash
@@ -55,51 +56,41 @@ docker-compose up
 
 The docker-compose spins up a few applications. A few of them are described below.
 
-_hexa-admin_
-
-This runs on http://localhost:8884/. This is the application used to manage and
+**hexa-admin** runs on [localhost:8884](http://localhost:8884/). This is the application used to manage and
 configure IDQL policy across the various integrations.
 
-_hexa-orchestrator_
+**hexa-orchestrator** runs on [localhost:8884](http://localhost:8885/health). This is the policy orchestrator which
+communicates with the various providers to convert the IDQL policy to the respective types.
 
-This runs on http://localhost:8885/health. This is the orchestrator which
-communicates with the various integrations to convert the IDQL policy to the
-respective types.
-
-_hexa-demo_
-
-This runs on http://localhost:8886/. This is the demo application against which
+**hexa-demo** runs on [localhost:8886](http://localhost:8886/). This is the demo application against which
 we can enforce policy. It reads its policy from the OPA server.
 
-_OPA server_
-
-This runs on http://localhost:8887/. This is the OPA server from which the
+**OPA server** runs on [localhost:8887](http://localhost:8887/). This is the OPA server from which the
 hexa-demo application reads its policies from. As an additional layer of
 indirection, it gets the policies from a bundle server.
 
-_hexa-demo-config_
+**hexa-demo-config** runs on [localhost:8889](http://localhost:8889/health). This is bundle HTTP server from which the
+OPA server can download the bundles of policy and data from.
+See [OPA bundles](https://www.openpolicyagent.org/docs/latest/management-bundles/) for more info.
 
-This runs on http://localhost:8889/health. This is bundle HTTP server from which the
-OPA server can download the bundles of policy and data from. See [OPA bundles]
-[opa-bundles] for more info.
+### Workflow
 
-#### Workflow
-
-In the _hexa-admin_ application, we can specify an Open Policy Agent integration
+In the hexa-admin application, we can specify an Open Policy Agent integration
 configuration file which defines the bundle HTTP server where the actual OPA rego
 policy lives.
 
-Once configured, IDQL policy for the _hexa-demo_ application can be defined on
-the Applications page. The _hexa-admin_ communicates the changes to the
-_hexa-orchestrator_ which makes the translation to OPA rego and updates the
-_hexa-demo-config_ bundle server.
+Once configured, IDQL policy for the hexa-demo application can be defined on
+the Applications page. The hexa-admin communicates the changes to the
+hexa-orchestrator which makes the translation to OPA rego and updates the
+hexa-demo-config bundle server.
 
-The _OPA server_ periodically reads config from the _hexa-demo-config_ bundle
-server and updates access to the _hexa-demo_ application.
+The OPA server periodically reads config from the _hexa-demo-config_ bundle
+server and updates access to the hexa-demo application.
 
 ![Hexa Demo Architecture](docs/img/Hexa-Demo-Architecture.png "hexa demo architecture")
 
 ### Cleanup
+
 Cleaning up. Remove all docker containers and volumes.
 
 ```bash
