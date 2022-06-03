@@ -116,7 +116,7 @@ func (s *ApplicationsHandlerSuite) TestGetPolicies() {
 
 	policy := policies.Policies[0]
 	assert.Equal(s.T(), "anAction", policy.Actions[0].Action)
-	assert.Equal(s.T(), "aVersion", policy.Version)
+	assert.Equal(s.T(), "aVersion", policy.Meta.Version)
 	assert.Equal(s.T(), []string{"aUser"}, policy.Subject.AuthenticatedUsers)
 	assert.Equal(s.T(), []string{"/"}, policy.Object.Resources)
 }
@@ -134,7 +134,7 @@ func (s *ApplicationsHandlerSuite) TestGetPolicies_withRequestFails() {
 
 func (s *ApplicationsHandlerSuite) TestSetPolicies() {
 	var buf bytes.Buffer
-	policy := orchestrator.Policy{Version: "v0.1", Actions: []orchestrator.Action{{"anAction"}}, Subject: orchestrator.Subject{AuthenticatedUsers: []string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{Resources: []string{"/"}}}
+	policy := orchestrator.Policy{Meta: orchestrator.Meta{Version: "v0.5"}, Actions: []orchestrator.Action{{"anAction"}}, Subject: orchestrator.Subject{AuthenticatedUsers: []string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{Resources: []string{"/"}}}
 	_ = json.NewEncoder(&buf).Encode(orchestrator.Policies{Policies: []orchestrator.Policy{policy}})
 
 	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)
@@ -148,7 +148,7 @@ func (s *ApplicationsHandlerSuite) TestSetPolicies_withErroneousProvider() {
 	s.providers["google_cloud"] = &noopProvider
 
 	var buf bytes.Buffer
-	policy := orchestrator.Policy{Version: "v0.1", Actions: []orchestrator.Action{{"anAction"}}, Subject: orchestrator.Subject{AuthenticatedUsers: []string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{Resources: []string{"/"}}}
+	policy := orchestrator.Policy{Meta: orchestrator.Meta{Version: "v0.5"}, Actions: []orchestrator.Action{{"anAction"}}, Subject: orchestrator.Subject{AuthenticatedUsers: []string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{Resources: []string{"/"}}}
 	_ = json.NewEncoder(&buf).Encode(policy)
 
 	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)

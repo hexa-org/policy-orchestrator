@@ -138,10 +138,14 @@ type policies struct {
 }
 
 type policy struct {
-	Version string   `json:"version"`
+	Meta    meta     `json:"meta"`
 	Actions []action `json:"actions"`
 	Subject subject  `json:"subject"`
 	Object  object   `json:"object"`
+}
+
+type meta struct {
+	Version string `json:"version"`
 }
 
 type action struct {
@@ -178,7 +182,7 @@ func (c orchestratorClient) GetPolicies(url string) ([]Policy, string, error) {
 			actions = append(actions, Action{a.Action})
 		}
 		foundPolicies = append(foundPolicies, Policy{
-			Version: p.Version,
+			Meta:    Meta{p.Meta.Version},
 			Actions: actions,
 			Subject: Subject{AuthenticatedUsers: p.Subject.AuthenticatedUsers},
 			Object:  Object{Resources: p.Object.Resources}})

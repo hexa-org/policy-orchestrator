@@ -26,10 +26,14 @@ type Policies struct {
 }
 
 type Policy struct {
-	Version string   `json:"version"`
+	Meta    Meta     `json:"meta"`
 	Actions []Action `json:"actions"`
 	Subject Subject  `json:"subject"`
 	Object  Object   `json:"object"`
+}
+
+type Meta struct {
+	Version string `json:"version"`
 }
 
 type Action struct {
@@ -104,7 +108,7 @@ func (handler ApplicationsHandler) GetPolicies(w http.ResponseWriter, r *http.Re
 		}
 		list = append(
 			list, Policy{
-				rec.Version,
+				Meta{rec.Meta.Version},
 				actions,
 				Subject{rec.Subject.AuthenticatedUsers},
 				Object{rec.Object.Resources},
@@ -136,9 +140,9 @@ func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Re
 	for _, policy := range policies.Policies {
 		var actionInfos []policysupport.ActionInfo
 		for _, a := range policy.Actions {
-			actionInfos = append(actionInfos, policysupport.ActionInfo{a.Action})
+			actionInfos = append(actionInfos, policysupport.ActionInfo{Action: a.Action})
 		}
-		info := policysupport.PolicyInfo{Version: policy.Version, Actions: actionInfos,
+		info := policysupport.PolicyInfo{Meta: policysupport.MetaInfo{Version: policy.Meta.Version}, Actions: actionInfos,
 			Subject: policysupport.SubjectInfo{AuthenticatedUsers: policy.Subject.AuthenticatedUsers},
 			Object:  policysupport.ObjectInfo{Resources: policy.Object.Resources}}
 		policyInfos = append(policyInfos, info)

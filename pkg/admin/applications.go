@@ -19,10 +19,14 @@ type Application struct {
 }
 
 type Policy struct {
-	Version string
+	Meta    Meta
 	Actions []Action
 	Subject Subject
 	Object  Object
+}
+
+type Meta struct {
+	Version string
 }
 
 type Action struct {

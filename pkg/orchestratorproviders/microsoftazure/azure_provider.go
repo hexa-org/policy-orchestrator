@@ -48,7 +48,7 @@ func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 	}
 
 	policies = append(policies, policysupport.PolicyInfo{
-		Version: "0.2",
+		Meta:    policysupport.MetaInfo{Version: "0.5"},
 		Actions: []policysupport.ActionInfo{{appRoleId}},
 		Subject: policysupport.SubjectInfo{AuthenticatedUsers: principalIdsAndDisplayNames},
 		Object:  policysupport.ObjectInfo{Resources: []string{resourceIdAndDisplayName}},

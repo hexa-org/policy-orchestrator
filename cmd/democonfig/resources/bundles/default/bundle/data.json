@@ -1,7 +1,7 @@
 {
   "policies": [
     {
-      "version": "0.4",
+      "meta": {"version": "0.5"},
       "actions": [{"action": "GET"}],
       "subject": {
         "authenticated_users": [
@@ -15,7 +15,7 @@
       }
     },
     {
-      "version": "0.4",
+      "meta": {"version": "0.5"},
       "actions": [{"action": "GET"}],
       "subject": {
         "authenticated_users": [
@@ -31,7 +31,7 @@
       }
     },
     {
-      "version": "0.4",
+      "meta": {"version": "0.5"},
       "actions": [{"action": "GET"}],
       "subject": {
         "authenticated_users": [
@@ -45,7 +45,7 @@
       }
     },
     {
-      "version": "0.4",
+      "meta": {"version": "0.5"},
       "actions": [{"action": "GET"}],
       "subject": {
         "authenticated_users": [
