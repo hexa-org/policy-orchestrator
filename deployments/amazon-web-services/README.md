@@ -63,32 +63,6 @@ docker tag hexa ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_PROJ
 docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_PROJECT_NAME}/hexa:latest
 ```
 
-Build an OPA server with configuration via Docker.
-
-From the `./deployments/opa-server` directory run the below commands.
-
-```bash
-docker pull openpolicyagent/opa:latest
-docker build --build-arg OPA_PROJECT_ID=${AWS_PROJECT_ID} -t opa-server:latest .
-````
-
-Create a repository for the open policy agent server.
-
-```bash
-aws ecr create-repository \
-  --repository-name ${AWS_PROJECT_NAME}/opa-server \
-  --image-scanning-configuration scanOnPush=false \
-  --image-tag-mutability IMMUTABLE \
-  --region ${AWS_REGION}
-```
-
-Push the open policy agent server image.
-
-```bash
-docker tag opa-server:latest ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_PROJECT_NAME}/opa-server:latest
-docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_PROJECT_NAME}/opa-server:latest
-```
-
 ## Deploy via Kubernetes
 
 Deploy the Demo app and the OPA Server to Kubernetes.
@@ -98,7 +72,7 @@ From the `./deployments/amazon-web-services` directory.
 Create a new kubernetes cluster.
 
 ```bash
-envsubst < kubernetes/cluster-config.yaml | eksctl create cluster -f -
+envsubst < deployments/amazon-web-services/cluster-config.yaml | eksctl create cluster -f -
 ```
 
 Write the configuration details as needed.
@@ -119,7 +93,7 @@ Create the RBOC roles.
 kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/aws-alb-ingress-controller/v1.1.4/docs/examples/rbac-role.yaml
 ```
 
-Create the IAM policy as needed.
+Create the IAM policy as needed - the entity may already exist.  
 
 ```bash
 curl -o iam_policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.3.1/docs/install/iam_policy.json
@@ -151,25 +125,22 @@ kubectl apply \
 Install the ingress controller.
 
 ```bash
-envsubst < kubernetes/v2_3_1_full.yaml | kubectl apply -f -
+envsubst < deployments/amazon-web-services/v2_3_1_full.yaml | kubectl apply -f -
 ```
 
-Deploy demo app objects.
+Create the namepace.
 
 ```bash
-envsubst < kubernetes/demo/deployment.yaml | kubectl apply -f -
-envsubst < kubernetes/demo/service.yaml | kubectl apply -f -
-envsubst < kubernetes/demo/ingress.yaml | kubectl apply -f -
-````
+ kubectl create namespace hexa-demo
+ ```
 
-Deploy demo opa objects.
+Deploy demo kubernetes objects.
 
 ```bash
-envsubst < kubernetes/opa-server/deployment.yaml | kubectl apply -f -
-envsubst < kubernetes/opa-server/service.yaml | kubectl apply -f -
+envsubst < deployments/amazon-web-services/hexa-demo.yaml | kubectl apply -f -
 ````
 
-Get the ingress address.
+Get the ingress address and create a CNAME record for the load balancer.
 
 ```bash
 kubectl get ingress

@@ -1,0 +1,194 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hexa-demo-amazon-config
+  name: hexa-demo-amazon-config
+  namespace: hexa-demo-amazon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hexa-demo-amazon-config
+  template:
+    metadata:
+      labels:
+        app: hexa-demo-amazon-config
+    spec:
+      containers:
+        - name: hexa-demo-amazon-config
+          image: ${IMAGE}
+          imagePullPolicy: Always
+          command:
+            - democonfig
+          env:
+            - name: PORT
+              value: "8889"
+          ports:
+            - containerPort: 8889
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: hexa-demo-amazon-config
+  name: hexa-demo-amazon-config
+  namespace: hexa-demo-amazon
+spec:
+  type: NodePort
+  ports:
+    - port: 8889
+      targetPort: 8889
+  selector:
+    app: hexa-demo-amazon-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hexa-demo-amazon-opa-server-agent-config
+  namespace: hexa-demo-amazon
+data:
+  config.yaml: |
+    services:
+      - name: test
+        url: http://hexa-demo-amazon-config.hexa-demo.svc.cluster.local:8889
+    bundles:
+      authz:
+        service: test
+        resource: bundles/bundle.tar.gz
+        persist: true
+        polling:
+          min_delay_seconds: 4
+          max_delay_seconds: 12
+    decision_logs:
+      console: true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hexa-demo-amazon-opa-server-agent
+  namespace: hexa-demo-amazon
+spec:
+  selector:
+    matchLabels:
+      app: hexa-demo-amazon-opa-server-agent
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: hexa-demo-amazon-opa-server-agent
+    spec:
+      volumes:
+        - name: hexa-demo-amazon-opa-server-agent-config
+          configMap:
+            name: hexa-demo-amazon-opa-server-agent-config
+      containers:
+        - name: hexa-demo-amazon-opa-server-agent
+          image: openpolicyagent/opa:latest
+          volumeMounts:
+            - readOnly: true
+              mountPath: /config
+              name: hexa-demo-amazon-opa-server-agent-config
+          args:
+            - "run"
+            - "--server"
+            - "--addr"
+            - "0.0.0.0:8887"
+            - "--config-file"
+            - "/config/config.yaml"
+          env:
+            - name: PORT
+              value: "8887"
+          ports:
+            - containerPort: 8887
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hexa-demo-amazon-opa-server-agent
+  namespace: hexa-demo-amazon
+  labels:
+    app: hexa-demo-amazon-opa-server-agent
+spec:
+  type: NodePort
+  ports:
+    - port: 8887
+      targetPort: 8887
+  selector:
+    app: hexa-demo-amazon-opa-server-agent
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hexa-demo-amazon
+  namespace: hexa-demo-amazon
+spec:
+  selector:
+    matchLabels:
+      app: hexa-demo-amazon
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: hexa-demo-amazon
+    spec:
+      containers:
+        - name: hexa-demo-amazon
+          image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_PROJECT_NAME}/hexa:latest
+          imagePullPolicy: Always
+          command:
+            - demo
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          env:
+            - name: PORT
+              value: "8886"
+            - name: OPA_SERVER_URL
+              value: http://hexa-demo-amazon-opa-server-agent.hexa-demo-amazon.svc.cluster.local:8887/v1/data/authz/allow
+            - name: AWS_REGION
+              value: "${AWS_REGION}"
+            - name: AWS_COGNITO_USER_POOL_DOMAIN
+              value: "${AWS_COGNITO_USER_POOL_DOMAIN}"
+            - name: AWS_COGNITO_DOMAIN_REDIRECT_URL
+              value: "${AWS_COGNITO_DOMAIN_REDIRECT_URL}"
+            - name: AWS_COGNITO_USER_POOL_ID
+              value: "${AWS_COGNITO_USER_POOL_ID}"
+            - name: AWS_COGNITO_USER_POOL_CLIENT_ID
+              value: "${AWS_COGNITO_USER_POOL_CLIENT_ID}"
+            - name: AWS_COGNITO_USER_POOL_CLIENT_SECRET
+              value: "${AWS_COGNITO_USER_POOL_CLIENT_SECRET}"
+          ports:
+            - containerPort: 8886
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hexa-demo-amazon
+  namespace: hexa-demo-amazon
+  labels:
+    app: hexa-demo-amazon
+spec:
+  type: NodePort
+  ports:
+    - port: 8886
+      targetPort: 8886
+  selector:
+    app: hexa-demo-amazon
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hexa-demo-amazon
+  namespace: hexa-demo-amazon
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  defaultBackend:
+    service:
+      name: hexa-demo-amazon
+      port:
+        number: 8886
