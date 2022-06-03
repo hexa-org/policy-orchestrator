@@ -97,7 +97,7 @@ func TestGoogleProvider_GetPolicy(t *testing.T) {
 
 func TestGoogleProvider_SetPolicy(t *testing.T) {
 	policy := policysupport.PolicyInfo{
-		Version: "aVersion", Actions: []policysupport.ActionInfo{{"anAction"}}, Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
+		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"anAction"}}, Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
 	}
 	m := google_cloud_test.NewMockClient()
 

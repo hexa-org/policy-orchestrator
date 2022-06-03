@@ -45,10 +45,14 @@ type Policies struct {
 }
 
 type Policy struct {
-	Version string   `json:"version"`
+	Meta    Meta     `json:"meta"`
 	Actions []Action `json:"actions"`
 	Subject Subject  `json:"subject"`
 	Object  Object   `json:"object"`
+}
+
+type Meta struct {
+	Version string `json:"version"`
 }
 
 type Action struct {
@@ -88,7 +92,7 @@ func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, _ 
 			actions = append(actions, policysupport.ActionInfo{Action: a.Action})
 		}
 		hexaPolicies = append(hexaPolicies, policysupport.PolicyInfo{
-			Version: p.Version,
+			Meta:    policysupport.MetaInfo{Version: p.Meta.Version},
 			Actions: actions,
 			Subject: policysupport.SubjectInfo{
 				AuthenticatedUsers: p.Subject.AuthenticatedUsers,
@@ -113,7 +117,7 @@ func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, _ 
 			actions = append(actions, Action{a.Action})
 		}
 		policies = append(policies, Policy{
-			Version: p.Version,
+			Meta:    Meta{Version: p.Meta.Version},
 			Actions: actions,
 			Subject: Subject{
 				p.Subject.AuthenticatedUsers,

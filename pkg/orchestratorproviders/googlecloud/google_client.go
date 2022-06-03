@@ -125,7 +125,7 @@ func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]policysupport.
 	for _, found := range binds.Bindings {
 		log.Printf("Found google cloud policy for role %s.\n", found.Role)
 		policies = append(policies, policysupport.PolicyInfo{
-			Version: "0.1",
+			Meta:    policysupport.MetaInfo{Version: "0.5"},
 			Actions: []policysupport.ActionInfo{{"gcp:" + found.Role}},
 			Subject: policysupport.SubjectInfo{AuthenticatedUsers: found.Members},
 			Object:  policysupport.ObjectInfo{Resources: []string{"/"}},

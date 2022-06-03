@@ -124,7 +124,7 @@ func updateAPolicy() (*http.Response, error) {
 	_ = json.NewDecoder(resp.Body).Decode(&apps)
 
 	var policies bytes.Buffer
-	policy := Policy{Version: "0.4", Actions: []Action{{"GET"}},
+	policy := Policy{Meta: Meta{"0.5"}, Actions: []Action{{"GET"}},
 		Subject: Subject{AuthenticatedUsers: []string{"accounting@hexaindustries.io", "sales@hexaindustries.io"}},
 		Object:  Object{Resources: []string{"/accounting"}},
 	}
@@ -159,10 +159,14 @@ type Policies struct {
 }
 
 type Policy struct {
-	Version string   `json:"version"`
+	Meta    Meta     `json:"meta"`
 	Actions []Action `json:"actions"`
 	Subject Subject  `json:"subject"`
 	Object  Object   `json:"object"`
+}
+
+type Meta struct {
+	Version string `json:"version"`
 }
 
 type Action struct {

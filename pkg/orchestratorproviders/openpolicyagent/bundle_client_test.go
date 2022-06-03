@@ -30,7 +30,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
 	assert.Equal(t, `{
   "policies": [
     {
-      "version": "0.4",
+      "meta": {"version": "0.5"},
       "actions": [{"action": "GET"}],
       "subject": {
         "authenticated_users": [
@@ -44,7 +44,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
       }
     },
     {
-      "version": "0.4",
+      "meta": {"version": "0.5"},
       "actions": [{"action": "GET"}],
       "subject": {
         "authenticated_users": [
@@ -60,7 +60,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
       }
     },
     {
-      "version": "0.4",
+      "meta": {"version": "0.5"},
       "actions": [{"action": "GET"}],
       "subject": {
         "authenticated_users": [
@@ -74,7 +74,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
       }
     },
     {
-      "version": "0.4",
+      "meta": {"version": "0.5"},
       "actions": [{"action": "GET"}],
       "subject": {
         "authenticated_users": [
