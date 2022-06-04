@@ -64,20 +64,18 @@ converting IDQL policy to and from the respective platform types.
 **hexa-admin** runs on [localhost:8884](http://localhost:8884/). An example application
 demonstrating the latest interactions with the policy orchestrator.
 
-**hexa-demo** runs on [localhost:8886](http://localhost:8886/). A demo application against which
-we can enforce both coarse and fine-grained policy. The demo application integrates with platform
+**hexa-demo** runs on [localhost:8886](http://localhost:8886/). A demo application used to highlight
+enforcing both coarse and fine-grained policy. The application integrates with platform
 authentication/ authorization proxies, [Google IAP](https://cloud.google.com/iap) for example,
 for coarse grained access and the [Open Policy Agent (OPA)](https://www.openpolicyagent.org/)
 for fine-grained policy access.
 
-**OPA server** runs on [localhost:8887](http://localhost:8887/). The OPA server - from which the
-hexa-demo application reads its policies from. As an additional layer of
-indirection, OPA gets the policies from a bundle server. IDQL policy is represented as data and interpreted by
+**OPA server** runs on [localhost:8887](http://localhost:8887/). The Open Policy Agent server used to 
+demonstrate fine-grained policy management. IDQL policy is represented as data and interpreted by
 the rego expression language.
 
 **hexa-demo-config** runs on [localhost:8889](http://localhost:8889/health). The bundle HTTP server from which the
-OPA server can download the bundles of policy and data from.
-See [OPA bundles][opa-bundles] for more info.
+OPA server can download the bundles of policy and data from. See [OPA bundles][opa-bundles] for more info.
 
 ### Workflow
 
