@@ -70,26 +70,32 @@ authentication/ authorization proxies, [Google IAP](https://cloud.google.com/iap
 for coarse grained access and the [Open Policy Agent (OPA)](https://www.openpolicyagent.org/)
 for fine-grained policy access.
 
-**OPA server** runs on [localhost:8887](http://localhost:8887/). The Open Policy Agent server used to 
+**OPA server** runs on [localhost:8887](http://localhost:8887/). The Open Policy Agent (OPA) server used to 
 demonstrate fine-grained policy management. IDQL policy is represented as data and interpreted by
 the rego expression language.
 
 **hexa-demo-config** runs on [localhost:8889](http://localhost:8889/health). The bundle HTTP server from which the
 OPA server can download the bundles of policy and data from. See [OPA bundles][opa-bundles] for more info.
 
-### Workflow
+### Example workflow
 
-Using the hexa-admin application, we can specify an Open Policy Agent integration
-configuration file which defines the bundle HTTP server where the actual OPA rego and
-policy lives.
+Using the hexa-admin application available via docker-compose, upload an OPA integration
+configuration file. The file describes the location of the IDQL policy.
 
-Once configured, IDQL policy for the hexa-demo application can be defined on
+```json
+{
+  "bundle_url":"http://hexa-demo-config:8889/bundles/bundle.tar.gz"
+}
+```
+
+Once configured, IDQL policy for the hexa-demo application can be modified on
 the Applications page. The hexa-admin communicates the changes to the
-hexa-orchestrator which makes the translation to OPA rego and updates the
-hexa-demo-config bundle server.
+hexa-orchestrator or **policy management point** which then updates the hexa-demo-config bundle server -
+making the updated policy available to the OPA server.
 
-The OPA server periodically reads config from the hexa-demo-config bundle
-server and updates access to the hexa-demo application.
+OPA or **policy decision point** periodically reads config from the hexa-demo-config bundle
+server and allows or denies access requests based on the IDQL policy.
+Decision enforcement is handled within the hexa-demo application or **policy enforcement point**.
 
 ![Hexa Demo Architecture](docs/img/Hexa-Demo-Architecture.png "hexa demo architecture")
 

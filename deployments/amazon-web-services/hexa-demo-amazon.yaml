@@ -51,7 +51,7 @@ data:
   config.yaml: |
     services:
       - name: test
-        url: http://hexa-demo-amazon-config.hexa-demo.svc.cluster.local:8889
+        url: http://hexa-demo-amazon-config.hexa-demo-amazon.svc.cluster.local:8889
     bundles:
       authz:
         service: test
