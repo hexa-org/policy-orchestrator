@@ -1,7 +1,7 @@
 apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 metadata:
-  name: ${AWS_PROJECT_NAME}
+  name: ${K8S_CLUSTER_NAME}
   region: ${AWS_REGION}
   version: "1.21"
 availabilityZones:

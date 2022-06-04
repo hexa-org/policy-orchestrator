@@ -78,13 +78,13 @@ envsubst < deployments/amazon-web-services/cluster-config.yaml | eksctl create c
 Write the configuration details as needed.
 
 ```bash
-aws eks --region ${AWS_REGION} update-kubeconfig --name ${AWS_PROJECT_NAME}
+aws eks --region ${AWS_REGION} update-kubeconfig --name ${K8S_CLUSTER_NAME}
 ````
 
 Create an IAM Open ID Connect provider.
 
 ```bash
-eksctl utils associate-iam-oidc-provider --cluster=${AWS_PROJECT_NAME} --region=${AWS_REGION} --approve
+eksctl utils associate-iam-oidc-provider --cluster=${K8S_CLUSTER_NAME} --region=${AWS_REGION} --approve
 ```
 
 Create the RBOC roles.
@@ -106,7 +106,7 @@ Create the service account.
 
 ```bash
 eksctl create iamserviceaccount \
-    --cluster=${AWS_PROJECT_NAME} \
+    --cluster=${K8S_CLUSTER_NAME} \
     --namespace=kube-system \
     --name=aws-load-balancer-controller \
     --attach-policy-arn=arn:aws:iam::${AWS_ACCOUNT_ID}:policy/AWSLoadBalancerControllerIAMPolicy \
@@ -131,13 +131,13 @@ envsubst < deployments/amazon-web-services/v2_3_1_full.yaml | kubectl apply -f -
 Create the namepace.
 
 ```bash
- kubectl create namespace hexa-demo
+kubectl create namespace ${APP_NAME}
  ```
 
 Deploy demo kubernetes objects.
 
 ```bash
-envsubst < deployments/amazon-web-services/hexa-demo.yaml | kubectl apply -f -
+envsubst < deployments/amazon-web-services/hexa-demo-amazon.yaml | kubectl apply -f -
 ````
 
 Get the ingress address and create a CNAME record for the load balancer.

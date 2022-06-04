@@ -1,1 +1,0 @@
-gcloud container clusters create {{index . "GCP_CLUSTER_NAME"}} --zone {{index . "GCP_ZONE"}} --num-nodes 4
