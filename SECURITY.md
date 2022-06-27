@@ -22,11 +22,11 @@ system.
 The long-term intent is to leverage authentication providers (e.g. OpenID Connect), establish browser sessions, and
 enforce access management using IDQL.
 
-### Hexa-Orchestrator & HAWK
+### Hexa-Orchestrator
 
 Hexa Orchestrator is the internal API gateway through which policy provisioning and retrieval takes place. Requests from
-Hexa-Admin and other container clients are secured using Hawk which implements a form of
-[digest message authentication](https://github.com/mozilla/hawk/blob/main/API.md).
+Hexa-Admin and other container clients are secured using [Hawk](https://github.com/mozilla/hawk) which implements a form
+of [digest message authentication](https://github.com/mozilla/hawk/blob/main/API.md).
 
 _Note_ The credentials used within this repository are for testing. Please create new credentials for your environment.
 

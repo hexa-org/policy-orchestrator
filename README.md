@@ -7,18 +7,18 @@
 [![codecov](https://codecov.io/gh/hexa-org/policy-orchestrator/branch/main/graph/badge.svg)](https://codecov.io/gh/hexa-org/policy-orchestrator)
 [![CodeQL](https://github.com/hexa-org/policy-orchestrator/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/hexa-org/policy-orchestrator/actions/workflows/codeql-analysis.yml)
 
-Hexa is the open-source, standards-based policy orchestration software for multi-cloud and hybrid businesses.
+Hexa Policy Orchestrator enables you to manage all of your policies consistently across software providers
+so that you can unify access policy management.  The below diagram describes the current provider architecture -
 
-The Hexa project contains three applications.
-* Policy Administrator web application
-* Policy Orchestrator server with IDQL translations
-* Demo application
-
-Hexa Policy Orchestration (Hexa) and Identity Query Language (IDQL) were purpose-built to solve the proliferation of
-policy orchestration problems caused by today’s hybrid cloud and multi-cloud world. Together, Hexa and IDQL enable you
-to manage all of your policies consistently across clouds and vendors so you can unify access policy management.
+![Hexa Provider Architecture](docs/img/Hexa-Provider-Architecture.svg "hexa provider architecture")
 
 ## Getting Started
+
+The Hexa project contains three applications - 
+
+* Policy Orchestrator server with policy translations
+* Demo Policy Administrator web application
+* Demo web application
 
 Clone or download the codebase from GitHub to your local machine and install the following prerequisites.
 
@@ -31,7 +31,7 @@ cd /home/user/workspace/
 git clone git@github.com:hexa-org/policy-orchestrator.git
 ```
 
-### Build
+### Build the Hexa image
 
 Build a Hexa image with Pack. The newly created image will contain the policy
 administrator web application, policy orchestrator server, and demo application.
@@ -47,7 +47,7 @@ chmod 775 ./databases/docker_support/initdb.d/create-databases.sh
 chmod 775 ./databases/docker_support/migrate-databases.sh
 ```
 
-### Run
+### Run the Policy Orchestrator
 
 Run all the applications with docker compose.
 
@@ -56,6 +56,8 @@ docker-compose up
 ```
 
 Docker runs the applications described below.
+
+### Application descriptions 
 
 **hexa-orchestrator** runs on [localhost:8885](http://localhost:8885/health). The main application
 that manages IDQL policy across various platforms and communicates with the various platform interfaces;
@@ -79,6 +81,8 @@ OPA server can download the bundles of policy and data from. See [OPA bundles][o
 
 ### Example workflow
 
+Fine-grained policy management with OPA.
+
 Using the hexa-admin application available via docker-compose, upload an OPA integration
 configuration file. The file describes the location of the IDQL policy.
 
@@ -97,36 +101,17 @@ OPA or **policy decision point** periodically reads config from the hexa-demo-co
 server and allows or denies access requests based on the IDQL policy.
 Decision enforcement is handled within the hexa-demo application or **policy enforcement point**.
 
-![Hexa Demo Architecture](docs/img/Hexa-Demo-Architecture.png "hexa demo architecture")
-
-### Cleanup
-
-Cleaning up. Remove all docker containers and volumes.
-
-```bash
-docker rm -f $(docker ps -a -q)
-docker volume rm -f $(docker volume ls -q)
-docker system prune -a -f
-```
-
-Remove the local postgres database files.
-
-```bash
-rm -rf .postgres
-```
-
-## Cloud Native Computing Foundation
-
-Hexa uses the below Cloud Native Computing Foundation ([CNCF](https://www.cncf.io/)) projects
-
-* [Contour](https://projectcontour.io/)
-* [Harbor](https://goharbor.io/)
-* [Helm](https://helm.sh/)
-* [Kubernetes](https://kubernetes.io/)
-* [Open Policy Agent](https://www.openpolicyagent.org/)
-* [Pack](https://buildpacks.io/)
-* [Prometheus](https://prometheus.io/)
+![Hexa Demo Architecture](docs/img/Hexa-Demo-Architecture.svg "hexa demo architecture")
 
 The current demo deployment infrastructure can be found at this [link](infrastructure/README.md).
+
+## Getting involved
+
+Here are a few links for those interested in contributing to the Hexa project.
+
+* [Contributing](CONTRIBUTING.md)
+* [Code of Conduct](CODE_OF_CONDUCT.md)
+* [Development](DEVELOPMENT.md)
+* [Security](SECURITY.md)
 
 [opa-bundles]: https://www.openpolicyagent.org/docs/latest/management-bundles/

@@ -3,8 +3,7 @@
 Hexa uses fresh cloud to deploy the hexa-demo infrastructure. You could find
 out more about [fresh cloud](https://github.com/initialcapacity/freshcloud) on the GitHub page. 
 
-<details>
-<summary>Current demo topology</summary>
+### Current demo topology
 
 | Platform            |               |                                         |
 |---------------------|---------------|-----------------------------------------|
@@ -44,8 +43,6 @@ out more about [fresh cloud](https://github.com/initialcapacity/freshcloud) on t
 |                     | Deployed      | via docker compose                      |
 |                     | Authorization | not available                           |
 |                     | Automation    | via pack locally                        |
-
-</details>
 
 The below notes summarize the steps used to create the infrastructure management cluster.
 
