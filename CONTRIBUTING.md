@@ -14,7 +14,7 @@ Additional development information can be found [here](DEVELOPMENT.md).
 
 ### Project Roles
 
-* **Contributors** are anyone that engages on a regular basis with the Hexa project by updating documentation, doing 
+* **Contributors** are anyone that engages on a regular basis with the Hexa-IDQL project by updating documentation, doing 
 code reviews, creating or responding to issues, contributing code, and so on.
 
 * **Maintainers** are the team responsible for overall project governance and project direction. Maintainers have final

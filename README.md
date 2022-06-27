@@ -16,8 +16,8 @@ so that you can unify access policy management.  The below diagram describes the
 
 The Hexa project contains three applications - 
 
-* Policy Orchestrator server with policy translations
-* Demo Policy Administrator web application
+* Policy Orchestrator with policy translations
+* Demo Policy Administrator
 * Demo web application
 
 Clone or download the codebase from GitHub to your local machine and install the following prerequisites.
@@ -103,8 +103,6 @@ Decision enforcement is handled within the hexa-demo application or **policy enf
 
 ![Hexa Demo Architecture](docs/img/Hexa-Demo-Architecture.svg "hexa demo architecture")
 
-The current demo deployment infrastructure can be found at this [link](infrastructure/README.md).
-
 ## Getting involved
 
 Here are a few links for those interested in contributing to the Hexa project.
@@ -113,5 +111,7 @@ Here are a few links for those interested in contributing to the Hexa project.
 * [Code of Conduct](CODE_OF_CONDUCT.md)
 * [Development](DEVELOPMENT.md)
 * [Security](SECURITY.md)
+
+The current demo deployment infrastructure can be found at this [link](infrastructure/README.md).
 
 [opa-bundles]: https://www.openpolicyagent.org/docs/latest/management-bundles/
