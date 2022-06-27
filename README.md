@@ -8,7 +8,7 @@
 [![CodeQL](https://github.com/hexa-org/policy-orchestrator/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/hexa-org/policy-orchestrator/actions/workflows/codeql-analysis.yml)
 
 Hexa Policy Orchestrator enables you to manage all of your policies consistently across software providers
-so that you can unify access policy management.  The below diagram describes the current provider architecture -
+so that you can unify access policy management. The below diagram describes the current provider architecture -
 
 ![Hexa Provider Architecture](docs/img/Hexa-Provider-Architecture.svg "hexa provider architecture")
 
@@ -57,7 +57,7 @@ docker-compose up
 
 Docker runs the applications described below.
 
-### Application descriptions 
+## Application descriptions 
 
 **hexa-orchestrator** runs on [localhost:8885](http://localhost:8885/health). The main application
 that manages IDQL policy across various platforms and communicates with the various platform interfaces;
