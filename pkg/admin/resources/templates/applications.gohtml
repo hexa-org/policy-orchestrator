@@ -9,6 +9,7 @@
         <table>
             <thead>
             <tr>
+                <th>Provider</th>
                 <th>Platform Identifier</th>
                 <th>Name</th>
                 <th>Description</th>
@@ -17,6 +18,12 @@
             <tbody>
             {{- range index .Map "applications"}}
                 <tr>
+                    <td>
+                        {{if eq .ProviderName "google_cloud"}}Google Cloud Platform{{end}}
+                        {{if eq .ProviderName "amazon"}}Amazon Web Services{{end}}
+                        {{if eq .ProviderName "azure"}}Azure Cloud Platform{{end}}
+                        {{if eq .ProviderName "open_policy_agent"}}Open Policy Agent{{end}}
+                    </td>
                     <td><a href="/applications/{{.ID}}">{{.ObjectId}}</a></td>
                     <td>{{.Name}}</td>
                     <td>{{.Description}}</td>

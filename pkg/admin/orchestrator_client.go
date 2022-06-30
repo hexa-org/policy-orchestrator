@@ -45,6 +45,7 @@ type application struct {
 	ObjectId      string `json:"object_id"`
 	Name          string `json:"name"`
 	Description   string `json:"description"`
+	ProviderName  string `json:"provider_name"`
 }
 
 func (c orchestratorClient) Applications(url string) (applications []Application, err error) {
@@ -64,11 +65,12 @@ func (c orchestratorClient) Applications(url string) (applications []Application
 
 	for _, app := range jsonResponse.Applications {
 		applications = append(applications, Application{
-			app.ID,
-			app.IntegrationId,
-			app.ObjectId,
-			app.Name,
-			app.Description})
+			ID:            app.ID,
+			IntegrationId: app.IntegrationId,
+			ObjectId:      app.ObjectId,
+			Name:          app.Name,
+			Description:   app.Description,
+			ProviderName:  app.ProviderName})
 	}
 
 	return applications, nil
@@ -86,7 +88,7 @@ func (c orchestratorClient) Application(url string) (Application, error) {
 	if err != nil {
 		return Application{}, err
 	}
-	app := Application{jsonResponse.ID, jsonResponse.IntegrationId, jsonResponse.ObjectId, jsonResponse.Name, jsonResponse.Description}
+	app := Application{ID: jsonResponse.ID, IntegrationId: jsonResponse.IntegrationId, ObjectId: jsonResponse.ObjectId, Name: jsonResponse.Name, Description: jsonResponse.Description}
 	return app, nil
 }
 

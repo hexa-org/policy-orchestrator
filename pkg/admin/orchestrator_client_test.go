@@ -51,11 +51,11 @@ func TestOrchestratorClient_NotHealthy(t *testing.T) {
 
 func TestOrchestratorClient_Applications(t *testing.T) {
 	mockClient := new(MockClient)
-	mockClient.response = []byte("{\"applications\":[{\"id\":\"anId\", \"integration_id\":\"anIntegrationId\", \"object_id\":\"anObjectId\", \"name\":\"anApp\", \"description\":\"aDescription\"}]}")
+	mockClient.response = []byte("{\"applications\":[{\"id\":\"anId\", \"integration_id\":\"anIntegrationId\", \"object_id\":\"anObjectId\", \"name\":\"anApp\", \"description\":\"aDescription\", \"provider_name\":\"aProviderName\"}]}")
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 
 	resp, _ := client.Applications("localhost:8883/applications")
-	assert.Equal(t, []admin.Application{{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "anApp", Description: "aDescription"}}, resp)
+	assert.Equal(t, []admin.Application{{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "anApp", Description: "aDescription", ProviderName: "aProviderName"}}, resp)
 }
 
 func TestOrchestratorClient_Applications_withErroneousGet(t *testing.T) {

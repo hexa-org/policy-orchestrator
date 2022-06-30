@@ -19,6 +19,7 @@ type Application struct {
 	ObjectId      string `json:"object_id"`
 	Name          string `json:"name"`
 	Description   string `json:"description"`
+	ProviderName  string `json:"provider_name"`
 }
 
 type Policies struct {
@@ -55,15 +56,28 @@ type ApplicationsHandler struct {
 }
 
 func (handler ApplicationsHandler) List(w http.ResponseWriter, _ *http.Request) {
-	records, err := handler.applicationsGateway.Find()
-	if err != nil {
-		log.Println("Error accessing database: " + err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	integrationRecords, integrationErr := handler.integrationsGateway.Find()
+	if integrationErr != nil {
+		log.Println("Error accessing database: " + integrationErr.Error())
+		http.Error(w, integrationErr.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	integrationNamesById := make(map[string]string, 0)
+	for _, integration := range integrationRecords {
+		integrationNamesById[integration.ID] = integration.Provider
+	}
+
+	records, applicationErr := handler.applicationsGateway.Find()
+	if applicationErr != nil {
+		log.Println("Error accessing database: " + applicationErr.Error())
+		http.Error(w, applicationErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	var list Applications
 	for _, rec := range records {
-		list.Applications = append(list.Applications, Application{rec.ID, rec.IntegrationId, rec.ObjectId, rec.Name, rec.Description})
+		list.Applications = append(list.Applications, Application{ID: rec.ID, IntegrationId: rec.IntegrationId, ObjectId: rec.ObjectId, Name: rec.Name, Description: rec.Description, ProviderName: integrationNamesById[rec.IntegrationId]})
 	}
 	data, _ := json.Marshal(list)
 	w.Header().Set("content-type", "application/json")
@@ -78,7 +92,7 @@ func (handler ApplicationsHandler) Show(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	app := Application{record.ID, record.IntegrationId, record.ObjectId, record.Name, record.Description}
+	app := Application{ID: record.ID, IntegrationId: record.IntegrationId, ObjectId: record.ObjectId, Name: record.Name, Description: record.Description}
 	data, _ := json.Marshal(app)
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
