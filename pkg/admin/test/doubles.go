@@ -38,7 +38,7 @@ func (m *MockClient) DeleteIntegration(url string) error {
 }
 
 func (m *MockClient) Applications(_ string) ([]admin.Application, error) {
-	application := admin.Application{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription"}
+	application := admin.Application{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription", ProviderName: "google_cloud"} // keep for now - tests proper provider name rendering
 	return []admin.Application{application}, m.Err
 }
 

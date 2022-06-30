@@ -52,6 +52,7 @@ func (suite *ApplicationsSuite) TestApplications() {
 	assert.Contains(suite.T(), string(body), "anObjectId")
 	assert.Contains(suite.T(), string(body), "aName")
 	assert.Contains(suite.T(), string(body), "aDescription")
+	assert.Contains(suite.T(), string(body), "Google Cloud Platform")
 }
 
 func (suite *ApplicationsSuite) TestApplications_templateRenders() {
