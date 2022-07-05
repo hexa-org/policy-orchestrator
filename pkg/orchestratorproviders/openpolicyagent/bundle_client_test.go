@@ -36,7 +36,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
   "policies": [
     {
       "meta": {"version": "0.5"},
-      "actions": [{"action": "GET"}],
+      "actions": [{"action": "http:GET"}],
       "subject": {
         "members": [
           "allusers", "allauthenticated"
@@ -50,7 +50,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
     },
     {
       "meta": {"version": "0.5"},
-      "actions": [{"action": "GET"}],
+      "actions": [{"action": "http:GET"}],
       "subject": {
         "members": [
           "sales@hexaindustries.io",
@@ -66,7 +66,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
     },
     {
       "meta": {"version": "0.5"},
-      "actions": [{"action": "GET"}],
+      "actions": [{"action": "http:GET"}],
       "subject": {
         "members": [
           "accounting@hexaindustries.io"
@@ -80,7 +80,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
     },
     {
       "meta": {"version": "0.5"},
-      "actions": [{"action": "GET"}],
+      "actions": [{"action": "http:GET"}],
       "subject": {
         "members": [
           "humanresources@hexaindustries.io"

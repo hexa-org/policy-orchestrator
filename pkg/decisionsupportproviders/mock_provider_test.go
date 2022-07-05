@@ -16,7 +16,7 @@ func TestBuildInput(t *testing.T) {
 	input, _ := provider.BuildInput(req)
 	casted := input.(map[string]string)
 
-	assert.Equal(t, "GET", casted["method"])
+	assert.Equal(t, "http:GET", casted["method"])
 	assert.Equal(t, "/noop", casted["path"])
 	provider.AssertExpectations(t)
 }
