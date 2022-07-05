@@ -21,7 +21,7 @@ func (m *MockDecisionProvider) BuildInput(r *http.Request) (interface{}, error) 
 	m.Called()
 
 	return map[string]string{
-		"method": "GET",
+		"method": "http:GET",
 		"path":   r.URL.Path,
 	}, m.BuildErr
 }

@@ -9,9 +9,9 @@ import (
 )
 
 type OpaDecisionProvider struct {
-	Client     HTTPClient
-	Url        string
-	Principals []interface{}
+	Client    HTTPClient
+	Url       string
+	Principal string
 }
 
 type OpaQuery struct {
@@ -20,9 +20,9 @@ type OpaQuery struct {
 
 func (o OpaDecisionProvider) BuildInput(r *http.Request) (any interface{}, err error) {
 	return OpaQuery{map[string]interface{}{
-		"method":     "GET",
-		"path":       strings.Split(r.RequestURI, "?")[0],
-		"principals": o.Principals,
+		"method":    "http:GET",
+		"path":      strings.Split(r.RequestURI, "?")[0],
+		"principal": o.Principal,
 	}}, nil
 }
 

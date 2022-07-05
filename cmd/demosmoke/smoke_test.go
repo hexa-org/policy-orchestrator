@@ -89,10 +89,7 @@ func TestDemoFlow(t *testing.T) {
 	body, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, "unable to update policy.\n", string(body))
 
-	_, resetErr := http.Get("http://localhost:8889/reset")
-	if resetErr != nil {
-		t.Fail()
-	}
+	_, _ = http.Get("http://localhost:8889/reset")
 }
 
 func assertContains(t *testing.T, url string, contains string) {
@@ -127,7 +124,7 @@ func updateAPolicy() (*http.Response, error) {
 	_ = json.NewDecoder(resp.Body).Decode(&apps)
 
 	var policies bytes.Buffer
-	policy := Policy{Meta: Meta{"0.5"}, Actions: []Action{{"GET"}},
+	policy := Policy{Meta: Meta{"0.5"}, Actions: []Action{{"http:GET"}},
 		Subject: Subject{Members: []string{"accounting@hexaindustries.io", "sales@hexaindustries.io"}},
 		Object:  Object{Resources: []string{"/accounting"}},
 	}

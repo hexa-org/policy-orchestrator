@@ -13,16 +13,16 @@ import (
 
 func TestOpaDecisionProvider_BuildInput(t *testing.T) {
 	provider := decisionsupportproviders.OpaDecisionProvider{
-		Principals: []interface{}{"allusers", "allauthenticatedusers", "sales@hexaindustries.io"},
+		Principal: "sales@hexaindustries.io",
 	}
 
 	req, _ := http.NewRequest("GET", "http://aDomain.com/noop", nil)
 	req.RequestURI = "/noop"
 	query, _ := provider.BuildInput(req)
 	casted := query.(decisionsupportproviders.OpaQuery).Input
-	assert.Equal(t, "GET", casted["method"])
+	assert.Equal(t, "http:GET", casted["method"])
 	assert.Equal(t, "/noop", casted["path"])
-	assert.Equal(t, []interface{}{"allusers", "allauthenticatedusers", "sales@hexaindustries.io"}, casted["principals"])
+	assert.Equal(t, "sales@hexaindustries.io", casted["principal"])
 }
 
 func TestOpaDecisionProvider_BuildInput_RemovesQueryParams(t *testing.T) {

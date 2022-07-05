@@ -63,9 +63,9 @@ func (o *OpaSupport) Middleware(next http.Handler) http.Handler {
 			}
 		}
 		input := OpaQuery{map[string]interface{}{
-			"method":     "GET",
+			"method":     "http:GET",
 			"path":       strings.Split(r.RequestURI, "?")[0],
-			"principals": []interface{}{"allusers", "allauthenticatedusers", "sales@hexaindustries.io"},
+			"principal": "sales@hexaindustries.io",
 		}}
 		log.Println(fmt.Sprintf("Checking authorization for %v", input))
 

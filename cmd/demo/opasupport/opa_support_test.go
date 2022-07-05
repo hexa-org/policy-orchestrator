@@ -35,9 +35,9 @@ func unauthorized(w http.ResponseWriter, _ *http.Request) {
 
 func TestAllow(t *testing.T) {
 	input := opasupport.OpaQuery{Input: map[string]interface{}{
-		"method":     "GET",
-		"path":       "/aUri",
-		"principals": []interface{}{"allusers", "allauthenticatedusers", "sales@hexaindustries.io", "accounting@hexaindustries.io"},
+		"method":    "http:GET",
+		"path":      "/aUri",
+		"principal": "sales@hexaindustries.io",
 	}}
 	mockClient := new(MockClient)
 	mockClient.response = []byte("{\"result\":true}")
@@ -60,9 +60,9 @@ func TestAllow_bad_json(t *testing.T) {
 
 func TestNotAllow(t *testing.T) {
 	input := opasupport.OpaQuery{Input: map[string]interface{}{
-		"method":     "GET",
-		"path":       "/aUri",
-		"principals": []interface{}{"allusers"},
+		"method":    "http:GET",
+		"path":      "/aUri",
+		"principal": "allusers",
 	}}
 	mockClient := new(MockClient)
 	mockClient.response = []byte("{\"result\":false}")
