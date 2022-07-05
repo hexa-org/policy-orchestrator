@@ -143,7 +143,7 @@ func (c *GoogleClient) SetBackendPolicy(name, objectId string, p policysupport.P
 	}
 
 	// todo - handle many actions
-	uri := strings.TrimPrefix(p.Actions[0].Action, "gcp:")
+	uri := strings.TrimPrefix(p.Actions[0].ActionUri, "gcp:")
 
 	body := policy{bindings{[]bindingInfo{{uri, p.Subject.Members}}}}
 	b := new(bytes.Buffer)

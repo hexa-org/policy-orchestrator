@@ -67,7 +67,7 @@ func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 		resources := policyInfo.Object.Resources[0]
 		for _, user := range policyInfo.Subject.Members {
 			assignments = append(assignments, AzureAppRoleAssignment{
-				AppRoleId:   strings.TrimPrefix(policyInfo.Actions[0].Action, "azure:"),
+				AppRoleId:   strings.TrimPrefix(policyInfo.Actions[0].ActionUri, "azure:"),
 				PrincipalId: strings.Split(user, ":")[0],
 				ResourceId:  strings.Split(resources, ":")[0],
 			})

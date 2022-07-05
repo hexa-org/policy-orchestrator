@@ -84,7 +84,7 @@ func TestAmazonProvider_GetPolicyInfo(t *testing.T) {
 	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
 	info, _ := p.GetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{ObjectID: "anObjectId"})
 	assert.Equal(t, 1, len(info))
-	assert.Equal(t, "aws:amazon.cognito/access", info[0].Actions[0].Action)
+	assert.Equal(t, "aws:amazon.cognito/access", info[0].Actions[0].ActionUri)
 	assert.Equal(t, "aUser:aUser@amazon.com", info[0].Subject.Members[0])
 	assert.Equal(t, "anObjectId", info[0].Object.Resources[0])
 }

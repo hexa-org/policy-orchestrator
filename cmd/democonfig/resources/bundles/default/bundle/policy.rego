@@ -14,7 +14,7 @@ matches(policy) {
     matchesPrincipal(policy.subject)
 }
 matchesAction(action) {
-    input.method == action.action
+    input.method == action.action_uri
 }
 matchesPrincipal(subject) {
     "allusers" in subject.members
