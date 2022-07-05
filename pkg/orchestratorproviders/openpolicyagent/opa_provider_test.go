@@ -117,7 +117,7 @@ func TestSetPolicyInfo(t *testing.T) {
 	path := filepath.Join(file, fmt.Sprintf("../resources/bundles/.bundle-%d", rand.Uint64()))
 	_ = compressionsupport.UnTarToPath(bytes.NewReader(gzip), path)
 	readFile, _ := ioutil.ReadFile(path + "/bundle/data.json")
-	assert.Equal(t, `{"policies":[{"meta":{"version":"0.5"},"actions":[{"action":"http:GET"}],"subject":{"members":["allusers"]},"object":{"resources":["/"]}}]}`, string(readFile))
+	assert.Equal(t, `{"policies":[{"meta":{"version":"0.5"},"actions":[{"action_uri":"http:GET"}],"subject":{"members":["allusers"]},"object":{"resources":["/"]}}]}`, string(readFile))
 	_ = os.RemoveAll(path)
 }
 
@@ -149,7 +149,7 @@ func TestMakeDefaultBundle(t *testing.T) {
   "policies": [
     {
       "version": "0.5",
-      "action": "http:GET",
+      "action_uri": "http:GET",
       "subject": {
         "members": [
           "allusers",
@@ -182,7 +182,7 @@ func TestMakeDefaultBundle(t *testing.T) {
   "policies": [
     {
       "version": "0.5",
-      "action": "http:GET",
+      "action_uri": "http:GET",
       "subject": {
         "members": [
           "allusers",

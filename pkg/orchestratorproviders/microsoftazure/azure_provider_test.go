@@ -75,7 +75,7 @@ func TestGetPolicy(t *testing.T) {
 	appInfo := orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"}
 	policies, _ := p.GetPolicyInfo(info, appInfo)
 	assert.Equal(t, 1, len(policies))
-	assert.Equal(t, "azure:anAppRoleId", policies[0].Actions[0].Action)
+	assert.Equal(t, "azure:anAppRoleId", policies[0].Actions[0].ActionUri)
 	assert.Equal(t, "aPrincipalId:aPrincipalDisplayName", policies[0].Subject.Members[0])
 	assert.Equal(t, "aResourceId:aResourceDisplayName", policies[0].Object.Resources[0])
 }

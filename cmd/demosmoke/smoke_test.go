@@ -170,7 +170,7 @@ type Meta struct {
 }
 
 type Action struct {
-	Action string `json:"action"`
+	ActionUri string `json:"action_uri"`
 }
 
 type Subject struct {

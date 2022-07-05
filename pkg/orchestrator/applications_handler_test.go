@@ -124,7 +124,7 @@ func (s *ApplicationsHandlerSuite) TestGetPolicies() {
 	assert.Equal(s.T(), 2, len(policies.Policies))
 
 	policy := policies.Policies[0]
-	assert.Equal(s.T(), "anAction", policy.Actions[0].Action)
+	assert.Equal(s.T(), "anAction", policy.Actions[0].ActionUri)
 	assert.Equal(s.T(), "aVersion", policy.Meta.Version)
 	assert.Equal(s.T(), []string{"aUser"}, policy.Subject.Members)
 	assert.Equal(s.T(), []string{"/"}, policy.Object.Resources)

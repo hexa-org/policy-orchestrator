@@ -31,7 +31,7 @@ type Meta struct {
 }
 
 type Action struct {
-	Action string
+	ActionUri string
 }
 
 type Subject struct {

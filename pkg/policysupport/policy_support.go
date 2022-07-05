@@ -14,7 +14,7 @@ type MetaInfo struct {
 }
 
 type ActionInfo struct {
-	Action string
+	ActionUri string
 }
 
 type SubjectInfo struct {

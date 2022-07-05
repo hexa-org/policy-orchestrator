@@ -38,7 +38,7 @@ type Meta struct {
 }
 
 type Action struct {
-	Action string `json:"action"`
+	ActionUri string `json:"action_uri"`
 }
 
 type Subject struct {
@@ -118,7 +118,7 @@ func (handler ApplicationsHandler) GetPolicies(w http.ResponseWriter, r *http.Re
 	for _, rec := range records {
 		var actions []Action
 		for _, a := range rec.Actions {
-			actions = append(actions, Action{a.Action})
+			actions = append(actions, Action{a.ActionUri})
 		}
 		list = append(
 			list, Policy{
@@ -154,7 +154,7 @@ func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Re
 	for _, policy := range policies.Policies {
 		var actionInfos []policysupport.ActionInfo
 		for _, a := range policy.Actions {
-			actionInfos = append(actionInfos, policysupport.ActionInfo{Action: a.Action})
+			actionInfos = append(actionInfos, policysupport.ActionInfo{ActionUri: a.ActionUri})
 		}
 		info := policysupport.PolicyInfo{Meta: policysupport.MetaInfo{Version: policy.Meta.Version}, Actions: actionInfos,
 			Subject: policysupport.SubjectInfo{Members: policy.Subject.Members},

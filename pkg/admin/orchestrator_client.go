@@ -151,7 +151,7 @@ type meta struct {
 }
 
 type action struct {
-	Action string `json:"action"`
+	ActionUri string `json:"action_uri"`
 }
 
 type subject struct {
@@ -181,7 +181,7 @@ func (c orchestratorClient) GetPolicies(url string) ([]Policy, string, error) {
 	for _, p := range jsonResponse.Policies {
 		var actions []Action
 		for _, a := range p.Actions {
-			actions = append(actions, Action{a.Action})
+			actions = append(actions, Action{a.ActionUri})
 		}
 		foundPolicies = append(foundPolicies, Policy{
 			Meta:    Meta{p.Meta.Version},
