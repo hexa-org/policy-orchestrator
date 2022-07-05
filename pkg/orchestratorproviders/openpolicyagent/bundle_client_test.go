@@ -3,14 +3,17 @@ package openpolicyagent_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent/test"
 	"github.com/stretchr/testify/assert"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
+	"time"
 )
 
 func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
@@ -25,7 +28,9 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
 	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
 
 	dir := os.TempDir()
-	data, err := client.GetDataFromBundle("someUrl", dir)
+	rand.Seed(time.Now().UnixNano())
+	path := filepath.Join(dir, fmt.Sprintf("../resources/bundles/.bundle-%d", rand.Uint64()))
+	data, err := client.GetDataFromBundle("someUrl", path)
 	assert.NoError(t, err)
 	assert.Equal(t, `{
   "policies": [
@@ -33,7 +38,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
       "meta": {"version": "0.5"},
       "actions": [{"action": "GET"}],
       "subject": {
-        "authenticated_users": [
+        "members": [
           "allusers", "allauthenticated"
         ]
       },
@@ -47,7 +52,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
       "meta": {"version": "0.5"},
       "actions": [{"action": "GET"}],
       "subject": {
-        "authenticated_users": [
+        "members": [
           "sales@hexaindustries.io",
           "marketing@hexaindustries.io"
         ]
@@ -63,7 +68,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
       "meta": {"version": "0.5"},
       "actions": [{"action": "GET"}],
       "subject": {
-        "authenticated_users": [
+        "members": [
           "accounting@hexaindustries.io"
         ]
       },
@@ -77,7 +82,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
       "meta": {"version": "0.5"},
       "actions": [{"action": "GET"}],
       "subject": {
-        "authenticated_users": [
+        "members": [
           "humanresources@hexaindustries.io"
         ]
       },
@@ -89,6 +94,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
     }
   ]
 }`, string(data))
+	_ = os.RemoveAll(path)
 }
 
 func TestBundleClient_GetExpressionFromBundle_withBadRequest(t *testing.T) {
@@ -115,7 +121,6 @@ func TestBundleClient_GetExpressionFromBundle_withBadTar(t *testing.T) {
 	_ = compressionsupport.Gzip(&buffer, tar)
 
 	mockClient := openpolicyagent_test.MockClient{Response: buffer.Bytes()}
-
 	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
 	_, err := client.GetDataFromBundle("someUrl", "/badPath")
 	assert.Error(t, err)

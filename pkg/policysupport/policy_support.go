@@ -18,7 +18,7 @@ type ActionInfo struct {
 }
 
 type SubjectInfo struct {
-	AuthenticatedUsers []string
+	Members []string
 }
 
 type ObjectInfo struct {

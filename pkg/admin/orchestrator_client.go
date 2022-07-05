@@ -155,7 +155,7 @@ type action struct {
 }
 
 type subject struct {
-	AuthenticatedUsers []string `json:"authenticated_users"`
+	Members []string `json:"members"`
 }
 
 type object struct {
@@ -186,7 +186,7 @@ func (c orchestratorClient) GetPolicies(url string) ([]Policy, string, error) {
 		foundPolicies = append(foundPolicies, Policy{
 			Meta:    Meta{p.Meta.Version},
 			Actions: actions,
-			Subject: Subject{AuthenticatedUsers: p.Subject.AuthenticatedUsers},
+			Subject: Subject{Members: p.Subject.Members},
 			Object:  Object{Resources: p.Object.Resources}})
 	}
 	return foundPolicies, rawJson, nil

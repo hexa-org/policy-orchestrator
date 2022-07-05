@@ -35,7 +35,7 @@ type Action struct {
 }
 
 type Subject struct {
-	AuthenticatedUsers []string
+	Members []string
 }
 
 type Object struct {

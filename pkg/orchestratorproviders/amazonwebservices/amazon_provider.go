@@ -70,13 +70,13 @@ func (a *AmazonProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationI
 	if err != nil {
 		return nil, err
 	}
-	authenticatedUsers := a.authenticatedUsersFrom(users)
+	members := a.membersFrom(users)
 
 	var policies []policysupport.PolicyInfo
 	policies = append(policies, policysupport.PolicyInfo{
 		Meta:    policysupport.MetaInfo{Version: "0.5"},
 		Actions: []policysupport.ActionInfo{{"aws:amazon.cognito/access"}}, // todo - not sure what this should be just yet.
-		Subject: policysupport.SubjectInfo{AuthenticatedUsers: authenticatedUsers},
+		Subject: policysupport.SubjectInfo{Members: members},
 		Object:  policysupport.ObjectInfo{Resources: []string{applicationInfo.ObjectID}},
 	})
 	return policies, nil
@@ -90,7 +90,7 @@ func (a *AmazonProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationI
 
 	for _, policyInfo := range policyInfos {
 		var newUsers []string
-		for _, user := range policyInfo.Subject.AuthenticatedUsers {
+		for _, user := range policyInfo.Subject.Members {
 			newUsers = append(newUsers, user)
 		}
 
@@ -101,7 +101,7 @@ func (a *AmazonProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationI
 			log.Println("Unable to find amazon cognito users.")
 			return http.StatusInternalServerError, listUsersErr
 		}
-		existingUsers := a.authenticatedUsersFrom(users)
+		existingUsers := a.membersFrom(users)
 
 		enableErr := a.EnableUsers(client, applicationInfo.ObjectID, a.ShouldEnable(existingUsers, newUsers))
 		if enableErr != nil {
@@ -118,16 +118,16 @@ func (a *AmazonProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationI
 	return http.StatusCreated, nil
 }
 
-func (a *AmazonProvider) authenticatedUsersFrom(users *cognitoidentityprovider.ListUsersOutput) []string {
-	var authenticatedUsers []string
+func (a *AmazonProvider) membersFrom(users *cognitoidentityprovider.ListUsersOutput) []string {
+	var members []string
 	for _, u := range users.Users {
 		for _, attr := range u.Attributes {
 			if aws.ToString(attr.Name) == "email" {
-				authenticatedUsers = append(authenticatedUsers, fmt.Sprintf("%s:%s", aws.ToString(u.Username), aws.ToString(attr.Value)))
+				members = append(members, fmt.Sprintf("%s:%s", aws.ToString(u.Username), aws.ToString(attr.Value)))
 			}
 		}
 	}
-	return authenticatedUsers
+	return members
 }
 
 func (a *AmazonProvider) EnableUsers(client CognitoClient, userPoolId string, shouldEnable []string) error {

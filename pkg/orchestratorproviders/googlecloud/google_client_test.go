@@ -79,7 +79,7 @@ func TestGoogleClient_GetAppEnginePolicies(t *testing.T) {
 		"serviceAccount:my-project-id@appspot.gserviceaccount.com",
 	}
 	assert.Equal(t, 2, len(infos))
-	assert.Equal(t, expectedUsers, infos[0].Subject.AuthenticatedUsers)
+	assert.Equal(t, expectedUsers, infos[0].Subject.Members)
 	assert.Equal(t, []string{"/"}, infos[1].Object.Resources)
 	assert.Equal(t, "https://iap.googleapis.com/v1/projects/appengineproject/iap_web/appengine-appEngineObjectId/services/default:getIamPolicy", m.Url)
 }
@@ -97,7 +97,7 @@ func TestGoogleClient_GetBackendPolicies(t *testing.T) {
 		"serviceAccount:my-project-id@appspot.gserviceaccount.com",
 	}
 	assert.Equal(t, 2, len(infos))
-	assert.Equal(t, expectedUsers, infos[0].Subject.AuthenticatedUsers)
+	assert.Equal(t, expectedUsers, infos[0].Subject.Members)
 	assert.Equal(t, []string{"/"}, infos[1].Object.Resources)
 	assert.Equal(t, "https://iap.googleapis.com/v1/projects/k8sproject/iap_web/compute/services/k8sObjectId:getIamPolicy", m.Url)
 }
@@ -121,7 +121,7 @@ func TestGoogleClient_GetBackendPolicies_withBadJson(t *testing.T) {
 
 func TestGoogleClient_SetAppEnginePolicies(t *testing.T) {
 	policy := policysupport.PolicyInfo{
-		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"roles/iap.httpsResourceAccessor"}}, Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
+		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"roles/iap.httpsResourceAccessor"}}, Subject: policysupport.SubjectInfo{Members: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
 	}
 	m := google_cloud_test.NewMockClient()
 	client := googlecloud.GoogleClient{HttpClient: m, ProjectId: "appengineproject"}
@@ -133,7 +133,7 @@ func TestGoogleClient_SetAppEnginePolicies(t *testing.T) {
 
 func TestGoogleClient_SetBackendPolicies(t *testing.T) {
 	policy := policysupport.PolicyInfo{
-		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"gcp:roles/iap.httpsResourceAccessor"}}, Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
+		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"gcp:roles/iap.httpsResourceAccessor"}}, Subject: policysupport.SubjectInfo{Members: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
 	}
 	m := google_cloud_test.NewMockClient()
 	client := googlecloud.GoogleClient{HttpClient: m, ProjectId: "k8sproject"}
@@ -145,7 +145,7 @@ func TestGoogleClient_SetBackendPolicies(t *testing.T) {
 
 func TestGoogleClient_SetBackendPolicies_withRequestError(t *testing.T) {
 	policy := policysupport.PolicyInfo{
-		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"gcp:roles/iap.httpsResourceAccessor"}}, Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
+		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"gcp:roles/iap.httpsResourceAccessor"}}, Subject: policysupport.SubjectInfo{Members: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
 	}
 	m := google_cloud_test.NewMockClient()
 	m.Err = errors.New("oops")

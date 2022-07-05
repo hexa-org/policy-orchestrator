@@ -28,7 +28,6 @@ func TestDemoFlow(t *testing.T) {
 
 	demo := makeCmd("/cmd/demo/demo.go", []string{"PORT=8886", "OPA_SERVER_URL: http://localhost:8887/v1/data/authz/allow"})
 	demoConfig := makeCmd("/cmd/democonfig/democonfig.go", []string{"PORT=8889"})
-	demoProxy := makeCmd("/cmd/demoproxy/demoproxy.go", []string{"PORT=8890", "REMOTER_URL=http://localhost:8886"})
 	orchestrator := makeCmd("/cmd/orchestrator/orchestrator.go", []string{
 		"PORT=8885",
 		"ORCHESTRATOR_HOSTPORT=localhost:8885",
@@ -54,21 +53,20 @@ func TestDemoFlow(t *testing.T) {
 
 	startCmd(demo, 8886)
 	startCmd(demoConfig, 8889)
-	startCmd(demoProxy, 8890)
 	startCmd(openPolicyAgent, 8887)
 	startCmd(orchestrator, 8885)
 
 	defer func() {
-		stopCmds(orchestrator, openPolicyAgent, demoProxy, demoConfig, demo)
+		stopCmds(orchestrator, openPolicyAgent, demoConfig, demo)
 	}()
 
-	assertContains(t, "http://localhost:8890/", "Great news, you're able to access this page.")
+	assertContains(t, "http://localhost:8886/", "Great news, you're able to access this page.")
 
-	assertContains(t, "http://localhost:8890/sales", "Great news, you're able to access this page.")
+	assertContains(t, "http://localhost:8886/sales", "Great news, you're able to access this page.")
 
-	assertContains(t, "http://localhost:8890/accounting", "Sorry, you're not able to access this page.")
+	assertContains(t, "http://localhost:8886/accounting", "Sorry, you're not able to access this page.")
 
-	assertContains(t, "http://localhost:8890/humanresources", "Sorry, you're not able to access this page.")
+	assertContains(t, "http://localhost:8886/humanresources", "Sorry, you're not able to access this page.")
 
 	_, _ = db.Exec(deleteAll)
 	createAnIntegration()
@@ -79,7 +77,7 @@ func TestDemoFlow(t *testing.T) {
 
 	time.Sleep(time.Duration(3) * time.Second) // waiting for opa to refresh the bundle
 
-	assertContains(t, "http://localhost:8890/accounting", "Great news, you're able to access this page.")
+	assertContains(t, "http://localhost:8886/accounting", "Great news, you're able to access this page.")
 
 	_, _ = db.Exec(deleteAll)
 	createAnErroneousIntegration()
@@ -90,6 +88,11 @@ func TestDemoFlow(t *testing.T) {
 
 	body, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, "unable to update policy.\n", string(body))
+
+	_, resetErr := http.Get("http://localhost:8889/reset")
+	if resetErr != nil {
+		t.Fail()
+	}
 }
 
 func assertContains(t *testing.T, url string, contains string) {
@@ -125,7 +128,7 @@ func updateAPolicy() (*http.Response, error) {
 
 	var policies bytes.Buffer
 	policy := Policy{Meta: Meta{"0.5"}, Actions: []Action{{"GET"}},
-		Subject: Subject{AuthenticatedUsers: []string{"accounting@hexaindustries.io", "sales@hexaindustries.io"}},
+		Subject: Subject{Members: []string{"accounting@hexaindustries.io", "sales@hexaindustries.io"}},
 		Object:  Object{Resources: []string{"/accounting"}},
 	}
 	_ = json.NewEncoder(&policies).Encode(Policies{[]Policy{policy}})
@@ -174,7 +177,7 @@ type Action struct {
 }
 
 type Subject struct {
-	AuthenticatedUsers []string `json:"authenticated_users"`
+	Members []string `json:"members"`
 }
 
 type Object struct {
