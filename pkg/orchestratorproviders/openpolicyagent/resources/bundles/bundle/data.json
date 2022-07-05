@@ -4,7 +4,7 @@
       "meta": {"version": "0.5"},
       "actions": [{"action": "GET"}],
       "subject": {
-        "authenticated_users": [
+        "members": [
           "allusers", "allauthenticated"
         ]
       },
@@ -18,7 +18,7 @@
       "meta": {"version": "0.5"},
       "actions": [{"action": "GET"}],
       "subject": {
-        "authenticated_users": [
+        "members": [
           "sales@hexaindustries.io",
           "marketing@hexaindustries.io"
         ]
@@ -34,7 +34,7 @@
       "meta": {"version": "0.5"},
       "actions": [{"action": "GET"}],
       "subject": {
-        "authenticated_users": [
+        "members": [
           "accounting@hexaindustries.io"
         ]
       },
@@ -48,7 +48,7 @@
       "meta": {"version": "0.5"},
       "actions": [{"action": "GET"}],
       "subject": {
-        "authenticated_users": [
+        "members": [
           "humanresources@hexaindustries.io"
         ]
       },

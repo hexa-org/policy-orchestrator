@@ -42,7 +42,7 @@ type Action struct {
 }
 
 type Subject struct {
-	AuthenticatedUsers []string `json:"authenticated_users"`
+	Members []string `json:"members"`
 }
 
 type Object struct {
@@ -124,7 +124,7 @@ func (handler ApplicationsHandler) GetPolicies(w http.ResponseWriter, r *http.Re
 			list, Policy{
 				Meta{rec.Meta.Version},
 				actions,
-				Subject{rec.Subject.AuthenticatedUsers},
+				Subject{rec.Subject.Members},
 				Object{rec.Object.Resources},
 			})
 	}
@@ -157,7 +157,7 @@ func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Re
 			actionInfos = append(actionInfos, policysupport.ActionInfo{Action: a.Action})
 		}
 		info := policysupport.PolicyInfo{Meta: policysupport.MetaInfo{Version: policy.Meta.Version}, Actions: actionInfos,
-			Subject: policysupport.SubjectInfo{AuthenticatedUsers: policy.Subject.AuthenticatedUsers},
+			Subject: policysupport.SubjectInfo{Members: policy.Subject.Members},
 			Object:  policysupport.ObjectInfo{Resources: policy.Object.Resources}}
 		policyInfos = append(policyInfos, info)
 	}

@@ -107,7 +107,7 @@ func TestSetPolicyInfo(t *testing.T) {
 	status, err := p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
 		orchestrator.ApplicationInfo{},
-		[]policysupport.PolicyInfo{{Meta: policysupport.MetaInfo{Version: "0.5"}, Actions: []policysupport.ActionInfo{{"GET"}}, Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"allusers"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}}}},
+		[]policysupport.PolicyInfo{{Meta: policysupport.MetaInfo{Version: "0.5"}, Actions: []policysupport.ActionInfo{{"GET"}}, Subject: policysupport.SubjectInfo{Members: []string{"allusers"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}}}},
 	)
 	assert.Equal(t, http.StatusCreated, status)
 	assert.NoError(t, err)
@@ -117,7 +117,8 @@ func TestSetPolicyInfo(t *testing.T) {
 	path := filepath.Join(file, fmt.Sprintf("../resources/bundles/.bundle-%d", rand.Uint64()))
 	_ = compressionsupport.UnTarToPath(bytes.NewReader(gzip), path)
 	readFile, _ := ioutil.ReadFile(path + "/bundle/data.json")
-	assert.Equal(t, `{"policies":[{"meta":{"version":"0.5"},"actions":[{"action":"GET"}],"subject":{"authenticated_users":["allusers"]},"object":{"resources":["/"]}}]}`, string(readFile))
+	assert.Equal(t, `{"policies":[{"meta":{"version":"0.5"},"actions":[{"action":"GET"}],"subject":{"members":["allusers"]},"object":{"resources":["/"]}}]}`, string(readFile))
+	_ = os.RemoveAll(path)
 }
 
 func TestSetPolicyInfo_withBadResponse(t *testing.T) {
@@ -134,7 +135,7 @@ func TestSetPolicyInfo_withBadResponse(t *testing.T) {
 	status, _ := p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
 		orchestrator.ApplicationInfo{},
-		[]policysupport.PolicyInfo{{Meta: policysupport.MetaInfo{Version: "0.5"}, Actions: []policysupport.ActionInfo{{"GET"}}, Subject: policysupport.SubjectInfo{AuthenticatedUsers: []string{"allusers"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}}}},
+		[]policysupport.PolicyInfo{{Meta: policysupport.MetaInfo{Version: "0.5"}, Actions: []policysupport.ActionInfo{{"GET"}}, Subject: policysupport.SubjectInfo{Members: []string{"allusers"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}}}},
 	)
 	assert.Equal(t, 0, status)
 }
@@ -150,7 +151,7 @@ func TestMakeDefaultBundle(t *testing.T) {
       "version": "0.5",
       "action": "GET",
       "subject": {
-        "authenticated_users": [
+        "members": [
           "allusers",
           "allauthenticated"
         ]
@@ -183,7 +184,7 @@ func TestMakeDefaultBundle(t *testing.T) {
       "version": "0.5",
       "action": "GET",
       "subject": {
-        "authenticated_users": [
+        "members": [
           "allusers",
           "allauthenticated"
         ]
@@ -196,4 +197,5 @@ func TestMakeDefaultBundle(t *testing.T) {
     }
   ]
 }`, string(dcreated))
+	_ = os.RemoveAll(path)
 }

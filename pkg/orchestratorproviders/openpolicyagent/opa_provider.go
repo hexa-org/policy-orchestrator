@@ -60,7 +60,7 @@ type Action struct {
 }
 
 type Subject struct {
-	AuthenticatedUsers []string `json:"authenticated_users"`
+	Members []string `json:"members"`
 }
 
 type Object struct {
@@ -95,7 +95,7 @@ func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, _ 
 			Meta:    policysupport.MetaInfo{Version: p.Meta.Version},
 			Actions: actions,
 			Subject: policysupport.SubjectInfo{
-				AuthenticatedUsers: p.Subject.AuthenticatedUsers,
+				Members: p.Subject.Members,
 			},
 			Object: policysupport.ObjectInfo{
 				Resources: p.Object.Resources,
@@ -120,7 +120,7 @@ func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, _ 
 			Meta:    Meta{Version: p.Meta.Version},
 			Actions: actions,
 			Subject: Subject{
-				p.Subject.AuthenticatedUsers,
+				p.Subject.Members,
 			},
 			Object: Object{
 				p.Object.Resources,

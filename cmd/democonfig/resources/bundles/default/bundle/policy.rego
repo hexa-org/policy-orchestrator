@@ -11,7 +11,7 @@ anyMatching {
 matches(policy) {
     matchesAction(policy.actions[i])
     input.path in policy.object.resources
-    input.principals[_] in policy.subject.authenticated_users
+    input.principals[_] in policy.subject.members
 }
 matchesAction(action) {
     input.method == action.action

@@ -127,7 +127,7 @@ func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]policysupport.
 		policies = append(policies, policysupport.PolicyInfo{
 			Meta:    policysupport.MetaInfo{Version: "0.5"},
 			Actions: []policysupport.ActionInfo{{"gcp:" + found.Role}},
-			Subject: policysupport.SubjectInfo{AuthenticatedUsers: found.Members},
+			Subject: policysupport.SubjectInfo{Members: found.Members},
 			Object:  policysupport.ObjectInfo{Resources: []string{"/"}},
 		})
 	}
@@ -145,7 +145,7 @@ func (c *GoogleClient) SetBackendPolicy(name, objectId string, p policysupport.P
 	// todo - handle many actions
 	uri := strings.TrimPrefix(p.Actions[0].Action, "gcp:")
 
-	body := policy{bindings{[]bindingInfo{{uri, p.Subject.AuthenticatedUsers}}}}
+	body := policy{bindings{[]bindingInfo{{uri, p.Subject.Members}}}}
 	b := new(bytes.Buffer)
 	_ = json.NewEncoder(b).Encode(body)
 

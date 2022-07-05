@@ -41,8 +41,8 @@
                 <tr>
                     <td class="compact">
                         <table class="no-margin">
-                            <tr class="no-border"><td>Authenticated users</td></tr>
-                            {{- range $user := $policy.Subject.AuthenticatedUsers}}
+                            <tr class="no-border"><td>Members</td></tr>
+                            {{- range $user := $policy.Subject.Members}}
                                 <tr class="no-border">
                                     <td>{{$user}}</td>
                                 </tr>

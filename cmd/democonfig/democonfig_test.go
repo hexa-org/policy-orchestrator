@@ -13,7 +13,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
 )
 
@@ -67,11 +66,13 @@ func TestUpload(t *testing.T) {
 	response, _ := http.Post(fmt.Sprintf("http://%s/bundles", app.Addr), contentType, buf)
 	assert.Equal(t, http.StatusCreated, response.StatusCode)
 
-	glob, _ := filepath.Glob(fmt.Sprintf("%s/*", bundleDir))
-	for _, item := range glob {
-		if strings.Contains(item, ".bundle") {
-			_ = os.RemoveAll(item)
-		}
-	}
+	_, _ = http.Get(fmt.Sprintf("http://%s/reset", app.Addr))
+	websupport.Stop(app)
+}
+
+func TestReset(t *testing.T) {
+	app := setup()
+	response, _ := http.Get(fmt.Sprintf("http://%s/reset", app.Addr))
+	assert.Equal(t, http.StatusOK, response.StatusCode)
 	websupport.Stop(app)
 }
