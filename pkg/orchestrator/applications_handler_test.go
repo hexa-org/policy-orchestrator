@@ -85,16 +85,6 @@ func (s *ApplicationsHandlerSuite) TestList() {
 	assert.Equal(s.T(), "aDescription", application.Description)
 }
 
-func (s *ApplicationsHandlerSuite) TestList_withMissingIntegration() {
-	_, _ = s.db.Exec(`
-insert into applications (id, object_id, name, description) values ('6409776a-367a-483a-a194-000000000000', 'anotherObjectId', 'anotherName', 'anotherDescription');
-`)
-	url := fmt.Sprintf("http://%s/applications", s.server.Addr)
-
-	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, url)
-	assert.Equal(s.T(), http.StatusInternalServerError, resp.StatusCode)
-}
-
 func (s *ApplicationsHandlerSuite) TestList_withErroneousDatabase() {
 	_ = s.db.Close()
 	url := fmt.Sprintf("http://%s/applications", s.server.Addr)

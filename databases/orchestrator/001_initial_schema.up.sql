@@ -8,7 +8,7 @@ create table integrations (
 
 create table applications (
     id             uuid not null primary key default gen_random_uuid(),
-    integration_id uuid,
+    integration_id uuid not null,
     object_id      varchar(255),
     name           varchar(255),
     description    varchar(255),
