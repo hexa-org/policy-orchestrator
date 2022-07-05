@@ -29,7 +29,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
 
 	dir := os.TempDir()
 	rand.Seed(time.Now().UnixNano())
-	path := filepath.Join(dir, fmt.Sprintf("../resources/bundles/.bundle-%d", rand.Uint64()))
+	path := filepath.Join(dir, fmt.Sprintf("test-bundles/.bundle-%d", rand.Uint64()))
 	data, err := client.GetDataFromBundle("someUrl", path)
 	assert.NoError(t, err)
 	assert.Equal(t, `{
