@@ -128,13 +128,16 @@ func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]policysupport.
 			Meta:    policysupport.MetaInfo{Version: "0.5"},
 			Actions: []policysupport.ActionInfo{{"gcp:" + found.Role}},
 			Subject: policysupport.SubjectInfo{Members: found.Members},
-			Object:  policysupport.ObjectInfo{Resources: []string{"/"}},
+			Object: policysupport.ObjectInfo{
+				ResourceID: objectId,
+				Resources:  []string{"/"},
+			},
 		})
 	}
 	return policies, err
 }
 
-func (c *GoogleClient) SetBackendPolicy(name, objectId string, p policysupport.PolicyInfo) error {
+func (c *GoogleClient) SetBackendPolicy(name, objectId string, p policysupport.PolicyInfo) error { // todo - objectId may no longer be needed, at least for google
 	var url string
 	if strings.HasPrefix(name, "k8s") { // todo - revisit and improve the decision here
 		url = fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s:setIamPolicy", c.ProjectId, objectId)

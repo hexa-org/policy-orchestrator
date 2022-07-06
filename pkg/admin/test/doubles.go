@@ -48,8 +48,8 @@ func (m *MockClient) Application(_ string) (admin.Application, error) {
 
 func (m *MockClient) GetPolicies(_ string) ([]admin.Policy, string, error) {
 	return []admin.Policy{
-		{admin.Meta{Version: "aVersion"}, []admin.Action{{"anAction"}}, admin.Subject{Members: []string{"aUser"}}, admin.Object{Resources: []string{"/"}}},
-		{admin.Meta{Version: "aVersion"}, []admin.Action{{"anotherAction"}}, admin.Subject{Members: []string{"anotherUser"}}, admin.Object{Resources: []string{"/"}}},
+		{admin.Meta{Version: "aVersion"}, []admin.Action{{"anAction"}}, admin.Subject{Members: []string{"aUser"}}, admin.Object{ResourceID: "aResourceId", Resources: []string{"/"}}},
+		{admin.Meta{Version: "aVersion"}, []admin.Action{{"anotherAction"}}, admin.Subject{Members: []string{"anotherUser"}}, admin.Object{ResourceID: "anotherResourceId", Resources: []string{"/"}}},
 	}, "", m.Err
 }
 

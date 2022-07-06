@@ -23,7 +23,7 @@ func TestMetrics(t *testing.T) {
 	router.HandleFunc("/health", healthsupport.HealthHandlerFunction).Methods("GET")
 
 	server := &http.Server{
-		Addr: listener.Addr().String(),
+		Addr:    listener.Addr().String(),
 		Handler: router,
 	}
 	go func() {

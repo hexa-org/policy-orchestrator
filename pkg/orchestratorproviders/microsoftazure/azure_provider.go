@@ -2,6 +2,7 @@ package microsoftazure
 
 import (
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"net/http"
@@ -51,13 +52,26 @@ func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 		Meta:    policysupport.MetaInfo{Version: "0.5"},
 		Actions: []policysupport.ActionInfo{{appRoleId}},
 		Subject: policysupport.SubjectInfo{Members: principalIdsAndDisplayNames},
-		Object:  policysupport.ObjectInfo{Resources: []string{resourceIdAndDisplayName}},
+		Object: policysupport.ObjectInfo{
+			ResourceID: applicationInfo.ObjectID,
+			Resources:  []string{resourceIdAndDisplayName},
+		},
 	})
 
 	return policies, nil
 }
 
 func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) (int, error) {
+	validate := validator.New() // todo - move this up?
+	errApp := validate.Struct(applicationInfo)
+	if errApp != nil {
+		return 0, errApp
+	}
+	errPolicies := validate.Var(policyInfos, "omitempty,dive")
+	if errPolicies != nil {
+		return 0, errPolicies
+	}
+
 	key := integrationInfo.Key
 	client := a.getHttpClient()
 	azureClient := AzureClient{client}

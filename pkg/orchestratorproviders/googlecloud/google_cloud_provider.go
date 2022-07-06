@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"google.golang.org/api/option"
@@ -59,7 +60,17 @@ func (g *GoogleProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo,
 	return googleClient.GetBackendPolicy(app.Name, app.ObjectID)
 }
 
-func (g *GoogleProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, app orchestrator.ApplicationInfo, policies []policysupport.PolicyInfo) (int, error) {
+func (g *GoogleProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, app orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) (int, error) {
+	validate := validator.New() // todo - move this up?
+	errApp := validate.Struct(app)
+	if errApp != nil {
+		return 0, errApp
+	}
+	errPolicies := validate.Var(policyInfos, "omitempty,dive")
+	if errPolicies != nil {
+		return 0, errPolicies
+	}
+
 	key := integration.Key
 	foundCredentials := g.credentials(key)
 	client, createClientErr := g.getHttpClient(key)
@@ -68,7 +79,7 @@ func (g *GoogleProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo,
 		return 500, createClientErr
 	}
 	googleClient := GoogleClient{client, foundCredentials.ProjectId}
-	for _, policyInfo := range policies {
+	for _, policyInfo := range policyInfos {
 		err := googleClient.SetBackendPolicy(app.Name, app.ObjectID, policyInfo)
 		if err != nil {
 			return 500, err

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	"github.com/go-playground/validator/v10"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"log"
@@ -77,12 +78,25 @@ func (a *AmazonProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationI
 		Meta:    policysupport.MetaInfo{Version: "0.5"},
 		Actions: []policysupport.ActionInfo{{"aws:amazon.cognito/access"}}, // todo - not sure what this should be just yet.
 		Subject: policysupport.SubjectInfo{Members: members},
-		Object:  policysupport.ObjectInfo{Resources: []string{applicationInfo.ObjectID}},
+		Object: policysupport.ObjectInfo{
+			ResourceID: applicationInfo.ObjectID,
+			Resources:  []string{applicationInfo.ObjectID},
+		},
 	})
 	return policies, nil
 }
 
 func (a *AmazonProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) (int, error) {
+	validate := validator.New() // todo - move this up?
+	errApp := validate.Struct(applicationInfo)
+	if errApp != nil {
+		return 0, errApp
+	}
+	errPolicies := validate.Var(policyInfos, "omitempty,dive")
+	if errPolicies != nil {
+		return 0, errPolicies
+	}
+
 	client, err := a.getHttpClient(integrationInfo)
 	if err != nil {
 		return http.StatusInternalServerError, err

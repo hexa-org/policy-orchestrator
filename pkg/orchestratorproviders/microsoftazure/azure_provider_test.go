@@ -78,6 +78,7 @@ func TestGetPolicy(t *testing.T) {
 	assert.Equal(t, "azure:anAppRoleId", policies[0].Actions[0].ActionUri)
 	assert.Equal(t, "aPrincipalId:aPrincipalDisplayName", policies[0].Subject.Members[0])
 	assert.Equal(t, "aResourceId:aResourceDisplayName", policies[0].Object.Resources[0])
+	assert.Equal(t, "anObjectId", policies[0].Object.ResourceID)
 }
 
 func TestSetPolicy(t *testing.T) {
@@ -128,9 +129,13 @@ func TestSetPolicy(t *testing.T) {
 	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}
 	appInfo := orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"}
 	status, err := azureProvider.SetPolicyInfo(info, appInfo, []policysupport.PolicyInfo{{
+		Meta:    policysupport.MetaInfo{Version: "0"},
 		Actions: []policysupport.ActionInfo{{"azure:anAppRoleId"}},
 		Subject: policysupport.SubjectInfo{Members: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
-		Object:  policysupport.ObjectInfo{Resources: []string{"aResourceId:aResourceDisplayName"}},
+		Object: policysupport.ObjectInfo{
+			ResourceID: "anObjectId",
+			Resources:  []string{"aResourceId:aResourceDisplayName"},
+		},
 	}})
 	assert.Equal(t, http.StatusCreated, status)
 	assert.NoError(t, err)

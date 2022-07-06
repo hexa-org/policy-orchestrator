@@ -9,6 +9,7 @@
         ]
       },
       "object": {
+        "resource_id": "aResourceId",
         "resources": [
           "/"
         ]
@@ -24,6 +25,7 @@
         ]
       },
       "object": {
+        "resource_id": "aResourceId",
         "resources": [
           "/sales",
           "/marketing"
@@ -39,6 +41,7 @@
         ]
       },
       "object": {
+        "resource_id": "aResourceId",
         "resources": [
           "/accounting"
         ]
@@ -53,6 +56,7 @@
         ]
       },
       "object": {
+        "resource_id": "aResourceId",
         "resources": [
           "/humanresources"
         ]

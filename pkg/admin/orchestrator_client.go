@@ -159,7 +159,8 @@ type subject struct {
 }
 
 type object struct {
-	Resources []string `json:"resources"`
+	ResourceId string   `json:"resource_id"`
+	Resources  []string `json:"resources"`
 }
 
 func (c orchestratorClient) GetPolicies(url string) ([]Policy, string, error) {
@@ -187,7 +188,10 @@ func (c orchestratorClient) GetPolicies(url string) ([]Policy, string, error) {
 			Meta:    Meta{p.Meta.Version},
 			Actions: actions,
 			Subject: Subject{Members: p.Subject.Members},
-			Object:  Object{Resources: p.Object.Resources}})
+			Object: Object{
+				ResourceID: p.Object.ResourceId,
+				Resources:  p.Object.Resources,
+			}})
 	}
 	return foundPolicies, rawJson, nil
 }

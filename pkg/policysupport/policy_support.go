@@ -3,24 +3,25 @@ package policysupport
 // todo - longer name used here to simplify a refactoring
 
 type PolicyInfo struct {
-	Meta    MetaInfo
-	Actions []ActionInfo
-	Subject SubjectInfo
-	Object  ObjectInfo
+	Meta    MetaInfo     `validate:"required"`
+	Actions []ActionInfo `validate:"required"`
+	Subject SubjectInfo  `validate:"required"`
+	Object  ObjectInfo   `validate:"required"`
 }
 
 type MetaInfo struct {
-	Version string
+	Version string `validate:"required"`
 }
 
 type ActionInfo struct {
-	ActionUri string
+	ActionUri string `validate:"required"`
 }
 
 type SubjectInfo struct {
-	Members []string
+	Members []string `validate:"required"`
 }
 
 type ObjectInfo struct {
-	Resources []string
+	ResourceID string `validate:"required"`
+	Resources  []string
 }

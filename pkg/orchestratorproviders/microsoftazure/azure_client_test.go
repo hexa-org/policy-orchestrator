@@ -184,7 +184,7 @@ func TestAzureClient_SetAppRoleAssignedTo(t *testing.T) {
 }
 `)
 	err := client.SetAppRoleAssignedTo(key, "anAppId", []microsoftazure.AzureAppRoleAssignment{
-		{ID:"anId"},
+		{ID: "anId"},
 	})
 	assert.NoError(t, err)
 }
@@ -207,7 +207,7 @@ func TestAzureClient_SetAppRoleAssignedTo_withBadGet(t *testing.T) {
 }
 `)
 	err := client.SetAppRoleAssignedTo(key, "anAppId", []microsoftazure.AzureAppRoleAssignment{
-		{ID:"anId"},
+		{ID: "anId"},
 	})
 	assert.Error(t, err)
 }
@@ -244,7 +244,7 @@ func TestAzureClient_SetAppRoleAssignedTo_withBadAdd(t *testing.T) {
 }
 `)
 	err := client.SetAppRoleAssignedTo(key, "anAppId", []microsoftazure.AzureAppRoleAssignment{
-		{ID:"anId"},
+		{ID: "anId"},
 	})
 	assert.Error(t, err)
 }
@@ -256,7 +256,7 @@ func TestAzureClient_SetAppRoleAssignedTo_withBadDelete(t *testing.T) {
 func TestAzureClient_AddAppRolesAssignedTo(t *testing.T) {
 	client := clientForTesting()
 	err := client.AddAppRolesAssignedTo([]byte("aBadKey"), "", []microsoftazure.AzureAppRoleAssignment{
-		{ID:"anId"},
+		{ID: "anId"},
 	})
 	assert.Equal(t, "invalid character 'a' looking for beginning of value", err.Error())
 }
