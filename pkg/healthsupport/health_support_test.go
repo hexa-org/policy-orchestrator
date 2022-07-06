@@ -17,7 +17,7 @@ func TestHealth(t *testing.T) {
 	router := mux.NewRouter()
 	router.HandleFunc("/health", healthsupport.HealthHandlerFunction).Methods("GET")
 	server := &http.Server{
-		Addr: listener.Addr().String(),
+		Addr:    listener.Addr().String(),
 		Handler: router,
 	}
 	go func() {

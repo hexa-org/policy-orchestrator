@@ -128,6 +128,7 @@ func (s *ApplicationsHandlerSuite) TestGetPolicies() {
 	assert.Equal(s.T(), "aVersion", policy.Meta.Version)
 	assert.Equal(s.T(), []string{"aUser"}, policy.Subject.Members)
 	assert.Equal(s.T(), []string{"/"}, policy.Object.Resources)
+	assert.Equal(s.T(), "anId", policy.Object.ResourceID)
 }
 
 func (s *ApplicationsHandlerSuite) TestGetPolicies_withRequestFails() {
@@ -143,7 +144,15 @@ func (s *ApplicationsHandlerSuite) TestGetPolicies_withRequestFails() {
 
 func (s *ApplicationsHandlerSuite) TestSetPolicies() {
 	var buf bytes.Buffer
-	policy := orchestrator.Policy{Meta: orchestrator.Meta{Version: "v0.5"}, Actions: []orchestrator.Action{{"anAction"}}, Subject: orchestrator.Subject{Members: []string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{Resources: []string{"/"}}}
+	policy := orchestrator.Policy{
+		Meta:    orchestrator.Meta{Version: "v0.5"},
+		Actions: []orchestrator.Action{{"anAction"}},
+		Subject: orchestrator.Subject{Members: []string{"anEmail", "anotherEmail"}},
+		Object: orchestrator.Object{
+			ResourceID: "aResourceId",
+			Resources:  []string{"/"},
+		},
+	}
 	_ = json.NewEncoder(&buf).Encode(orchestrator.Policies{Policies: []orchestrator.Policy{policy}})
 
 	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)

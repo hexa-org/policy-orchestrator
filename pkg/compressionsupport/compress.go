@@ -60,7 +60,7 @@ func UnTarToPath(r io.Reader, path string) error {
 		if err != nil {
 			return err
 		}
-		if strings.Contains(hdr.Name,"..") {
+		if strings.Contains(hdr.Name, "..") {
 			return errors.New("zip slip fix")
 		}
 		join := filepath.Join(path, hdr.Name)

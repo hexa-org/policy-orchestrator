@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -144,7 +145,9 @@ func TestOrchestratorClient_DeleteIntegrations(t *testing.T) {
 
 func TestOrchestratorClient_GetPolicy(t *testing.T) {
 	mockClient := new(MockClient)
-	rawJson := "{\"policies\":[{\"meta\":{\"version\":\"aVersion\"},\"actions\":[{\"action_uri\": \"anAction\"}],\"subject\":{\"members\":[\"aUser\"]},\"object\":{\"resources\":[\"/\"]}},{\"version\":\"aVersion\",\"actions\":[{\"action\": \"anotherAction\"}],\"subject\":{\"members\":[\"anotherUser\"]},\"object\":{\"resources\":[\"/\"]}}]}"
+	rawJson := "{\"policies\":[" +
+		"{\"meta\":{\"version\":\"aVersion\"},\"actions\":[{\"action_uri\": \"anAction\"}],\"subject\":{\"members\":[\"aUser\"]},\"object\":{\"resource_id\":\"aResourceId\",\"resources\":[\"/\"]}}," +
+		"{\"meta\":{\"version\":\"anotherVersion\"},\"actions\":[{\"action\": \"anotherAction\"}],\"subject\":{\"members\":[\"anotherUser\"]},\"object\":{\"resource_id\":\"anotherResourceId\",\"resources\":[\"/\"]}}]}"
 	mockClient.response = []byte(rawJson)
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 
@@ -154,6 +157,14 @@ func TestOrchestratorClient_GetPolicy(t *testing.T) {
 	assert.Equal(t, "anAction", resp[0].Actions[0].ActionUri)
 	assert.Equal(t, []string{"aUser"}, resp[0].Subject.Members)
 	assert.Equal(t, []string{"/"}, resp[0].Object.Resources)
+	assert.Equal(t, "aResourceId", resp[0].Object.ResourceID)
+
+	validate := validator.New()
+	errPolicies := validate.Var(resp, "omitempty,dive")
+	if errPolicies != nil {
+		fmt.Println(errPolicies)
+		t.Fail()
+	}
 }
 
 func TestOrchestratorClient_GetPolicy_withErroneousGet(t *testing.T) {
@@ -177,7 +188,7 @@ func TestOrchestratorClient_GetPolicy_withBadJson(t *testing.T) {
 
 func TestOrchestratorClient_SetPolicy(t *testing.T) {
 	mockClient := new(MockClient)
-	policies := "{\"policies\":[[{\"version\":\"aVersion\",\"action_uri\":\"anAction\",\"subject\":{\"members\":[\"aUser\"]},\"object\":{\"resources\":[\"/\"]}},{\"version\":\"aVersion\",\"action\":\"anotherAction\",\"subject\":{\"members\":[\"anotherUser\"]},\"object\":{\"resources\":[\"/\"]}}]}"
+	policies := "{\"policies\":[[{\"version\":\"aVersion\",\"action_uri\":\"anAction\",\"subject\":{\"members\":[\"aUser\"]},\"object\":{\"resource_id\":\"aResourceId\",\"resources\":[\"/\"]}},{\"version\":\"aVersion\",\"action\":\"anotherAction\",\"subject\":{\"members\":[\"anotherUser\"]},\"object\":{\"resource_id\":\"anotherResourceId\",\"resources\":[\"/\"]}}]}"
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 	err := client.SetPolicies("localhost:8883/applications/anId/policies", policies)
 	assert.NoError(t, err)

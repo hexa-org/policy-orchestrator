@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
@@ -64,10 +65,11 @@ type Subject struct {
 }
 
 type Object struct {
-	Resources []string `json:"resources"`
+	ResourceID string   `json:"resource_id"`
+	Resources  []string `json:"resources"`
 }
 
-func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
+func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, appInfo orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
 	client := o.ensureClientIsAvailable()
 	key := integration.Key
 	foundCredentials := o.credentials(key)
@@ -98,14 +100,25 @@ func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, _ 
 				Members: p.Subject.Members,
 			},
 			Object: policysupport.ObjectInfo{
-				Resources: p.Object.Resources,
+				ResourceID: appInfo.ObjectID,
+				Resources:  p.Object.Resources,
 			},
 		})
 	}
 	return hexaPolicies, nil
 }
 
-func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) (int, error) {
+func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, appInfo orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) (int, error) {
+	validate := validator.New() // todo - move this up?
+	errApp := validate.Struct(appInfo)
+	if errApp != nil {
+		return 0, errApp
+	}
+	errPolicies := validate.Var(policyInfos, "omitempty,dive")
+	if errPolicies != nil {
+		return 0, errPolicies
+	}
+
 	client := o.ensureClientIsAvailable()
 	key := integration.Key
 	foundCredentials := o.credentials(key)
@@ -123,7 +136,8 @@ func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, _ 
 				p.Subject.Members,
 			},
 			Object: Object{
-				p.Object.Resources,
+				ResourceID: appInfo.ObjectID,
+				Resources:  p.Object.Resources,
 			},
 		})
 	}

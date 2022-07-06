@@ -43,6 +43,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
         ]
       },
       "object": {
+        "resource_id": "aResourceId",
         "resources": [
           "/"
         ]
@@ -58,6 +59,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
         ]
       },
       "object": {
+        "resource_id": "aResourceId",
         "resources": [
           "/sales",
           "/marketing"
@@ -73,6 +75,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
         ]
       },
       "object": {
+        "resource_id": "aResourceId",
         "resources": [
           "/accounting"
         ]
@@ -87,6 +90,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
         ]
       },
       "object": {
+        "resource_id": "aResourceId",
         "resources": [
           "/humanresources"
         ]

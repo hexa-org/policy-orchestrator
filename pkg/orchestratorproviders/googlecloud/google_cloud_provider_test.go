@@ -19,10 +19,10 @@ func TestGoogleProvider_BadClientKey(t *testing.T) {
 	_, discoverErr := p.DiscoverApplications(info)
 	assert.Error(t, discoverErr)
 
-	_, getErr := p.GetPolicyInfo(info, orchestrator.ApplicationInfo{})
+	_, getErr := p.GetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "anObjectId"})
 	assert.Error(t, getErr)
 
-	status, setErr := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{})
+	status, setErr := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{})
 	assert.Equal(t, 500, status)
 	assert.Error(t, setErr)
 }
@@ -97,7 +97,10 @@ func TestGoogleProvider_GetPolicy(t *testing.T) {
 
 func TestGoogleProvider_SetPolicy(t *testing.T) {
 	policy := policysupport.PolicyInfo{
-		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"anAction"}}, Subject: policysupport.SubjectInfo{Members: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
+		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"anAction"}}, Subject: policysupport.SubjectInfo{Members: []string{"aUser"}}, Object: policysupport.ObjectInfo{
+			ResourceID: "anObjectId",
+			Resources:  []string{"/"},
+		},
 	}
 	m := google_cloud_test.NewMockClient()
 

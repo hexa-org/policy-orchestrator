@@ -20,26 +20,27 @@ type Application struct {
 }
 
 type Policy struct {
-	Meta    Meta
-	Actions []Action
-	Subject Subject
-	Object  Object
+	Meta    Meta     `validate:"required"`
+	Actions []Action `validate:"required"`
+	Subject Subject  `validate:"required"`
+	Object  Object   `validate:"required"`
 }
 
 type Meta struct {
-	Version string
+	Version string `validate:"required"`
 }
 
 type Action struct {
-	ActionUri string
+	ActionUri string `validate:"required"`
 }
 
 type Subject struct {
-	Members []string
+	Members []string `validate:"required"`
 }
 
 type Object struct {
-	Resources []string
+	Resources  []string `validate:"required"`
+	ResourceID string
 }
 
 type ApplicationsHandler interface {

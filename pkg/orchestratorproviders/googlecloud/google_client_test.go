@@ -121,7 +121,10 @@ func TestGoogleClient_GetBackendPolicies_withBadJson(t *testing.T) {
 
 func TestGoogleClient_SetAppEnginePolicies(t *testing.T) {
 	policy := policysupport.PolicyInfo{
-		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"roles/iap.httpsResourceAccessor"}}, Subject: policysupport.SubjectInfo{Members: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
+		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"roles/iap.httpsResourceAccessor"}}, Subject: policysupport.SubjectInfo{Members: []string{"aUser"}}, Object: policysupport.ObjectInfo{
+			ResourceID: "anObjectId",
+			Resources:  []string{"/"},
+		},
 	}
 	m := google_cloud_test.NewMockClient()
 	client := googlecloud.GoogleClient{HttpClient: m, ProjectId: "appengineproject"}
@@ -133,7 +136,10 @@ func TestGoogleClient_SetAppEnginePolicies(t *testing.T) {
 
 func TestGoogleClient_SetBackendPolicies(t *testing.T) {
 	policy := policysupport.PolicyInfo{
-		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"gcp:roles/iap.httpsResourceAccessor"}}, Subject: policysupport.SubjectInfo{Members: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
+		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"gcp:roles/iap.httpsResourceAccessor"}}, Subject: policysupport.SubjectInfo{Members: []string{"aUser"}}, Object: policysupport.ObjectInfo{
+			ResourceID: "anObjectId",
+			Resources:  []string{"/"},
+		},
 	}
 	m := google_cloud_test.NewMockClient()
 	client := googlecloud.GoogleClient{HttpClient: m, ProjectId: "k8sproject"}
@@ -145,7 +151,10 @@ func TestGoogleClient_SetBackendPolicies(t *testing.T) {
 
 func TestGoogleClient_SetBackendPolicies_withRequestError(t *testing.T) {
 	policy := policysupport.PolicyInfo{
-		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"gcp:roles/iap.httpsResourceAccessor"}}, Subject: policysupport.SubjectInfo{Members: []string{"aUser"}}, Object: policysupport.ObjectInfo{Resources: []string{"/"}},
+		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"gcp:roles/iap.httpsResourceAccessor"}}, Subject: policysupport.SubjectInfo{Members: []string{"aUser"}}, Object: policysupport.ObjectInfo{
+			ResourceID: "anObjectId",
+			Resources:  []string{"/"},
+		},
 	}
 	m := google_cloud_test.NewMockClient()
 	m.Err = errors.New("oops")

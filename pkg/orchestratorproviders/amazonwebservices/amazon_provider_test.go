@@ -87,6 +87,7 @@ func TestAmazonProvider_GetPolicyInfo(t *testing.T) {
 	assert.Equal(t, "aws:amazon.cognito/access", info[0].Actions[0].ActionUri)
 	assert.Equal(t, "aUser:aUser@amazon.com", info[0].Subject.Members[0])
 	assert.Equal(t, "anObjectId", info[0].Object.Resources[0])
+	assert.Equal(t, "anObjectId", info[0].Object.ResourceID)
 }
 
 func TestAmazonProvider_GetPolicyInfo_withError(t *testing.T) {
@@ -114,10 +115,11 @@ func TestAmazonProvider_ShouldDisable(t *testing.T) {
 func TestAmazonProvider_SetPolicyInfo(t *testing.T) {
 	mockClient := &amazonwebservices_test.MockClient{}
 	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
-	status, err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{{
+	status, err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{{
+		Meta:    policysupport.MetaInfo{Version: "0"},
 		Actions: []policysupport.ActionInfo{{"aws:amazon.cognito/access"}},
 		Subject: policysupport.SubjectInfo{Members: []string{"aUser:aUser@amazon.com", "anotherUser:anotherUser@amazon.com"}},
-		Object:  policysupport.ObjectInfo{Resources: []string{"aResource"}},
+		Object:  policysupport.ObjectInfo{ResourceID: "aResourceId", Resources: []string{"aResource"}},
 	}})
 	assert.Equal(t, http.StatusCreated, status)
 	assert.NoError(t, err)
@@ -127,7 +129,12 @@ func TestAmazonProvider_SetPolicyInfo_withListErr(t *testing.T) {
 	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
 	mockClient.Errs["ListUsers"] = errors.New("oops")
 	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
-	status, err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{{}})
+	status, err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{{
+		Meta:    policysupport.MetaInfo{Version: "0"},
+		Actions: []policysupport.ActionInfo{},
+		Subject: policysupport.SubjectInfo{Members: []string{}},
+		Object:  policysupport.ObjectInfo{ResourceID: "aResourceId", Resources: []string{}},
+	}})
 	assert.Equal(t, http.StatusInternalServerError, status)
 	assert.Error(t, err)
 }
@@ -136,9 +143,11 @@ func TestAmazonProvider_SetPolicyInfo_withEnableErr(t *testing.T) {
 	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
 	mockClient.Errs["AdminEnableUser"] = errors.New("oops")
 	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
-	status, err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{{
+	status, err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{{
+		Meta:    policysupport.MetaInfo{Version: "0"},
+		Actions: []policysupport.ActionInfo{{"aws:amazon.cognito/access"}},
 		Subject: policysupport.SubjectInfo{Members: []string{"aUser:aUser@amazon.com", "anotherUser:anotherUser@amazon.com"}},
-		Object:  policysupport.ObjectInfo{Resources: []string{"aResource"}},
+		Object:  policysupport.ObjectInfo{ResourceID: "aResourceId", Resources: []string{"aResource"}},
 	}})
 	assert.Equal(t, http.StatusInternalServerError, status)
 	assert.Error(t, err)
@@ -148,7 +157,12 @@ func TestAmazonProvider_SetPolicyInfo_withDisableErr(t *testing.T) {
 	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
 	mockClient.Errs["AdminDisableUser"] = errors.New("oops")
 	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
-	status, err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{{}})
+	status, err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{{
+		Meta:    policysupport.MetaInfo{Version: "0"},
+		Actions: []policysupport.ActionInfo{},
+		Subject: policysupport.SubjectInfo{Members: []string{}},
+		Object:  policysupport.ObjectInfo{ResourceID: "aResourceId", Resources: []string{}},
+	}})
 	assert.Equal(t, http.StatusInternalServerError, status)
 	assert.Error(t, err)
 }

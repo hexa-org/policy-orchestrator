@@ -15,7 +15,7 @@ type IntegrationInfo struct {
 }
 
 type ApplicationInfo struct {
-	ObjectID    string
+	ObjectID    string `validate:"required"`
 	Name        string
 	Description string
 }

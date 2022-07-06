@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"encoding/json"
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"log"
@@ -27,26 +28,27 @@ type Policies struct {
 }
 
 type Policy struct {
-	Meta    Meta     `json:"meta"`
-	Actions []Action `json:"actions"`
-	Subject Subject  `json:"subject"`
-	Object  Object   `json:"object"`
+	Meta    Meta     `json:"meta" validate:"required"`
+	Actions []Action `json:"actions" validate:"required"`
+	Subject Subject  `json:"subject" validate:"required"`
+	Object  Object   `json:"object" validate:"required"`
 }
 
 type Meta struct {
-	Version string `json:"version"`
+	Version string `json:"version" validate:"required"`
 }
 
 type Action struct {
-	ActionUri string `json:"action_uri"`
+	ActionUri string `json:"action_uri" validate:"required"`
 }
 
 type Subject struct {
-	Members []string `json:"members"`
+	Members []string `json:"members" validate:"required"`
 }
 
 type Object struct {
-	Resources []string `json:"resources"`
+	ResourceID string   `json:"resource_id" validate:"required"`
+	Resources  []string `json:"resources"`
 }
 
 type ApplicationsHandler struct {
@@ -122,10 +124,17 @@ func (handler ApplicationsHandler) GetPolicies(w http.ResponseWriter, r *http.Re
 		}
 		list = append(
 			list, Policy{
-				Meta{rec.Meta.Version},
-				actions,
-				Subject{rec.Subject.Members},
-				Object{rec.Object.Resources},
+				Meta: Meta{
+					rec.Meta.Version,
+				},
+				Actions: actions,
+				Subject: Subject{
+					rec.Subject.Members,
+				},
+				Object: Object{
+					ResourceID: rec.Object.ResourceID,
+					Resources:  rec.Object.Resources,
+				},
 			})
 	}
 	data, _ := json.Marshal(Policies{list})
@@ -147,6 +156,12 @@ func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	err = validator.New().Var(policies.Policies, "omitempty,dive")
+	if err != nil {
+		http.Error(w, "unable to validate policy.", http.StatusInternalServerError)
+		return
+	}
+
 	integration := IntegrationInfo{Name: integrationRecord.Name, Key: integrationRecord.Key}
 	application := ApplicationInfo{ObjectID: applicationRecord.ObjectId, Name: applicationRecord.Name, Description: applicationRecord.Description}
 	pro := handler.providers[strings.ToLower(integrationRecord.Provider)] // todo - test for lower?
@@ -156,9 +171,18 @@ func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Re
 		for _, a := range policy.Actions {
 			actionInfos = append(actionInfos, policysupport.ActionInfo{ActionUri: a.ActionUri})
 		}
-		info := policysupport.PolicyInfo{Meta: policysupport.MetaInfo{Version: policy.Meta.Version}, Actions: actionInfos,
-			Subject: policysupport.SubjectInfo{Members: policy.Subject.Members},
-			Object:  policysupport.ObjectInfo{Resources: policy.Object.Resources}}
+		info := policysupport.PolicyInfo{
+			Meta: policysupport.MetaInfo{
+				Version: policy.Meta.Version,
+			},
+			Actions: actionInfos,
+			Subject: policysupport.SubjectInfo{
+				Members: policy.Subject.Members,
+			},
+			Object: policysupport.ObjectInfo{
+				ResourceID: policy.Object.ResourceID, Resources: policy.Object.Resources,
+			},
+		}
 		policyInfos = append(policyInfos, info)
 	}
 	status, setErr := pro.SetPolicyInfo(integration, application, policyInfos)
