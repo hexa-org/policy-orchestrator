@@ -28,11 +28,9 @@ func (n *NoopProvider) GetPolicyInfo(_ orchestrator.IntegrationInfo, _ orchestra
 	return []policysupport.PolicyInfo{
 		{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"anAction"}}, policysupport.SubjectInfo{Members: []string{"aUser"}}, policysupport.ObjectInfo{
 			ResourceID: "anId",
-			Resources:  []string{"/"},
 		}},
 		{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"anotherAction"}}, policysupport.SubjectInfo{Members: []string{"anotherUser"}}, policysupport.ObjectInfo{
 			ResourceID: "anotherId",
-			Resources:  []string{"/"},
 		}},
 	}, n.Err
 }

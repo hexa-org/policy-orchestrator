@@ -10,7 +10,6 @@ anyMatching {
 }
 matches(policy) {
     matchesAction(policy.actions[i])
-    input.path in policy.object.resources
     matchesPrincipal(policy.subject)
 }
 matchesAction(action) {
@@ -27,5 +26,5 @@ matchesPrincipal(subject) {
     input.principal in subject.members
 }
 principalExists(principal) {
-    not is_null(principal)
+    "" != principal
 }

@@ -23,5 +23,4 @@ type SubjectInfo struct {
 
 type ObjectInfo struct {
 	ResourceID string `validate:"required"`
-	Resources  []string
 }

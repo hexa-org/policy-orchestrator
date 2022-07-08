@@ -77,12 +77,76 @@ func TestGetPolicy(t *testing.T) {
 	assert.Equal(t, 1, len(policies))
 	assert.Equal(t, "azure:anAppRoleId", policies[0].Actions[0].ActionUri)
 	assert.Equal(t, "aPrincipalId:aPrincipalDisplayName", policies[0].Subject.Members[0])
-	assert.Equal(t, "aResourceId:aResourceDisplayName", policies[0].Object.Resources[0])
 	assert.Equal(t, "anObjectId", policies[0].Object.ResourceID)
 }
 
 func TestSetPolicy(t *testing.T) {
 	m := new(microsoftazure_test.MockClient)
+	mockExchanges(m)
+	azureProvider := microsoftazure.AzureProvider{HttpClientOverride: m}
+	key := []byte(`
+{
+  "appId":"anAppId",
+  "secret":"aSecret",
+  "tenant":"aTenant",
+  "subscription":"aSubscription"
+}
+`)
+	status, err := azureProvider.SetPolicyInfo(
+		orchestrator.IntegrationInfo{Name: "azure", Key: key},
+		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"},
+		[]policysupport.PolicyInfo{{
+			Meta:    policysupport.MetaInfo{Version: "0"},
+			Actions: []policysupport.ActionInfo{{"azure:anAppRoleId"}},
+			Subject: policysupport.SubjectInfo{Members: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
+			Object: policysupport.ObjectInfo{
+				ResourceID: "anObjectId",
+			},
+		}})
+	assert.Equal(t, http.StatusCreated, status)
+	assert.NoError(t, err)
+}
+
+func TestSetPolicy_withInvalidArguments(t *testing.T) {
+	m := new(microsoftazure_test.MockClient)
+	mockExchanges(m)
+	azureProvider := microsoftazure.AzureProvider{HttpClientOverride: m}
+	key := []byte(`
+{
+  "appId":"anAppId",
+  "secret":"aSecret",
+  "tenant":"aTenant",
+  "subscription":"aSubscription"
+}
+`)
+	status, err := azureProvider.SetPolicyInfo(
+		orchestrator.IntegrationInfo{Name: "azure", Key: key},
+		orchestrator.ApplicationInfo{Name: "anAppName", Description: "aDescription"}, // missing objectId
+		[]policysupport.PolicyInfo{{
+			Meta:    policysupport.MetaInfo{Version: "0"},
+			Actions: []policysupport.ActionInfo{{"azure:anAppRoleId"}},
+			Subject: policysupport.SubjectInfo{Members: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
+			Object: policysupport.ObjectInfo{
+				ResourceID: "anObjectId",
+			},
+		}})
+	assert.Equal(t, http.StatusInternalServerError, status)
+	assert.Error(t, err)
+
+	status, err = azureProvider.SetPolicyInfo(
+		orchestrator.IntegrationInfo{Name: "azure", Key: key},
+		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"},
+		[]policysupport.PolicyInfo{{
+			Meta:    policysupport.MetaInfo{Version: "0"},
+			Actions: []policysupport.ActionInfo{{"azure:anAppRoleId"}},
+			Subject: policysupport.SubjectInfo{Members: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
+			Object:  policysupport.ObjectInfo{},
+		}})
+	assert.Equal(t, http.StatusInternalServerError, status)
+	assert.Error(t, err)
+}
+
+func mockExchanges(m *microsoftazure_test.MockClient) {
 	m.Exchanges = []microsoftazure_test.MockExchange{
 		{Path: "https://login.microsoftonline.com/aTenant/oauth2/v2.0/token", ResponseBody: []byte("{\"access_token\":\"aToken\"}")},
 		{Path: "https://graph.microsoft.com/v1.0/servicePrincipals?$search=\"appId:aDescription\"", ResponseBody: []byte("{\"value\":[{\"id\":\"aToken\"}]}")},
@@ -116,27 +180,4 @@ func TestSetPolicy(t *testing.T) {
 `)},
 		{Path: "https://graph.microsoft.com/v1.0/servicePrincipals/aToken/appRoleAssignedTo/anotherId"},
 	}
-
-	azureProvider := microsoftazure.AzureProvider{HttpClientOverride: m}
-	key := []byte(`
-{
-  "appId":"anAppId",
-  "secret":"aSecret",
-  "tenant":"aTenant",
-  "subscription":"aSubscription"
-}
-`)
-	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}
-	appInfo := orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"}
-	status, err := azureProvider.SetPolicyInfo(info, appInfo, []policysupport.PolicyInfo{{
-		Meta:    policysupport.MetaInfo{Version: "0"},
-		Actions: []policysupport.ActionInfo{{"azure:anAppRoleId"}},
-		Subject: policysupport.SubjectInfo{Members: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
-		Object: policysupport.ObjectInfo{
-			ResourceID: "anObjectId",
-			Resources:  []string{"aResourceId:aResourceDisplayName"},
-		},
-	}})
-	assert.Equal(t, http.StatusCreated, status)
-	assert.NoError(t, err)
 }

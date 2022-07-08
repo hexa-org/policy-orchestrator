@@ -99,7 +99,6 @@ func TestGoogleProvider_SetPolicy(t *testing.T) {
 	policy := policysupport.PolicyInfo{
 		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"anAction"}}, Subject: policysupport.SubjectInfo{Members: []string{"aUser"}}, Object: policysupport.ObjectInfo{
 			ResourceID: "anObjectId",
-			Resources:  []string{"/"},
 		},
 	}
 	m := google_cloud_test.NewMockClient()
@@ -109,4 +108,24 @@ func TestGoogleProvider_SetPolicy(t *testing.T) {
 	status, err := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{policy})
 	assert.Equal(t, 201, status)
 	assert.NoError(t, err)
+}
+
+func TestGoogleProvider_SetPolicy_withInvalidArguments(t *testing.T) {
+	missingMeta := policysupport.PolicyInfo{
+		Actions: []policysupport.ActionInfo{{"anAction"}}, Subject: policysupport.SubjectInfo{Members: []string{"aUser"}}, Object: policysupport.ObjectInfo{
+			ResourceID: "anObjectId",
+		},
+	}
+	m := google_cloud_test.NewMockClient()
+
+	p := googlecloud.GoogleProvider{HttpClientOverride: m}
+	info := orchestrator.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
+
+	status, err := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{missingMeta})
+	assert.Equal(t, 500, status)
+	assert.Error(t, err)
+
+	status, err = p.SetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{missingMeta})
+	assert.Equal(t, 500, status)
+	assert.Error(t, err)
 }

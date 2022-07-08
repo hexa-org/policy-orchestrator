@@ -47,8 +47,7 @@ type Subject struct {
 }
 
 type Object struct {
-	ResourceID string   `json:"resource_id" validate:"required"`
-	Resources  []string `json:"resources"`
+	ResourceID string `json:"resource_id" validate:"required"`
 }
 
 type ApplicationsHandler struct {
@@ -133,7 +132,6 @@ func (handler ApplicationsHandler) GetPolicies(w http.ResponseWriter, r *http.Re
 				},
 				Object: Object{
 					ResourceID: rec.Object.ResourceID,
-					Resources:  rec.Object.Resources,
 				},
 			})
 	}
@@ -180,7 +178,7 @@ func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Re
 				Members: policy.Subject.Members,
 			},
 			Object: policysupport.ObjectInfo{
-				ResourceID: policy.Object.ResourceID, Resources: policy.Object.Resources,
+				ResourceID: policy.Object.ResourceID,
 			},
 		}
 		policyInfos = append(policyInfos, info)

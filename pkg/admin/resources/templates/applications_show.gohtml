@@ -41,7 +41,9 @@
                 <tr>
                     <td class="compact">
                         <table class="no-margin">
-                            <tr class="no-border"><td>Members</td></tr>
+                            <tr class="no-border">
+                                <td>Members</td>
+                            </tr>
                             {{- range $user := $policy.Subject.Members}}
                                 <tr class="no-border">
                                     <td>{{$user}}</td>
@@ -51,7 +53,9 @@
                     </td>
                     <td class="compact">
                         <table class="no-margin">
-                            <tr class="no-border"><td>Actions</td></tr>
+                            <tr class="no-border">
+                                <td>Actions</td>
+                            </tr>
                             {{- range $action := $policy.Actions}}
                                 <tr class="no-border">
                                     <td>{{$action.ActionUri}}</td>
@@ -61,12 +65,13 @@
                     </td>
                     <td class="compact">
                         <table class="no-margin">
-                            <tr class="no-border"><td>Resources</td></tr>
-                            {{- range $resource := $policy.Object.Resources}}
-                                <tr class="no-border">
-                                    <td>{{$resource}}</td>
-                                </tr>
-                            {{- end}}
+                            <tr class="no-border">
+                                <td>Resource</td>
+                            </tr>
+                            {{- $resource := $policy.Object.ResourceID}}
+                            <tr class="no-border">
+                                <td>{{$resource}}</td>
+                            </tr>
                         </table>
                     </td>
                     <td></td>

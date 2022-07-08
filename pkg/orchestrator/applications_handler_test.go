@@ -127,8 +127,14 @@ func (s *ApplicationsHandlerSuite) TestGetPolicies() {
 	assert.Equal(s.T(), "anAction", policy.Actions[0].ActionUri)
 	assert.Equal(s.T(), "aVersion", policy.Meta.Version)
 	assert.Equal(s.T(), []string{"aUser"}, policy.Subject.Members)
-	assert.Equal(s.T(), []string{"/"}, policy.Object.Resources)
 	assert.Equal(s.T(), "anId", policy.Object.ResourceID)
+}
+
+func (s *ApplicationsHandlerSuite) TestGetPolicies_withDatabaseError() {
+	_ = s.db.Close()
+	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)
+	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, url)
+	assert.Equal(s.T(), http.StatusInternalServerError, resp.StatusCode)
 }
 
 func (s *ApplicationsHandlerSuite) TestGetPolicies_withRequestFails() {
@@ -150,7 +156,6 @@ func (s *ApplicationsHandlerSuite) TestSetPolicies() {
 		Subject: orchestrator.Subject{Members: []string{"anEmail", "anotherEmail"}},
 		Object: orchestrator.Object{
 			ResourceID: "aResourceId",
-			Resources:  []string{"/"},
 		},
 	}
 	_ = json.NewEncoder(&buf).Encode(orchestrator.Policies{Policies: []orchestrator.Policy{policy}})
@@ -160,13 +165,20 @@ func (s *ApplicationsHandlerSuite) TestSetPolicies() {
 	assert.Equal(s.T(), http.StatusCreated, resp.StatusCode)
 }
 
+func (s *ApplicationsHandlerSuite) TestSetPolicies_withDatabaseError() {
+	_ = s.db.Close()
+	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)
+	resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", s.key, url, bytes.NewReader([]byte("")))
+	assert.Equal(s.T(), http.StatusInternalServerError, resp.StatusCode)
+}
+
 func (s *ApplicationsHandlerSuite) TestSetPolicies_withErroneousProvider() {
 	noopProvider := orchestrator_test.NoopProvider{}
 	noopProvider.Err = errors.New("oops")
 	s.providers["google_cloud"] = &noopProvider
 
 	var buf bytes.Buffer
-	policy := orchestrator.Policy{Meta: orchestrator.Meta{Version: "v0.5"}, Actions: []orchestrator.Action{{"anAction"}}, Subject: orchestrator.Subject{Members: []string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{Resources: []string{"/"}}}
+	policy := orchestrator.Policy{Meta: orchestrator.Meta{Version: "v0.5"}, Actions: []orchestrator.Action{{"anAction"}}, Subject: orchestrator.Subject{Members: []string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{ResourceID: "aResourceId"}}
 	_ = json.NewEncoder(&buf).Encode(policy)
 
 	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)

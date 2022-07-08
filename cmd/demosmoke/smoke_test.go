@@ -124,12 +124,11 @@ func updateAPolicy() (*http.Response, error) {
 	_ = json.NewDecoder(resp.Body).Decode(&apps)
 
 	var policies bytes.Buffer
-	policy := Policy{Meta: Meta{"0.5"}, Actions: []Action{{"http:GET"}},
+	policy := Policy{Meta: Meta{"0.5"}, Actions: []Action{{"http:GET:/accounting"}},
 		Subject: Subject{Members: []string{"accounting@hexaindustries.io", "sales@hexaindustries.io"}},
 		Object: Object{
 			ResourceID: "aResourceId",
-			Resources: []string{"/accounting",
-			}},
+		},
 	}
 	_ = json.NewEncoder(&policies).Encode(Policies{[]Policy{policy}})
 
@@ -181,8 +180,7 @@ type Subject struct {
 }
 
 type Object struct {
-	ResourceID string   `json:"resource_id"`
-	Resources  []string `json:"resources"`
+	ResourceID string `json:"resource_id"`
 }
 
 /// supporting functions

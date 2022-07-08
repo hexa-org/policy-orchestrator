@@ -130,7 +130,6 @@ func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]policysupport.
 			Subject: policysupport.SubjectInfo{Members: found.Members},
 			Object: policysupport.ObjectInfo{
 				ResourceID: objectId,
-				Resources:  []string{"/"},
 			},
 		})
 	}
