@@ -8,13 +8,13 @@
 [![CodeQL](https://github.com/hexa-org/policy-orchestrator/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/hexa-org/policy-orchestrator/actions/workflows/codeql-analysis.yml)
 
 Hexa Policy Orchestrator enables you to manage all of your policies consistently across software providers
-so that you can unify access policy management. The below diagram describes the current provider architecture -
+so that you can unify access policy management. The below diagram describes the current provider architecture.
 
 ![Hexa Provider Architecture](docs/img/Hexa-Provider-Architecture.svg "hexa provider architecture")
 
 ## Getting Started
 
-The Hexa project contains three applications - 
+The Hexa project contains three applications
 
 * Policy Orchestrator with policy translations
 * Demo Policy Administrator
@@ -33,7 +33,7 @@ git clone git@github.com:hexa-org/policy-orchestrator.git
 
 ### Build the Hexa image
 
-Build a Hexa image with Pack. The newly created image will contain the policy
+Build a Hexa image with `pack`. The newly created image will contain the policy
 administrator web application, policy orchestrator server, and demo application.
 
 ```bash
@@ -104,6 +104,11 @@ Decision enforcement is handled within the hexa-demo application or **policy enf
 ![Hexa Demo Architecture](docs/img/Hexa-Demo-Architecture.svg "hexa demo architecture")
 
 ## Getting involved
+
+Here is a link to our product backlog where we maintain a fresh supply of good first issues. In addition to
+enhancements, feel free to post any bugs you may find.
+
+* [Backlog](https://github.com/orgs/hexa-org/projects/1)
 
 Here are a few links for those interested in contributing to the Hexa project.
 
