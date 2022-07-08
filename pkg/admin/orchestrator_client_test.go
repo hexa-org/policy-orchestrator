@@ -146,8 +146,8 @@ func TestOrchestratorClient_DeleteIntegrations(t *testing.T) {
 func TestOrchestratorClient_GetPolicy(t *testing.T) {
 	mockClient := new(MockClient)
 	rawJson := "{\"policies\":[" +
-		"{\"meta\":{\"version\":\"aVersion\"},\"actions\":[{\"action_uri\": \"anAction\"}],\"subject\":{\"members\":[\"aUser\"]},\"object\":{\"resource_id\":\"aResourceId\",\"resources\":[\"/\"]}}," +
-		"{\"meta\":{\"version\":\"anotherVersion\"},\"actions\":[{\"action\": \"anotherAction\"}],\"subject\":{\"members\":[\"anotherUser\"]},\"object\":{\"resource_id\":\"anotherResourceId\",\"resources\":[\"/\"]}}]}"
+		"{\"meta\":{\"version\":\"aVersion\"},\"actions\":[{\"action_uri\": \"anAction\"}],\"subject\":{\"members\":[\"aUser\"]},\"object\":{\"resource_id\":\"aResourceId\"}}," +
+		"{\"meta\":{\"version\":\"anotherVersion\"},\"actions\":[{\"action\": \"anotherAction\"}],\"subject\":{\"members\":[\"anotherUser\"]},\"object\":{\"resource_id\":\"anotherResourceId\"}}]}"
 	mockClient.response = []byte(rawJson)
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 
@@ -156,7 +156,6 @@ func TestOrchestratorClient_GetPolicy(t *testing.T) {
 	assert.Equal(t, "aVersion", resp[0].Meta.Version)
 	assert.Equal(t, "anAction", resp[0].Actions[0].ActionUri)
 	assert.Equal(t, []string{"aUser"}, resp[0].Subject.Members)
-	assert.Equal(t, []string{"/"}, resp[0].Object.Resources)
 	assert.Equal(t, "aResourceId", resp[0].Object.ResourceID)
 
 	validate := validator.New()
@@ -188,7 +187,7 @@ func TestOrchestratorClient_GetPolicy_withBadJson(t *testing.T) {
 
 func TestOrchestratorClient_SetPolicy(t *testing.T) {
 	mockClient := new(MockClient)
-	policies := "{\"policies\":[[{\"version\":\"aVersion\",\"action_uri\":\"anAction\",\"subject\":{\"members\":[\"aUser\"]},\"object\":{\"resource_id\":\"aResourceId\",\"resources\":[\"/\"]}},{\"version\":\"aVersion\",\"action\":\"anotherAction\",\"subject\":{\"members\":[\"anotherUser\"]},\"object\":{\"resource_id\":\"anotherResourceId\",\"resources\":[\"/\"]}}]}"
+	policies := "{\"policies\":[[{\"version\":\"aVersion\",\"action_uri\":\"anAction\",\"subject\":{\"members\":[\"aUser\"]},\"object\":{\"resource_id\":\"aResourceId\"}},{\"version\":\"aVersion\",\"action\":\"anotherAction\",\"subject\":{\"members\":[\"anotherUser\"]},\"object\":{\"resource_id\":\"anotherResourceId\"}}]}"
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 	err := client.SetPolicies("localhost:8883/applications/anId/policies", policies)
 	assert.NoError(t, err)

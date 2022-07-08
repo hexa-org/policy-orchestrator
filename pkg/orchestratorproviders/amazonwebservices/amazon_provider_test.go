@@ -86,7 +86,6 @@ func TestAmazonProvider_GetPolicyInfo(t *testing.T) {
 	assert.Equal(t, 1, len(info))
 	assert.Equal(t, "aws:amazon.cognito/access", info[0].Actions[0].ActionUri)
 	assert.Equal(t, "aUser:aUser@amazon.com", info[0].Subject.Members[0])
-	assert.Equal(t, "anObjectId", info[0].Object.Resources[0])
 	assert.Equal(t, "anObjectId", info[0].Object.ResourceID)
 }
 
@@ -119,10 +118,25 @@ func TestAmazonProvider_SetPolicyInfo(t *testing.T) {
 		Meta:    policysupport.MetaInfo{Version: "0"},
 		Actions: []policysupport.ActionInfo{{"aws:amazon.cognito/access"}},
 		Subject: policysupport.SubjectInfo{Members: []string{"aUser:aUser@amazon.com", "anotherUser:anotherUser@amazon.com"}},
-		Object:  policysupport.ObjectInfo{ResourceID: "aResourceId", Resources: []string{"aResource"}},
+		Object:  policysupport.ObjectInfo{ResourceID: "aResourceId"},
 	}})
 	assert.Equal(t, http.StatusCreated, status)
 	assert.NoError(t, err)
+}
+
+func TestAmazonProvider_SetPolicyInfo_withInvalidArguments(t *testing.T) {
+	mockClient := &amazonwebservices_test.MockClient{}
+	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
+
+	status, _ := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{})
+	assert.Equal(t, http.StatusInternalServerError, status)
+
+	status, _ = p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{{
+		Actions: []policysupport.ActionInfo{},
+		Subject: policysupport.SubjectInfo{Members: []string{}},
+		Object:  policysupport.ObjectInfo{ResourceID: "aResourceId"},
+	}})
+	assert.Equal(t, http.StatusInternalServerError, status)
 }
 
 func TestAmazonProvider_SetPolicyInfo_withListErr(t *testing.T) {
@@ -133,7 +147,7 @@ func TestAmazonProvider_SetPolicyInfo_withListErr(t *testing.T) {
 		Meta:    policysupport.MetaInfo{Version: "0"},
 		Actions: []policysupport.ActionInfo{},
 		Subject: policysupport.SubjectInfo{Members: []string{}},
-		Object:  policysupport.ObjectInfo{ResourceID: "aResourceId", Resources: []string{}},
+		Object:  policysupport.ObjectInfo{ResourceID: "aResourceId"},
 	}})
 	assert.Equal(t, http.StatusInternalServerError, status)
 	assert.Error(t, err)
@@ -147,7 +161,7 @@ func TestAmazonProvider_SetPolicyInfo_withEnableErr(t *testing.T) {
 		Meta:    policysupport.MetaInfo{Version: "0"},
 		Actions: []policysupport.ActionInfo{{"aws:amazon.cognito/access"}},
 		Subject: policysupport.SubjectInfo{Members: []string{"aUser:aUser@amazon.com", "anotherUser:anotherUser@amazon.com"}},
-		Object:  policysupport.ObjectInfo{ResourceID: "aResourceId", Resources: []string{"aResource"}},
+		Object:  policysupport.ObjectInfo{ResourceID: "aResourceId"},
 	}})
 	assert.Equal(t, http.StatusInternalServerError, status)
 	assert.Error(t, err)
@@ -161,7 +175,7 @@ func TestAmazonProvider_SetPolicyInfo_withDisableErr(t *testing.T) {
 		Meta:    policysupport.MetaInfo{Version: "0"},
 		Actions: []policysupport.ActionInfo{},
 		Subject: policysupport.SubjectInfo{Members: []string{}},
-		Object:  policysupport.ObjectInfo{ResourceID: "aResourceId", Resources: []string{}},
+		Object:  policysupport.ObjectInfo{ResourceID: "aResourceId"},
 	}})
 	assert.Equal(t, http.StatusInternalServerError, status)
 	assert.Error(t, err)

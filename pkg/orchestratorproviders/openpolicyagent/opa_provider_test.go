@@ -110,7 +110,6 @@ func TestSetPolicyInfo(t *testing.T) {
 		[]policysupport.PolicyInfo{
 			{Meta: policysupport.MetaInfo{Version: "0.5"}, Actions: []policysupport.ActionInfo{{"http:GET"}}, Subject: policysupport.SubjectInfo{Members: []string{"allusers"}}, Object: policysupport.ObjectInfo{
 				ResourceID: "aResourceId",
-				Resources:  []string{"/"},
 			}},
 		},
 	)
@@ -122,11 +121,11 @@ func TestSetPolicyInfo(t *testing.T) {
 	path := filepath.Join(file, fmt.Sprintf("../resources/bundles/.bundle-%d", rand.Uint64()))
 	_ = compressionsupport.UnTarToPath(bytes.NewReader(gzip), path)
 	readFile, _ := ioutil.ReadFile(path + "/bundle/data.json")
-	assert.Equal(t, `{"policies":[{"meta":{"version":"0.5"},"actions":[{"action_uri":"http:GET"}],"subject":{"members":["allusers"]},"object":{"resource_id":"aResourceId","resources":["/"]}}]}`, string(readFile))
+	assert.Equal(t, `{"policies":[{"meta":{"version":"0.5"},"actions":[{"action_uri":"http:GET"}],"subject":{"members":["allusers"]},"object":{"resource_id":"aResourceId"}}]}`, string(readFile))
 	_ = os.RemoveAll(path)
 }
 
-func TestSetPolicyInfo_withBadResponse(t *testing.T) {
+func TestSetPolicyInfo_withInvalidArguments(t *testing.T) {
 	key := []byte(`
 {
   "bundle_url": "aBigUrl"
@@ -140,14 +139,21 @@ func TestSetPolicyInfo_withBadResponse(t *testing.T) {
 	status, _ := p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
 		orchestrator.ApplicationInfo{},
+		[]policysupport.PolicyInfo{},
+	)
+	assert.Equal(t, 500, status)
+
+	status, _ = p.SetPolicyInfo(
+		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
+		orchestrator.ApplicationInfo{ObjectID: "aResourceId"},
 		[]policysupport.PolicyInfo{
-			{Meta: policysupport.MetaInfo{Version: "0.5"}, Actions: []policysupport.ActionInfo{{"http:GET"}}, Subject: policysupport.SubjectInfo{Members: []string{"allusers"}}, Object: policysupport.ObjectInfo{
+			{
+				Actions: []policysupport.ActionInfo{{"http:GET"}}, Subject: policysupport.SubjectInfo{Members: []string{"allusers"}}, Object: policysupport.ObjectInfo{
 				ResourceID: "aResourceId",
-				Resources:  []string{"/"},
 			}},
 		},
 	)
-	assert.Equal(t, 0, status)
+	assert.Equal(t, 500, status)
 }
 
 func TestMakeDefaultBundle(t *testing.T) {
@@ -167,10 +173,7 @@ func TestMakeDefaultBundle(t *testing.T) {
         ]
       },
       "object": {
-        "resource_id": "aResourceId",
-        "resources": [
-          "/"
-        ]
+        "resource_id": "aResourceId"
       }
     }
   ]
@@ -201,10 +204,7 @@ func TestMakeDefaultBundle(t *testing.T) {
         ]
       },
       "object": {
-        "resource_id": "aResourceId",
-        "resources": [
-          "/"
-        ]
+        "resource_id": "aResourceId"
       }
     }
   ]

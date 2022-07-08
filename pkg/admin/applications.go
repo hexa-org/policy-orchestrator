@@ -39,8 +39,7 @@ type Subject struct {
 }
 
 type Object struct {
-	Resources  []string `validate:"required"`
-	ResourceID string
+	ResourceID string `validate:"required"`
 }
 
 type ApplicationsHandler interface {

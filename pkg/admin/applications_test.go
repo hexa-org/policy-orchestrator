@@ -81,7 +81,7 @@ func (suite *ApplicationsSuite) TestApplication() {
 	assert.Contains(suite.T(), string(body), "aDescription")
 
 	assert.Contains(suite.T(), string(body), "aVersion")
-	assert.Contains(suite.T(), string(body), "anotherAction")
+	assert.Contains(suite.T(), string(body), "anotherResourceId")
 	assert.Contains(suite.T(), string(body), "anotherUser")
 }
 

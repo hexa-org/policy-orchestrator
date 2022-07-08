@@ -40,11 +40,8 @@ func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 
 	var appRoleId string
 	var principalIdsAndDisplayNames []string
-	var resourceIdAndDisplayName string
-
 	for _, assignment := range assignments.List {
 		appRoleId = fmt.Sprintf("azure:%s", assignment.AppRoleId)
-		resourceIdAndDisplayName = fmt.Sprintf("%s:%s", assignment.ResourceId, assignment.ResourceDisplayName)
 		principalIdsAndDisplayNames = append(principalIdsAndDisplayNames, fmt.Sprintf("%s:%s", assignment.PrincipalId, assignment.PrincipalDisplayName))
 	}
 
@@ -54,7 +51,6 @@ func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 		Subject: policysupport.SubjectInfo{Members: principalIdsAndDisplayNames},
 		Object: policysupport.ObjectInfo{
 			ResourceID: applicationInfo.ObjectID,
-			Resources:  []string{resourceIdAndDisplayName},
 		},
 	})
 
@@ -65,11 +61,11 @@ func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 	validate := validator.New() // todo - move this up?
 	errApp := validate.Struct(applicationInfo)
 	if errApp != nil {
-		return 0, errApp
+		return http.StatusInternalServerError, errApp
 	}
 	errPolicies := validate.Var(policyInfos, "omitempty,dive")
 	if errPolicies != nil {
-		return 0, errPolicies
+		return http.StatusInternalServerError, errPolicies
 	}
 
 	key := integrationInfo.Key
@@ -78,12 +74,11 @@ func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 	principal, _ := azureClient.GetServicePrincipals(key, applicationInfo.Description) // todo - description is named poorly
 	for _, policyInfo := range policyInfos {
 		var assignments []AzureAppRoleAssignment
-		resources := policyInfo.Object.Resources[0]
 		for _, user := range policyInfo.Subject.Members {
 			assignments = append(assignments, AzureAppRoleAssignment{
 				AppRoleId:   strings.TrimPrefix(policyInfo.Actions[0].ActionUri, "azure:"),
 				PrincipalId: strings.Split(user, ":")[0],
-				ResourceId:  strings.Split(resources, ":")[0],
+				ResourceId:  strings.Split(policyInfo.Object.ResourceID, ":")[0],
 			})
 		}
 		err := azureClient.SetAppRoleAssignedTo(key, principal.List[0].ID, assignments)

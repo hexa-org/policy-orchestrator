@@ -64,11 +64,11 @@ func (g *GoogleProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo,
 	validate := validator.New() // todo - move this up?
 	errApp := validate.Struct(app)
 	if errApp != nil {
-		return 0, errApp
+		return 500, errApp
 	}
 	errPolicies := validate.Var(policyInfos, "omitempty,dive")
 	if errPolicies != nil {
-		return 0, errPolicies
+		return 500, errPolicies
 	}
 
 	key := integration.Key

@@ -65,8 +65,7 @@ type Subject struct {
 }
 
 type Object struct {
-	ResourceID string   `json:"resource_id"`
-	Resources  []string `json:"resources"`
+	ResourceID string `json:"resource_id"`
 }
 
 func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, appInfo orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
@@ -101,7 +100,6 @@ func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, ap
 			},
 			Object: policysupport.ObjectInfo{
 				ResourceID: appInfo.ObjectID,
-				Resources:  p.Object.Resources,
 			},
 		})
 	}
@@ -112,11 +110,11 @@ func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, ap
 	validate := validator.New() // todo - move this up?
 	errApp := validate.Struct(appInfo)
 	if errApp != nil {
-		return 0, errApp
+		return http.StatusInternalServerError, errApp
 	}
 	errPolicies := validate.Var(policyInfos, "omitempty,dive")
 	if errPolicies != nil {
-		return 0, errPolicies
+		return http.StatusInternalServerError, errPolicies
 	}
 
 	client := o.ensureClientIsAvailable()
@@ -137,7 +135,6 @@ func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, ap
 			},
 			Object: Object{
 				ResourceID: appInfo.ObjectID,
-				Resources:  p.Object.Resources,
 			},
 		})
 	}

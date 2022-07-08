@@ -20,8 +20,7 @@ func TestOpaDecisionProvider_BuildInput(t *testing.T) {
 	req.RequestURI = "/noop"
 	query, _ := provider.BuildInput(req)
 	casted := query.(decisionsupportproviders.OpaQuery).Input
-	assert.Equal(t, "http:GET", casted["method"])
-	assert.Equal(t, "/noop", casted["path"])
+	assert.Equal(t, "http:GET:/noop", casted["method"])
 	assert.Equal(t, "sales@hexaindustries.io", casted["principal"])
 }
 
@@ -34,7 +33,7 @@ func TestOpaDecisionProvider_BuildInput_RemovesQueryParams(t *testing.T) {
 	req.RequestURI = "/noop"
 	query, _ := provider.BuildInput(req)
 
-	assert.Equal(t, "/noop", query.(decisionsupportproviders.OpaQuery).Input["path"])
+	assert.Equal(t, "http:GET:/noop", query.(decisionsupportproviders.OpaQuery).Input["method"])
 }
 
 type MockClient struct {

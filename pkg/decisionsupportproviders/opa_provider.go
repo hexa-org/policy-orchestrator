@@ -20,8 +20,7 @@ type OpaQuery struct {
 
 func (o OpaDecisionProvider) BuildInput(r *http.Request) (any interface{}, err error) {
 	return OpaQuery{map[string]interface{}{
-		"method":    "http:GET",
-		"path":      strings.Split(r.RequestURI, "?")[0],
+		"method":    "http:GET:" + strings.Split(r.RequestURI, "?")[0],
 		"principal": o.Principal,
 	}}, nil
 }

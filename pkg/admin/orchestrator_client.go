@@ -190,7 +190,6 @@ func (c orchestratorClient) GetPolicies(url string) ([]Policy, string, error) {
 			Subject: Subject{Members: p.Subject.Members},
 			Object: Object{
 				ResourceID: p.Object.ResourceId,
-				Resources:  p.Object.Resources,
 			}})
 	}
 	return foundPolicies, rawJson, nil
