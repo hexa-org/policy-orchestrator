@@ -38,7 +38,7 @@ func HawkMiddleware(next http.HandlerFunc, credentialStore hawk.CredentialStore,
 		if r.Header.Get("Authorization") == "" {
 			log.Println("Request missing authorization header")
 			w.Header().Set("www-authenticate", "hawk")
-			w.WriteHeader(401)
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
@@ -46,7 +46,7 @@ func HawkMiddleware(next http.HandlerFunc, credentialStore hawk.CredentialStore,
 		if err != nil {
 			log.Printf("HAWK authentication failed: %s", err.Error())
 			w.Header().Set("www-authenticate", "hawk")
-			w.WriteHeader(401)
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 		opt := &hawk.Option{
