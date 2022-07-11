@@ -1,7 +1,7 @@
 # Hexa infrastructure
 
-Hexa uses fresh cloud to deploy the hexa-demo infrastructure. You could find
-out more about [fresh cloud](https://github.com/initialcapacity/freshcloud) on the GitHub page. 
+Hexa uses Fresh Cloud to deploy the hexa-demo infrastructure. You could find
+out more about [Fresh Cloud](https://github.com/initialcapacity/freshcloud) on the GitHub page. 
 
 ### Current demo topology
 
@@ -132,8 +132,6 @@ Confirm the management cluster services are deployed.
 
 * Harbor https://registry.your_domain
 * Concourse https://ci.your_domain
-
-That's a wrap for now.
 
 [Google GKE]:https://cloud.google.com/kubernetes-engine
 [Google Cloud IAP]:https://cloud.google.com/iap

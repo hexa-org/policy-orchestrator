@@ -24,12 +24,12 @@ type MockClient struct {
 
 func (m *MockClient) Do(_ *http.Request) (*http.Response, error) {
 	r := ioutil.NopCloser(bytes.NewReader(m.response))
-	return &http.Response{StatusCode: 201, Body: r}, m.err
+	return &http.Response{StatusCode: http.StatusCreated, Body: r}, m.err
 }
 
 func (m *MockClient) Get(_ string) (resp *http.Response, err error) {
 	r := ioutil.NopCloser(bytes.NewReader(m.response))
-	return &http.Response{StatusCode: 200, Body: r}, m.err
+	return &http.Response{StatusCode: http.StatusOK, Body: r}, m.err
 }
 
 func TestOrchestratorClient_Health(t *testing.T) {

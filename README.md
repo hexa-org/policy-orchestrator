@@ -1,4 +1,4 @@
-![hexa-logo](docs/img/hexa-logo.svg)
+![hexa-logo](docs/hexa-logo.svg)
 
 # Hexa Policy Orchestrator
 
@@ -10,7 +10,7 @@
 Hexa Policy Orchestrator enables you to manage all of your policies consistently across software providers
 so that you can unify access policy management. The below diagram describes the current provider architecture.
 
-![Hexa Provider Architecture](docs/img/Hexa-Provider-Architecture.svg "hexa provider architecture")
+![Hexa Provider Architecture](docs/hexa-provider-architecture.svg "hexa provider architecture")
 
 ## Getting Started
 
@@ -101,7 +101,7 @@ OPA or **policy decision point** periodically reads config from the hexa-demo-co
 server and allows or denies access requests based on the IDQL policy.
 Decision enforcement is handled within the hexa-demo application or **policy enforcement point**.
 
-![Hexa Demo Architecture](docs/img/Hexa-Demo-Architecture.svg "hexa demo architecture")
+![Hexa Demo Architecture](docs/hexa-demo-architecture.svg "hexa demo architecture")
 
 ## Getting involved
 

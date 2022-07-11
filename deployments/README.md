@@ -1,18 +1,18 @@
 # Hexa applications
 
-Hexa uses fresh cloud to deploy the hexa-demo applications. You could find
-out more about [fresh cloud](https://github.com/initialcapacity/freshcloud) on the GitHub page.
+Hexa uses Fresh Cloud to deploy the hexa-demo applications. You could find
+out more about [Fresh Cloud](https://github.com/initialcapacity/freshcloud) on the GitHub page.
 
 The below notes summarize the steps used to deploy hexa applications.
 
-## Google Cloud
+## Google Cloud (example)
 
-## Install Google Cloud SDK
+### Install Google Cloud SDK
 
 Install the Google Cloud SDK CLI following [these instructions](https://cloud.google.com/sdk/docs/install) or with
 [Homebrew](https://formulae.brew.sh/cask/google-cloud-sdk).
 
-## Google Cloud Project Setup
+### Google Cloud Project Setup
 
 Log in to Google Cloud.
 
@@ -26,7 +26,7 @@ Create a service account.
 freshctl clusters gcp create-service-account
 ```
 
-## Hexa-demo
+### Hexa-demo
 
 Create a `.env_google_cloud_demo.sh` file similar to the below.
 
@@ -95,7 +95,7 @@ Deploy the demo application.
 freshctl applications deploy
 ```
 
-## Hexa-admin
+### Hexa-admin
 
 Follow the above steps for the hexa-admin application - although, select a different name for your environment file
 `.env_google_cloud_admin.sh` file similar to the below.
@@ -140,5 +140,3 @@ kubectl cp databases/orchestrator ${APP_NAME}/${APP_NAME}-db-postgresql-migrate:
 kubectl exec ${APP_NAME}-db-postgresql-migrate -it --namespace ${APP_NAME} sh
 /  migrate -verbose -path /home/orchestrator -database postgres://orchestrator:orchestrator@hexa-admin-db-postgresql:5432/orchestrator_development?sslmode=disable up
 ```
-
-That's a wrap for now.
