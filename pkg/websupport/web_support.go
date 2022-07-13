@@ -57,6 +57,17 @@ func Start(server *http.Server, l net.Listener) {
 	}
 }
 
+func StartWithTLS(server *http.Server, l net.Listener) {
+	if server.TLSConfig == nil {
+		panic("tls not configured.")
+	}
+	log.Println("Starting the server with tls support.", server.Addr)
+	err := server.ServeTLS(l, "", "")
+	if err != nil {
+		return
+	}
+}
+
 func Stop(server *http.Server) {
 	log.Printf("Stopping the server.")
 	_ = server.Shutdown(context.Background())
