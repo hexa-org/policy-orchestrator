@@ -8,8 +8,9 @@ services:
     environment:
       ORCHESTRATOR_HOSTPORT: hexa-orchestrator:8885
       ORCHESTRATOR_KEY: 0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb
-      POSTGRESQL_URL: postgres://orchestrator:orchestrator@postgresql:5432/orchestrator_development?sslmode=disable
-
+      POSTGRESQL_URL: postgres://orchestrator:orchestrator@postgresql:5432/orchestrator_development?sslmode=verify-ca&sslrootcert=/home/databases/docker_support/ca-cert.pem&sslcert=/home/databases/docker_support/client-cert.pem&sslkey=/home/databases/docker_support/client-key.pem
+    volumes:
+      - "./databases/docker_support:/home/databases/docker_support:ro"
   hexa-admin:
     image: hexa
     container_name: hexa-admin
