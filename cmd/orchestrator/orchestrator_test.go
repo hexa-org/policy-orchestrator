@@ -64,8 +64,9 @@ func TestConfigWithPort(t *testing.T) {
 }
 
 func TestConfigWithTransportLayerSecuritye(t *testing.T) {
-	_ = os.Setenv("SERVER_CERT", "../test/server-cert.pem")
-	_ = os.Setenv("SERVER_KEY", "../test/server-key.pem")
+	_, file, _, _ := runtime.Caller(0)
+	_ = os.Setenv("SERVER_CERT", filepath.Join(file, "../test/server-cert.pem"))
+	_ = os.Setenv("SERVER_KEY", filepath.Join(file, "../test/server-key.pem"))
 	newApp("localhost:0")
 }
 
@@ -77,14 +78,16 @@ func TestConfigWithTransportLayerSecurity_withBadCertFile(t *testing.T) {
 
 func TestConfigWithTransportLayerSecurity_withBadKeyFile(t *testing.T) {
 	defer shouldPanic(t)
-	_ = os.Setenv("SERVER_CERT", "../test/server-cert.pem")
+	_, file, _, _ := runtime.Caller(0)
+	_ = os.Setenv("SERVER_CERT", filepath.Join(file, "../test/server-cert.pem"))
 	_ = os.Setenv("SERVER_KEY", "notAFile")
 	newApp("localhost:0")
 }
 
 func TestConfigWithTransportLayerSecurity_withBad509(t *testing.T) {
 	defer shouldPanic(t)
-	_ = os.Setenv("SERVER_CERT", "../test/server-cert.pem")
+	_, file, _, _ := runtime.Caller(0)
+	_ = os.Setenv("SERVER_CERT", filepath.Join(file, "../test/server-cert.pem"))
 	newApp("localhost:0")
 }
 

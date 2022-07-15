@@ -16,8 +16,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path/filepath"
-	"runtime"
 )
 
 func App(key string, addr string, hostPort string, dbUrl string) (*http.Server, *workflowsupport.WorkScheduler) {
@@ -52,12 +50,11 @@ func newApp(addr string) (*http.Server, net.Listener, *workflowsupport.WorkSched
 }
 
 func withTransportLayerSecurity(certFile, keyFile string, app *http.Server) {
-	_, file, _, _ := runtime.Caller(0)
-	cert, certErr := os.ReadFile(filepath.Join(file, certFile))
+	cert, certErr := os.ReadFile(certFile)
 	if certErr != nil {
 		panic(certErr.Error())
 	}
-	key, keyErr := os.ReadFile(filepath.Join(file, keyFile))
+	key, keyErr := os.ReadFile(keyFile)
 	if keyErr != nil {
 		panic(certErr.Error())
 	}
