@@ -45,6 +45,9 @@ We'll be using postgresql and need to execute the below shell scripts from docke
 ```bash
 chmod 775 ./databases/docker_support/initdb.d/create-databases.sh
 chmod 775 ./databases/docker_support/migrate-databases.sh
+chmod 600 ./databases/docker_support/ca-cert.pem
+chmod 600 ./databases/docker_support/client-cert.pem
+chmod 600 ./databases/docker_support/client-key.pem
 ```
 
 ### Run the Policy Orchestrator
