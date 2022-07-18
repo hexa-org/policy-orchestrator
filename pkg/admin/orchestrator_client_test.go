@@ -24,19 +24,21 @@ type MockClient struct {
 
 func (m *MockClient) Do(_ *http.Request) (*http.Response, error) {
 	r := ioutil.NopCloser(bytes.NewReader(m.response))
-	return &http.Response{StatusCode: http.StatusCreated, Body: r}, m.err
+	return &http.Response{StatusCode: m.status, Body: r}, m.err
 }
 
 func (m *MockClient) Get(_ string) (resp *http.Response, err error) {
 	r := ioutil.NopCloser(bytes.NewReader(m.response))
-	return &http.Response{StatusCode: http.StatusOK, Body: r}, m.err
+	return &http.Response{StatusCode: m.status, Body: r}, m.err
 }
+
+///
 
 func TestOrchestratorClient_Health(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = []byte("{\"status\": \"pass\"}")
-
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
+
 	resp, _ := client.Health("localhost:8883/health")
 	assert.Equal(t, "{\"status\": \"pass\"}", resp)
 }
@@ -44,8 +46,8 @@ func TestOrchestratorClient_Health(t *testing.T) {
 func TestOrchestratorClient_NotHealthy(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.err = errors.New("anError")
-
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
+
 	resp, _ := client.Health("localhost:8883/health")
 	assert.Equal(t, "{\"status\": \"fail\"}", resp)
 }
@@ -53,6 +55,7 @@ func TestOrchestratorClient_NotHealthy(t *testing.T) {
 func TestOrchestratorClient_Applications(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = []byte("{\"applications\":[{\"id\":\"anId\", \"integration_id\":\"anIntegrationId\", \"object_id\":\"anObjectId\", \"name\":\"anApp\", \"description\":\"aDescription\", \"provider_name\":\"aProviderName\"}]}")
+	mockClient.status = http.StatusOK
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 
 	resp, _ := client.Applications("localhost:8883/applications")
@@ -81,6 +84,7 @@ func TestOrchestratorClient_Applications_withBadJson(t *testing.T) {
 func TestOrchestratorClient_Application(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = []byte("{\"id\":\"anId\", \"integration_id\":\"anIntegrationId\", \"object_id\":\"anObjectId\", \"name\":\"anApp\", \"description\":\"aDescription\"}}")
+	mockClient.status = http.StatusOK
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 
 	resp, _ := client.Application("localhost:8883/applications/anId")
@@ -97,9 +101,11 @@ func TestOrchestratorClient_Application_withBadJson(t *testing.T) {
 }
 
 func TestOrchestratorClient_Integrations(t *testing.T) {
-	mockClient := new(MockClient)
 	key := base64.StdEncoding.EncodeToString([]byte("anotherKey"))
+
+	mockClient := new(MockClient)
 	mockClient.response = []byte(fmt.Sprintf("{\"integrations\":[{\"provider\":\"google_cloud\", \"key\":\"%s\"}]}", key))
+	mockClient.status = http.StatusOK
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 
 	resp, _ := client.Integrations("localhost:8883/applications")
@@ -145,6 +151,7 @@ func TestOrchestratorClient_DeleteIntegrations(t *testing.T) {
 
 func TestOrchestratorClient_GetPolicy(t *testing.T) {
 	mockClient := new(MockClient)
+	mockClient.status = http.StatusOK
 	rawJson := "{\"policies\":[" +
 		"{\"meta\":{\"version\":\"aVersion\"},\"actions\":[{\"action_uri\": \"anAction\"}],\"subject\":{\"members\":[\"aUser\"]},\"object\":{\"resource_id\":\"aResourceId\"}}," +
 		"{\"meta\":{\"version\":\"anotherVersion\"},\"actions\":[{\"action\": \"anotherAction\"}],\"subject\":{\"members\":[\"anotherUser\"]},\"object\":{\"resource_id\":\"anotherResourceId\"}}]}"
@@ -178,6 +185,7 @@ func TestOrchestratorClient_GetPolicy_withErroneousGet(t *testing.T) {
 
 func TestOrchestratorClient_GetPolicy_withBadJson(t *testing.T) {
 	mockClient := new(MockClient)
+	mockClient.status = http.StatusOK
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 
 	resp, _, err := client.GetPolicies("localhost:8883/applications/anId/policies")
@@ -187,6 +195,7 @@ func TestOrchestratorClient_GetPolicy_withBadJson(t *testing.T) {
 
 func TestOrchestratorClient_SetPolicy(t *testing.T) {
 	mockClient := new(MockClient)
+	mockClient.status = http.StatusCreated
 	policies := "{\"policies\":[[{\"version\":\"aVersion\",\"action_uri\":\"anAction\",\"subject\":{\"members\":[\"aUser\"]},\"object\":{\"resource_id\":\"aResourceId\"}},{\"version\":\"aVersion\",\"action\":\"anotherAction\",\"subject\":{\"members\":[\"anotherUser\"]},\"object\":{\"resource_id\":\"anotherResourceId\"}}]}"
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 	err := client.SetPolicies("localhost:8883/applications/anId/policies", policies)
@@ -199,4 +208,14 @@ func TestOrchestratorClient_SetPolicy_withErroneousSet(t *testing.T) {
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 	err := client.SetPolicies("localhost:8883/applications/anId/policies", "")
 	assert.Error(t, err)
+}
+
+func TestOrchestratorClient_SetPolicy_withBadStatus(t *testing.T) {
+	mockClient := new(MockClient)
+	mockClient.status = 500
+	mockClient.response = []byte("shoot")
+	client := admin.NewOrchestratorClient(mockClient, "aKey")
+	err := client.SetPolicies("localhost:8883/applications/anId/policies", "")
+	assert.Error(t, err)
+	assert.Equal(t, "shoot", err.Error())
 }

@@ -49,17 +49,14 @@ type application struct {
 }
 
 func (c orchestratorClient) Applications(url string) (applications []Application, err error) {
-	resp, err := hawksupport.HawkGet(c.client, "anId", c.key, url)
-	if err != nil {
-		log.Println(err)
+	resp, hawkErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
+	if err = errorOrBadResponse(resp, http.StatusOK, hawkErr); err != nil {
 		return applications, err
 	}
 
 	var jsonResponse applicationList
-	body := resp.Body
-	err = json.NewDecoder(body).Decode(&jsonResponse)
-	if err != nil {
-		log.Printf("unable to parse customer json: %s\n", err.Error())
+	if err = json.NewDecoder(resp.Body).Decode(&jsonResponse); err != nil {
+		log.Printf("unable to parse found json: %s\n", err.Error())
 		return applications, err
 	}
 
@@ -77,15 +74,14 @@ func (c orchestratorClient) Applications(url string) (applications []Application
 }
 
 func (c orchestratorClient) Application(url string) (Application, error) {
-	resp, err := hawksupport.HawkGet(c.client, "anId", c.key, url)
-	if err != nil {
+	resp, hawkErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
+	if err := errorOrBadResponse(resp, http.StatusOK, hawkErr); err != nil {
 		return Application{}, err
 	}
 
 	var jsonResponse application
-	body := resp.Body
-	err = json.NewDecoder(body).Decode(&jsonResponse)
-	if err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&jsonResponse); err != nil {
+		log.Printf("unable to parse found json: %s\n", err.Error())
 		return Application{}, err
 	}
 	app := Application{ID: jsonResponse.ID, IntegrationId: jsonResponse.IntegrationId, ObjectId: jsonResponse.ObjectId, Name: jsonResponse.Name, Description: jsonResponse.Description}
@@ -104,35 +100,33 @@ type integration struct {
 }
 
 func (c orchestratorClient) Integrations(url string) (integrations []Integration, err error) {
-	resp, err := hawksupport.HawkGet(c.client, "anId", c.key, url)
-	if err != nil {
+	resp, hawkErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
+	if err = errorOrBadResponse(resp, http.StatusOK, hawkErr); err != nil {
 		return integrations, err
 	}
 
 	var jsonResponse integrationList
-	body := resp.Body
-	err = json.NewDecoder(body).Decode(&jsonResponse)
-	if err != nil {
+	if err = json.NewDecoder(resp.Body).Decode(&jsonResponse); err != nil {
+		log.Printf("unable to parse found json: %s\n", err.Error())
 		return integrations, err
 	}
 
 	for _, in := range jsonResponse.Integrations {
 		integrations = append(integrations, Integration{in.ID, in.Name, in.Provider, in.Key})
 	}
-
 	return integrations, nil
 }
 
 func (c orchestratorClient) CreateIntegration(url string, name string, provider string, key []byte) error {
 	i := integration{Name: name, Provider: provider, Key: key}
 	marshal, _ := json.Marshal(i)
-	_, err := hawksupport.HawkPost(c.client, "anId", c.key, url, bytes.NewReader(marshal))
-	return err
+	resp, hawkErr := hawksupport.HawkPost(c.client, "anId", c.key, url, bytes.NewReader(marshal))
+	return errorOrBadResponse(resp, http.StatusCreated, hawkErr)
 }
 
 func (c orchestratorClient) DeleteIntegration(url string) error {
-	_, err := hawksupport.HawkGet(c.client, "anId", c.key, url)
-	return err
+	resp, hawkErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
+	return errorOrBadResponse(resp, http.StatusOK, hawkErr)
 }
 
 type policies struct {
@@ -164,18 +158,20 @@ type object struct {
 }
 
 func (c orchestratorClient) GetPolicies(url string) ([]Policy, string, error) {
-	resp, getErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
-	if getErr != nil {
-		return []Policy{}, "", getErr
+	resp, hawkErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
+	if err := errorOrBadResponse(resp, http.StatusOK, hawkErr); err != nil {
+		return []Policy{}, "{}", err
+	}
+
+	jsonBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return []Policy{}, "{}", err
 	}
 
 	var jsonResponse policies
-	all, readErr := io.ReadAll(resp.Body)
-	rawJson := string(all)
-	decoder := json.NewDecoder(bytes.NewReader(all))
-	readErr = decoder.Decode(&jsonResponse)
-	if readErr != nil {
-		return []Policy{}, rawJson, readErr
+	if err := json.NewDecoder(bytes.NewReader(jsonBody)).Decode(&jsonResponse); err != nil {
+		log.Println(err)
+		return []Policy{}, string(jsonBody), err
 	}
 
 	var foundPolicies []Policy
@@ -188,20 +184,29 @@ func (c orchestratorClient) GetPolicies(url string) ([]Policy, string, error) {
 			Meta:    Meta{p.Meta.Version},
 			Actions: actions,
 			Subject: Subject{Members: p.Subject.Members},
-			Object: Object{
-				ResourceID: p.Object.ResourceId,
-			}})
+			Object:  Object{ResourceID: p.Object.ResourceId},
+		})
 	}
-	return foundPolicies, rawJson, nil
+	return foundPolicies, string(jsonBody), nil
 }
 
 func (c orchestratorClient) SetPolicies(url string, policies string) error {
-	response, err := hawksupport.HawkPost(c.client, "anId", c.key, url, strings.NewReader(policies))
+	resp, err := hawksupport.HawkPost(c.client, "anId", c.key, url, strings.NewReader(policies))
+	return errorOrBadResponse(resp, http.StatusCreated, err)
+}
+
+///
+
+func errorOrBadResponse(response *http.Response, status int, err error) error {
 	if err != nil {
+		log.Println(err)
 		return err
 	}
-	if response.StatusCode != http.StatusCreated {
-		return errors.New("unable to update policies")
+	if response.StatusCode != status {
+		all, _ := io.ReadAll(response.Body)
+		message := string(all)
+		log.Println(message)
+		return errors.New(message)
 	}
-	return nil
+	return err
 }

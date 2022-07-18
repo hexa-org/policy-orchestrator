@@ -31,7 +31,7 @@ func (gateway IntegrationsDataGateway) Find() ([]IntegrationRecord, error) {
 		_ = rows.Close()
 	}(rows)
 
-	var records []IntegrationRecord
+	records := make([]IntegrationRecord, 0)
 	for rows.Next() {
 		var record IntegrationRecord
 		if erroneousScan := rows.Scan(&record.ID, &record.Name, &record.Provider, &record.Key); erroneousScan != nil {

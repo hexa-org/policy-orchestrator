@@ -38,7 +38,7 @@ func (gateway ApplicationsDataGateway) Find() ([]ApplicationRecord, error) {
 		_ = rows.Close()
 	}(rows)
 
-	var records []ApplicationRecord
+	records := make([]ApplicationRecord, 0)
 	for rows.Next() {
 		var record ApplicationRecord
 		if erroneousScan := rows.Scan(&record.ID, &record.IntegrationId, &record.ObjectId, &record.Name, &record.Description); erroneousScan != nil {

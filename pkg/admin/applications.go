@@ -59,75 +59,85 @@ func NewApplicationsHandler(orchestratorUrl string, client Client) ApplicationsH
 }
 
 func (p appsHandler) List(w http.ResponseWriter, _ *http.Request) {
-	url := fmt.Sprintf("%v/applications", p.orchestratorUrl)
-	applications, err := p.client.Applications(url)
-	if err != nil {
-		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "message": "Unable to contact orchestrator."}}
+	orchestratorEndpoint := fmt.Sprintf("%v/applications", p.orchestratorUrl)
+	foundApplications, clientErr := p.client.Applications(orchestratorEndpoint)
+	if clientErr != nil {
+		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "message": clientErr.Error()}}
 		_ = websupport.ModelAndView(w, "applications", model)
-		log.Println(err)
+		log.Println(clientErr)
 		return
 	}
-	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "applications": applications}}
+	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "applications": foundApplications}}
 	_ = websupport.ModelAndView(w, "applications", model)
 }
 
 func (p appsHandler) Show(w http.ResponseWriter, r *http.Request) {
 	identifier := mux.Vars(r)["id"]
-	orchestratorAppEndpoint := fmt.Sprintf("%v/applications/%s", p.orchestratorUrl, identifier)
-	app, err := p.client.Application(orchestratorAppEndpoint)
-
-	orchestratorPolicyEndpoint := fmt.Sprintf("%v/applications/%s/policies", p.orchestratorUrl, identifier)
-	foundPolicies, rawJson, anotherPossibleErr := p.client.GetPolicies(orchestratorPolicyEndpoint)
-
-	if err != nil || anotherPossibleErr != nil {
-		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "message": "Error communicating with the orchestrator."}}
+	orchestratorEndpoint := fmt.Sprintf("%v/applications/%s", p.orchestratorUrl, identifier)
+	foundApplication, clientErr := p.client.Application(orchestratorEndpoint)
+	if clientErr != nil {
+		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "message": clientErr.Error()}}
 		_ = websupport.ModelAndView(w, "applications_show", model)
-		log.Println(err)
+		log.Println(clientErr)
+		return
+	}
+
+	/// todo - consider one rest call here?
+	orchestratorPoliciesEndpoint := fmt.Sprintf("%v/applications/%s/policies", p.orchestratorUrl, identifier)
+	foundPolicies, rawJson, policiesError := p.client.GetPolicies(orchestratorPoliciesEndpoint)
+	if policiesError != nil {
+		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "message": policiesError.Error()}}
+		_ = websupport.ModelAndView(w, "applications_show", model)
+		log.Println(policiesError)
 		return
 	}
 
 	var buffer bytes.Buffer
 	_ = json.Indent(&buffer, []byte(rawJson), "", "  ")
 	resourceLink := fmt.Sprintf("/applications/%v", identifier)
-	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "resource_link": resourceLink,
-		"application": app, "policies": foundPolicies, "rawJson": buffer.String()}}
+	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "resource_link": resourceLink, "application": foundApplication, "policies": foundPolicies, "rawJson": buffer.String()}}
 	_ = websupport.ModelAndView(w, "applications_show", model)
 }
 
 func (p appsHandler) Edit(w http.ResponseWriter, r *http.Request) {
 	identifier := mux.Vars(r)["id"]
-	orchestratorAppsEndpoint := fmt.Sprintf("%v/applications/%s", p.orchestratorUrl, identifier)
-	app, err := p.client.Application(orchestratorAppsEndpoint)
+	orchestratorEndpoint := fmt.Sprintf("%v/applications/%s", p.orchestratorUrl, identifier)
+	foundApplication, applicationError := p.client.Application(orchestratorEndpoint)
 
-	orchestratorPolicyEndpoint := fmt.Sprintf("%v/applications/%s/policies", p.orchestratorUrl, identifier)
-	foundPolicies, rawJson, anotherPossibleErr := p.client.GetPolicies(orchestratorPolicyEndpoint)
-
-	if err != nil || anotherPossibleErr != nil {
-		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": app,
-			"message": "Error communicating with the orchestrator."}}
+	if applicationError != nil {
+		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": foundApplication, "message": applicationError.Error()}}
 		_ = websupport.ModelAndView(w, "applications_edit", model)
-		log.Println(err)
+		log.Println(applicationError)
+		return
+	}
+
+	orchestratorPoliciesEndpoint := fmt.Sprintf("%v/applications/%s/policies", p.orchestratorUrl, identifier)
+	foundPolicies, rawJson, policiesError := p.client.GetPolicies(orchestratorPoliciesEndpoint)
+	if policiesError != nil {
+		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": foundApplication, "message": policiesError.Error()}}
+		_ = websupport.ModelAndView(w, "applications_edit", model)
+		log.Println(policiesError)
 		return
 	}
 
 	var buffer bytes.Buffer
 	_ = json.Indent(&buffer, []byte(rawJson), "", "  ")
-	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": app, "policies": foundPolicies, "rawJson": buffer.String()}}
+	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": foundApplication, "policies": foundPolicies, "rawJson": buffer.String()}}
 	_ = websupport.ModelAndView(w, "applications_edit", model)
 }
 
 func (p appsHandler) Update(w http.ResponseWriter, r *http.Request) {
 	identifier := mux.Vars(r)["id"]
-	orchestratorPolicyEndpoint := fmt.Sprintf("%v/applications/%s/policies", p.orchestratorUrl, identifier)
-	value := r.FormValue("policy")
-	err := p.client.SetPolicies(orchestratorPolicyEndpoint, value)
+	orchestratorEndpoint := fmt.Sprintf("%v/applications/%s/policies", p.orchestratorUrl, identifier)
+	desiredPolicies := r.FormValue("policy")
+	clientErr := p.client.SetPolicies(orchestratorEndpoint, desiredPolicies)
 
-	if err != nil {
+	if clientErr != nil {
 		orchestratorAppsEndpoint := fmt.Sprintf("%v/applications/%s", p.orchestratorUrl, identifier)
-		app, _ := p.client.Application(orchestratorAppsEndpoint)
-		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": app, "message": "Error communicating with the orchestrator."}}
+		foundApplication, _ := p.client.Application(orchestratorAppsEndpoint)
+		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": foundApplication, "policies": desiredPolicies, "message": clientErr.Error()}}
 		_ = websupport.ModelAndView(w, "applications_edit", model)
-		log.Println(err)
+		log.Println(clientErr)
 		return
 	}
 	applicationsEndpoint := fmt.Sprintf("/applications/%v", identifier)

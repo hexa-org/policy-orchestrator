@@ -115,7 +115,7 @@ func (handler ApplicationsHandler) GetPolicies(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	var list []Policy
+	list := make([]Policy, 0)
 	for _, rec := range records {
 		var actions []Action
 		for _, a := range rec.Actions {

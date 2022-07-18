@@ -65,7 +65,8 @@ func (suite *IntegrationsSuite) TestListIntegrations_templateRenders() {
 }
 
 func (suite *IntegrationsSuite) TestListIntegrations_with_error() {
-	suite.client.Err = errors.New("oops")
+	suite.client.Errs = map[string]error{"http://noop/integrations": errors.New("oops")}
+
 	resp, _ := http.Get(fmt.Sprintf("http://%s/integrations", suite.server.Addr))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Something went wrong.")
