@@ -15,11 +15,16 @@
                 {{- $s := index .Map "status"}}
                 <td>Policy Orchestrator</td>
                 <td><a href="{{$s.URL}}" target="_blank">{{$s.URL}}</a></td>
-                {{- if (contains $s.Status "pass") }}
-                    <td><a class="status green"></a></td>
-                {{- else}}
-                    <td><a class="status orange"></a></td>
-                {{end}}
+                <td>
+                    {{- range index $s.Checks }}
+                        {{- if (contains .Pass "true") }}
+                            <a class="status green"></a>
+                        {{- else}}
+                            <a class="status orange"></a>
+                        {{end}}
+                        {{.Name}}
+                    {{- end}}
+                </td>
             </tr>
             </tbody>
         </table>

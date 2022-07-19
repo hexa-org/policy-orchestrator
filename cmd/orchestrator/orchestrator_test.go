@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
+	"github.com/stretchr/testify/assert"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -22,6 +24,11 @@ func TestApp(t *testing.T) {
 		scheduler.Start()
 	}()
 	healthsupport.WaitForHealthy(app)
+
+	get, _ := http.Get(fmt.Sprintf("http://%s/health", app.Addr))
+	body, _ := io.ReadAll(get.Body)
+	assert.Equal(t, "[{\"name\":\"server\",\"pass\":\"true\"},{\"name\":\"database\",\"pass\":\"true\"}]", string(body))
+
 	websupport.Stop(app)
 	scheduler.Stop()
 }
