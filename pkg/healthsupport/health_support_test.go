@@ -27,6 +27,6 @@ func TestHealth(t *testing.T) {
 
 	resp, _ := http.Get(fmt.Sprintf("http://%s/health", server.Addr))
 	body, _ := io.ReadAll(resp.Body)
-	assert.Equal(t, "{\"status\":\"pass\"}", string(body))
+	assert.Equal(t, "[{\"name\":\"noop\",\"pass\":\"true\"}]", string(body))
 	_ = server.Shutdown(context.Background())
 }

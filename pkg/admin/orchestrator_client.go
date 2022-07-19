@@ -29,7 +29,7 @@ func (c orchestratorClient) Health(url string) (string, error) {
 	resp, err := c.client.Get(url)
 	if err != nil {
 		log.Println(err)
-		return "{\"status\": \"fail\"}", err
+		return "[{\"name\":\"Unreachable\",\"pass\":\"fail\"}]", err
 	}
 	body, err := io.ReadAll(resp.Body)
 	return string(body), err

@@ -57,5 +57,5 @@ func (m *MockClient) SetPolicies(url string, _ string) error {
 }
 
 func (m *MockClient) Health(_ string) (string, error) {
-	return "{\"status\":\"pass\"}", nil
+	return "[{\"name\":\"noop\",\"pass\":\"true\"}]", nil
 }

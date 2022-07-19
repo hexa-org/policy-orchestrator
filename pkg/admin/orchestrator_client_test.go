@@ -36,11 +36,11 @@ func (m *MockClient) Get(_ string) (resp *http.Response, err error) {
 
 func TestOrchestratorClient_Health(t *testing.T) {
 	mockClient := new(MockClient)
-	mockClient.response = []byte("{\"status\": \"pass\"}")
+	mockClient.response = []byte("[{\"name\":\"noop\",\"pass\":\"true\"}]")
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 
 	resp, _ := client.Health("localhost:8883/health")
-	assert.Equal(t, "{\"status\": \"pass\"}", resp)
+	assert.Equal(t, "[{\"name\":\"noop\",\"pass\":\"true\"}]", resp)
 }
 
 func TestOrchestratorClient_NotHealthy(t *testing.T) {
@@ -49,7 +49,7 @@ func TestOrchestratorClient_NotHealthy(t *testing.T) {
 	client := admin.NewOrchestratorClient(mockClient, "aKey")
 
 	resp, _ := client.Health("localhost:8883/health")
-	assert.Equal(t, "{\"status\": \"fail\"}", resp)
+	assert.Equal(t, "[{\"name\":\"Unreachable\",\"pass\":\"fail\"}]", resp)
 }
 
 func TestOrchestratorClient_Applications(t *testing.T) {

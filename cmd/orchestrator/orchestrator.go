@@ -2,9 +2,11 @@ package main
 
 import (
 	"crypto/tls"
+	"database/sql"
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/amazonwebservices"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud"
@@ -18,6 +20,33 @@ import (
 	"os"
 )
 
+type DatabaseHealthCheck struct {
+	Db *sql.DB
+}
+
+func (d DatabaseHealthCheck) Name() string {
+	return "database"
+}
+
+func (d DatabaseHealthCheck) Check() bool {
+	err := d.Db.Ping()
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+type ServerHealthCheck struct {
+}
+
+func (s ServerHealthCheck) Name() string {
+	return "server"
+}
+
+func (s ServerHealthCheck) Check() bool {
+	return true
+}
+
 func App(key string, addr string, hostPort string, dbUrl string) (*http.Server, *workflowsupport.WorkScheduler) {
 	db, _ := databasesupport.Open(dbUrl)
 	store := hawksupport.NewCredentialStore(key)
@@ -27,7 +56,12 @@ func App(key string, addr string, hostPort string, dbUrl string) (*http.Server, 
 	providers["amazon"] = &amazonwebservices.AmazonProvider{}
 	providers["open_policy_agent"] = &openpolicyagent.OpaProvider{}
 	handlers, scheduler := orchestrator.LoadHandlers(db, store, hostPort, providers)
-	return websupport.Create(addr, handlers, websupport.Options{}), scheduler
+	return websupport.Create(addr, handlers, websupport.Options{
+		HealthChecks: []healthsupport.HealthCheck{
+			ServerHealthCheck{},
+			DatabaseHealthCheck{db},
+		},
+	}), scheduler
 }
 
 func newApp(addr string) (*http.Server, net.Listener, *workflowsupport.WorkScheduler) {

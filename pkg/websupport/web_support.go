@@ -12,6 +12,7 @@ import (
 
 type Options struct {
 	ResourceDirectory string
+	HealthChecks      []healthsupport.HealthCheck
 }
 
 type Path struct {
@@ -32,10 +33,18 @@ func Paths(router *mux.Router) []Path {
 
 func Create(addr string, handlers func(x *mux.Router), options Options) *http.Server {
 	resourcesDirectory = options.ResourceDirectory
+	checks := options.HealthChecks
+	if checks == nil || len(checks) == 0 {
+		checks = append(checks, &healthsupport.NoopCheck{})
+	}
 
 	router := mux.NewRouter()
 	router.Use(metricssupport.MetricsMiddleware)
-	router.HandleFunc("/health", healthsupport.HealthHandlerFunction).Methods("GET")
+	router.HandleFunc("/health",
+		func(w http.ResponseWriter, r *http.Request) {
+			healthsupport.HealthHandlerFunctionWithChecks(w, r, checks)
+		},
+	).Methods("GET")
 	router.Path("/metrics").Handler(metricssupport.MetricsHandler())
 	router.StrictSlash(true)
 	handlers(router)
