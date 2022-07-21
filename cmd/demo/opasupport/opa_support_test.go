@@ -15,6 +15,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -95,6 +96,42 @@ func TestMiddleware(t *testing.T) {
 	assert.Equal(t, "http:POST", actualOpaQuery.Input["method"])
 
 	websupport.Stop(server)
+}
+
+func TestMiddlewareOpaQueryMethod(t *testing.T) {
+	mockClient := new(MockClient)
+	mockClient.response = []byte("{\"result\":true}")
+	support := opasupport.NewOpaSupport(mockClient, "aUrl", unauthorized)
+
+	handler := support.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// no-op
+	}))
+	rw := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "scheme://foo.com/bar", nil)
+	handler.ServeHTTP(rw, req)
+
+	var actualOpaQuery opasupport.OpaQuery
+	err := json.Unmarshal(mockClient.requestBody, &actualOpaQuery)
+	assert.NoError(t, err)
+	assert.Equal(t, "scheme:POST", actualOpaQuery.Input["method"])
+}
+
+func TestMiddlewareOpaQueryMethodMissingScheme(t *testing.T) {
+	mockClient := new(MockClient)
+	mockClient.response = []byte("{\"result\":true}")
+	support := opasupport.NewOpaSupport(mockClient, "aUrl", unauthorized)
+
+	handler := support.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// no-op
+	}))
+	rw := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/foo/bar", nil)
+	handler.ServeHTTP(rw, req)
+
+	var actualOpaQuery opasupport.OpaQuery
+	err := json.Unmarshal(mockClient.requestBody, &actualOpaQuery)
+	assert.NoError(t, err)
+	assert.Equal(t, "http:POST", actualOpaQuery.Input["method"])
 }
 
 func TestMiddlewareNotAllowed(t *testing.T) {

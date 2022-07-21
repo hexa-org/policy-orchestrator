@@ -62,8 +62,12 @@ func (o *OpaSupport) Middleware(next http.Handler) http.Handler {
 				return
 			}
 		}
+		scheme := "http"
+		if len(r.URL.Scheme) != 0 {
+			scheme = r.URL.Scheme
+		}
 		input := OpaQuery{map[string]interface{}{
-			"method":    "http:" + r.Method,
+			"method":    scheme + ":" + r.Method,
 			"path":      strings.Split(r.RequestURI, "?")[0],
 			"principal": "sales@hexaindustries.io",
 		}}
