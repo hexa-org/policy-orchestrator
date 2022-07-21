@@ -1,6 +1,6 @@
 module github.com/hexa-org/policy-orchestrator
 
-go 1.17
+go 1.18
 
 // +heroku goVersion go1.17
 
