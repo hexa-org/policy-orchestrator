@@ -16,11 +16,11 @@ func TestOpaDecisionProvider_BuildInput(t *testing.T) {
 		Principal: "sales@hexaindustries.io",
 	}
 
-	req, _ := http.NewRequest("GET", "http://aDomain.com/noop", nil)
+	req, _ := http.NewRequest("POST", "https://aDomain.com/noop", nil)
 	req.RequestURI = "/noop"
 	query, _ := provider.BuildInput(req)
 	casted := query.(decisionsupportproviders.OpaQuery).Input
-	assert.Equal(t, "http:GET:/noop", casted["method"])
+	assert.Equal(t, "http:POST:/noop", casted["method"])
 	assert.Equal(t, "sales@hexaindustries.io", casted["principal"])
 }
 

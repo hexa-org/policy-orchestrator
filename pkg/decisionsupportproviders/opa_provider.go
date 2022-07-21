@@ -3,6 +3,7 @@ package decisionsupportproviders
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -19,8 +20,13 @@ type OpaQuery struct {
 }
 
 func (o OpaDecisionProvider) BuildInput(r *http.Request) (any interface{}, err error) {
+	method := fmt.Sprintf(
+		"http:%s:%s",
+		r.Method,
+		strings.Split(r.RequestURI, "?")[0],
+	)
 	return OpaQuery{map[string]interface{}{
-		"method":    "http:GET:" + strings.Split(r.RequestURI, "?")[0],
+		"method":    method,
 		"principal": o.Principal,
 	}}, nil
 }

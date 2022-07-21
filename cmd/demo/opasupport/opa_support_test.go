@@ -2,6 +2,7 @@ package opasupport_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -11,7 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -20,13 +20,16 @@ import (
 
 type MockClient struct {
 	mock.Mock
-	response []byte
-	err      error
+	response    []byte
+	err         error
+	requestBody []byte
 }
 
-func (m *MockClient) Do(_ *http.Request) (*http.Response, error) {
-	r := ioutil.NopCloser(bytes.NewReader(m.response))
-	return &http.Response{StatusCode: 200, Body: r}, m.err
+func (m *MockClient) Do(r *http.Request) (*http.Response, error) {
+	reqBody, _ := io.ReadAll(r.Body)
+	m.requestBody = reqBody
+	b := io.NopCloser(bytes.NewReader(m.response))
+	return &http.Response{StatusCode: 200, Body: b}, m.err
 }
 
 func unauthorized(w http.ResponseWriter, _ *http.Request) {
@@ -78,13 +81,18 @@ func TestMiddleware(t *testing.T) {
 	mockClient.response = []byte("{\"result\":true}")
 	server := setupWithMockClient(mockClient)
 
-	resp, err := http.Get(fmt.Sprintf("http://%s/", server.Addr))
+	resp, err := http.Post(fmt.Sprintf("http://%s/", server.Addr), "", nil)
 	if err != nil {
 		log.Fatalln(err)
 	}
+	defer resp.Body.Close()
 	body, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, "opa!", string(body))
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	var actualOpaQuery opasupport.OpaQuery
+	err = json.Unmarshal(mockClient.requestBody, &actualOpaQuery)
+	assert.NoError(t, err)
+	assert.Equal(t, "http:POST", actualOpaQuery.Input["method"])
 
 	websupport.Stop(server)
 }
