@@ -1,6 +1,7 @@
 # Development 
 
-Clone or download the codebase from GitHub to your local machine and install the following prerequisites.
+Clone or download this codebase from GitHub to your local machine and install the
+following prerequisites.
 
 * [Go 1.17](https://go.dev)
 * [Pack](https://buildpacks.io)
@@ -9,22 +10,9 @@ Clone or download the codebase from GitHub to your local machine and install the
 * [postgresql](https://www.postgresql.org/)
 * [golang-migrate](https://github.com/golang-migrate/migrate)
 
-```bash
-cd ~/workspace
-git clone git@github.com:hexa-org/policy-orchestrator.git
-```
-
-Install via [Homebrew Formulae](https://formulae.brew.sh)
-
-```bash
-brew install go buildpacks/tap/pack opa docker docker-compose postgresql golang-migrate
-```
-
 ## Run the migration
 
-Install postgresql via homebrew.
-
-Create a test database.
+Create a test database in Postgresql.
 
 ```bash
 create database orchestrator_test;
