@@ -22,7 +22,7 @@ The Hexa project contains three applications
 
 Clone or download the codebase from GitHub to your local machine and install the following prerequisites.
 
-* [Go 1.17](https://go.dev)
+* [Go 1.18](https://go.dev)
 * [Pack](https://buildpacks.io)
 * [Docker Desktop](https://www.docker.com/products/docker-desktop)
 
