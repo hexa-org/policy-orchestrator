@@ -13,183 +13,201 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 	"net"
 	"net/http"
 	"testing"
 )
 
-type ApplicationsHandlerSuite struct {
-	suite.Suite
+type applicationsHandlerData struct {
 	db                *sql.DB
 	server            *http.Server
-	scheduler         *workflowsupport.WorkScheduler
 	key               string
 	providers         map[string]orchestrator.Provider
 	applicationTestId string
 }
 
-func TestApplicationsHandler(t *testing.T) {
-	suite.Run(t, &ApplicationsHandlerSuite{})
-}
-
-func (s *ApplicationsHandlerSuite) SetupTest() {
-	s.db, _ = databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
-	_, _ = s.db.Exec(`
+func (data *applicationsHandlerData) SetUp() {
+	data.db, _ = databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
+	_, _ = data.db.Exec(`
 delete from applications;
 delete from integrations;
 insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'aName', 'google_cloud', 'aKey');
 insert into applications (id, integration_id, object_id, name, description) values ('6409776a-367a-483a-a194-5ccf9c4ff210', '50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'anObjectId', 'aName', 'aDescription');
 `)
-	s.applicationTestId = "6409776a-367a-483a-a194-5ccf9c4ff210"
+	data.applicationTestId = "6409776a-367a-483a-a194-5ccf9c4ff210"
 
 	listener, _ := net.Listen("tcp", "localhost:0")
 	addr := listener.Addr().String()
 
 	hash := sha256.Sum256([]byte("aKey"))
-	s.key = hex.EncodeToString(hash[:])
+	data.key = hex.EncodeToString(hash[:])
 
-	s.providers = make(map[string]orchestrator.Provider)
-	s.providers["google_cloud"] = &orchestrator_test.NoopProvider{}
-
-	handlers, scheduler := orchestrator.LoadHandlers(s.db, hawksupport.NewCredentialStore(s.key), addr, s.providers)
-	s.scheduler = scheduler
-	s.server = websupport.Create(addr, handlers, websupport.Options{})
-
-	go websupport.Start(s.server, listener)
-	healthsupport.WaitForHealthy(s.server)
+	data.providers = make(map[string]orchestrator.Provider)
+	data.providers["google_cloud"] = &orchestrator_test.NoopProvider{}
+	handlers, _ := orchestrator.LoadHandlers(data.db, hawksupport.NewCredentialStore(data.key), addr, data.providers)
+	data.server = websupport.Create(addr, handlers, websupport.Options{})
+	go websupport.Start(data.server, listener)
+	healthsupport.WaitForHealthy(data.server)
 }
 
-func (s *ApplicationsHandlerSuite) TearDownTest() {
-	_ = s.db.Close()
-	websupport.Stop(s.server)
+func (data *applicationsHandlerData) TearDown() {
+	_ = data.db.Close()
+	websupport.Stop(data.server)
 }
 
-func (s *ApplicationsHandlerSuite) TestList() {
-	url := fmt.Sprintf("http://%s/applications", s.server.Addr)
+func TestListApps(t *testing.T) {
+	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
+		url := fmt.Sprintf("http://%s/applications", data.server.Addr)
 
-	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, url)
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+		resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", data.key, url)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	var apps orchestrator.Applications
-	_ = json.NewDecoder(resp.Body).Decode(&apps)
-	assert.Equal(s.T(), 1, len(apps.Applications))
+		var apps orchestrator.Applications
+		_ = json.NewDecoder(resp.Body).Decode(&apps)
+		assert.Equal(t, 1, len(apps.Applications))
 
-	application := apps.Applications[0]
-	assert.Equal(s.T(), "anObjectId", application.ObjectId)
-	assert.Equal(s.T(), "aName", application.Name)
-	assert.Equal(s.T(), "google_cloud", application.ProviderName)
-	assert.Equal(s.T(), "aDescription", application.Description)
+		application := apps.Applications[0]
+		assert.Equal(t, "anObjectId", application.ObjectId)
+		assert.Equal(t, "aName", application.Name)
+		assert.Equal(t, "google_cloud", application.ProviderName)
+		assert.Equal(t, "aDescription", application.Description)
+	})
 }
 
-func (s *ApplicationsHandlerSuite) TestList_withErroneousDatabase() {
-	_ = s.db.Close()
-	url := fmt.Sprintf("http://%s/applications", s.server.Addr)
+func TestListApps_withErroneousDatabase(t *testing.T) {
+	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
+		_ = data.db.Close()
 
-	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, url)
-	assert.Equal(s.T(), http.StatusInternalServerError, resp.StatusCode)
+		url := fmt.Sprintf("http://%s/applications", data.server.Addr)
+
+		resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", data.key, url)
+		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+	})
 }
 
-func (s *ApplicationsHandlerSuite) TestShow() {
-	url := fmt.Sprintf("http://%s/applications/%s", s.server.Addr, s.applicationTestId)
+func TestShowApps(t *testing.T) {
+	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
+		url := fmt.Sprintf("http://%s/applications/%s", data.server.Addr, data.applicationTestId)
 
-	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, url)
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+		resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", data.key, url)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	var app orchestrator.Application
-	_ = json.NewDecoder(resp.Body).Decode(&app)
-	assert.Equal(s.T(), "anObjectId", app.ObjectId)
-	assert.Equal(s.T(), "aName", app.Name)
-	assert.Equal(s.T(), "aDescription", app.Description)
+		var app orchestrator.Application
+		_ = json.NewDecoder(resp.Body).Decode(&app)
+		assert.Equal(t, "anObjectId", app.ObjectId)
+		assert.Equal(t, "aName", app.Name)
+		assert.Equal(t, "aDescription", app.Description)
+	})
 }
 
-func (s *ApplicationsHandlerSuite) TestShow_withUnknownID() {
-	url := fmt.Sprintf("http://%s/applications/oops", s.server.Addr)
+func TestShowApps_withUnknownID(t *testing.T) {
+	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
+		url := fmt.Sprintf("http://%s/applications/oops", data.server.Addr)
 
-	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, url)
-	assert.Equal(s.T(), http.StatusInternalServerError, resp.StatusCode)
+		resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", data.key, url)
+		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+	})
 }
 
-func (s *ApplicationsHandlerSuite) TestGetPolicies() {
-	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)
+func TestGetPolicies(t *testing.T) {
+	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
+		url := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
 
-	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, url)
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+		resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", data.key, url)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	var policies orchestrator.Policies
-	_ = json.NewDecoder(resp.Body).Decode(&policies)
-	assert.Equal(s.T(), 2, len(policies.Policies))
+		var policies orchestrator.Policies
+		_ = json.NewDecoder(resp.Body).Decode(&policies)
+		assert.Equal(t, 2, len(policies.Policies))
 
-	policy := policies.Policies[0]
-	assert.Equal(s.T(), "anAction", policy.Actions[0].ActionUri)
-	assert.Equal(s.T(), "aVersion", policy.Meta.Version)
-	assert.Equal(s.T(), []string{"aUser"}, policy.Subject.Members)
-	assert.Equal(s.T(), "anId", policy.Object.ResourceID)
+		policy := policies.Policies[0]
+		assert.Equal(t, "anAction", policy.Actions[0].ActionUri)
+		assert.Equal(t, "aVersion", policy.Meta.Version)
+		assert.Equal(t, []string{"aUser"}, policy.Subject.Members)
+		assert.Equal(t, "anId", policy.Object.ResourceID)
+	})
 }
 
-func (s *ApplicationsHandlerSuite) TestGetPolicies_withDatabaseError() {
-	_ = s.db.Close()
-	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)
-	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, url)
-	assert.Equal(s.T(), http.StatusInternalServerError, resp.StatusCode)
+func TestGetPolicies_withDatabaseError(t *testing.T) {
+	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
+		_ = data.db.Close()
+
+		url := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
+
+		resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", data.key, url)
+		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+	})
 }
 
-func (s *ApplicationsHandlerSuite) TestGetPolicies_withRequestFails() {
-	discovery := orchestrator_test.NoopProvider{}
-	discovery.Err = errors.New("oops")
-	s.providers["google_cloud"] = &discovery
+func TestGetPolicies_withFailedRequest(t *testing.T) {
+	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
+		discovery := orchestrator_test.NoopProvider{}
+		discovery.Err = errors.New("oops")
+		data.providers["google_cloud"] = &discovery
 
-	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)
+		url := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
 
-	resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", s.key, url)
-	assert.Equal(s.T(), http.StatusInternalServerError, resp.StatusCode)
+		resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", data.key, url)
+		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+	})
 }
 
-func (s *ApplicationsHandlerSuite) TestSetPolicies() {
-	var buf bytes.Buffer
-	policy := orchestrator.Policy{
-		Meta:    orchestrator.Meta{Version: "v0.5"},
-		Actions: []orchestrator.Action{{"anAction"}},
-		Subject: orchestrator.Subject{Members: []string{"anEmail", "anotherEmail"}},
-		Object: orchestrator.Object{
-			ResourceID: "aResourceId",
-		},
-	}
-	_ = json.NewEncoder(&buf).Encode(orchestrator.Policies{Policies: []orchestrator.Policy{policy}})
+func TestSetPolicies(t *testing.T) {
+	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
+		var buf bytes.Buffer
+		policy := orchestrator.Policy{
+			Meta:    orchestrator.Meta{Version: "v0.5"},
+			Actions: []orchestrator.Action{{"anAction"}},
+			Subject: orchestrator.Subject{Members: []string{"anEmail", "anotherEmail"}},
+			Object: orchestrator.Object{
+				ResourceID: "aResourceId",
+			},
+		}
+		_ = json.NewEncoder(&buf).Encode(orchestrator.Policies{Policies: []orchestrator.Policy{policy}})
 
-	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)
-	resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", s.key, url, bytes.NewReader(buf.Bytes()))
-	assert.Equal(s.T(), http.StatusCreated, resp.StatusCode)
+		url := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
+
+		resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", data.key, url, bytes.NewReader(buf.Bytes()))
+		assert.Equal(t, http.StatusCreated, resp.StatusCode)
+	})
 }
 
-func (s *ApplicationsHandlerSuite) TestSetPolicies_withDatabaseError() {
-	_ = s.db.Close()
-	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)
-	resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", s.key, url, bytes.NewReader([]byte("")))
-	assert.Equal(s.T(), http.StatusInternalServerError, resp.StatusCode)
+func TestSetPolicies_withDatabaseError(t *testing.T) {
+	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
+		_ = data.db.Close()
+
+		url := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
+
+		resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", data.key, url, bytes.NewReader([]byte("")))
+		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+	})
 }
 
-func (s *ApplicationsHandlerSuite) TestSetPolicies_withErroneousProvider() {
-	noopProvider := orchestrator_test.NoopProvider{}
-	noopProvider.Err = errors.New("oops")
-	s.providers["google_cloud"] = &noopProvider
+func TestSetPolicies_withErroneousProvider(t *testing.T) {
+	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
+		noopProvider := orchestrator_test.NoopProvider{}
+		noopProvider.Err = errors.New("oops")
+		data.providers["google_cloud"] = &noopProvider
 
-	var buf bytes.Buffer
-	policy := orchestrator.Policy{Meta: orchestrator.Meta{Version: "v0.5"}, Actions: []orchestrator.Action{{"anAction"}}, Subject: orchestrator.Subject{Members: []string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{ResourceID: "aResourceId"}}
-	_ = json.NewEncoder(&buf).Encode(policy)
+		var buf bytes.Buffer
+		policy := orchestrator.Policy{Meta: orchestrator.Meta{Version: "v0.5"}, Actions: []orchestrator.Action{{"anAction"}}, Subject: orchestrator.Subject{Members: []string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{ResourceID: "aResourceId"}}
+		_ = json.NewEncoder(&buf).Encode(policy)
 
-	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, s.applicationTestId)
+		url := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
 
-	resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", s.key, url, bytes.NewReader(buf.Bytes()))
-	assert.Equal(s.T(), http.StatusInternalServerError, resp.StatusCode)
+		resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", data.key, url, bytes.NewReader(buf.Bytes()))
+		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+	})
 }
 
-func (s *ApplicationsHandlerSuite) TestSetPolicies_withMissingJson() {
-	url := fmt.Sprintf("http://%s/applications/%s/policies", s.server.Addr, "anId")
+func TestSetPolicies_withMissingJson(t *testing.T) {
+	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
+		url := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, "anId")
 
-	resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", s.key, url, nil)
-	assert.Equal(s.T(), http.StatusInternalServerError, resp.StatusCode)
+		resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", data.key, url, nil)
+		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+	})
 }
