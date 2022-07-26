@@ -34,7 +34,8 @@ func (p StatusHandler) StatusHandler(w http.ResponseWriter, _ *http.Request) {
 
 	var checks []Check
 	if err := json.NewDecoder(strings.NewReader(health)).Decode(&checks); err != nil {
-		log.Printf("unable to parse found json: %s\n", err.Error())
+		log.Printf("unable to parse found json for status check: %s\n", err.Error())
+		checks = append(checks, Check{"Unparsable", "false"})
 	}
 	status := Status{url, checks}
 

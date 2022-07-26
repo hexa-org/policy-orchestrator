@@ -11,6 +11,7 @@ type MockClient struct {
 	Provider string
 	Key      []byte
 	Errs     map[string]error
+	Status   string
 
 	DesiredApplication admin.Application
 	DesiredPolicies    []admin.Policy
@@ -57,5 +58,5 @@ func (m *MockClient) SetPolicies(url string, _ string) error {
 }
 
 func (m *MockClient) Health(_ string) (string, error) {
-	return "[{\"name\":\"noop\",\"pass\":\"true\"}]", nil
+	return m.Status, nil
 }
