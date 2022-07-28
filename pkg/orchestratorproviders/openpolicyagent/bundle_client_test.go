@@ -62,7 +62,7 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
     },
     {
       "meta": {"version": "0.5"},
-      "actions": [{"action_uri": "http:GET:/accounting"}],
+      "actions": [{"action_uri": "http:GET:/accounting"}, {"action_uri": "http:POST:/accounting"}],
       "subject": {
         "members": [
           "accounting@hexaindustries.io"

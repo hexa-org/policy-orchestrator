@@ -20,9 +20,13 @@ type OpaQuery struct {
 }
 
 func (o OpaDecisionProvider) BuildInput(r *http.Request) (any interface{}, err error) {
+	scheme := "http"
+	if len(r.URL.Scheme) != 0 {
+		scheme = r.URL.Scheme
+	}
 	method := fmt.Sprintf(
 		"%s:%s:%s",
-		r.URL.Scheme,
+		scheme,
 		r.Method,
 		strings.Split(r.RequestURI, "?")[0],
 	)
