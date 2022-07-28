@@ -33,17 +33,22 @@ func TestWithTransaction(t *testing.T) {
 		if first != nil {
 			return nil, first
 		}
+		if id == "" {
+			return nil, errors.New("unable to create integration record")
+		}
 
 		var record Record
-		row := db.QueryRow("select id, name from integrations where id=$1", id)
+		row := db.QueryRow("select id, name from integrations where id=$1 for update", id)
 		second := row.Scan(&record.ID, &record.Name)
 		if second != nil {
 			return nil, second
 		}
-
+		if record.ID == "" {
+			return nil, errors.New("unable to find integration record")
+		}
 		var appId string
 		third := db.QueryRow(`insert into applications (integration_id, object_id, name, description) values ($1, $2, $3, $4) returning id`,
-			record.ID, "anObjectId", "aName", "aDescription").Scan(&id)
+			record.ID, "anObjectId", "aName", "aDescription").Scan(&appId)
 		if third != nil {
 			return nil, third
 		}

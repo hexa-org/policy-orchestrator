@@ -49,6 +49,11 @@ func (gateway ApplicationsDataGateway) Find() ([]ApplicationRecord, error) {
 	return records, nil
 }
 
+func (gateway ApplicationsDataGateway) FindByIntegrationId(integrationId string) (ApplicationRecord, error) {
+	s := "select id, integration_id, object_id, name, description from applications where integration_id=$1"
+	return gateway.queryRow(s, integrationId)
+}
+
 func (gateway ApplicationsDataGateway) FindByObjectId(objectId string) (ApplicationRecord, error) {
 	s := "select id, integration_id, object_id, name, description from applications where object_id=$1"
 	return gateway.queryRow(s, objectId)

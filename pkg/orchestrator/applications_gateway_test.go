@@ -43,8 +43,7 @@ func (suite *ApplicationGatewaySuite) TestCreate() {
 
 func (suite *ApplicationGatewaySuite) TestFind() {
 	_, _ = suite.gateway.CreateIfAbsent(suite.integrationTestId, "anObjectId", "aName", "aDescription")
-	records, _ := suite.gateway.Find()
-	record := records[0]
+	record, _ := suite.gateway.FindByIntegrationId(suite.integrationTestId)
 	assert.Equal(suite.T(), suite.integrationTestId, record.IntegrationId)
 	assert.Equal(suite.T(), "anObjectId", record.ObjectId)
 	assert.Equal(suite.T(), "aName", record.Name)
