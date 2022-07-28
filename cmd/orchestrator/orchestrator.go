@@ -71,6 +71,12 @@ func newApp(addr string) (*http.Server, net.Listener, *workflowsupport.WorkSched
 	}
 	log.Printf("Found server address %v", addr)
 
+	if found := os.Getenv("HOST"); found != "" {
+		_, port, _ := net.SplitHostPort(addr)
+		addr = fmt.Sprintf("%v:%v", found, port)
+	}
+	log.Printf("Found server host %v", addr)
+
 	dbUrl := os.Getenv("POSTGRESQL_URL")
 	key := os.Getenv("ORCHESTRATOR_KEY")
 	hostPort := os.Getenv("ORCHESTRATOR_HOSTPORT")

@@ -18,6 +18,7 @@ import (
 
 func TestNewApp(t *testing.T) {
 	_ = os.Setenv("PORT", "0")
+	_ = os.Setenv("HOST", "localhost")
 	newApp("localhost:0")
 }
 

@@ -103,6 +103,12 @@ func newApp(addr string) (*http.Server, net.Listener) {
 	}
 	log.Printf("Found server address %v", addr)
 
+	if found := os.Getenv("HOST"); found != "" {
+		_, port, _ := net.SplitHostPort(addr)
+		addr = fmt.Sprintf("%v:%v", found, port)
+	}
+	log.Printf("Found server host %v", addr)
+
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../../../cmd/demo/resources")
 	listener, _ := net.Listen("tcp", addr)

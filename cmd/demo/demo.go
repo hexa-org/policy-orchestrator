@@ -96,7 +96,13 @@ func newApp(addr string) (*http.Server, net.Listener) {
 		host, _, _ := net.SplitHostPort(addr)
 		addr = fmt.Sprintf("%v:%v", host, found)
 	}
-	log.Printf("Found server address %v", addr)
+	log.Printf("Found server port %v", addr)
+
+	if found := os.Getenv("HOST"); found != "" {
+		_, port, _ := net.SplitHostPort(addr)
+		addr = fmt.Sprintf("%v:%v", found, port)
+	}
+	log.Printf("Found server host %v", addr)
 
 	opaUrl := "http://0.0.0.0:8887/v1/data/authz/allow"
 	if found := os.Getenv("OPA_SERVER_URL"); found != "" {

@@ -26,9 +26,10 @@ func TestDemoFlow(t *testing.T) {
 	db, _ := databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
 	deleteAll := "delete from integrations; delete from applications;"
 
-	demo := makeCmd("/cmd/demo/demo.go", []string{"PORT=8886", "OPA_SERVER_URL: http://localhost:8887/v1/data/authz/allow"})
-	demoConfig := makeCmd("/cmd/democonfig/democonfig.go", []string{"PORT=8889"})
+	demo := makeCmd("/cmd/demo/demo.go", []string{"HOST=localhost", "PORT=8886", "OPA_SERVER_URL: http://localhost:8887/v1/data/authz/allow"})
+	demoConfig := makeCmd("/cmd/democonfig/democonfig.go", []string{"HOST=localhost", "PORT=8889"})
 	orchestrator := makeCmd("/cmd/orchestrator/orchestrator.go", []string{
+		"HOST=localhost",
 		"PORT=8885",
 		"ORCHESTRATOR_HOSTPORT=localhost:8885",
 		"ORCHESTRATOR_KEY=0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb",
