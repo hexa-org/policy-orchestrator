@@ -1,5 +1,7 @@
 package workflowsupport
 
+// Inspired by code from the Conductor project available at https://github.com/Netflix/conductor
+
 import (
 	"log"
 	"time"
