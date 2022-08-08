@@ -14,6 +14,10 @@ metadata:
   name: hexa-admin-builder
   namespace: hexa-admin
 spec:
+  build:
+    env:
+    - name: GOFLAGS
+      value: -buildvcs=false
   serviceAccount: hexa-admin-service-account
   tag: registry.${REGISTRY_DOMAIN}/kpack/builder
   stack:

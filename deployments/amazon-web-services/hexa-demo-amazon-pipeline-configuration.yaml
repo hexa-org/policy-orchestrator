@@ -32,6 +32,10 @@ metadata:
   name: hexa-demo-amazon-image
   namespace: hexa-demo-amazon
 spec:
+  build:
+    env:
+    - name: GOFLAGS
+      value: -buildvcs=false
   tag: registry.${REGISTRY_DOMAIN}/kpack/hexa-demo-amazon
   serviceAccount: hexa-demo-amazon-service-account
   builder:
