@@ -20,8 +20,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          artifacts: "release.tar.gz,sbom.spdx"
-          name: ${{ github.ref }}
+          artifacts: "sbom.spdx"
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
           prerelease: false
