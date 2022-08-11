@@ -1,0 +1,27 @@
+name: release
+on:
+  push:
+    tags:
+      - 'v**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Anchore/Syft SBOM
+        uses: anchore/syft-action@v0.11.0
+        with:
+          path: .
+          artifact-name: sbom.spdx
+      - name: Create Release
+        id: create_release
+        uses: ncipollo/release-action@v1.10.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          artifacts: "release.tar.gz,sbom.spdx"
+          name: ${{ github.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
+          prerelease: false
