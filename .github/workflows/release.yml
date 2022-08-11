@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Anchore/Syft SBOM
-        uses: anchore/syft-action@v0.11.0
+        uses: anchore/sbom-action@v0.11.0
         with:
           path: .
           artifact-name: sbom.spdx
