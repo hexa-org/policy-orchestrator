@@ -33,7 +33,7 @@ func TestApp(t *testing.T) {
 	scheduler.Stop()
 }
 
-func TestAppWithTransportLayerSecurity(t *testing.T) {
+func _TestAppWithTransportLayerSecurity(t *testing.T) {
 	listener, _ := net.Listen("tcp", "localhost:0")
 	app, scheduler := App("aKey", listener.Addr().String(), listener.Addr().String(), "postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
 	_, file, _, _ := runtime.Caller(0)
@@ -71,7 +71,7 @@ func TestConfigWithPort(t *testing.T) {
 	newApp("localhost:0")
 }
 
-func TestConfigWithTransportLayerSecuritye(t *testing.T) {
+func _TestConfigWithTransportLayerSecurity(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	_ = os.Setenv("SERVER_CERT", filepath.Join(file, "../test/server-cert.pem"))
 	_ = os.Setenv("SERVER_KEY", filepath.Join(file, "../test/server-key.pem"))
