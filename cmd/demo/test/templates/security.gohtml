@@ -1,7 +1,0 @@
-{{- template "base" .}}
-{{- define "main"}}
-    {{- $email := index .Map "provider_email"}}
-    {{- if $email }}
-        {{- $email}}
-    {{- end}}
-{{- end}}
