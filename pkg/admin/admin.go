@@ -1,9 +1,14 @@
 package admin
 
 import (
-	"github.com/gorilla/mux"
+	"embed"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
+
+//go:embed resources
+var resources embed.FS
 
 type Client interface {
 	Health(url string) (string, error)

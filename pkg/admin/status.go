@@ -3,10 +3,11 @@ package admin
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 )
 
 type Status struct {
@@ -40,5 +41,5 @@ func (p StatusHandler) StatusHandler(w http.ResponseWriter, _ *http.Request) {
 	status := Status{url, checks}
 
 	model := websupport.Model{Map: map[string]interface{}{"resource": "status", "status": status}}
-	_ = websupport.ModelAndView(w, "status", model)
+	_ = websupport.ModelAndView(w, &resources, "status", model)
 }

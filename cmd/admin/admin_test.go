@@ -2,22 +2,19 @@ package main
 
 import (
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
-	"github.com/stretchr/testify/assert"
 	"net"
 	"net/http"
 	"os"
-	"path/filepath"
-	"runtime"
 	"testing"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestApp(t *testing.T) {
-	_, file, _, _ := runtime.Caller(0)
-	resourcesDirectory := filepath.Join(file, "../../../pkg/admin/resources")
 	listener, _ := net.Listen("tcp", "localhost:0")
-	app := App(resourcesDirectory, listener.Addr().String(), "http://localhost:8885/", "aKey")
+	app := App(listener.Addr().String(), "http://localhost:8885/", "aKey")
 	go func() {
 		websupport.Start(app, listener)
 	}()
