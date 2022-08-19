@@ -3,9 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"io/fs"
 	"log"
 	"math/rand"
@@ -17,11 +14,15 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 )
 
-func App(addr string, resourcesDirectory string) *http.Server {
+func App(addr string) *http.Server {
 	basic := NewBasicApp()
-	return websupport.Create(addr, basic.loadHandlers(), websupport.Options{ResourceDirectory: resourcesDirectory})
+	return websupport.Create(addr, basic.loadHandlers(), websupport.Options{})
 }
 
 type BasicApp struct {
@@ -109,10 +110,8 @@ func newApp(addr string) (*http.Server, net.Listener) {
 	}
 	log.Printf("Found server host %v", addr)
 
-	_, file, _, _ := runtime.Caller(0)
-	resourcesDirectory := filepath.Join(file, "../../../cmd/demo/resources")
 	listener, _ := net.Listen("tcp", addr)
-	return App(listener.Addr().String(), resourcesDirectory), listener
+	return App(listener.Addr().String()), listener
 }
 
 func main() {
