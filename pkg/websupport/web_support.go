@@ -2,17 +2,17 @@ package websupport
 
 import (
 	"context"
-	"github.com/gorilla/mux"
-	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/metricssupport"
 	"log"
 	"net"
 	"net/http"
+
+	"github.com/gorilla/mux"
+	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/metricssupport"
 )
 
 type Options struct {
-	ResourceDirectory string
-	HealthChecks      []healthsupport.HealthCheck
+	HealthChecks []healthsupport.HealthCheck
 }
 
 type Path struct {
@@ -32,7 +32,6 @@ func Paths(router *mux.Router) []Path {
 }
 
 func Create(addr string, handlers func(x *mux.Router), options Options) *http.Server {
-	resourcesDirectory = options.ResourceDirectory
 	checks := options.HealthChecks
 	if checks == nil || len(checks) == 0 {
 		checks = append(checks, &healthsupport.NoopCheck{})

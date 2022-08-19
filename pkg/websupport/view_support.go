@@ -3,6 +3,7 @@ package websupport
 import (
 	"fmt"
 	"html/template"
+	"io/fs"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -12,12 +13,10 @@ type Model struct {
 	Map map[string]interface{}
 }
 
-var resourcesDirectory string
-
-func ModelAndView(w http.ResponseWriter, view string, data Model) error {
+func ModelAndView(w http.ResponseWriter, resources fs.FS, view string, data Model) error {
 	views := []string{
-		filepath.Join(resourcesDirectory, fmt.Sprintf("./templates/%v.gohtml", view)),
-		filepath.Join(resourcesDirectory, "./templates/template.gohtml"),
+		filepath.Join(fmt.Sprintf("resources/templates/%v.gohtml", view)),
+		filepath.Join("resources/templates/template.gohtml"),
 	}
 
 	base := filepath.Base(views[0]) // to match template names in ParseFiles
@@ -32,5 +31,5 @@ func ModelAndView(w http.ResponseWriter, view string, data Model) error {
 		"startsWith": func(s string, prefix string) bool {
 			return strings.HasPrefix(s, prefix)
 		},
-	}).ParseFiles(views...)).Execute(w, data)
+	}).ParseFS(resources, views...)).Execute(w, data)
 }
