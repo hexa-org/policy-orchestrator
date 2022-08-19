@@ -2,12 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/gorilla/sessions"
-	"github.com/hexa-org/policy-orchestrator/cmd/demo/amazonsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"io"
 	"io/ioutil"
 	"net"
@@ -17,6 +11,13 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/gorilla/sessions"
+	"github.com/hexa-org/policy-orchestrator/cmd/demo/amazonsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 type MockClient struct {

@@ -1,7 +1,15 @@
 package main
 
 import (
+	"embed"
 	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"path/filepath"
+	"runtime"
+
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/hexa-org/policy-orchestrator/cmd/demo/amazonsupport"
@@ -10,13 +18,13 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupportproviders"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
-	"log"
-	"net"
-	"net/http"
-	"os"
-	"path/filepath"
-	"runtime"
 )
+
+//go:embed resources/static
+var staticResources embed.FS
+
+//go:embed resources
+var resources embed.FS
 
 type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
@@ -29,7 +37,7 @@ func App(session *sessions.CookieStore, amazonConfig amazonsupport.AmazonCognito
 	azureSupport := azuresupport.NewAzureSupport(session)
 	provider := decisionsupportproviders.OpaDecisionProvider{Client: client, Url: opaUrl, Principal: "sales@hexaindustries.io"}
 	opaSupport := decisionsupport.DecisionSupport{Provider: provider, Unauthorized: basic.unauthorized, Skip: []string{"/health", "/metrics", "/styles", "/images", "/bundle", "/favicon.ico"}}
-	server := websupport.Create(addr, basic.loadHandlers(), websupport.Options{ResourceDirectory: resourcesDirectory})
+	server := websupport.Create(addr, basic.loadHandlers(), websupport.Options{})
 	router := server.Handler.(*mux.Router)
 	router.Use(googleSupport.Middleware, amazonSupport.Middleware, azureSupport.Middleware, opaSupport.Middleware)
 	return server
@@ -45,23 +53,23 @@ func NewBasicApp(session *sessions.CookieStore, amazonConfig amazonsupport.Amazo
 }
 
 func (a *BasicApp) dashboard(writer http.ResponseWriter, req *http.Request) {
-	_ = websupport.ModelAndView(writer, "dashboard", a.principalAndLogout(req))
+	_ = websupport.ModelAndView(writer, &resources, "dashboard", a.principalAndLogout(req))
 }
 
 func (a *BasicApp) accounting(writer http.ResponseWriter, req *http.Request) {
-	_ = websupport.ModelAndView(writer, "accounting", a.principalAndLogout(req))
+	_ = websupport.ModelAndView(writer, &resources, "accounting", a.principalAndLogout(req))
 }
 
 func (a *BasicApp) sales(writer http.ResponseWriter, req *http.Request) {
-	_ = websupport.ModelAndView(writer, "sales", a.principalAndLogout(req))
+	_ = websupport.ModelAndView(writer, &resources, "sales", a.principalAndLogout(req))
 }
 
 func (a *BasicApp) humanresources(writer http.ResponseWriter, req *http.Request) {
-	_ = websupport.ModelAndView(writer, "humanresources", a.principalAndLogout(req))
+	_ = websupport.ModelAndView(writer, &resources, "humanresources", a.principalAndLogout(req))
 }
 
 func (a *BasicApp) unauthorized(writer http.ResponseWriter, req *http.Request) {
-	_ = websupport.ModelAndView(writer, "unauthorized", a.principalAndLogout(req))
+	_ = websupport.ModelAndView(writer, &resources, "unauthorized", a.principalAndLogout(req))
 }
 
 func (a *BasicApp) loadHandlers() func(router *mux.Router) {
@@ -71,9 +79,18 @@ func (a *BasicApp) loadHandlers() func(router *mux.Router) {
 		router.HandleFunc("/accounting", a.accounting).Methods("GET")
 		router.HandleFunc("/humanresources", a.humanresources).Methods("GET")
 
-		fileServer := http.FileServer(http.Dir("cmd/demo/resources/static"))
-		router.PathPrefix("/").Handler(http.StripPrefix("/", fileServer))
+		fileServer := http.FileServer(http.FS(staticResources))
+		router.PathPrefix("/").Handler(addPrefix("resources/static", fileServer))
 	}
+}
+
+// addPrefix returns a handler that serves HTTP requests by adding the given
+// prefix to the request URL's Path and invoking the handler h.
+func addPrefix(prefix string, h http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		req.URL.Path = prefix + req.URL.Path
+		h.ServeHTTP(rw, req)
+	})
 }
 
 func (a *BasicApp) principalAndLogout(req *http.Request) websupport.Model {
