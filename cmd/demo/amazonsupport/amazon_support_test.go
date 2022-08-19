@@ -7,6 +7,12 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net"
+	"net/http"
+	"testing"
+
 	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -15,13 +21,6 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"io"
-	"io/ioutil"
-	"net"
-	"net/http"
-	"path/filepath"
-	"runtime"
-	"testing"
 )
 
 type MockClient struct {
@@ -50,16 +49,10 @@ func (m MockClaimsParser) ParseWithClaims(_ string, _ string, claims jwt.Claims)
 	return nil, nil
 }
 
-///
-
 func TestAmazonSupport(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.response = nil
 	mockParser := MockClaimsParser{}
-
-	_, file, _, _ := runtime.Caller(0)
-	resourcesDirectory := filepath.Join(file, "../../../demo/test")
-	options := websupport.Options{ResourceDirectory: resourcesDirectory}
 
 	var session = sessions.NewCookieStore([]byte("super_secret"))
 	listener, _ := net.Listen("tcp", "localhost:0")
@@ -69,7 +62,7 @@ func TestAmazonSupport(t *testing.T) {
 			principal := session.Values["principal"].([]string)
 			_, _ = w.Write([]byte(principal[0]))
 		})
-	}, options)
+	}, websupport.Options{})
 	router := server.Handler.(*mux.Router)
 	router.Use(amazonsupport.NewAmazonSupport(mockClient, amazonsupport.AmazonCognitoConfiguration{}, mockParser, session).Middleware)
 

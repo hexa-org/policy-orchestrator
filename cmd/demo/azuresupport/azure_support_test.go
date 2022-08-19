@@ -2,25 +2,20 @@ package azuresupport_test
 
 import (
 	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"testing"
+
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/hexa-org/policy-orchestrator/cmd/demo/azuresupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
-	"io"
-	"net"
-	"net/http"
-	"path/filepath"
-	"runtime"
-	"testing"
 )
 
 func TestAzureSecurityOptions(t *testing.T) {
-	_, file, _, _ := runtime.Caller(0)
-	resourcesDirectory := filepath.Join(file, "../../../demo/test")
-	options := websupport.Options{ResourceDirectory: resourcesDirectory}
-
 	var session = sessions.NewCookieStore([]byte("super_secret"))
 	listener, _ := net.Listen("tcp", "localhost:0")
 	server := websupport.Create(listener.Addr().String(), func(router *mux.Router) {
@@ -33,7 +28,7 @@ func TestAzureSecurityOptions(t *testing.T) {
 			bytes := []byte(principal[0])
 			_, _ = w.Write(bytes)
 		})
-	}, options)
+	}, websupport.Options{})
 	router := server.Handler.(*mux.Router)
 	router.Use(azuresupport.NewAzureSupport(session).Middleware)
 
