@@ -3,10 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
-	"github.com/stretchr/testify/assert"
 	"mime/multipart"
 	"net"
 	"net/http"
@@ -14,6 +10,11 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewApp(t *testing.T) {
@@ -23,10 +24,8 @@ func TestNewApp(t *testing.T) {
 }
 
 func setup() *http.Server {
-	_, file, _, _ := runtime.Caller(0)
-	resourcesDirectory := filepath.Join(file, "../resources")
 	listener, _ := net.Listen("tcp", "localhost:0")
-	app := App(listener.Addr().String(), resourcesDirectory)
+	app := App(listener.Addr().String())
 	go func() {
 		websupport.Start(app, listener)
 	}()
