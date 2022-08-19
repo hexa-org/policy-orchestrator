@@ -5,14 +5,14 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"testing"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"io/ioutil"
-	"net/http"
-
-	"testing"
 )
 
 type MockClient struct {
@@ -31,8 +31,6 @@ func (m *MockClient) Get(_ string) (resp *http.Response, err error) {
 	r := ioutil.NopCloser(bytes.NewReader(m.response))
 	return &http.Response{StatusCode: m.status, Body: r}, m.err
 }
-
-///
 
 func TestOrchestratorClient_Health(t *testing.T) {
 	mockClient := new(MockClient)

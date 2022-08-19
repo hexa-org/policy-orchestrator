@@ -3,8 +3,6 @@ package openpolicyagent_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupportproviders"
-	"github.com/stretchr/testify/assert"
 	"log"
 	"net/http"
 	"os"
@@ -13,6 +11,9 @@ import (
 	"runtime"
 	"syscall"
 	"testing"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupportproviders"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPolicy(t *testing.T) {

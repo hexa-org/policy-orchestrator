@@ -3,18 +3,17 @@ package admin_test
 import (
 	"errors"
 	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"testing"
+
 	"github.com/hexa-org/policy-orchestrator/pkg/admin"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"io"
-	"net"
-	"net/http"
-	"path/filepath"
-	"runtime"
-	"testing"
 )
 
 type ApplicationsSuite struct {
@@ -28,15 +27,12 @@ func TestApplications(t *testing.T) {
 }
 
 func (suite *ApplicationsSuite) SetupTest() {
-	_, file, _, _ := runtime.Caller(0)
-	resourcesDirectory := filepath.Join(file, "../../../pkg/admin/resources")
-
 	listener, _ := net.Listen("tcp", "localhost:0")
 	suite.client = new(admin_test.MockClient)
 	suite.server = websupport.Create(
 		listener.Addr().String(),
 		admin.LoadHandlers("http://noop", suite.client),
-		websupport.Options{ResourceDirectory: resourcesDirectory})
+		websupport.Options{})
 	go websupport.Start(suite.server, listener)
 	healthsupport.WaitForHealthy(suite.server)
 }

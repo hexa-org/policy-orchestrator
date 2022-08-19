@@ -2,6 +2,11 @@ package admin_test
 
 import (
 	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"testing"
+
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin/test"
@@ -9,12 +14,6 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
-	"io"
-	"net"
-	"net/http"
-	"path/filepath"
-	"runtime"
-	"testing"
 )
 
 type StatusData struct {
@@ -23,15 +22,12 @@ type StatusData struct {
 }
 
 func (data *StatusData) SetUp() {
-	_, file, _, _ := runtime.Caller(0)
-	resourcesDirectory := filepath.Join(file, "../../../pkg/admin/resources")
-
 	data.client = admin_test.MockClient{}
 	handler := admin.NewStatusHandler("http://noop", &data.client)
 	listener, _ := net.Listen("tcp", "localhost:0")
 	data.server = websupport.Create(listener.Addr().String(), func(router *mux.Router) {
 		router.HandleFunc("/status", handler.StatusHandler).Methods("GET")
-	}, websupport.Options{ResourceDirectory: resourcesDirectory})
+	}, websupport.Options{})
 
 	go websupport.Start(data.server, listener)
 	healthsupport.WaitForHealthy(data.server)

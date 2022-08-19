@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
 	"io"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
 )
 
 type HTTPClient interface {
@@ -194,8 +195,6 @@ func (c orchestratorClient) SetPolicies(url string, policies string) error {
 	resp, err := hawksupport.HawkPost(c.client, "anId", c.key, url, strings.NewReader(policies))
 	return errorOrBadResponse(resp, http.StatusCreated, err)
 }
-
-///
 
 func errorOrBadResponse(response *http.Response, status int, err error) error {
 	if err != nil {

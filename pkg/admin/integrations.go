@@ -2,12 +2,13 @@ package admin
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/gorilla/mux"
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 )
 
 type IntegrationProviderInterface interface {
@@ -48,19 +49,19 @@ func (i integrationsHandler) List(w http.ResponseWriter, _ *http.Request) {
 	integrations, err := i.client.Integrations(url)
 	if err != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "message": "Unable to contact orchestrator."}}
-		_ = websupport.ModelAndView(w, "integrations", model)
+		_ = websupport.ModelAndView(w, &resources, "integrations", model)
 		log.Println(err)
 		return
 	}
 	model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "integrations": integrations}}
-	_ = websupport.ModelAndView(w, "integrations", model)
+	_ = websupport.ModelAndView(w, &resources, "integrations", model)
 }
 
 func (i integrationsHandler) New(w http.ResponseWriter, r *http.Request) {
 	provider := r.URL.Query().Get("provider")
 	model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider}}
 	integrationView := i.knownIntegrationViews(provider)
-	_ = websupport.ModelAndView(w, integrationView, model)
+	_ = websupport.ModelAndView(w, &resources, integrationView, model)
 }
 
 func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Request) {
@@ -81,7 +82,7 @@ func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		log.Printf("Missing key file %s.\n", err.Error())
 		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Missing key file."}}
-		_ = websupport.ModelAndView(w, integrationView, model)
+		_ = websupport.ModelAndView(w, &resources, integrationView, model)
 		return
 	}
 
@@ -110,7 +111,7 @@ func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Re
 	err = i.client.CreateIntegration(url, name, provider, key)
 	if err != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Unable to communicate with orchestrator."}}
-		_ = websupport.ModelAndView(w, integrationView, model)
+		_ = websupport.ModelAndView(w, &resources, integrationView, model)
 		return
 	}
 	http.Redirect(w, r, "/integrations", http.StatusMovedPermanently)
@@ -127,7 +128,7 @@ func (i integrationsHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 func (i integrationsHandler) viewWithMessage(w http.ResponseWriter, provider string, message string, integrationView string) {
 	model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": message}}
-	_ = websupport.ModelAndView(w, integrationView, model)
+	_ = websupport.ModelAndView(w, &resources, integrationView, model)
 }
 
 func (i integrationsHandler) knownIntegrationViews(provider string) string {

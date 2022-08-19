@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/mux"
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 )
 
 type Application struct {
@@ -63,12 +64,12 @@ func (p appsHandler) List(w http.ResponseWriter, _ *http.Request) {
 	foundApplications, clientErr := p.client.Applications(orchestratorEndpoint)
 	if clientErr != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "message": clientErr.Error()}}
-		_ = websupport.ModelAndView(w, "applications", model)
+		_ = websupport.ModelAndView(w, &resources, "applications", model)
 		log.Println(clientErr)
 		return
 	}
 	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "applications": foundApplications}}
-	_ = websupport.ModelAndView(w, "applications", model)
+	_ = websupport.ModelAndView(w, &resources, "applications", model)
 }
 
 func (p appsHandler) Show(w http.ResponseWriter, r *http.Request) {
@@ -77,17 +78,17 @@ func (p appsHandler) Show(w http.ResponseWriter, r *http.Request) {
 	foundApplication, clientErr := p.client.Application(orchestratorEndpoint)
 	if clientErr != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "message": clientErr.Error()}}
-		_ = websupport.ModelAndView(w, "applications_show", model)
+		_ = websupport.ModelAndView(w, &resources, "applications_show", model)
 		log.Println(clientErr)
 		return
 	}
 
-	/// todo - consider one rest call here?
+	// / todo - consider one rest call here?
 	orchestratorPoliciesEndpoint := fmt.Sprintf("%v/applications/%s/policies", p.orchestratorUrl, identifier)
 	foundPolicies, rawJson, policiesError := p.client.GetPolicies(orchestratorPoliciesEndpoint)
 	if policiesError != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "message": policiesError.Error()}}
-		_ = websupport.ModelAndView(w, "applications_show", model)
+		_ = websupport.ModelAndView(w, &resources, "applications_show", model)
 		log.Println(policiesError)
 		return
 	}
@@ -96,7 +97,7 @@ func (p appsHandler) Show(w http.ResponseWriter, r *http.Request) {
 	_ = json.Indent(&buffer, []byte(rawJson), "", "  ")
 	resourceLink := fmt.Sprintf("/applications/%v", identifier)
 	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "resource_link": resourceLink, "application": foundApplication, "policies": foundPolicies, "rawJson": buffer.String()}}
-	_ = websupport.ModelAndView(w, "applications_show", model)
+	_ = websupport.ModelAndView(w, &resources, "applications_show", model)
 }
 
 func (p appsHandler) Edit(w http.ResponseWriter, r *http.Request) {
@@ -106,7 +107,7 @@ func (p appsHandler) Edit(w http.ResponseWriter, r *http.Request) {
 
 	if applicationError != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": foundApplication, "message": applicationError.Error()}}
-		_ = websupport.ModelAndView(w, "applications_edit", model)
+		_ = websupport.ModelAndView(w, &resources, "applications_edit", model)
 		log.Println(applicationError)
 		return
 	}
@@ -115,7 +116,7 @@ func (p appsHandler) Edit(w http.ResponseWriter, r *http.Request) {
 	foundPolicies, rawJson, policiesError := p.client.GetPolicies(orchestratorPoliciesEndpoint)
 	if policiesError != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": foundApplication, "message": policiesError.Error()}}
-		_ = websupport.ModelAndView(w, "applications_edit", model)
+		_ = websupport.ModelAndView(w, &resources, "applications_edit", model)
 		log.Println(policiesError)
 		return
 	}
@@ -123,7 +124,7 @@ func (p appsHandler) Edit(w http.ResponseWriter, r *http.Request) {
 	var buffer bytes.Buffer
 	_ = json.Indent(&buffer, []byte(rawJson), "", "  ")
 	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": foundApplication, "policies": foundPolicies, "rawJson": buffer.String()}}
-	_ = websupport.ModelAndView(w, "applications_edit", model)
+	_ = websupport.ModelAndView(w, &resources, "applications_edit", model)
 }
 
 func (p appsHandler) Update(w http.ResponseWriter, r *http.Request) {
@@ -136,7 +137,7 @@ func (p appsHandler) Update(w http.ResponseWriter, r *http.Request) {
 		orchestratorAppsEndpoint := fmt.Sprintf("%v/applications/%s", p.orchestratorUrl, identifier)
 		foundApplication, _ := p.client.Application(orchestratorAppsEndpoint)
 		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": foundApplication, "policies": desiredPolicies, "message": clientErr.Error()}}
-		_ = websupport.ModelAndView(w, "applications_edit", model)
+		_ = websupport.ModelAndView(w, &resources, "applications_edit", model)
 		log.Println(clientErr)
 		return
 	}
