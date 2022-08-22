@@ -24,7 +24,7 @@ func (data *integrationsTestData) TearDown() {
 
 func TestCreateIntegration(t *testing.T) {
 	testsupport.WithSetUp(&integrationsTestData{}, func(data *integrationsTestData) {
-		id, err := data.gateway.Create("aName", "google_cloud", []byte("aKey"))
+		id, err := data.gateway.Create("aName", "noop", []byte("aKey"))
 		assert.NotEmpty(t, id)
 		assert.NoError(t, err)
 	})
@@ -32,7 +32,7 @@ func TestCreateIntegration(t *testing.T) {
 
 func TestFindIntegrations(t *testing.T) {
 	testsupport.WithSetUp(&integrationsTestData{}, func(data *integrationsTestData) {
-		_, _ = data.gateway.Create("aName", "google_cloud", []byte("aKey"))
+		_, _ = data.gateway.Create("aName", "noop", []byte("aKey"))
 		all, _ := data.gateway.Find()
 		assert.Equal(t, 1, len(all))
 	})
@@ -43,7 +43,7 @@ func TestFindIntegrations_withDatabaseError(t *testing.T) {
 		open, _ := databasesupport.Open("")
 
 		gateway := orchestrator.IntegrationsDataGateway{DB: open}
-		_, _ = data.gateway.Create("aName", "google_cloud", []byte("aKey"))
+		_, _ = data.gateway.Create("aName", "noop", []byte("aKey"))
 		_, err := gateway.Find()
 		assert.Error(t, err)
 	})
@@ -51,7 +51,7 @@ func TestFindIntegrations_withDatabaseError(t *testing.T) {
 
 func TestDeleteIntegration(t *testing.T) {
 	testsupport.WithSetUp(&integrationsTestData{}, func(data *integrationsTestData) {
-		id, _ := data.gateway.Create("aName", "google_cloud", []byte("aKey"))
+		id, _ := data.gateway.Create("aName", "noop", []byte("aKey"))
 		_ = data.gateway.Delete(id)
 		find, _ := data.gateway.Find()
 		assert.Equal(t, 0, len(find))
@@ -60,10 +60,10 @@ func TestDeleteIntegration(t *testing.T) {
 
 func TestFindIntegrationById(t *testing.T) {
 	testsupport.WithSetUp(&integrationsTestData{}, func(data *integrationsTestData) {
-		id, _ := data.gateway.Create("aName", "google_cloud", []byte("aKey"))
+		id, _ := data.gateway.Create("aName", "noop", []byte("aKey"))
 		record, _ := data.gateway.FindById(id)
 		assert.Equal(t, "aName", record.Name)
-		assert.Equal(t, "google_cloud", record.Provider)
+		assert.Equal(t, "noop", record.Provider)
 		assert.Equal(t, []byte("aKey"), record.Key)
 	})
 }

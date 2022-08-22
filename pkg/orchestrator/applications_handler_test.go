@@ -34,7 +34,7 @@ func (data *applicationsHandlerData) SetUp() {
 	_, _ = data.db.Exec(`
 delete from applications;
 delete from integrations;
-insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'aName', 'google_cloud', 'aKey');
+insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'aName', 'noop', 'aKey');
 insert into applications (id, integration_id, object_id, name, description) values ('6409776a-367a-483a-a194-5ccf9c4ff210', '50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'anObjectId', 'aName', 'aDescription');
 `)
 	data.applicationTestId = "6409776a-367a-483a-a194-5ccf9c4ff210"
@@ -46,7 +46,7 @@ insert into applications (id, integration_id, object_id, name, description) valu
 	data.key = hex.EncodeToString(hash[:])
 
 	data.providers = make(map[string]orchestrator.Provider)
-	data.providers["google_cloud"] = &orchestrator_test.NoopProvider{}
+	data.providers["noop"] = &orchestrator_test.NoopProvider{}
 	handlers, _ := orchestrator.LoadHandlers(data.db, hawksupport.NewCredentialStore(data.key), addr, data.providers)
 	data.server = websupport.Create(addr, handlers, websupport.Options{})
 	go websupport.Start(data.server, listener)
@@ -72,7 +72,7 @@ func TestListApps(t *testing.T) {
 		application := apps.Applications[0]
 		assert.Equal(t, "anObjectId", application.ObjectId)
 		assert.Equal(t, "aName", application.Name)
-		assert.Equal(t, "google_cloud", application.ProviderName)
+		assert.Equal(t, "noop", application.ProviderName)
 		assert.Equal(t, "aDescription", application.Description)
 	})
 }
@@ -146,7 +146,7 @@ func TestGetPolicies_withFailedRequest(t *testing.T) {
 	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
 		discovery := orchestrator_test.NoopProvider{}
 		discovery.Err = errors.New("oops")
-		data.providers["google_cloud"] = &discovery
+		data.providers["noop"] = &discovery
 
 		url := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
 
@@ -190,7 +190,7 @@ func TestSetPolicies_withErroneousProvider(t *testing.T) {
 	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
 		noopProvider := orchestrator_test.NoopProvider{}
 		noopProvider.Err = errors.New("oops")
-		data.providers["google_cloud"] = &noopProvider
+		data.providers["noop"] = &noopProvider
 
 		var buf bytes.Buffer
 		policy := orchestrator.Policy{Meta: orchestrator.Meta{Version: "v0.5"}, Actions: []orchestrator.Action{{"anAction"}}, Subject: orchestrator.Subject{Members: []string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{ResourceID: "aResourceId"}}

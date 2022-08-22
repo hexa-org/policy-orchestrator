@@ -26,7 +26,7 @@ func TestOrchestratorHandlers(t *testing.T) {
 	listener, _ := net.Listen("tcp", "localhost:0")
 
 	providers := make(map[string]orchestrator.Provider)
-	providers["google_cloud"] = &orchestrator_test.NoopProvider{}
+	providers["noop"] = &orchestrator_test.NoopProvider{}
 
 	handlers, _ := orchestrator.LoadHandlers(db, store, listener.Addr().String(), providers)
 	server := websupport.Create(listener.Addr().String(), handlers, websupport.Options{})

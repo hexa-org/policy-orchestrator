@@ -20,7 +20,7 @@ func (data *applicationsTestData) SetUp() {
 	_, _ = db.Exec(`
 delete from applications;
 delete from integrations;
-insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'aName', 'google_cloud', 'aKey');
+insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'aName', 'noop', 'aKey');
 `)
 }
 

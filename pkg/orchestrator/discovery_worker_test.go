@@ -65,7 +65,7 @@ func (n *ErroneousWorker) Run(interface{}) error {
 
 func TestWorkflow_erroneousFind(t *testing.T) {
 	gateway, _ := setUp()
-	_, _ = gateway.Create("aName", "google_cloud", []byte("aKey"))
+	_, _ = gateway.Create("aName", "noop", []byte("aKey"))
 
 	worker := ErroneousWorker{}
 	finder := orchestrator.NewDiscoveryWorkFinder(gateway)
