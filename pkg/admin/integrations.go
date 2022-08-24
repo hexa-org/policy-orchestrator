@@ -1,8 +1,6 @@
 package admin
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
@@ -11,6 +9,11 @@ import (
 	"net/http"
 	"strings"
 )
+
+type IntegrationProviderInterface interface {
+	detect(provider string) bool
+	name(key []byte) (string, error)
+}
 
 type Integration struct {
 	ID       string
@@ -29,10 +32,15 @@ type IntegrationHandler interface {
 type integrationsHandler struct {
 	orchestratorUrl string
 	client          Client
+	providerStructs []IntegrationProviderInterface
 }
 
 func NewIntegrationsHandler(orchestratorUrl string, client Client) IntegrationHandler {
-	return integrationsHandler{orchestratorUrl, client}
+	return integrationsHandler{
+		orchestratorUrl,
+		client,
+		[]IntegrationProviderInterface{googleProvider{}, azureProvider{}, amazonProvider{}, opaProvider{}},
+	}
 }
 
 func (i integrationsHandler) List(w http.ResponseWriter, _ *http.Request) {
@@ -53,22 +61,6 @@ func (i integrationsHandler) New(w http.ResponseWriter, r *http.Request) {
 	model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider}}
 	integrationView := i.knownIntegrationViews(provider)
 	_ = websupport.ModelAndView(w, integrationView, model)
-}
-
-type googleKeyFile struct {
-	ProjectId string `json:"project_id"`
-}
-
-type azureKeyFile struct {
-	Tenant string `json:"tenant"`
-}
-
-type amazonKeyFile struct {
-	Region string `json:"region"`
-}
-
-type bundleFile struct {
-	BundleUrl string `json:"bundle_url"`
 }
 
 func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Request) {
@@ -99,45 +91,20 @@ func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Re
 	}
 	_ = file.Close()
 
-	// todo - replace conditional logic with strategy or new route
-	if provider == "google_cloud" {
-		var foundKeyFile googleKeyFile
-		err = json.NewDecoder(bytes.NewReader(key)).Decode(&foundKeyFile)
-		if err != nil || foundKeyFile.ProjectId == "" {
-			i.viewWithMessage(w, provider, "Unable to read key file, missing project.", integrationView)
-			return
+	var foundProvider IntegrationProviderInterface
+	for _, p := range i.providerStructs {
+		if p.detect(provider) {
+			foundProvider = p
 		}
-		name = fmt.Sprintf("project:%s", foundKeyFile.ProjectId)
 	}
-
-	if provider == "azure" {
-		var foundKeyFile azureKeyFile
-		err = json.NewDecoder(bytes.NewReader(key)).Decode(&foundKeyFile)
-		if err != nil || foundKeyFile.Tenant == "" {
-			i.viewWithMessage(w, provider, "Unable to read key file, missing tenant.", integrationView)
-			return
-		}
-		name = fmt.Sprintf("tenant:%s", foundKeyFile.Tenant)
+	if foundProvider == nil {
+		i.viewWithMessage(w, provider, "unknown provider", integrationView)
+		return
 	}
-
-	if provider == "amazon" {
-		var foundKeyFile amazonKeyFile
-		err = json.NewDecoder(bytes.NewReader(key)).Decode(&foundKeyFile)
-		if err != nil || foundKeyFile.Region == "" {
-			i.viewWithMessage(w, provider, "Unable to read key file, missing region.", integrationView)
-			return
-		}
-		name = fmt.Sprintf("region:%s", foundKeyFile.Region)
-	}
-
-	if provider == "open_policy_agent" {
-		var foundKeyFile bundleFile
-		err = json.NewDecoder(bytes.NewReader(key)).Decode(&foundKeyFile)
-		if err != nil || foundKeyFile.BundleUrl == "" {
-			i.viewWithMessage(w, provider, "Unable to read key file, missing bundle url.", integrationView)
-			return
-		}
-		name = "bundle:open-policy-agent"
+	name, err = foundProvider.name(key)
+	if err != nil {
+		i.viewWithMessage(w, provider, err.Error(), integrationView)
+		return
 	}
 
 	err = i.client.CreateIntegration(url, name, provider, key)

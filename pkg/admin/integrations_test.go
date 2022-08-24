@@ -149,7 +149,7 @@ func (suite *IntegrationsSuite) TestCreateIntegration_withErroneousKeyFile() {
 	resp, _ := http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf)
 	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
 	all, _ := io.ReadAll(resp.Body)
-	assert.Contains(suite.T(), string(all), "Something went wrong. Unable to read key file, missing project.")
+	assert.Contains(suite.T(), string(all), "Something went wrong. unable to read key file, missing project")
 }
 
 func (suite *IntegrationsSuite) TestDeleteIntegration() {
