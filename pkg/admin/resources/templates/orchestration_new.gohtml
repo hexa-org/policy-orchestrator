@@ -1,0 +1,58 @@
+{{- template "base" .}}
+{{- define "main"}}
+    <div class="card">
+        <h1>Policy Orchestration</h1>
+        {{- $m := index .Map "message"}}
+        {{- if $m}}
+            <div class="message">Something went wrong. {{$m}}</div>
+        {{- end }}
+        <form name="orchestration" action="/orchestration" method="post">
+        <table>
+            <thead>
+            <tr>
+                <th>Apply from</th>
+                <th>Apply to</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            <tr>
+                <td>
+                    <label>
+                        <select class="custom-select">
+                            {{- range index .Map "applications"}}
+                                <option value="/applications/{{.ID}}" id="from">
+                                    {{if eq .ProviderName "google_cloud"}}[Google Cloud Platform]{{end}}
+                                    {{if eq .ProviderName "amazon"}}[Amazon Web Services]{{end}}
+                                    {{if eq .ProviderName "azure"}}[Azure Cloud Platform]{{end}}
+                                    {{if eq .ProviderName "open_policy_agent"}}[Open Policy Agent]{{end}}
+                                    {{.Name}}</option>
+                            {{- end}}
+                        </select>
+                    </label>
+                </td>
+
+                <td>
+                    <label>
+                        <select class="custom-select">
+                            {{- range index .Map "applications"}}
+                                <option value="/applications/{{.ID}}" id="to">
+                                    {{if eq .ProviderName "google_cloud"}}[Google Cloud Platform]{{end}}
+                                    {{if eq .ProviderName "amazon"}}[Amazon Web Services]{{end}}
+                                    {{if eq .ProviderName "azure"}}[Azure Cloud Platform]{{end}}
+                                    {{if eq .ProviderName "open_policy_agent"}}[Open Policy Agent]{{end}}
+                                    {{.Name}}</option>
+                            {{- end}}
+                        </select>
+                    </label>
+                </td>
+            </tr>
+        </table>
+
+        <input type="submit" value="Apply Policy" class="button"/>
+        {{- if $m}}
+            <div class="message">Something went wrong. {{$m}}</div>
+        {{- end }}
+        </form>
+    </div>
+{{- end}}

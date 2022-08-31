@@ -28,6 +28,7 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 func LoadHandlers(orchestratorUrl string, client Client) func(router *mux.Router) {
 	apps := NewApplicationsHandler(orchestratorUrl, client)
 	integrations := NewIntegrationsHandler(orchestratorUrl, client)
+	orchestration := NewOrchestrationHandler(orchestratorUrl, client)
 	status := NewStatusHandler(orchestratorUrl, client)
 
 	return func(router *mux.Router) {
@@ -40,6 +41,8 @@ func LoadHandlers(orchestratorUrl string, client Client) func(router *mux.Router
 		router.HandleFunc("/applications/{id}", apps.Show).Methods("GET")
 		router.HandleFunc("/applications/{id}/edit", apps.Edit).Methods("GET")
 		router.HandleFunc("/applications/{id}", apps.Update).Methods("POST")
+		router.HandleFunc("/orchestration/new", orchestration.New).Methods("GET")
+		router.HandleFunc("/orchestration", orchestration.Apply).Methods("POST")
 		router.HandleFunc("/status", status.StatusHandler).Methods("GET")
 
 		fileServer := http.FileServer(http.Dir("pkg/admin/resources/static"))
