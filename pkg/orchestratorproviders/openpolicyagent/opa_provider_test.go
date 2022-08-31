@@ -149,8 +149,8 @@ func TestSetPolicyInfo_withInvalidArguments(t *testing.T) {
 		[]policysupport.PolicyInfo{
 			{
 				Actions: []policysupport.ActionInfo{{"http:GET"}}, Subject: policysupport.SubjectInfo{Members: []string{"allusers"}}, Object: policysupport.ObjectInfo{
-				ResourceID: "aResourceId",
-			}},
+					ResourceID: "aResourceId",
+				}},
 		},
 	)
 	assert.Equal(t, 500, status)

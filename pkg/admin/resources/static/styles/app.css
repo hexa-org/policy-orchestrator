@@ -372,3 +372,24 @@ pre {
 .no-margin {
     margin: 0;
 }
+
+.row {
+    display: flex;
+    gap: 4rem;
+    margin-bottom: 1rem;
+    justify-content: center;
+}
+
+.custom-select {
+    appearance: none;
+    background-color: transparent;
+    border: none;
+    padding: 0 1em 0 0;
+    margin: 0;
+    width: 100%;
+    font-family: inherit;
+    font-size: inherit;
+    color: var(--gray);
+    cursor: inherit;
+    outline: none;
+}
