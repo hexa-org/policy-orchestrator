@@ -12,7 +12,7 @@ import (
 )
 
 func App(addr string, orchestratorUrl string, orchestratorKey string) *http.Server {
-	client := admin.NewOrchestratorClient(&http.Client{}, orchestratorKey)
+	client := admin.NewOrchestratorClient(&http.Client{}, orchestratorUrl, orchestratorKey)
 	handlers := admin.LoadHandlers(orchestratorUrl, client)
 	return websupport.Create(addr, handlers, websupport.Options{})
 }

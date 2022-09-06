@@ -60,8 +60,7 @@ func NewApplicationsHandler(orchestratorUrl string, client Client) ApplicationsH
 }
 
 func (p appsHandler) List(w http.ResponseWriter, _ *http.Request) {
-	orchestratorEndpoint := fmt.Sprintf("%v/applications", p.orchestratorUrl)
-	foundApplications, clientErr := p.client.Applications(orchestratorEndpoint)
+	foundApplications, clientErr := p.client.Applications()
 	if clientErr != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "message": clientErr.Error()}}
 		_ = websupport.ModelAndView(w, &resources, "applications", model)
@@ -74,8 +73,8 @@ func (p appsHandler) List(w http.ResponseWriter, _ *http.Request) {
 
 func (p appsHandler) Show(w http.ResponseWriter, r *http.Request) {
 	identifier := mux.Vars(r)["id"]
-	orchestratorEndpoint := fmt.Sprintf("%v/applications/%s", p.orchestratorUrl, identifier)
-	foundApplication, clientErr := p.client.Application(orchestratorEndpoint)
+
+	foundApplication, clientErr := p.client.Application(identifier)
 	if clientErr != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "message": clientErr.Error()}}
 		_ = websupport.ModelAndView(w, &resources, "applications_show", model)
@@ -84,8 +83,7 @@ func (p appsHandler) Show(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// / todo - consider one rest call here?
-	orchestratorPoliciesEndpoint := fmt.Sprintf("%v/applications/%s/policies", p.orchestratorUrl, identifier)
-	foundPolicies, rawJson, policiesError := p.client.GetPolicies(orchestratorPoliciesEndpoint)
+	foundPolicies, rawJson, policiesError := p.client.GetPolicies(identifier)
 	if policiesError != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "message": policiesError.Error()}}
 		_ = websupport.ModelAndView(w, &resources, "applications_show", model)
@@ -102,9 +100,8 @@ func (p appsHandler) Show(w http.ResponseWriter, r *http.Request) {
 
 func (p appsHandler) Edit(w http.ResponseWriter, r *http.Request) {
 	identifier := mux.Vars(r)["id"]
-	orchestratorEndpoint := fmt.Sprintf("%v/applications/%s", p.orchestratorUrl, identifier)
-	foundApplication, applicationError := p.client.Application(orchestratorEndpoint)
 
+	foundApplication, applicationError := p.client.Application(identifier)
 	if applicationError != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": foundApplication, "message": applicationError.Error()}}
 		_ = websupport.ModelAndView(w, &resources, "applications_edit", model)
@@ -112,8 +109,7 @@ func (p appsHandler) Edit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orchestratorPoliciesEndpoint := fmt.Sprintf("%v/applications/%s/policies", p.orchestratorUrl, identifier)
-	foundPolicies, rawJson, policiesError := p.client.GetPolicies(orchestratorPoliciesEndpoint)
+	foundPolicies, rawJson, policiesError := p.client.GetPolicies(identifier)
 	if policiesError != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": foundApplication, "message": policiesError.Error()}}
 		_ = websupport.ModelAndView(w, &resources, "applications_edit", model)
@@ -129,13 +125,11 @@ func (p appsHandler) Edit(w http.ResponseWriter, r *http.Request) {
 
 func (p appsHandler) Update(w http.ResponseWriter, r *http.Request) {
 	identifier := mux.Vars(r)["id"]
-	orchestratorEndpoint := fmt.Sprintf("%v/applications/%s/policies", p.orchestratorUrl, identifier)
 	desiredPolicies := r.FormValue("policy")
-	clientErr := p.client.SetPolicies(orchestratorEndpoint, desiredPolicies)
+	clientErr := p.client.SetPolicies(identifier, desiredPolicies)
 
 	if clientErr != nil {
-		orchestratorAppsEndpoint := fmt.Sprintf("%v/applications/%s", p.orchestratorUrl, identifier)
-		foundApplication, _ := p.client.Application(orchestratorAppsEndpoint)
+		foundApplication, _ := p.client.Application(identifier)
 		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": foundApplication, "policies": desiredPolicies, "message": clientErr.Error()}}
 		_ = websupport.ModelAndView(w, &resources, "applications_edit", model)
 		log.Println(clientErr)

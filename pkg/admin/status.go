@@ -30,15 +30,14 @@ type Check struct {
 }
 
 func (p StatusHandler) StatusHandler(w http.ResponseWriter, _ *http.Request) {
-	url := fmt.Sprintf("%v/health", p.orchestratorUrl)
-	health, _ := p.client.Health(url)
+	health, _ := p.client.Health()
 
 	var checks []Check
 	if err := json.NewDecoder(strings.NewReader(health)).Decode(&checks); err != nil {
 		log.Printf("unable to parse found json for status check: %s\n", err.Error())
 		checks = append(checks, Check{"Unparsable", "false"})
 	}
-	status := Status{url, checks}
+	status := Status{fmt.Sprintf("%v/health", p.orchestratorUrl), checks} // todo - remove endpoint knowledge
 
 	model := websupport.Model{Map: map[string]interface{}{"resource": "status", "status": status}}
 	_ = websupport.ModelAndView(w, &resources, "status", model)

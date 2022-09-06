@@ -1,13 +1,12 @@
 package admin
 
 import (
-	"fmt"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
 
-	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 )
 
@@ -45,8 +44,7 @@ func NewIntegrationsHandler(orchestratorUrl string, client Client) IntegrationHa
 }
 
 func (i integrationsHandler) List(w http.ResponseWriter, _ *http.Request) {
-	url := fmt.Sprintf("%v/integrations", i.orchestratorUrl)
-	integrations, err := i.client.Integrations(url)
+	integrations, err := i.client.Integrations()
 	if err != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "message": "Unable to contact orchestrator."}}
 		_ = websupport.ModelAndView(w, &resources, "integrations", model)
@@ -65,8 +63,6 @@ func (i integrationsHandler) New(w http.ResponseWriter, r *http.Request) {
 }
 
 func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Request) {
-	url := fmt.Sprintf("%v/integrations", i.orchestratorUrl)
-
 	err := r.ParseMultipartForm(32 << 20)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -108,7 +104,7 @@ func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	err = i.client.CreateIntegration(url, name, provider, key)
+	err = i.client.CreateIntegration(name, provider, key)
 	if err != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Unable to communicate with orchestrator."}}
 		_ = websupport.ModelAndView(w, &resources, integrationView, model)
@@ -118,8 +114,8 @@ func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Re
 }
 
 func (i integrationsHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	url := fmt.Sprintf("%v/integrations/%s", i.orchestratorUrl, mux.Vars(r)["id"])
-	err := i.client.DeleteIntegration(url)
+	identifier := mux.Vars(r)["id"]
+	err := i.client.DeleteIntegration(identifier)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
