@@ -17,6 +17,7 @@ func LoadHandlers(database *sql.DB, store hawk.CredentialStore, hostPort string,
 
 	applicationsHandler := ApplicationsHandler{applicationsGateway, integrationsGateway, providers}
 	integrationsHandler := IntegrationsHandler{integrationsGateway, worker}
+	orchestrationHandler := OrchestrationHandler{}
 
 	list := []workflowsupport.Worker{&worker}
 	scheduler := workflowsupport.NewScheduler(&finder, list, 60_000)
@@ -29,5 +30,6 @@ func LoadHandlers(database *sql.DB, store hawk.CredentialStore, hostPort string,
 		router.HandleFunc("/integrations", hawksupport.HawkMiddleware(integrationsHandler.List, store, hostPort)).Methods("GET")
 		router.HandleFunc("/integrations", hawksupport.HawkMiddleware(integrationsHandler.Create, store, hostPort)).Methods("POST")
 		router.HandleFunc("/integrations/{id}", hawksupport.HawkMiddleware(integrationsHandler.Delete, store, hostPort)).Methods("GET")
+		router.HandleFunc("/orchestration", hawksupport.HawkMiddleware(orchestrationHandler.Update, store, hostPort)).Methods("POST")
 	}, &scheduler
 }

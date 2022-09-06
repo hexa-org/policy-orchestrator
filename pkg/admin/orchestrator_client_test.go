@@ -85,7 +85,7 @@ func TestOrchestratorClient_Application(t *testing.T) {
 	mockClient.status = http.StatusOK
 	client := admin.NewOrchestratorClient(mockClient, "localhost:8883", "aKey")
 
-	resp, _ := client.Application("localhost:8883/applications/anId")
+	resp, _ := client.Application("anId")
 	assert.Equal(t, admin.Application{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "anApp", Description: "aDescription"}, resp)
 }
 
@@ -94,7 +94,7 @@ func TestOrchestratorClient_Application_withBadJson(t *testing.T) {
 	mockClient.response = []byte("_{\"_id\":\"anId\"}}")
 	client := admin.NewOrchestratorClient(mockClient, "localhost:8883", "aKey")
 
-	_, err := client.Application("localhost:8883/applications/anId")
+	_, err := client.Application("anId")
 	assert.Error(t, err)
 }
 
@@ -143,7 +143,7 @@ func TestOrchestratorClient_DeleteIntegrations(t *testing.T) {
 	mockClient.status = http.StatusOK
 	client := admin.NewOrchestratorClient(mockClient, "localhost:8883", "aKey")
 
-	err := client.DeleteIntegration("localhost:8883/integrations/101")
+	err := client.DeleteIntegration("101")
 	assert.NoError(t, err)
 }
 
@@ -156,7 +156,7 @@ func TestOrchestratorClient_GetPolicy(t *testing.T) {
 	mockClient.response = []byte(rawJson)
 	client := admin.NewOrchestratorClient(mockClient, "localhost:8883", "aKey")
 
-	resp, raw, _ := client.GetPolicies("localhost:8883/applications/anId/policies")
+	resp, raw, _ := client.GetPolicies("anId")
 	assert.Equal(t, rawJson, raw)
 	assert.Equal(t, "aVersion", resp[0].Meta.Version)
 	assert.Equal(t, "anAction", resp[0].Actions[0].ActionUri)
@@ -176,7 +176,7 @@ func TestOrchestratorClient_GetPolicy_withErroneousGet(t *testing.T) {
 	mockClient.err = errors.New("oops")
 	client := admin.NewOrchestratorClient(mockClient, "localhost:8883", "aKey")
 
-	resp, _, err := client.GetPolicies("localhost:8883/applications/anId/policies")
+	resp, _, err := client.GetPolicies("anId")
 	assert.Error(t, err)
 	assert.Equal(t, []admin.Policy{}, resp)
 }
@@ -186,7 +186,7 @@ func TestOrchestratorClient_GetPolicy_withBadJson(t *testing.T) {
 	mockClient.status = http.StatusOK
 	client := admin.NewOrchestratorClient(mockClient, "localhost:8883", "aKey")
 
-	resp, _, err := client.GetPolicies("localhost:8883/applications/anId/policies")
+	resp, _, err := client.GetPolicies("anId")
 	assert.Error(t, err)
 	assert.Equal(t, []admin.Policy{}, resp)
 }
@@ -196,7 +196,7 @@ func TestOrchestratorClient_SetPolicy(t *testing.T) {
 	mockClient.status = http.StatusCreated
 	policies := "{\"policies\":[[{\"version\":\"aVersion\",\"action_uri\":\"anAction\",\"subject\":{\"members\":[\"aUser\"]},\"object\":{\"resource_id\":\"aResourceId\"}},{\"version\":\"aVersion\",\"action\":\"anotherAction\",\"subject\":{\"members\":[\"anotherUser\"]},\"object\":{\"resource_id\":\"anotherResourceId\"}}]}"
 	client := admin.NewOrchestratorClient(mockClient, "localhost:8883", "aKey")
-	err := client.SetPolicies("localhost:8883/applications/anId/policies", policies)
+	err := client.SetPolicies("anId", policies)
 	assert.NoError(t, err)
 }
 
@@ -204,7 +204,7 @@ func TestOrchestratorClient_SetPolicy_withErroneousSet(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.err = errors.New("oops")
 	client := admin.NewOrchestratorClient(mockClient, "localhost:8883", "aKey")
-	err := client.SetPolicies("localhost:8883/applications/anId/policies", "")
+	err := client.SetPolicies("anId", "")
 	assert.Error(t, err)
 }
 
@@ -213,7 +213,23 @@ func TestOrchestratorClient_SetPolicy_withBadStatus(t *testing.T) {
 	mockClient.status = 500
 	mockClient.response = []byte("shoot")
 	client := admin.NewOrchestratorClient(mockClient, "localhost:8883", "aKey")
-	err := client.SetPolicies("localhost:8883/applications/anId/policies", "")
+	err := client.SetPolicies("anId", "")
 	assert.Error(t, err)
 	assert.Equal(t, "shoot", err.Error())
+}
+
+func TestOrchestrationClient_Orchestration(t *testing.T) {
+	mockClient := new(MockClient)
+	mockClient.status = http.StatusCreated
+	client := admin.NewOrchestratorClient(mockClient, "localhost:8883", "aKey")
+	err := client.Orchestration("fromId", "toId")
+	assert.NoError(t, err)
+}
+
+func TestOrchestrationClient_Orchestration_withError(t *testing.T) {
+	mockClient := new(MockClient)
+	mockClient.err = errors.New("oops")
+	client := admin.NewOrchestratorClient(mockClient, "localhost:8883", "aKey")
+	err := client.Orchestration("fromId", "toId")
+	assert.Error(t, err)
 }
