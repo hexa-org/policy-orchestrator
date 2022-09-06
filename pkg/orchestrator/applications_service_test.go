@@ -1,29 +1,18 @@
 package orchestrator_test
 
 import (
-	"bytes"
-	"crypto/sha256"
 	"database/sql"
-	"encoding/hex"
-	"encoding/json"
-	"fmt"
+	"errors"
 	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
-	"net"
-	"net/http"
 	"testing"
 )
 
-type orchestrationHandlerData struct {
+type applicationsServiceData struct {
 	db        *sql.DB
-	server    *http.Server
-	key       string
 	providers map[string]orchestrator.Provider
 
 	fromApp        string
@@ -31,7 +20,7 @@ type orchestrationHandlerData struct {
 	toAppDifferent string
 }
 
-func (data *orchestrationHandlerData) SetUp() {
+func (data *applicationsServiceData) SetUp() {
 	data.db, _ = databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
 	_, _ = data.db.Exec(`
 delete from applications;
@@ -47,41 +36,32 @@ insert into applications (id, integration_id, object_id, name, description) valu
 	data.toApp = "6409776a-367a-483a-a194-5ccf9c4ff211"
 	data.toAppDifferent = "6409776a-367a-483a-a194-5ccf9c4ff212"
 
-	listener, _ := net.Listen("tcp", "localhost:0")
-	addr := listener.Addr().String()
-
-	hash := sha256.Sum256([]byte("aKey"))
-	data.key = hex.EncodeToString(hash[:])
-
 	data.providers = make(map[string]orchestrator.Provider)
 	data.providers["noop"] = &orchestrator_test.NoopProvider{}
-	handlers, _ := orchestrator.LoadHandlers(data.db, hawksupport.NewCredentialStore(data.key), addr, data.providers)
-	data.server = websupport.Create(addr, handlers, websupport.Options{})
-	go websupport.Start(data.server, listener)
-	healthsupport.WaitForHealthy(data.server)
 }
 
-func (data *orchestrationHandlerData) TearDown() {
+func (data *applicationsServiceData) TearDown() {
 	_ = data.db.Close()
-	websupport.Stop(data.server)
 }
 
-func TestOrchestration(t *testing.T) {
-	testsupport.WithSetUp(&orchestrationHandlerData{}, func(data *orchestrationHandlerData) {
-		url := fmt.Sprintf("http://%s/orchestration", data.server.Addr)
-		marshal, _ := json.Marshal(orchestrator.Orchestration{From: data.fromApp, To: data.toApp})
+func TestApplicationsService_Apply(t *testing.T) {
+	testsupport.WithSetUp(&applicationsServiceData{}, func(data *applicationsServiceData) {
+		applicationsGateway := orchestrator.ApplicationsDataGateway{DB: data.db}
+		integrationsGateway := orchestrator.IntegrationsDataGateway{DB: data.db}
+		applicationsService := orchestrator.ApplicationsService{applicationsGateway, integrationsGateway, data.providers}
 
-		resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", data.key, url, bytes.NewReader(marshal))
-		assert.Equal(t, http.StatusCreated, resp.StatusCode)
-	})
-}
+		err := applicationsService.Apply(orchestrator.Orchestration{From: data.fromApp, To: data.toApp})
+		assert.NoError(t, err)
 
-func TestOrchestration_failsAcrossProviders(t *testing.T) {
-	testsupport.WithSetUp(&orchestrationHandlerData{}, func(data *orchestrationHandlerData) {
-		url := fmt.Sprintf("http://%s/orchestration", data.server.Addr)
-		marshal, _ := json.Marshal(orchestrator.Orchestration{From: data.fromApp, To: data.toAppDifferent})
+		badFromApp := applicationsService.Apply(orchestrator.Orchestration{From: "", To: data.toApp})
+		assert.Error(t, badFromApp)
 
-		resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", data.key, url, bytes.NewReader(marshal))
-		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+		badToApp := applicationsService.Apply(orchestrator.Orchestration{From: data.fromApp, To: ""})
+		assert.Error(t, badToApp)
+
+		data.providers["noop"] = &orchestrator_test.NoopProvider{Err: errors.New("oops")}
+
+		providerError := applicationsService.Apply(orchestrator.Orchestration{From: data.fromApp, To: data.toApp})
+		assert.Error(t, providerError)
 	})
 }

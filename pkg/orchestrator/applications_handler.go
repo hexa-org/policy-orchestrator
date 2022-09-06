@@ -7,7 +7,6 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"log"
 	"net/http"
-	"strings"
 )
 
 type Applications struct {
@@ -53,7 +52,7 @@ type Object struct {
 type ApplicationsHandler struct {
 	applicationsGateway ApplicationsDataGateway
 	integrationsGateway IntegrationsDataGateway
-	providers           map[string]Provider
+	applicationsService ApplicationsService
 }
 
 func (handler ApplicationsHandler) List(w http.ResponseWriter, _ *http.Request) {
@@ -66,7 +65,7 @@ func (handler ApplicationsHandler) List(w http.ResponseWriter, _ *http.Request) 
 
 	integrationNamesById := make(map[string]string, 0)
 	for _, integration := range integrationRecords {
-		integrationNamesById[integration.ID] = integration.Provider
+		integrationNamesById[integration.ID] = integration.Provider // todo - include provider within applications table
 	}
 
 	records, applicationErr := handler.applicationsGateway.Find()
@@ -101,15 +100,13 @@ func (handler ApplicationsHandler) Show(w http.ResponseWriter, r *http.Request) 
 }
 
 func (handler ApplicationsHandler) GetPolicies(w http.ResponseWriter, r *http.Request) {
-	applicationRecord, integrationRecord, err := handler.gatherRecords(r)
+	application, integration, provider, err := handler.applicationsService.GatherRecords(mux.Vars(r)["id"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	integration := IntegrationInfo{Name: integrationRecord.Name, Key: integrationRecord.Key}
-	application := ApplicationInfo{ObjectID: applicationRecord.ObjectId, Name: applicationRecord.Name, Description: applicationRecord.Description}
-	p := handler.providers[strings.ToLower(integrationRecord.Provider)] // todo - test for lower?
-	records, err := p.GetPolicyInfo(integration, application)
+
+	records, err := provider.GetPolicyInfo(integration, application)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -142,27 +139,18 @@ func (handler ApplicationsHandler) GetPolicies(w http.ResponseWriter, r *http.Re
 }
 
 func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Request) {
-	applicationRecord, integrationRecord, err := handler.gatherRecords(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	var policies Policies
 	if erroneousDecode := json.NewDecoder(r.Body).Decode(&policies); erroneousDecode != nil {
 		http.Error(w, erroneousDecode.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = validator.New().Var(policies.Policies, "omitempty,dive")
-	if err != nil {
+	validatorErr := validator.New().Var(policies.Policies, "omitempty,dive")
+	if validatorErr != nil {
 		http.Error(w, "unable to validate policy.", http.StatusInternalServerError)
 		return
 	}
 
-	integration := IntegrationInfo{Name: integrationRecord.Name, Key: integrationRecord.Key}
-	application := ApplicationInfo{ObjectID: applicationRecord.ObjectId, Name: applicationRecord.Name, Description: applicationRecord.Description}
-	pro := handler.providers[strings.ToLower(integrationRecord.Provider)] // todo - test for lower?
 	var policyInfos []policysupport.PolicyInfo
 	for _, policy := range policies.Policies {
 		var actionInfos []policysupport.ActionInfo
@@ -183,23 +171,16 @@ func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Re
 		}
 		policyInfos = append(policyInfos, info)
 	}
-	status, setErr := pro.SetPolicyInfo(integration, application, policyInfos)
+
+	application, integration, provider, err := handler.applicationsService.GatherRecords(mux.Vars(r)["id"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	status, setErr := provider.SetPolicyInfo(integration, application, policyInfos)
 	if setErr != nil || status != http.StatusCreated {
 		http.Error(w, "unable to update policy.", http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(status)
-}
-
-func (handler ApplicationsHandler) gatherRecords(r *http.Request) (ApplicationRecord, IntegrationRecord, error) {
-	identifier := mux.Vars(r)["id"]
-	applicationRecord, err := handler.applicationsGateway.FindById(identifier)
-	if err != nil {
-		return ApplicationRecord{}, IntegrationRecord{}, err
-	}
-	integrationRecord, err := handler.integrationsGateway.FindById(applicationRecord.IntegrationId)
-	if err != nil {
-		return ApplicationRecord{}, IntegrationRecord{}, err
-	}
-	return applicationRecord, integrationRecord, err
 }

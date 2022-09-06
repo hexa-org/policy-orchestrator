@@ -34,7 +34,7 @@
 
                 <td>
                     <label>
-                        <select  name="to" id="to" class="custom-select">
+                        <select name="to" id="to" class="custom-select">
                             {{- range index .Map "applications"}}
                                 <option value="{{.ID}}">
                                     {{if eq .ProviderName "google_cloud"}}[Google Cloud Platform]{{end}}
