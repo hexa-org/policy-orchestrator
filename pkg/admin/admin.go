@@ -42,7 +42,7 @@ func LoadHandlers(orchestratorUrl string, client Client) func(router *mux.Router
 		router.HandleFunc("/applications/{id}/edit", apps.Edit).Methods("GET")
 		router.HandleFunc("/applications/{id}", apps.Update).Methods("POST")
 		router.HandleFunc("/orchestration/new", orchestration.New).Methods("GET")
-		router.HandleFunc("/orchestration", orchestration.Apply).Methods("POST")
+		router.HandleFunc("/orchestration", orchestration.Update).Methods("POST")
 		router.HandleFunc("/status", status.StatusHandler).Methods("GET")
 
 		fileServer := http.FileServer(http.Dir("pkg/admin/resources/static"))
