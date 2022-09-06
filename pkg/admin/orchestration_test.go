@@ -41,11 +41,17 @@ func (suite *OrchestrationSuite) TearDownTest() {
 }
 
 func (suite *OrchestrationSuite) TestNewOrchestration() {
+	suite.client.DesiredApplications = []admin.Application{
+		{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription", ProviderName: "google_cloud"},
+		{ID: "anotherId", IntegrationId: "anotherIntegrationId", ObjectId: "anotherObjectId", Name: "anotherName", Description: "anotherDescription", ProviderName: "google_cloud"},
+	}
 	resp, _ := http.Get(fmt.Sprintf("http://%s/orchestration/new", suite.server.Addr))
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(suite.T(), string(body), "Policy Orchestration")
 	assert.Contains(suite.T(), string(body), "Apply from")
+	assert.Contains(suite.T(), string(body), "<option value=\"anId\">")
 	assert.Contains(suite.T(), string(body), "Apply to")
+	assert.Contains(suite.T(), string(body), "<option value=\"anotherId\">")
 }
 
 func (suite *OrchestrationSuite) TestNewOrchestration_withClientError() {

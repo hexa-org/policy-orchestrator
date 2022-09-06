@@ -21,7 +21,7 @@
                     <label>
                         <select name="from" id="from" class="custom-select">
                             {{- range index .Map "applications"}}
-                                <option value="/applications/{{.ID}}">
+                                <option value="{{.ID}}">
                                     {{if eq .ProviderName "google_cloud"}}[Google Cloud Platform]{{end}}
                                     {{if eq .ProviderName "amazon"}}[Amazon Web Services]{{end}}
                                     {{if eq .ProviderName "azure"}}[Azure Cloud Platform]{{end}}
@@ -36,7 +36,7 @@
                     <label>
                         <select  name="to" id="to" class="custom-select">
                             {{- range index .Map "applications"}}
-                                <option value="/applications/{{.ID}}">
+                                <option value="{{.ID}}">
                                     {{if eq .ProviderName "google_cloud"}}[Google Cloud Platform]{{end}}
                                     {{if eq .ProviderName "amazon"}}[Amazon Web Services]{{end}}
                                     {{if eq .ProviderName "azure"}}[Azure Cloud Platform]{{end}}

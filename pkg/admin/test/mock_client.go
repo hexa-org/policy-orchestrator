@@ -15,8 +15,8 @@ type MockClient struct {
 	Status   string
 	Url      string
 
-	DesiredApplication admin.Application
-	DesiredPolicies    []admin.Policy
+	DesiredApplications []admin.Application
+	DesiredPolicies     []admin.Policy
 }
 
 func (m *MockClient) Health() (string, error) {
@@ -52,12 +52,15 @@ func (m *MockClient) DeleteIntegration(id string) error {
 
 func (m *MockClient) Applications() ([]admin.Application, error) {
 	url := fmt.Sprintf("%v/applications", m.Url)
-	return []admin.Application{m.DesiredApplication}, m.Errs[url]
+	return m.DesiredApplications, m.Errs[url]
 }
 
 func (m *MockClient) Application(id string) (admin.Application, error) {
 	url := fmt.Sprintf("%v/applications/%s", m.Url, id)
-	return m.DesiredApplication, m.Errs[url]
+	if len(m.DesiredApplications) == 0 {
+		return admin.Application{}, m.Errs[url]
+	}
+	return m.DesiredApplications[0], m.Errs[url]
 }
 
 func (m *MockClient) GetPolicies(id string) ([]admin.Policy, string, error) {
