@@ -11,14 +11,14 @@ import (
 var resources embed.FS
 
 type Client interface {
-	Health(url string) (string, error)
-	Integrations(url string) ([]Integration, error)
-	CreateIntegration(url string, name string, provider string, key []byte) error
-	DeleteIntegration(url string) error
-	Applications(url string) ([]Application, error)
-	Application(url string) (Application, error)
-	GetPolicies(url string) ([]Policy, string, error)
-	SetPolicies(url string, policies string) error
+	Health() (string, error)
+	Integrations() ([]Integration, error)
+	CreateIntegration(name string, provider string, key []byte) error
+	DeleteIntegration(id string) error
+	Applications() ([]Application, error)
+	Application(id string) (Application, error)
+	GetPolicies(id string) ([]Policy, string, error)
+	SetPolicies(id string, policies string) error
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {

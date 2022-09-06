@@ -31,7 +31,7 @@ func TestIntegrations(t *testing.T) {
 
 func (suite *IntegrationsSuite) SetupTest() {
 	listener, _ := net.Listen("tcp", "localhost:0")
-	suite.client = new(admin_test.MockClient)
+	suite.client = &admin_test.MockClient{Url: "http://noop"}
 	suite.server = websupport.Create(
 		listener.Addr().String(),
 		admin.LoadHandlers("http://noop", suite.client),

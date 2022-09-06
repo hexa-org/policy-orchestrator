@@ -23,8 +23,7 @@ func NewOrchestrationHandler(orchestratorUrl string, client Client) Orchestratio
 }
 
 func (p orchestrationHandler) New(w http.ResponseWriter, _ *http.Request) {
-	orchestratorEndpoint := fmt.Sprintf("%v/applications", p.orchestratorUrl)
-	foundApplications, clientErr := p.client.Applications(orchestratorEndpoint)
+	foundApplications, clientErr := p.client.Applications()
 	if clientErr != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "orchestration", "message": clientErr.Error()}}
 		_ = websupport.ModelAndView(w, &resources, "orchestration_new", model)

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -19,15 +20,16 @@ type HTTPClient interface {
 
 type orchestratorClient struct {
 	client HTTPClient
+	url    string
 	key    string
 }
 
-func NewOrchestratorClient(client HTTPClient, key string) Client {
-	return &orchestratorClient{client, key}
+func NewOrchestratorClient(client HTTPClient, url, key string) Client {
+	return &orchestratorClient{client, url, key}
 }
 
-func (c orchestratorClient) Health(url string) (string, error) {
-	resp, err := c.client.Get(url)
+func (c orchestratorClient) Health() (string, error) {
+	resp, err := c.client.Get(fmt.Sprintf("%v/health", c.url))
 	if err != nil {
 		log.Println(err)
 		return "[{\"name\":\"Unreachable\",\"pass\":\"fail\"}]", err
@@ -49,7 +51,8 @@ type application struct {
 	ProviderName  string `json:"provider_name"`
 }
 
-func (c orchestratorClient) Applications(url string) (applications []Application, err error) {
+func (c orchestratorClient) Applications() (applications []Application, err error) {
+	url := fmt.Sprintf("%v/applications", c.url)
 	resp, hawkErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
 	if err = errorOrBadResponse(resp, http.StatusOK, hawkErr); err != nil {
 		return applications, err
@@ -74,7 +77,8 @@ func (c orchestratorClient) Applications(url string) (applications []Application
 	return applications, nil
 }
 
-func (c orchestratorClient) Application(url string) (Application, error) {
+func (c orchestratorClient) Application(id string) (Application, error) {
+	url := fmt.Sprintf("%v/applications/%s", c.url, id)
 	resp, hawkErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
 	if err := errorOrBadResponse(resp, http.StatusOK, hawkErr); err != nil {
 		return Application{}, err
@@ -100,7 +104,8 @@ type integration struct {
 	Key      []byte `json:"key"`
 }
 
-func (c orchestratorClient) Integrations(url string) (integrations []Integration, err error) {
+func (c orchestratorClient) Integrations() (integrations []Integration, err error) {
+	url := fmt.Sprintf("%v/integrations", c.url)
 	resp, hawkErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
 	if err = errorOrBadResponse(resp, http.StatusOK, hawkErr); err != nil {
 		return integrations, err
@@ -118,14 +123,16 @@ func (c orchestratorClient) Integrations(url string) (integrations []Integration
 	return integrations, nil
 }
 
-func (c orchestratorClient) CreateIntegration(url string, name string, provider string, key []byte) error {
+func (c orchestratorClient) CreateIntegration(name string, provider string, key []byte) error {
+	url := fmt.Sprintf("%v/integrations", c.url)
 	i := integration{Name: name, Provider: provider, Key: key}
 	marshal, _ := json.Marshal(i)
 	resp, hawkErr := hawksupport.HawkPost(c.client, "anId", c.key, url, bytes.NewReader(marshal))
 	return errorOrBadResponse(resp, http.StatusCreated, hawkErr)
 }
 
-func (c orchestratorClient) DeleteIntegration(url string) error {
+func (c orchestratorClient) DeleteIntegration(id string) error {
+	url := fmt.Sprintf("%v/integrations/%s", c.url, id)
 	resp, hawkErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
 	return errorOrBadResponse(resp, http.StatusOK, hawkErr)
 }
@@ -158,7 +165,8 @@ type object struct {
 	Resources  []string `json:"resources"`
 }
 
-func (c orchestratorClient) GetPolicies(url string) ([]Policy, string, error) {
+func (c orchestratorClient) GetPolicies(id string) ([]Policy, string, error) {
+	url := fmt.Sprintf("%v/applications/%s/policies", c.url, id)
 	resp, hawkErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
 	if err := errorOrBadResponse(resp, http.StatusOK, hawkErr); err != nil {
 		return []Policy{}, "{}", err
@@ -191,7 +199,8 @@ func (c orchestratorClient) GetPolicies(url string) ([]Policy, string, error) {
 	return foundPolicies, string(jsonBody), nil
 }
 
-func (c orchestratorClient) SetPolicies(url string, policies string) error {
+func (c orchestratorClient) SetPolicies(id string, policies string) error {
+	url := fmt.Sprintf("%v/applications/%s/policies", c.url, id)
 	resp, err := hawksupport.HawkPost(c.client, "anId", c.key, url, strings.NewReader(policies))
 	return errorOrBadResponse(resp, http.StatusCreated, err)
 }
