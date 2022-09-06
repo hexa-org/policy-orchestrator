@@ -62,8 +62,16 @@ func (suite *OrchestrationSuite) TestNewOrchestration_withClientError() {
 	assert.Contains(suite.T(), string(body), "Something went wrong.")
 }
 
-func (suite *OrchestrationSuite) TestCreateOrchestration() {
+func (suite *OrchestrationSuite) TestUpdateOrchestration() {
 	resp, _ := http.Post(fmt.Sprintf("http://%s/orchestration", suite.server.Addr), "application/json", nil)
 	_, _ = io.ReadAll(resp.Body)
 	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
+}
+
+func (suite *OrchestrationSuite) TestUpdateOrchestration_withError() {
+	suite.client.Errs = map[string]error{"http://noop/orchestration": errors.New("oops")}
+
+	resp, _ := http.Post(fmt.Sprintf("http://%s/orchestration", suite.server.Addr), "application/json", nil)
+	body, _ := io.ReadAll(resp.Body)
+	assert.Contains(suite.T(), string(body), "oops")
 }
