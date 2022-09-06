@@ -10,7 +10,7 @@ import (
 
 type OrchestrationHandler interface {
 	New(w http.ResponseWriter, r *http.Request)
-	Apply(w http.ResponseWriter, r *http.Request)
+	Update(w http.ResponseWriter, r *http.Request)
 }
 
 type orchestrationHandler struct {
@@ -35,6 +35,16 @@ func (p orchestrationHandler) New(w http.ResponseWriter, _ *http.Request) {
 	_ = websupport.ModelAndView(w, &resources, "orchestration_new", model)
 }
 
-func (p orchestrationHandler) Apply(w http.ResponseWriter, r *http.Request) {
+func (p orchestrationHandler) Update(w http.ResponseWriter, r *http.Request) {
+	err := Apply(r.FormValue("from"), r.FormValue("to"))
+	if err != nil {
+		fmt.Println(Apply(r.FormValue("from"), r.FormValue("to")).Error())
+	}
 	http.Redirect(w, r, "/applications", http.StatusMovedPermanently)
+}
+
+func Apply(from, to string) error {
+	fmt.Println(from)
+	fmt.Println(to)
+	return nil
 }
