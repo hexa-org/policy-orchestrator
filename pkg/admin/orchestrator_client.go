@@ -125,8 +125,7 @@ func (c orchestratorClient) Integrations() (integrations []Integration, err erro
 
 func (c orchestratorClient) CreateIntegration(name string, provider string, key []byte) error {
 	url := fmt.Sprintf("%v/integrations", c.url)
-	i := integration{Name: name, Provider: provider, Key: key}
-	marshal, _ := json.Marshal(i)
+	marshal, _ := json.Marshal(integration{Name: name, Provider: provider, Key: key})
 	resp, hawkErr := hawksupport.HawkPost(c.client, "anId", c.key, url, bytes.NewReader(marshal))
 	return errorOrBadResponse(resp, http.StatusCreated, hawkErr)
 }
@@ -202,6 +201,18 @@ func (c orchestratorClient) GetPolicies(id string) ([]Policy, string, error) {
 func (c orchestratorClient) SetPolicies(id string, policies string) error {
 	url := fmt.Sprintf("%v/applications/%s/policies", c.url, id)
 	resp, err := hawksupport.HawkPost(c.client, "anId", c.key, url, strings.NewReader(policies))
+	return errorOrBadResponse(resp, http.StatusCreated, err)
+}
+
+type orchestration struct {
+	From string `json:"from"`
+	To   string `json:"to"`
+}
+
+func (c orchestratorClient) Orchestration(from string, to string) error {
+	url := fmt.Sprintf("%v/orchestration", c.url)
+	marshal, _ := json.Marshal(orchestration{From: from, To: to})
+	resp, err := hawksupport.HawkPost(c.client, "anId", c.key, url, bytes.NewReader(marshal))
 	return errorOrBadResponse(resp, http.StatusCreated, err)
 }
 

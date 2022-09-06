@@ -19,6 +19,7 @@ type Client interface {
 	Application(id string) (Application, error)
 	GetPolicies(id string) ([]Policy, string, error)
 	SetPolicies(id string, policies string) error
+	Orchestration(from string, to string) error
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {

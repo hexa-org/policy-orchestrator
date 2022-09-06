@@ -19,6 +19,10 @@ type MockClient struct {
 	DesiredPolicies    []admin.Policy
 }
 
+func (m *MockClient) Health() (string, error) {
+	return m.Status, nil
+}
+
 func (m *MockClient) Integrations() ([]admin.Integration, error) {
 	integration := admin.Integration{ID: "anId", Name: "aName", Provider: "google_cloud", Key: []byte("aKey")}
 	url := fmt.Sprintf("%v/integrations", m.Url)
@@ -66,6 +70,7 @@ func (m *MockClient) SetPolicies(id string, _ string) error {
 	return m.Errs[url]
 }
 
-func (m *MockClient) Health() (string, error) {
-	return m.Status, nil
+func (m *MockClient) Orchestration(from string, to string) error {
+	url := fmt.Sprintf("%v/orchestration", m.Url)
+	return m.Errs[url]
 }

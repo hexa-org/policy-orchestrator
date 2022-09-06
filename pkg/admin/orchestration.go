@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -35,15 +34,12 @@ func (p orchestrationHandler) New(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (p orchestrationHandler) Update(w http.ResponseWriter, r *http.Request) {
-	err := Apply(r.FormValue("from"), r.FormValue("to"))
-	if err != nil {
-		fmt.Println(Apply(r.FormValue("from"), r.FormValue("to")).Error())
+	clientErr := p.client.Orchestration(r.FormValue("from"), r.FormValue("to"))
+	if clientErr != nil {
+		model := websupport.Model{Map: map[string]interface{}{"resource": "orchestration", "message": clientErr.Error()}}
+		_ = websupport.ModelAndView(w, &resources, "orchestration_new", model)
+		log.Println(clientErr.Error())
+		return
 	}
 	http.Redirect(w, r, "/applications", http.StatusMovedPermanently)
-}
-
-func Apply(from, to string) error {
-	fmt.Println(from)
-	fmt.Println(to)
-	return nil
 }
