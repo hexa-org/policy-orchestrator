@@ -52,8 +52,8 @@ func (suite *ApplicationsSuite) TestApplications_templateRenders() {
 }
 
 func (suite *ApplicationsSuite) TestApplications() {
-	suite.client.DesiredApplication = admin.Application{
-		ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription", ProviderName: "google_cloud",
+	suite.client.DesiredApplications = []admin.Application{
+		{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription", ProviderName: "google_cloud"},
 	}
 
 	url := fmt.Sprintf("http://%s/applications", suite.server.Addr)
@@ -75,8 +75,8 @@ func (suite *ApplicationsSuite) TestApplications_with_error() {
 }
 
 func (suite *ApplicationsSuite) TestApplication() {
-	suite.client.DesiredApplication = admin.Application{
-		ID: "anotherId", IntegrationId: "anotherIntegrationId", ObjectId: "anotherObjectId", Name: "anotherName", Description: "anotherDescription", ProviderName: "google_cloud",
+	suite.client.DesiredApplications = []admin.Application{
+		{ID: "anotherId", IntegrationId: "anotherIntegrationId", ObjectId: "anotherObjectId", Name: "anotherName", Description: "anotherDescription", ProviderName: "google_cloud"},
 	}
 	suite.client.DesiredPolicies = []admin.Policy{
 		{admin.Meta{Version: "aVersion"}, []admin.Action{{"anAction"}}, admin.Subject{Members: []string{"aUser"}}, admin.Object{ResourceID: "aResourceId"}},
@@ -112,8 +112,8 @@ func (suite *ApplicationsSuite) TestApplication_withErroneousGet() {
 }
 
 func (suite *ApplicationsSuite) TestApplication_withErroneousGetForPolicies() {
-	suite.client.DesiredApplication = admin.Application{
-		ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription", ProviderName: "google_cloud",
+	suite.client.DesiredApplications = []admin.Application{
+		{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription", ProviderName: "google_cloud"},
 	}
 	suite.client.Errs = map[string]error{
 		"http://noop/applications/anId":          nil,
@@ -127,8 +127,8 @@ func (suite *ApplicationsSuite) TestApplication_withErroneousGetForPolicies() {
 }
 
 func (suite *ApplicationsSuite) TestApplication_Edit() {
-	suite.client.DesiredApplication = admin.Application{
-		ID: "anotherId", IntegrationId: "anotherIntegrationId", ObjectId: "anotherObjectId", Name: "anotherName", Description: "anotherDescription", ProviderName: "google_cloud",
+	suite.client.DesiredApplications = []admin.Application{
+		{ID: "anotherId", IntegrationId: "anotherIntegrationId", ObjectId: "anotherObjectId", Name: "anotherName", Description: "anotherDescription", ProviderName: "google_cloud"},
 	}
 	suite.client.DesiredPolicies = []admin.Policy{
 		{admin.Meta{Version: "aVersion"}, []admin.Action{{"anAction"}}, admin.Subject{Members: []string{"aUser"}}, admin.Object{ResourceID: "aResourceId"}},
@@ -155,8 +155,8 @@ func (suite *ApplicationsSuite) TestApplication_Edit_withErroneousGet() {
 }
 
 func (suite *ApplicationsSuite) TestApplication_Edit_withErroneousGetForPolicies() {
-	suite.client.DesiredApplication = admin.Application{
-		ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription", ProviderName: "google_cloud",
+	suite.client.DesiredApplications = []admin.Application{
+		{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription", ProviderName: "google_cloud"},
 	}
 	suite.client.Errs = map[string]error{"http://noop/applications/anId": nil,
 		"http://noop/applications/anId/policies": errors.New("shoot"),
@@ -169,8 +169,8 @@ func (suite *ApplicationsSuite) TestApplication_Edit_withErroneousGetForPolicies
 }
 
 func (suite *ApplicationsSuite) TestApplication_Update() {
-	suite.client.DesiredApplication = admin.Application{
-		ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription", ProviderName: "google_cloud",
+	suite.client.DesiredApplications = []admin.Application{
+		{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription", ProviderName: "google_cloud"},
 	}
 	suite.client.DesiredPolicies = []admin.Policy{
 		{admin.Meta{Version: "aVersion"}, []admin.Action{{"anAction"}}, admin.Subject{Members: []string{"aUser"}}, admin.Object{ResourceID: "aResourceId"}},
