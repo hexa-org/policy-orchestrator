@@ -29,7 +29,16 @@ func (p orchestrationHandler) New(w http.ResponseWriter, _ *http.Request) {
 		log.Println(clientErr)
 		return
 	}
-	model := websupport.Model{Map: map[string]interface{}{"resource": "orchestration", "applications": foundApplications}}
+
+	/// todo - remove once working across providers
+	available := make([]Application, 0)
+	for _, app := range foundApplications {
+		if app.ProviderName == "google_cloud" {
+			available = append(available, app)
+		}
+	}
+
+	model := websupport.Model{Map: map[string]interface{}{"resource": "orchestration", "applications": available}}
 	_ = websupport.ModelAndView(w, &resources, "orchestration_new", model)
 }
 
