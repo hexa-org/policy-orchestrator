@@ -366,7 +366,7 @@ pre code {
 pre {
     line-height: 1.4;
     overflow-x: auto;
-    margin: 0 1rem 1rem 1rem;
+    margin: 1rem 1rem 1rem 0;
 }
 
 .no-margin {
@@ -383,8 +383,8 @@ pre {
 .custom-select {
     appearance: none;
     background-color: transparent;
-    border: none;
-    padding: 0 1em 0 0;
+    border: 1px solid var(--dark-orange);
+    padding: 8px;
     margin: 0;
     width: 100%;
     font-family: inherit;

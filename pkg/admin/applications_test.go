@@ -210,3 +210,17 @@ func (suite *ApplicationsSuite) TestApplication_Update_withErroneousGetForPolici
 	assert.Contains(suite.T(), string(body), "Something went wrong.")
 	assert.Contains(suite.T(), string(body), "shoot")
 }
+
+func (suite *ApplicationsSuite) TestApplication_Policies() {
+	suite.client.DesiredApplications = []admin.Application{
+		{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription", ProviderName: "google_cloud"},
+	}
+	suite.client.DesiredPolicies = []admin.Policy{
+		{admin.Meta{Version: "aVersion"}, []admin.Action{{"anAction"}}, admin.Subject{Members: []string{"aUser"}}, admin.Object{ResourceID: "aResourceId"}},
+	}
+
+	identifier := "anId"
+	resp, _ := http.Get(fmt.Sprintf("http://%s/applications/%s/policies", suite.server.Addr, identifier))
+	body, _ := io.ReadAll(resp.Body)
+	assert.Contains(suite.T(), string(body), "{\n  \"policies\": []\n}")
+}

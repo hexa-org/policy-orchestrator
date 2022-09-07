@@ -48,6 +48,7 @@ type ApplicationsHandler interface {
 	Show(w http.ResponseWriter, r *http.Request)
 	Edit(w http.ResponseWriter, r *http.Request)
 	Update(w http.ResponseWriter, r *http.Request)
+	Policies(w http.ResponseWriter, r *http.Request)
 }
 
 type appsHandler struct {
@@ -137,4 +138,14 @@ func (p appsHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	applicationsEndpoint := fmt.Sprintf("/applications/%v", identifier)
 	http.Redirect(w, r, applicationsEndpoint, http.StatusMovedPermanently)
+}
+
+func (p appsHandler) Policies(w http.ResponseWriter, r *http.Request) {
+	identifier := mux.Vars(r)["id"]
+	_, rawJson, _ := p.client.GetPolicies(identifier)
+	var buffer bytes.Buffer
+	_ = json.Indent(&buffer, []byte(rawJson), "", "  ")
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(buffer.Bytes())
 }
