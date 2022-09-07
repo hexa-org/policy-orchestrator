@@ -65,7 +65,7 @@ func (m *MockClient) Application(id string) (admin.Application, error) {
 
 func (m *MockClient) GetPolicies(id string) ([]admin.Policy, string, error) {
 	url := fmt.Sprintf("%v/applications/%s/policies", m.Url, id)
-	return m.DesiredPolicies, "", m.Errs[url]
+	return m.DesiredPolicies, "{\"policies\":[]}", m.Errs[url]
 }
 
 func (m *MockClient) SetPolicies(id string, _ string) error {

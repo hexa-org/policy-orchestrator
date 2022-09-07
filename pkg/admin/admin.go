@@ -40,6 +40,7 @@ func LoadHandlers(orchestratorUrl string, client Client) func(router *mux.Router
 		router.HandleFunc("/integrations/{id}", integrations.Delete).Methods("POST")
 		router.HandleFunc("/applications", apps.List).Methods("GET")
 		router.HandleFunc("/applications/{id}", apps.Show).Methods("GET")
+		router.HandleFunc("/applications/{id}/policies", apps.Policies).Methods("GET")
 		router.HandleFunc("/applications/{id}/edit", apps.Edit).Methods("GET")
 		router.HandleFunc("/applications/{id}", apps.Update).Methods("POST")
 		router.HandleFunc("/orchestration/new", orchestration.New).Methods("GET")

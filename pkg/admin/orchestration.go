@@ -41,5 +41,5 @@ func (p orchestrationHandler) Update(w http.ResponseWriter, r *http.Request) {
 		log.Println(clientErr.Error())
 		return
 	}
-	http.Redirect(w, r, "/applications", http.StatusMovedPermanently)
+	http.Redirect(w, r, "/orchestration/new", http.StatusMovedPermanently)
 }
