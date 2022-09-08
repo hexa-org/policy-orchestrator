@@ -140,6 +140,8 @@ func (p appsHandler) Update(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, applicationsEndpoint, http.StatusMovedPermanently)
 }
 
+// todo - maybe the below should be closer to the orchestration functions
+
 func (p appsHandler) Policies(w http.ResponseWriter, r *http.Request) {
 	identifier := mux.Vars(r)["id"]
 	_, rawJson, _ := p.client.GetPolicies(identifier)
