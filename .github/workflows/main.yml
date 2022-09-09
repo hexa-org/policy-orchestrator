@@ -58,7 +58,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: azure/docker-login@v1
         with:
-          login-server: stratademos.azurecr.io
+          login-server: azurehexa.azurecr.io
           username: ${{ secrets.HEXA_DEMO_REGISTRY_USERNAME }}
           password: ${{ secrets.HEXA_DEMO_REGISTRY_PASSWORD }}
       - name: pack
