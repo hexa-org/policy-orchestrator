@@ -67,3 +67,27 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pack-cli
           pack build --builder heroku/buildpacks:20 --publish azurehexa.azurecr.io/hexa:${{ github.sha }}
+  azure-deploy-hexa-demo:
+    runs-on: ubuntu-latest
+    needs: [azure-container]
+    steps:
+      - name: 'login via azure cli'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.HEXA_DEMO_AZURE_CREDENTIALS }}
+      - uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'azurehexa'
+          images: 'azurehexa.azurecr.io/hexa:${{ github.sha }}'
+  azure-deploy-hexa-demo-config:
+    runs-on: ubuntu-latest
+    needs: [azure-container]
+    steps:
+      - name: 'login via azure cli'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.HEXA_DEMO_CONFIG_AZURE_CREDENTIALS }}
+      - uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'azurehexa-config'
+          images: 'azurehexa.azurecr.io/hexa:${{ github.sha }}'
