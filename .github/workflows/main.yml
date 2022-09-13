@@ -51,6 +51,25 @@ jobs:
           go test -tags integration -coverprofile coverage.out  ./.../
       - name: Upload coverage to Codecov
         run: bash <(curl -s https://codecov.io/bash)
+  amazon-container:
+    runs-on: ubuntu-latest
+    needs: [ test ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.HEXA_DEMO_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.HEXA_DEMO_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+      - name: login to amazon ecr
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: pack
+        run: |
+          sudo add-apt-repository ppa:cncf-buildpacks/pack-cli
+          sudo apt-get update
+          sudo apt-get install -y pack-cli
+          pack build --builder heroku/buildpacks:20 --publish ${{ secrets.HEXA_DEMO_AWS_REPOSITORY_URI }}:${{ github.sha }}
   azure-container:
     runs-on: ubuntu-latest
     needs: [test]
@@ -59,14 +78,14 @@ jobs:
       - uses: azure/docker-login@v1
         with:
           login-server: azurehexa.azurecr.io
-          username: ${{ secrets.HEXA_DEMO_REGISTRY_USERNAME }}
-          password: ${{ secrets.HEXA_DEMO_REGISTRY_PASSWORD }}
+          username: ${{ secrets.HEXA_DEMO_AZURE_REGISTRY_USERNAME }}
+          password: ${{ secrets.HEXA_DEMO_AZURE_REGISTRY_PASSWORD }}
       - name: pack
         run: |
           sudo add-apt-repository ppa:cncf-buildpacks/pack-cli
           sudo apt-get update
           sudo apt-get install -y pack-cli
-          pack build --builder heroku/buildpacks:20 --publish azurehexa.azurecr.io/hexa:${{ github.sha }}
+          pack build --builder heroku/buildpacks:20 --publish ${{ secrets.HEXA_DEMO_AZURE_REPOSITORY_URI }}:${{ github.sha }}
   azure-deploy-hexa-demo:
     runs-on: ubuntu-latest
     needs: [azure-container]
