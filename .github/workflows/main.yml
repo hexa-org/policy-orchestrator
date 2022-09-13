@@ -71,7 +71,7 @@ jobs:
           sudo add-apt-repository ppa:cncf-buildpacks/pack-cli
           sudo apt-get update
           sudo apt-get install -y pack-cli
-          pack build --builder heroku/buildpacks:20 --publish $ECR_REGISTRY:${{ github.sha }}
+          pack build --builder heroku/buildpacks:20 --publish $ECR_REGISTRY/hexa-demo/hexa:${{ github.sha }}
   azure-container:
     runs-on: ubuntu-latest
     needs: [test]
