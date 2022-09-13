@@ -65,11 +65,13 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
       - name: pack
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           sudo add-apt-repository ppa:cncf-buildpacks/pack-cli
           sudo apt-get update
           sudo apt-get install -y pack-cli
-          pack build --builder heroku/buildpacks:20 --publish ${{ secrets.HEXA_DEMO_AWS_REPOSITORY_URI }}:${{ github.sha }}
+          pack build --builder heroku/buildpacks:20 --publish $ECR_REGISTRY:${{ github.sha }}
   azure-container:
     runs-on: ubuntu-latest
     needs: [test]
