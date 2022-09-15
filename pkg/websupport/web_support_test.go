@@ -4,10 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net"
 	"net/http"
@@ -15,6 +11,11 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/gorilla/mux"
+	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestServer(t *testing.T) {
@@ -35,7 +36,7 @@ func TestServer(t *testing.T) {
 	websupport.Stop(server)
 }
 
-func _TestServerWithTLS(t *testing.T) {
+func TestServerWithTLS(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 
 	listener, _ := net.Listen("tcp", "localhost:0")
@@ -71,7 +72,7 @@ func TestPaths(t *testing.T) {
 	assert.Equal(t, 2, len(websupport.Paths(server.Handler.(*mux.Router))))
 }
 
-/// supporting functions
+// / supporting functions
 
 func configureWithTransportLayerSecurity(file string, server *http.Server) {
 	cert, _ := tls.X509KeyPair(
