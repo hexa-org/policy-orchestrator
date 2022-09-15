@@ -72,6 +72,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pack-cli
           pack build --builder heroku/buildpacks:20 --publish $ECR_REGISTRY/hexa-demo/hexa:${{ github.sha }}
+      - name: docker
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          cd deployments/opa-server
+          docker build -t $ECR_REGISTRY/hexa-demo/hexa-opa-server:${{ github.sha }} .
+          docker push $ECR_REGISTRY/hexa-demo/hexa-opa-server:${{ github.sha }}
   azure-container:
     runs-on: ubuntu-latest
     needs: [test]
