@@ -4,9 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net"
 	"net/http"
@@ -14,6 +11,10 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestApp(t *testing.T) {
@@ -33,7 +34,7 @@ func TestApp(t *testing.T) {
 	scheduler.Stop()
 }
 
-func _TestAppWithTransportLayerSecurity(t *testing.T) {
+func TestAppWithTransportLayerSecurity(t *testing.T) {
 	listener, _ := net.Listen("tcp", "localhost:0")
 	app, scheduler := App("aKey", listener.Addr().String(), listener.Addr().String(), "postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
 	_, file, _, _ := runtime.Caller(0)
@@ -71,7 +72,7 @@ func TestConfigWithPort(t *testing.T) {
 	newApp("localhost:0")
 }
 
-func _TestConfigWithTransportLayerSecurity(t *testing.T) {
+func TestConfigWithTransportLayerSecurity(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	_ = os.Setenv("SERVER_CERT", filepath.Join(file, "../test/server-cert.pem"))
 	_ = os.Setenv("SERVER_KEY", filepath.Join(file, "../test/server-key.pem"))
@@ -105,7 +106,7 @@ func shouldPanic(t *testing.T) {
 	}
 }
 
-/// supporting functions
+// / supporting functions
 
 func configureWithTransportLayerSecurity(file string, server *http.Server) {
 	cert, _ := tls.X509KeyPair(
