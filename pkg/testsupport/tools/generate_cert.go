@@ -94,6 +94,54 @@ func certsetup() (err error) {
 	}
 
 	// set up our server certificate
+	certPEM, certPrivKeyPEM, err := generateCert(
+		ca,
+		caPrivKey,
+		[]x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
+	)
+	if err != nil {
+		return err
+	}
+	log.Println("Writing out Server Cert")
+	err = os.WriteFile("server-cert.pem", certPEM, 0644)
+	if err != nil {
+		return err
+	}
+	log.Println("Writing out Server Key")
+	err = os.WriteFile("server-key.pem", certPrivKeyPEM, 0644)
+	if err != nil {
+		return err
+	}
+
+	// set up our client certificate
+	clientCertPEM, clientCertPrivKeyPEM, err := generateCert(
+		ca,
+		caPrivKey,
+		[]x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+	)
+	if err != nil {
+		return err
+	}
+
+	log.Println("Writing out Client Cert")
+	err = os.WriteFile("client-cert.pem", clientCertPEM, 0644)
+	if err != nil {
+		return err
+	}
+	log.Println("Writing out Client Key")
+	err = os.WriteFile("client-key.pem", clientCertPrivKeyPEM, 0644)
+	if err != nil {
+		return err
+	}
+
+	return
+}
+
+func generateCert(
+	ca *x509.Certificate,
+	caPrivKey *rsa.PrivateKey,
+	keyUsage []x509.ExtKeyUsage,
+) ([]byte, []byte, error) {
 	cert := &x509.Certificate{
 		SerialNumber: big.NewInt(2019),
 		Subject: pkix.Name{
@@ -106,18 +154,18 @@ func certsetup() (err error) {
 		NotBefore:    time.Now(),
 		NotAfter:     time.Now().AddDate(10, 0, 0),
 		SubjectKeyId: []byte{1, 2, 3, 4, 6},
-		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
+		ExtKeyUsage:  keyUsage,
 		KeyUsage:     x509.KeyUsageDigitalSignature,
 	}
 
 	certPrivKey, err := rsa.GenerateKey(rand.Reader, 4096)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
 	certBytes, err := x509.CreateCertificate(rand.Reader, cert, ca, &certPrivKey.PublicKey, caPrivKey)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
 	certPEM := new(bytes.Buffer)
@@ -125,81 +173,11 @@ func certsetup() (err error) {
 		Type:  "CERTIFICATE",
 		Bytes: certBytes,
 	})
-	log.Println("Writing out Server Cert")
-	err = os.WriteFile("server-cert.pem", certPEM.Bytes(), 0644)
-	if err != nil {
-		return err
-	}
 
 	certPrivKeyPEM := new(bytes.Buffer)
 	pem.Encode(certPrivKeyPEM, &pem.Block{
 		Type:  "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(certPrivKey),
 	})
-	log.Println("Writing out Server Key")
-	err = os.WriteFile("server-key.pem", certPrivKeyPEM.Bytes(), 0644)
-	if err != nil {
-		return err
-	}
-
-	// serverCert, err := tls.X509KeyPair(certPEM.Bytes(), certPrivKeyPEM.Bytes())
-	// if err != nil {
-	// 	return nil, nil, err
-	// }
-
-	// set up our client certificate
-	clientcert := &x509.Certificate{
-		SerialNumber: big.NewInt(2019),
-		Subject: pkix.Name{
-			Organization: []string{"Strata Identity"},
-			Country:      []string{"US"},
-			Province:     []string{"CO"},
-			Locality:     []string{"Boulder"},
-		},
-		IPAddresses:  []net.IP{net.IPv4(127, 0, 0, 1), net.IPv6loopback},
-		NotBefore:    time.Now(),
-		NotAfter:     time.Now().AddDate(10, 0, 0),
-		SubjectKeyId: []byte{1, 2, 3, 4, 6},
-		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
-		KeyUsage:     x509.KeyUsageDigitalSignature,
-	}
-
-	clientcertPrivKey, err := rsa.GenerateKey(rand.Reader, 4096)
-	if err != nil {
-		return err
-	}
-
-	clientcertBytes, err := x509.CreateCertificate(rand.Reader, clientcert, ca, &certPrivKey.PublicKey, caPrivKey)
-	if err != nil {
-		return err
-	}
-
-	clientcertPEM := new(bytes.Buffer)
-	pem.Encode(clientcertPEM, &pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: clientcertBytes,
-	})
-	log.Println("Writing out Client Cert")
-	err = os.WriteFile("client-cert.pem", clientcertPEM.Bytes(), 0644)
-	if err != nil {
-		return err
-	}
-
-	clientcertPrivKeyPEM := new(bytes.Buffer)
-	pem.Encode(clientcertPrivKeyPEM, &pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(clientcertPrivKey),
-	})
-	log.Println("Writing out Client Key")
-	err = os.WriteFile("client-key.pem", clientcertPrivKeyPEM.Bytes(), 0644)
-	if err != nil {
-		return err
-	}
-
-	// clientserverCert, err := tls.X509KeyPair(clientcertPEM.Bytes(), clientcertPrivKeyPEM.Bytes())
-	// if err != nil {
-	// 	return nil, nil, err
-	// }
-
-	return
+	return certPEM.Bytes(), certPrivKeyPEM.Bytes(), nil
 }
