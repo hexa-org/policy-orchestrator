@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source ${REPO}/bin/support.sh
+
+# ------------------------------------------------------------------------------
+# Usage:
+#
+#   dev <command>   [<args>...] [options]
+#
+# Description:
+#
+#   Performs project-level tasks & utilities.
+#
+# Commands:
+#
+#    build          Builds the Hexa Policy Orchestrator.
+#    version        Print version information.
+#
+# Options:
+#
+#   -h, --help      Print help text.
+#   -v, --version   Print version information.
+# ------------------------------------------------------------------------------
+
+_main_() {
+  cmd="${1:-}"
+
+  case "${cmd}" in
+    version | --version | -v )
+      _version_
+      ;;
+    * )
+      cmd::proxy ${cmd} "${@:2}"
+      ;;
+  esac
+}
+
+_version_() {
+  echo "v0.1.0"
+}
+
+_main_ "$@"
