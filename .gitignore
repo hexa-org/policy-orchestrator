@@ -6,4 +6,7 @@
 .bundle*
 .codeql
 .freshcloud
+
 Brewfile.lock.json
+
+!.envrc
