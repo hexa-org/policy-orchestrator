@@ -4,12 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent/test"
-	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -18,6 +12,13 @@ import (
 	"runtime"
 	"testing"
 	"time"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDiscoverApplications(t *testing.T) {
@@ -106,7 +107,7 @@ func TestSetPolicyInfo(t *testing.T) {
 	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
 	status, err := p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
-		orchestrator.ApplicationInfo{ObjectID: "aResourceId"},
+		orchestrator.ApplicationInfo{ObjectID: "anotherResourceId"},
 		[]policysupport.PolicyInfo{
 			{Meta: policysupport.MetaInfo{Version: "0.5"}, Actions: []policysupport.ActionInfo{{"http:GET"}}, Subject: policysupport.SubjectInfo{Members: []string{"allusers"}}, Object: policysupport.ObjectInfo{
 				ResourceID: "aResourceId",
@@ -121,7 +122,7 @@ func TestSetPolicyInfo(t *testing.T) {
 	path := filepath.Join(file, fmt.Sprintf("../resources/bundles/.bundle-%d", rand.Uint64()))
 	_ = compressionsupport.UnTarToPath(bytes.NewReader(gzip), path)
 	readFile, _ := ioutil.ReadFile(path + "/bundle/data.json")
-	assert.Equal(t, `{"policies":[{"meta":{"version":"0.5"},"actions":[{"action_uri":"http:GET"}],"subject":{"members":["allusers"]},"object":{"resource_id":"aResourceId"}}]}`, string(readFile))
+	assert.Equal(t, `{"policies":[{"meta":{"version":"0.5"},"actions":[{"action_uri":"http:GET"}],"subject":{"members":["allusers"]},"object":{"resource_id":"anotherResourceId"}}]}`, string(readFile))
 	_ = os.RemoveAll(path)
 }
 
@@ -149,8 +150,8 @@ func TestSetPolicyInfo_withInvalidArguments(t *testing.T) {
 		[]policysupport.PolicyInfo{
 			{
 				Actions: []policysupport.ActionInfo{{"http:GET"}}, Subject: policysupport.SubjectInfo{Members: []string{"allusers"}}, Object: policysupport.ObjectInfo{
-					ResourceID: "aResourceId",
-				}},
+				ResourceID: "aResourceId",
+			}},
 		},
 	)
 	assert.Equal(t, 500, status)

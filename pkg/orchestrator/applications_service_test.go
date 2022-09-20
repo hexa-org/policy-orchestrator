@@ -3,12 +3,14 @@ package orchestrator_test
 import (
 	"database/sql"
 	"errors"
+	"testing"
+
 	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 type applicationsServiceData struct {
@@ -48,7 +50,7 @@ func TestApplicationsService_Apply(t *testing.T) {
 	testsupport.WithSetUp(&applicationsServiceData{}, func(data *applicationsServiceData) {
 		applicationsGateway := orchestrator.ApplicationsDataGateway{DB: data.db}
 		integrationsGateway := orchestrator.IntegrationsDataGateway{DB: data.db}
-		applicationsService := orchestrator.ApplicationsService{applicationsGateway, integrationsGateway, data.providers}
+		applicationsService := orchestrator.ApplicationsService{ApplicationsGateway: applicationsGateway, IntegrationsGateway: integrationsGateway, Providers: data.providers}
 
 		err := applicationsService.Apply(orchestrator.Orchestration{From: data.fromApp, To: data.toApp})
 		assert.NoError(t, err)
@@ -63,5 +65,51 @@ func TestApplicationsService_Apply(t *testing.T) {
 
 		providerError := applicationsService.Apply(orchestrator.Orchestration{From: data.fromApp, To: data.toApp})
 		assert.Error(t, providerError)
+	})
+}
+
+func TestApplicationsService_RetainResource(t *testing.T) {
+	testsupport.WithSetUp(&applicationsServiceData{}, func(data *applicationsServiceData) {
+		applicationsGateway := orchestrator.ApplicationsDataGateway{DB: data.db}
+		integrationsGateway := orchestrator.IntegrationsDataGateway{DB: data.db}
+		applicationsService := orchestrator.ApplicationsService{ApplicationsGateway: applicationsGateway, IntegrationsGateway: integrationsGateway, Providers: data.providers}
+
+		from := []policysupport.PolicyInfo{
+			{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"fromAnAction"}}, policysupport.SubjectInfo{Members: []string{"fromAUser"}}, policysupport.ObjectInfo{
+				ResourceID: "fromAnId",
+			}},
+			{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"fromAnotherAction"}}, policysupport.SubjectInfo{Members: []string{"fromAnotherUser"}}, policysupport.ObjectInfo{
+				ResourceID: "fromAnId",
+			}},
+		}
+
+		to := []policysupport.PolicyInfo{
+			{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"toAnAction"}}, policysupport.SubjectInfo{Members: []string{"toAUser"}}, policysupport.ObjectInfo{
+				ResourceID: "toAnId",
+			}},
+			{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"toAnotherAction"}}, policysupport.SubjectInfo{Members: []string{"toAnotherUser"}}, policysupport.ObjectInfo{
+				ResourceID: "toAnId",
+			}},
+		}
+
+		modified, _ := applicationsService.RetainResource(from, to)
+		assert.Equal(t, "toAnId", modified[0].Object.ResourceID)
+		assert.Equal(t, "fromAnAction", modified[0].Actions[0].ActionUri)
+		assert.Equal(t, "fromAUser", modified[0].Subject.Members[0])
+
+		assert.Equal(t, "toAnId", modified[1].Object.ResourceID)
+		assert.Equal(t, "fromAnotherAction", modified[1].Actions[0].ActionUri)
+		assert.Equal(t, "fromAnotherUser", modified[1].Subject.Members[0])
+
+		toWithDifferentResources := []policysupport.PolicyInfo{
+			{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"anotherAction"}}, policysupport.SubjectInfo{Members: []string{"anotherUser"}}, policysupport.ObjectInfo{
+				ResourceID: "anotherId",
+			}},
+			{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"anotherAction"}}, policysupport.SubjectInfo{Members: []string{"anotherUser"}}, policysupport.ObjectInfo{
+				ResourceID: "andAnotherId",
+			}},
+		}
+		_, err := applicationsService.RetainResource(from, toWithDifferentResources)
+		assert.Error(t, err)
 	})
 }

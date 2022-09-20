@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 )
 
 type ApplicationsService struct {
@@ -43,14 +45,49 @@ func (service ApplicationsService) Apply(jsonRequest Orchestration) error {
 		return errors.New("sorry, orchestration across providers is work in progress")
 	}
 
-	fromPolicies, getErr := fromProvider.GetPolicyInfo(fromIntegration, fromApplication)
-	if getErr != nil {
-		return getErr
+	fromPolicies, getFroErr := fromProvider.GetPolicyInfo(fromIntegration, fromApplication)
+	if getFroErr != nil {
+		return getFroErr
 	}
 
-	status, setErr := toProvider.SetPolicyInfo(toIntegration, toApplication, fromPolicies)
+	toPolicies, getToErr := fromProvider.GetPolicyInfo(fromIntegration, fromApplication)
+	if getToErr != nil {
+		return getToErr
+	}
+
+	modifiedPolicies, err := service.RetainResource(fromPolicies, toPolicies)
+	if err != nil {
+		return err
+	}
+
+	status, setErr := toProvider.SetPolicyInfo(toIntegration, toApplication, modifiedPolicies)
 	if setErr != nil || status != http.StatusCreated {
 		return setErr
 	}
 	return nil
+}
+
+func (service ApplicationsService) RetainResource(fromPolicies, toPolicies []policysupport.PolicyInfo) ([]policysupport.PolicyInfo, error) {
+	var firstResourceId string
+
+	resourceIds := make([]string, 0)
+	for _, policy := range toPolicies {
+		if firstResourceId == "" {
+			firstResourceId = policy.Object.ResourceID
+		}
+		resourceIds = append(resourceIds, policy.Object.ResourceID)
+	}
+
+	for _, foundResourceId := range resourceIds {
+		if firstResourceId != foundResourceId {
+			return []policysupport.PolicyInfo{}, errors.New("sorry, found more than one resource id within policies")
+		}
+	}
+
+	modified := make([]policysupport.PolicyInfo, 0)
+	for _, policy := range fromPolicies {
+		policy.Object.ResourceID = firstResourceId
+		modified = append(modified, policy)
+	}
+	return modified, nil
 }
