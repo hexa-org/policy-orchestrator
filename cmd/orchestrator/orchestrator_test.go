@@ -80,30 +80,24 @@ func TestConfigWithTransportLayerSecurity(t *testing.T) {
 }
 
 func TestConfigWithTransportLayerSecurity_withBadCertFile(t *testing.T) {
-	defer shouldPanic(t)
 	_ = os.Setenv("SERVER_CERT", "notAFile")
-	newApp("localhost:0")
+
+	assert.Panics(t, func() { newApp("localhost:0") })
 }
 
 func TestConfigWithTransportLayerSecurity_withBadKeyFile(t *testing.T) {
-	defer shouldPanic(t)
 	_, file, _, _ := runtime.Caller(0)
 	_ = os.Setenv("SERVER_CERT", filepath.Join(file, "../test/server-cert.pem"))
 	_ = os.Setenv("SERVER_KEY", "notAFile")
-	newApp("localhost:0")
+
+	assert.Panics(t, func() { newApp("localhost:0") })
 }
 
 func TestConfigWithTransportLayerSecurity_withBad509(t *testing.T) {
-	defer shouldPanic(t)
 	_, file, _, _ := runtime.Caller(0)
 	_ = os.Setenv("SERVER_CERT", filepath.Join(file, "../test/server-cert.pem"))
-	newApp("localhost:0")
-}
 
-func shouldPanic(t *testing.T) {
-	if err := recover(); err == nil {
-		t.Fail()
-	}
+	assert.Panics(t, func() { newApp("localhost:0") })
 }
 
 // / supporting functions
