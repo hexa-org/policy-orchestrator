@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"io/fs"
 	"log"
@@ -111,9 +112,38 @@ func newApp(addr string) (*http.Server, net.Listener) {
 	log.Printf("Found server host %v", addr)
 
 	listener, _ := net.Listen("tcp", addr)
-	return App(listener.Addr().String()), listener
+	app := App(listener.Addr().String())
+
+	serverCertPath := os.Getenv("SERVER_CERT")
+	serverKeyPath := os.Getenv("SERVER_KEY")
+	if serverKeyPath != "" && serverCertPath != "" {
+		key, err := os.ReadFile(serverKeyPath)
+		if err != nil {
+			panic(fmt.Sprintf("invalid SERVER_KEY path: %s", err))
+		}
+		cert, err := os.ReadFile(serverCertPath)
+		if err != nil {
+			panic(fmt.Sprintf("invalid SERVER_CERT path: %s", err))
+		}
+		pair, err := tls.X509KeyPair(cert, key)
+		if err != nil {
+			panic(fmt.Sprintf("invalid cert/key pair: %s", err))
+		}
+		app.TLSConfig = &tls.Config{
+			Certificates: []tls.Certificate{pair},
+		}
+	}
+
+	return app, listener
 }
 
 func main() {
-	websupport.Start(newApp("0.0.0.0:8889"))
+	app, listener := newApp("0.0.0.0:8889")
+
+	if os.Getenv("SERVER_KEY") != "" && os.Getenv("SERVER_CERT") != "" {
+		websupport.StartWithTLS(app, listener)
+		return
+	}
+
+	websupport.Start(app, listener)
 }
