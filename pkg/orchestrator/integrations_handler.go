@@ -2,8 +2,9 @@ package orchestrator
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type Integrations struct {
@@ -42,7 +43,7 @@ func (handler IntegrationsHandler) Create(w http.ResponseWriter, r *http.Request
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	handler.RunWorker()
+	handler.RunWorker() // todo - make async?
 	w.WriteHeader(http.StatusCreated)
 }
 

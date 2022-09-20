@@ -1,9 +1,10 @@
 package orchestrator_test
 
 import (
+	"net/http"
+
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
-	"net/http"
 )
 
 type NoopProvider struct {
@@ -30,7 +31,7 @@ func (n *NoopProvider) GetPolicyInfo(_ orchestrator.IntegrationInfo, _ orchestra
 			ResourceID: "anId",
 		}},
 		{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"anotherAction"}}, policysupport.SubjectInfo{Members: []string{"anotherUser"}}, policysupport.ObjectInfo{
-			ResourceID: "anotherId",
+			ResourceID: "anId",
 		}},
 	}, n.Err
 }

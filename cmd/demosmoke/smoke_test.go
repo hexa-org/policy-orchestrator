@@ -6,9 +6,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"log"
 	"net/http"
@@ -19,6 +16,10 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDemoFlow(t *testing.T) {
@@ -28,6 +29,7 @@ func TestDemoFlow(t *testing.T) {
 
 	demo := makeCmd("/cmd/demo/demo.go", []string{"HOST=localhost", "PORT=8886", "OPA_SERVER_URL: http://localhost:8887/v1/data/authz/allow"})
 	demoConfig := makeCmd("/cmd/democonfig/democonfig.go", []string{"HOST=localhost", "PORT=8889"})
+	anotherDemoConfig := makeCmd("/cmd/democonfig/democonfig.go", []string{"HOST=localhost", "PORT=8890"})
 	orchestrator := makeCmd("/cmd/orchestrator/orchestrator.go", []string{
 		"HOST=localhost",
 		"PORT=8885",
@@ -54,11 +56,12 @@ func TestDemoFlow(t *testing.T) {
 
 	startCmd(demo, 8886)
 	startCmd(demoConfig, 8889)
+	startCmd(anotherDemoConfig, 8890)
 	startCmd(openPolicyAgent, 8887)
 	startCmd(orchestrator, 8885)
 
 	defer func() {
-		stopCmds(orchestrator, openPolicyAgent, demoConfig, demo)
+		stopCmds(orchestrator, openPolicyAgent, demoConfig, anotherDemoConfig, demo)
 	}()
 
 	assertContains(t, "http://localhost:8886/", "Great news, you're able to access this page.")
@@ -70,7 +73,7 @@ func TestDemoFlow(t *testing.T) {
 	assertContains(t, "http://localhost:8886/humanresources", "Sorry, you're not able to access this page.")
 
 	_, _ = db.Exec(deleteAll)
-	createAnIntegration()
+	createAnIntegration([]byte(`{ "bundle_url":"http://localhost:8889/bundles/bundle.tar.gz" }`))
 
 	status, updateErr := updateAPolicy()
 	assert.Equal(t, http.StatusCreated, status.StatusCode)
@@ -90,7 +93,16 @@ func TestDemoFlow(t *testing.T) {
 	body, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, "unable to update policy.\n", string(body))
 
-	_, _ = http.Get("http://localhost:8889/reset")
+	_, _ = db.Exec(deleteAll)
+	createAnIntegration([]byte(`{ "bundle_url":"http://localhost:8889/bundles/bundle.tar.gz" }`))
+	createAnIntegration([]byte(`{ "bundle_url":"http://localhost:8890/bundles/bundle.tar.gz" }`))
+
+	apps := listApplications()
+	orchestratePolicy(apps.Applications[0].ID, apps.Applications[1].ID)
+
+	assertContains(t, "http://localhost:8886/accounting", "Great news, you're able to access this page.")
+
+	_, _ = http.Get( /**/ "http://localhost:8889/reset")
 }
 
 func assertContains(t *testing.T, url string, contains string) {
@@ -99,9 +111,9 @@ func assertContains(t *testing.T, url string, contains string) {
 	assert.Contains(t, string(body), contains, url)
 }
 
-func createAnIntegration() {
+func createAnIntegration(key []byte) {
 	integrationInfo, _ := json.Marshal(Integration{Name: "bundle:open-policy-agent", Provider: "open_policy_agent",
-		Key: []byte(`{ "bundle_url":"http://localhost:8889/bundles/bundle.tar.gz" }`)})
+		Key: key})
 
 	_, _ = hawksupport.HawkPost(&http.Client{},
 		"anId", "0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb",
@@ -138,6 +150,22 @@ func updateAPolicy() (*http.Response, error) {
 		"anId", "0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb",
 		url, bytes.NewReader(policies.Bytes()))
 	return resp, err
+}
+
+func listApplications() Applications {
+	resp, _ := hawksupport.HawkGet(&http.Client{},
+		"anId", "0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb",
+		"http://localhost:8885/applications")
+	var apps Applications
+	_ = json.NewDecoder(resp.Body).Decode(&apps)
+	return apps
+}
+
+func orchestratePolicy(fromApp, toApp string) {
+	orchestration, _ := json.Marshal(Orchestration{From: fromApp, To: toApp})
+	_, _ = hawksupport.HawkPost(&http.Client{},
+		"anId", "0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb",
+		"http://localhost:8885/orchestration", bytes.NewReader(orchestration))
 }
 
 /// supporting structs
@@ -182,6 +210,11 @@ type Subject struct {
 
 type Object struct {
 	ResourceID string `json:"resource_id"`
+}
+
+type Orchestration struct {
+	From string `json:"from"`
+	To   string `json:"to"`
 }
 
 /// supporting functions

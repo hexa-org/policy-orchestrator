@@ -5,10 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/go-playground/validator/v10"
-	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -18,6 +14,11 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 )
 
 type OpaProvider struct {
@@ -33,7 +34,7 @@ func (o *OpaProvider) DiscoverApplications(info orchestrator.IntegrationInfo) (a
 	c := o.credentials(info.Key)
 	if strings.EqualFold(info.Name, o.Name()) {
 		apps = append(apps, orchestrator.ApplicationInfo{
-			ObjectID:    base64.StdEncoding.EncodeToString([]byte(c.BundleUrl)),
+			ObjectID:    base64.StdEncoding.EncodeToString([]byte(c.BundleUrl)), // todo - intended to represent a resource identifier
 			Name:        "package authz",
 			Description: "Open policy agent bundle",
 		})
@@ -99,7 +100,7 @@ func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, ap
 				Members: p.Subject.Members,
 			},
 			Object: policysupport.ObjectInfo{
-				ResourceID: appInfo.ObjectID,
+				ResourceID: appInfo.ObjectID, // todo - for now, ensures the correct resource identifier
 			},
 		})
 	}
@@ -134,7 +135,7 @@ func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, ap
 				p.Subject.Members,
 			},
 			Object: Object{
-				ResourceID: appInfo.ObjectID,
+				ResourceID: appInfo.ObjectID, // todo - for now, ensures the correct resource identifier
 			},
 		})
 	}
