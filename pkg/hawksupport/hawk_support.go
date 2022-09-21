@@ -1,11 +1,12 @@
 package hawksupport
 
 import (
-	"github.com/hiyosi/hawk"
 	"io"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/hiyosi/hawk"
 )
 
 type HTTPClient interface {
