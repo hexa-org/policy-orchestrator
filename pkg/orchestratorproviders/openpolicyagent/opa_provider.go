@@ -2,6 +2,8 @@ package openpolicyagent
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -70,8 +72,8 @@ type Object struct {
 }
 
 func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, appInfo orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
-	client := o.ensureClientIsAvailable()
 	key := integration.Key
+	client := o.ensureClientIsAvailable(key)
 	foundCredentials := o.credentials(key)
 	rand.Seed(time.Now().UnixNano())
 	path := filepath.Join(os.TempDir(), fmt.Sprintf("/test-bundle-%d", rand.Uint64()))
@@ -118,8 +120,8 @@ func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, ap
 		return http.StatusInternalServerError, errPolicies
 	}
 
-	client := o.ensureClientIsAvailable()
 	key := integration.Key
+	client := o.ensureClientIsAvailable(key)
 	foundCredentials := o.credentials(key)
 
 	var policies []Policy
@@ -180,26 +182,45 @@ func (o *OpaProvider) MakeDefaultBundle(data []byte) (bytes.Buffer, error) {
 	return buffer, nil
 }
 
-///
+// /
 
 type credentials struct {
 	BundleUrl string `json:"bundle_url"`
+	CACert    string `json:"ca_cert"`
 }
 
+// todo - does this method need to be on OpaProvider?
+// todo - refactor and pull this into  ensureClientIsAvailable and build out the client from it.
 func (o *OpaProvider) credentials(key []byte) credentials {
 	var foundCredentials credentials
 	_ = json.NewDecoder(bytes.NewReader(key)).Decode(&foundCredentials)
 	return foundCredentials
 }
 
-func (o *OpaProvider) ensureClientIsAvailable() BundleClient {
+func (o *OpaProvider) ensureClientIsAvailable(key []byte) BundleClient {
 	if o.ResourcesDirectory == "" {
 		_, file, _, _ := runtime.Caller(0)
 		o.ResourcesDirectory = filepath.Join(file, "../resources")
 	}
 
+	creds := o.credentials(key)
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	if creds.CACert != "" {
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM([]byte(creds.CACert))
+		client.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: caCertPool,
+			},
+		}
+	}
+
 	if o.BundleClientOverride.HttpClient != nil {
 		return o.BundleClientOverride
 	}
-	return BundleClient{HttpClient: &http.Client{}}
+
+	return BundleClient{HttpClient: client}
 }

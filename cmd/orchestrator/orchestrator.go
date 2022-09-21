@@ -4,6 +4,11 @@ import (
 	"crypto/tls"
 	"database/sql"
 	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"os"
+
 	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
@@ -14,10 +19,6 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
-	"log"
-	"net"
-	"net/http"
-	"os"
 )
 
 type DatabaseHealthCheck struct {

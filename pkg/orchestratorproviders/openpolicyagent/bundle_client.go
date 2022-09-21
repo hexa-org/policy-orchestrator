@@ -3,13 +3,14 @@ package openpolicyagent
 import (
 	"bytes"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
 )
 
 type HTTPClient interface {
