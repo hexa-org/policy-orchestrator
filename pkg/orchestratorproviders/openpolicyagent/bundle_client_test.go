@@ -4,16 +4,17 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent/test"
-	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
 	"time"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent/test"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBundleClient_GetExpressionFromBundle(t *testing.T) {

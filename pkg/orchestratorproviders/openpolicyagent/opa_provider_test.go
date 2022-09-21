@@ -2,11 +2,14 @@ package openpolicyagent_test
 
 import (
 	"bytes"
+	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -155,6 +158,43 @@ func TestSetPolicyInfo_withInvalidArguments(t *testing.T) {
 		},
 	)
 	assert.Equal(t, 500, status)
+}
+
+func TestSetPolicyInfo_WithHTTPSBundleServer(t *testing.T) {
+	gotBundleRequest := false
+	bundleServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/bundles", r.URL.Path)
+		gotBundleRequest = true
+		rw.WriteHeader(http.StatusCreated)
+	}))
+	caCert := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: bundleServer.Certificate().Raw,
+	})
+
+	integration := struct {
+		BundleURL string `json:"bundle_url"`
+		CACert    string `json:"ca_cert"`
+	}{
+		BundleURL: bundleServer.URL,
+		CACert:    string(caCert),
+	}
+	key, _ := json.Marshal(integration)
+
+	_, file, _, _ := runtime.Caller(0)
+	p := openpolicyagent.OpaProvider{ResourcesDirectory: filepath.Join(file, "../resources")}
+	status, err := p.SetPolicyInfo(
+		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
+		orchestrator.ApplicationInfo{ObjectID: "aResourceId"},
+		[]policysupport.PolicyInfo{
+			{Meta: policysupport.MetaInfo{Version: "0.5"}, Actions: []policysupport.ActionInfo{{"http:GET"}}, Subject: policysupport.SubjectInfo{Members: []string{"allusers"}}, Object: policysupport.ObjectInfo{
+				ResourceID: "aResourceId",
+			}},
+		},
+	)
+	assert.Equal(t, http.StatusCreated, status)
+	assert.NoError(t, err)
+	assert.True(t, gotBundleRequest)
 }
 
 func TestMakeDefaultBundle(t *testing.T) {
