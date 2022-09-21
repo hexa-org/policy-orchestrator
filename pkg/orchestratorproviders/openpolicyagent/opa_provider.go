@@ -74,10 +74,9 @@ type Object struct {
 func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, appInfo orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
 	key := integration.Key
 	client := o.ensureClientIsAvailable(key)
-	foundCredentials := o.credentials(key)
 	rand.Seed(time.Now().UnixNano())
 	path := filepath.Join(os.TempDir(), fmt.Sprintf("/test-bundle-%d", rand.Uint64()))
-	data, err := client.GetDataFromBundle(foundCredentials.BundleUrl, path)
+	data, err := client.GetDataFromBundle(client.BundleServerURL, path)
 	if err != nil {
 		log.Printf("open-policy-agent, unable to read expression file. %s\n", err)
 		return nil, err
@@ -122,7 +121,6 @@ func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, ap
 
 	key := integration.Key
 	client := o.ensureClientIsAvailable(key)
-	foundCredentials := o.credentials(key)
 
 	var policies []Policy
 	for _, p := range policyInfos {
@@ -157,7 +155,7 @@ func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, ap
 			log.Println("unable to set policy.")
 		}
 	}()
-	return client.PostBundle(foundCredentials.BundleUrl, bundle.Bytes())
+	return client.PostBundle(client.BundleServerURL, bundle.Bytes())
 }
 
 func (o *OpaProvider) MakeDefaultBundle(data []byte) (bytes.Buffer, error) {
@@ -222,5 +220,8 @@ func (o *OpaProvider) ensureClientIsAvailable(key []byte) BundleClient {
 		return o.BundleClientOverride
 	}
 
-	return BundleClient{HttpClient: client}
+	return BundleClient{
+		BundleServerURL: creds.BundleUrl,
+		HttpClient:      client,
+	}
 }

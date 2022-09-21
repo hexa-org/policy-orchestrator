@@ -19,7 +19,8 @@ type HTTPClient interface {
 }
 
 type BundleClient struct {
-	HttpClient HTTPClient
+	BundleServerURL string
+	HttpClient      HTTPClient
 }
 
 func (b *BundleClient) GetDataFromBundle(bundleUrl string, path string) ([]byte, error) {
