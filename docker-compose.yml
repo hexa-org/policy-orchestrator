@@ -39,6 +39,10 @@ services:
     command: democonfig
     environment:
       PORT: 8889
+      SERVER_CERT: "/home/config/server-cert.pem"
+      SERVER_KEY: "/home/config/server-key.pem"
+    volumes:
+      - "./deployments/bundle-server/config:/home/config:ro"
 
   postgresql:
     image: postgres
@@ -69,6 +73,7 @@ services:
       - "8887:8887"
     command: run --server --addr :8887 -c /home/config/config.yaml
     environment:
-      HEXA_DEMO_URL: "http://hexa-demo-config:8889"
+      HEXA_DEMO_URL: "https://hexa-demo-config:8889"
+      HEXA_DEMO_CA_CERT: "/home/config/ca-cert.pem"
     volumes:
       - "./deployments/opa-server/config:/home/config:ro"

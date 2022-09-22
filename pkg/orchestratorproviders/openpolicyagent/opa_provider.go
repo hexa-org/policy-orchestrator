@@ -184,11 +184,9 @@ func (o *OpaProvider) MakeDefaultBundle(data []byte) (bytes.Buffer, error) {
 
 type credentials struct {
 	BundleUrl string `json:"bundle_url"`
-	CACert    string `json:"ca_cert"`
+	CACert    string `json:"ca_cert,omitempty"`
 }
 
-// todo - does this method need to be on OpaProvider?
-// todo - refactor and pull this into  ensureClientIsAvailable and build out the client from it.
 func (o *OpaProvider) credentials(key []byte) credentials {
 	var foundCredentials credentials
 	_ = json.NewDecoder(bytes.NewReader(key)).Decode(&foundCredentials)
