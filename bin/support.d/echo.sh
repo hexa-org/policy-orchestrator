@@ -14,7 +14,11 @@ echo::fail() {
 }
 
 echo::step() {
-  echo::color --green "     •" --reset "$@"
+  if [[ $1 == "-n" ]] ; then
+    echo::color -n --green "     •" --reset "$@"
+  else
+    echo::color --green "     •" --reset "$@"
+  fi
 }
 
 echo::color() {

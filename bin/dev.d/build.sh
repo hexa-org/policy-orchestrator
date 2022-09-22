@@ -9,17 +9,17 @@ source ${REPO}/bin/support.sh
 #
 # Description:
 #
-#   Builds the Hexa Policy Orchestrator.
+#   Build the Hexa image.
 #
 # Options:
 #
-#   -h, --help      Print help text.
+#   -h, --help                Print help text.
 # ------------------------------------------------------------------------------
 
 arg::parse "$@"
 
 _main_() {
-  exec::step "Building Policy Orchestrator" "pack build hexa --builder heroku/buildpacks:20"
+  exec::step "Building Hexa image" "pack build hexa --builder heroku/buildpacks:20"
 }
 
 _main_ "$@"
