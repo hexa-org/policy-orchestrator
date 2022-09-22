@@ -4,6 +4,7 @@ package demosmoke_test
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -72,6 +73,8 @@ func TestDemoFlow(t *testing.T) {
 
 	assertContains(t, "http://localhost:8886/humanresources", "Sorry, you're not able to access this page.")
 
+	/// test update
+
 	_, _ = db.Exec(deleteAll)
 	createAnIntegration([]byte(`{ "bundle_url":"http://localhost:8889/bundles/bundle.tar.gz" }`))
 
@@ -83,6 +86,11 @@ func TestDemoFlow(t *testing.T) {
 
 	assertContains(t, "http://localhost:8886/accounting", "Great news, you're able to access this page.")
 
+	demoConfigResourceId := base64.StdEncoding.EncodeToString([]byte("http://localhost:8889/bundles/bundle.tar.gz"))
+	assertContains(t, "http://localhost:8887/v1/data", demoConfigResourceId)
+
+	/// test erroneous
+
 	_, _ = db.Exec(deleteAll)
 	createAnErroneousIntegration()
 
@@ -93,16 +101,24 @@ func TestDemoFlow(t *testing.T) {
 	body, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, "unable to update policy.\n", string(body))
 
+	/// test orchestration
+
 	_, _ = db.Exec(deleteAll)
-	createAnIntegration([]byte(`{ "bundle_url":"http://localhost:8889/bundles/bundle.tar.gz" }`))
-	createAnIntegration([]byte(`{ "bundle_url":"http://localhost:8890/bundles/bundle.tar.gz" }`))
+	fromKey := []byte(`{ "bundle_url":"http://localhost:8889/bundles/bundle.tar.gz" }`)
+	createAnIntegration(fromKey)
+
+	toKey := []byte(`{ "bundle_url":"http://localhost:8890/bundles/bundle.tar.gz" }`)
+	createAnIntegration(toKey)
 
 	apps := listApplications()
 	orchestratePolicy(apps.Applications[0].ID, apps.Applications[1].ID)
 
-	assertContains(t, "http://localhost:8886/accounting", "Great news, you're able to access this page.")
+	time.Sleep(time.Duration(3) * time.Second) // waiting for opa to refresh the bundle
 
-	_, _ = http.Get( /**/ "http://localhost:8889/reset")
+	anotherDemoConfigResourceId := base64.StdEncoding.EncodeToString([]byte("http://localhost:8890/bundles/bundle.tar.gz"))
+	assertContains(t, "http://localhost:8887/v1/data", anotherDemoConfigResourceId) // ensures that the resource id is not overwritten
+
+	_, _ = http.Get("http://localhost:8889/reset")
 }
 
 func assertContains(t *testing.T, url string, contains string) {

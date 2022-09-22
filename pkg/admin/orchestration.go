@@ -33,7 +33,7 @@ func (p orchestrationHandler) New(w http.ResponseWriter, _ *http.Request) {
 	/// todo - remove once working across providers
 	available := make([]Application, 0)
 	for _, app := range foundApplications {
-		if app.ProviderName == "google_cloud" {
+		if app.ProviderName == "google_cloud" || app.ProviderName == "open_policy_agent" {
 			available = append(available, app)
 		}
 	}
