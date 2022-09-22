@@ -3,16 +3,17 @@ package decisionsupport_test
 import (
 	"errors"
 	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"testing"
+
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupportproviders"
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
-	"io"
-	"net"
-	"net/http"
-	"testing"
 )
 
 func TestMiddleware_allowed(t *testing.T) {

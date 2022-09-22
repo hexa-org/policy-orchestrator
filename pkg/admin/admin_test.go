@@ -2,14 +2,15 @@ package admin_test
 
 import (
 	"fmt"
+	"net"
+	"net/http"
+	"testing"
+
 	"github.com/hexa-org/policy-orchestrator/pkg/admin"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
-	"net"
-	"net/http"
-	"testing"
 )
 
 func TestAdminHandlers(t *testing.T) {

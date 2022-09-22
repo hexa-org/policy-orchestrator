@@ -3,16 +3,17 @@ package admin_test
 import (
 	"errors"
 	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"testing"
+
 	"github.com/hexa-org/policy-orchestrator/pkg/admin"
 	"github.com/hexa-org/policy-orchestrator/pkg/admin/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"io"
-	"net"
-	"net/http"
-	"testing"
 )
 
 type OrchestrationSuite struct {

@@ -2,10 +2,11 @@ package workflowsupport_test
 
 import (
 	"errors"
-	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
-	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
+	"github.com/stretchr/testify/assert"
 )
 
 type NoopWorker struct {

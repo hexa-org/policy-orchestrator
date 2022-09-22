@@ -1,10 +1,11 @@
 package decisionsupportproviders_test
 
 import (
-	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupportproviders"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupportproviders"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBuildInput(t *testing.T) {

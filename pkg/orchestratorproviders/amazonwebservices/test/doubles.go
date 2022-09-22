@@ -2,6 +2,7 @@ package amazonwebservices_test
 
 import (
 	"context"
+
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/stretchr/testify/mock"

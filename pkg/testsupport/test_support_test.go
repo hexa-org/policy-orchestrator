@@ -1,9 +1,10 @@
 package testsupport_test
 
 import (
+	"testing"
+
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 type TestData struct {

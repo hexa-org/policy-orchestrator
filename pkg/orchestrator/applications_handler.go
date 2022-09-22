@@ -2,11 +2,12 @@ package orchestrator
 
 import (
 	"encoding/json"
+	"log"
+	"net/http"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
-	"log"
-	"net/http"
 )
 
 type Applications struct {

@@ -2,13 +2,14 @@ package orchestrator_test
 
 import (
 	"errors"
+	"testing"
+	"time"
+
 	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func setUp() (orchestrator.IntegrationsDataGateway, orchestrator.ApplicationsDataGateway) {

@@ -2,12 +2,13 @@ package compressionsupport_test
 
 import (
 	"bytes"
-	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTarGzip(t *testing.T) {

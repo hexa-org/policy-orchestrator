@@ -2,14 +2,15 @@ package amazonwebservices_test
 
 import (
 	"errors"
+	"net/http"
+	"testing"
+
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/amazonwebservices"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/amazonwebservices/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"testing"
 )
 
 func TestAmazonProvider_Credentials(t *testing.T) {

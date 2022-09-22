@@ -2,11 +2,12 @@ package google_cloud_test
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/mock"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/stretchr/testify/mock"
 )
 
 type MockClient struct {

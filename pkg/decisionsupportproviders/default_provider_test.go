@@ -1,8 +1,9 @@
 package decisionsupportproviders_test
 
 import (
-	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupportproviders"
 	"testing"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupportproviders"
 )
 
 func TestDefaultProvider_BuildInput(t *testing.T) {

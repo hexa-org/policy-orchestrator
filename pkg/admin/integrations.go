@@ -1,11 +1,12 @@
 package admin
 
 import (
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/gorilla/mux"
 
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 )

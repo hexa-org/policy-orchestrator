@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"io"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 )
 
 type HTTPClient interface {

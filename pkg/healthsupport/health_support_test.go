@@ -3,13 +3,14 @@ package healthsupport_test
 import (
 	"context"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net"
 	"net/http"
 	"testing"
+
+	"github.com/gorilla/mux"
+	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHealth(t *testing.T) {

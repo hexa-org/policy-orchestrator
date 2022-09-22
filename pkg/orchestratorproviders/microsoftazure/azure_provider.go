@@ -2,11 +2,12 @@ package microsoftazure
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
-	"net/http"
-	"strings"
 )
 
 type AzureProvider struct {

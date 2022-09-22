@@ -1,13 +1,14 @@
 package microsoftazure_test
 
 import (
+	"net/http"
+	"testing"
+
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/microsoftazure"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/microsoftazure/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"testing"
 )
 
 func TestDiscoverApplications(t *testing.T) {

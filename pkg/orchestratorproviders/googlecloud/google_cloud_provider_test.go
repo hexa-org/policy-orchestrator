@@ -1,15 +1,16 @@
 package googlecloud_test
 
 import (
+	"io/ioutil"
+	"path/filepath"
+	"runtime"
+	"testing"
+
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"path/filepath"
-	"runtime"
-	"testing"
 )
 
 func TestGoogleProvider_BadClientKey(t *testing.T) {

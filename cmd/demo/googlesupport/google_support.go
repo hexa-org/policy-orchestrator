@@ -1,9 +1,10 @@
 package googlesupport
 
 import (
-	"github.com/gorilla/sessions"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/sessions"
 )
 
 type GoogleSupport struct {

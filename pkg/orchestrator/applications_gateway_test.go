@@ -1,11 +1,12 @@
 package orchestrator_test
 
 import (
+	"testing"
+
 	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 type applicationsTestData struct {

@@ -2,13 +2,14 @@ package openpolicyagent_test
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/mock"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+
+	"github.com/stretchr/testify/mock"
 )
 
 type MockClient struct {

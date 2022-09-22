@@ -2,10 +2,11 @@ package microsoftazure_test
 
 import (
 	"errors"
+	"testing"
+
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/microsoftazure"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/microsoftazure/test"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestAzureClient_GetWebApplications(t *testing.T) {

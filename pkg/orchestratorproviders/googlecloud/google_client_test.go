@@ -2,11 +2,12 @@ package googlecloud_test
 
 import (
 	"errors"
+	"testing"
+
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestGoogleClient_GetAppEngineApplications(t *testing.T) {

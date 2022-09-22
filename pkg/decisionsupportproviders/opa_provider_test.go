@@ -3,12 +3,13 @@ package decisionsupportproviders_test
 import (
 	"bytes"
 	"errors"
-	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupportproviders"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"io/ioutil"
 	"net/http"
 	"testing"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupportproviders"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestOpaDecisionProvider_BuildInput(t *testing.T) {

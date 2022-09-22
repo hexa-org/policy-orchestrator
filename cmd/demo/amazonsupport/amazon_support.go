@@ -2,11 +2,12 @@ package amazonsupport
 
 import (
 	"fmt"
-	"github.com/golang-jwt/jwt"
-	"github.com/gorilla/sessions"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/golang-jwt/jwt"
+	"github.com/gorilla/sessions"
 )
 
 type AmazonCognitoConfiguration struct {
