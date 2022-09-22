@@ -179,7 +179,8 @@ func TestSetPolicyInfo_WithHTTPSBundleServer(t *testing.T) {
 		BundleURL: bundleServer.URL,
 		CACert:    string(caCert),
 	}
-	key, _ := json.Marshal(integration)
+	key, err := json.Marshal(integration)
+	assert.NoError(t, err)
 
 	_, file, _, _ := runtime.Caller(0)
 	p := openpolicyagent.OpaProvider{ResourcesDirectory: filepath.Join(file, "../resources")}

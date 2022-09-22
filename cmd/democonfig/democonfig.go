@@ -130,6 +130,7 @@ func newApp(addr string) (*http.Server, net.Listener) {
 			panic(fmt.Sprintf("invalid cert/key pair: %s", err))
 		}
 		app.TLSConfig = &tls.Config{
+			// todo - tls client auth? Should we require client cert verification?
 			Certificates: []tls.Certificate{pair},
 		}
 	}
