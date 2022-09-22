@@ -14,7 +14,7 @@ source ${REPO}/bin/support.sh
 #   NOTE:
 #
 #   The project workspace must be bootstrapped with
-#   \`pkg setup\` before running these \`dev\` CLI tasks.
+#   "pkg setup" before running these "dev" CLI tasks.
 #
 # Options:
 #
