@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+set -euo pipefail
+REPO=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )
+source ${REPO}/bin/support.sh
+
+# ------------------------------------------------------------------------------
+# Usage:
+#
+#   pkg <command> [<args>...] [options]
+#
+# Description:
+#
+#   Utilities for building and running Hexa applications.
+#
+# Commands:
+#
+#    build                    Build the Hexa image.
+#    serve                    Deploy and run Hexa applications in Docker.
+#    setup                    Install/configure dependencies.
+#    version                  Print version information.
+#
+# Options:
+#
+#   -h, --help                Print help text.
+#   -v, --version             Print version information.
+# ------------------------------------------------------------------------------
+
+_main_() {
+  cmd="${1:-}"
+
+  case "${cmd}" in
+    setup )
+      internal::setup
+      ;;
+    version | --version | -v )
+      internal::version
+      ;;
+    * )
+      cmd::proxy ${cmd} "${@:2}"
+      ;;
+  esac
+}
+
+internal::setup() {
+  pushd ${REPO} > /dev/null
+    ensure::brew
+    ensure::asdf
+    ensure::path
+  popd > /dev/null
+}
+
+internal::version() {
+  echo "v0.1.0"
+}
+
+# homebrew & packages
+# ----------------------------------------------------------
+ensure::brew() {
+  command -v brew > /dev/null || setup::brew
+  brew bundle
+}
+
+setup::brew() {
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+}
+
+# asdf packages (just golang)
+# ----------------------------------------------------------
+ensure::asdf() {
+  (go version | grep 'go1.18' > /dev/null) || setup::asdf
+}
+
+setup::asdf() {
+  asdf install golang
+}
+
+# path (i.e., direnv)
+# ----------------------------------------------------------
+ensure::path() {
+  direnv allow
+}
+
+_main_ "$@"

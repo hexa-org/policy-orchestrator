@@ -19,7 +19,9 @@ source ${REPO}/bin/support.sh
 arg::parse "$@"
 
 _main_() {
-  exec::step "Building Hexa image" "pack build hexa --builder heroku/buildpacks:20"
+  pushd ${REPO} > /dev/null
+    exec::step "Building Hexa image" "pack build hexa --builder heroku/buildpacks:20"
+  popd > /dev/null
 }
 
 _main_ "$@"
