@@ -30,11 +30,14 @@ _do_usage_() {
 }
 
 _parse_args_() {
-  local script=$1
-  shift
+  # NOTE: need to check for `docpars` to cover first-run bootstrapping.
+  if command -v docpars > /dev/null ; then
+    local script=$1
+    shift
 
-  HELP="$(_parse_help_ "$script")"
-  docpars -h "$HELP" : "$@"
+    HELP="$(_parse_help_ "$script")"
+    docpars -h "$HELP" : "$@"
+  fi
 }
 
 _parse_help_() {
