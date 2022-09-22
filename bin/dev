@@ -9,13 +9,15 @@ source ${REPO}/bin/support.sh
 #
 # Description:
 #
-#   Performs project-level tasks & utilities.
+#   Performs project-level development tasks.
+#
+#   NOTE:
+#
+#   The project workspace must be bootstrapped with
+#   \`pkg setup\` before running these \`dev\` CLI tasks.
 #
 # Commands:
 #
-#    build                    Build the Policy Orchestrator.
-#    install                  Build the Policy Orchestrator.
-#    serve                    Deploy and run Policy Orchestrator.
 #    setup                    Perform workspace/dev setup tasks.
 #    version                  Print version information.
 #
