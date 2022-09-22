@@ -55,12 +55,12 @@ func (service ApplicationsService) Apply(jsonRequest Orchestration) error {
 		return getToErr
 	}
 
-	modifiedPolicies, err := service.RetainResource(fromPolicies, toPolicies)
+	modifiedToPoliciesRetainingResourceId, err := service.RetainResource(fromPolicies, toPolicies)
 	if err != nil {
 		return err
 	}
 
-	status, setErr := toProvider.SetPolicyInfo(toIntegration, toApplication, modifiedPolicies)
+	status, setErr := toProvider.SetPolicyInfo(toIntegration, toApplication, modifiedToPoliciesRetainingResourceId)
 	if setErr != nil || status != http.StatusCreated {
 		return setErr
 	}
