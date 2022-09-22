@@ -161,10 +161,10 @@ func TestSetPolicyInfo_withInvalidArguments(t *testing.T) {
 }
 
 func TestSetPolicyInfo_WithHTTPSBundleServer(t *testing.T) {
-	gotBundleRequest := false
+	mockCalled := false
 	bundleServer := httptest.NewTLSServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/bundles", r.URL.Path)
-		gotBundleRequest = true
+		mockCalled = true
 		rw.WriteHeader(http.StatusCreated)
 	}))
 	caCert := pem.EncodeToMemory(&pem.Block{
@@ -195,7 +195,7 @@ func TestSetPolicyInfo_WithHTTPSBundleServer(t *testing.T) {
 	)
 	assert.Equal(t, http.StatusCreated, status)
 	assert.NoError(t, err)
-	assert.True(t, gotBundleRequest)
+	assert.True(t, mockCalled)
 }
 
 func TestMakeDefaultBundle(t *testing.T) {
