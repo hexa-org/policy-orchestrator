@@ -4,12 +4,37 @@ exec::fail() {
   echo::fail "\n\nUsage:$@"
 }
 
-exec::root() {
-  (
-    THIS=${ROOT}
-    cd ${ROOT}
-    eval "$@"
-  )
+exec::stat() {
+  label=$1
+  check=$2
+  build=$3
+  trace="${REPO}/.local/setup.out"
+
+  echo::step -n "check ${label}:"
+
+  flags=$-
+  set +e
+
+  eval "${check} > ${trace} 2>&1"
+  status=$?
+
+  if [[ ${flags} =~ e ]] ; then
+    set -e
+  else
+    set +e
+  fi
+
+  if [ ${status} -eq 0 ]; then
+    echo::color --green "OK"
+  else
+    echo::color --red "FAILED"
+    # cat ${trace}
+    echo::info "build ${label}..."
+    eval "${build}"
+  fi
+
+  rm ${trace}
+  return ${status}
 }
 
 exec::step() {

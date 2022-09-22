@@ -5,7 +5,7 @@ source ${REPO}/bin/support.sh
 # ------------------------------------------------------------------------------
 # Usage:
 #
-#   dev <command>   [<args>...] [options]
+#   dev <command> [<args>...] [options]
 #
 # Description:
 #
@@ -13,13 +13,16 @@ source ${REPO}/bin/support.sh
 #
 # Commands:
 #
-#    build          Builds the Hexa Policy Orchestrator.
-#    version        Print version information.
+#    build                    Build the Policy Orchestrator.
+#    install                  Build the Policy Orchestrator.
+#    serve                    Deploy and run Policy Orchestrator.
+#    setup                    Perform workspace/dev setup tasks.
+#    version                  Print version information.
 #
 # Options:
 #
-#   -h, --help      Print help text.
-#   -v, --version   Print version information.
+#   -h, --help                Print help text.
+#   -v, --version             Print version information.
 # ------------------------------------------------------------------------------
 
 _main_() {
