@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"testing"
 
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
@@ -25,6 +24,7 @@ func TestApp(t *testing.T) {
 }
 
 func TestConfigWithPort(t *testing.T) {
-	_ = os.Setenv("PORT", "0")
+	t.Setenv("PORT", "0")
 	newApp("localhost:0")
+
 }
