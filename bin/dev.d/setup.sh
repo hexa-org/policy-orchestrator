@@ -11,11 +11,6 @@ source ${REPO}/bin/support.sh
 #
 #   Perform workspace development setup tasks.
 #
-#   NOTE:
-#
-#   The project workspace must be bootstrapped with
-#   "pkg setup" before running these "dev" CLI tasks.
-#
 # Options:
 #
 #   -t, --target=<name>       Component to set up [default: all].
