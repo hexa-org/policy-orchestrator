@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -42,9 +41,9 @@ func TestApp(t *testing.T) {
 }
 
 func TestConfigWithPort(t *testing.T) {
-	_ = os.Setenv("PORT", "0")
-	_ = os.Setenv("HOST", "localhost")
-	_ = os.Setenv("OPA_SERVER_URL", "http://localhost:8887/v1/data/authz/allow")
+	t.Setenv("PORT", "0")
+	t.Setenv("HOST", "localhost")
+	t.Setenv("OPA_SERVER_URL", "http://localhost:8887/v1/data/authz/allow")
 	newApp("localhost:0")
 }
 
