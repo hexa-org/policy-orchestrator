@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 
 type bundleFile struct {
 	BundleUrl string `json:"bundle_url"`
+	ProjectID string `json:"project_id,omitempty"`
 }
 
 type opaProvider struct {
@@ -23,5 +25,9 @@ func (p opaProvider) name(key []byte) (string, error) {
 	if err != nil || foundKeyFile.BundleUrl == "" {
 		return "", errors.New("unable to read key file, missing bundle url")
 	}
-	return "bundle:open-policy-agent", nil
+	projectID := "bundle"
+	if foundKeyFile.ProjectID != "" {
+		projectID = foundKeyFile.ProjectID
+	}
+	return fmt.Sprintf("%s:open-policy-agent", projectID), nil
 }

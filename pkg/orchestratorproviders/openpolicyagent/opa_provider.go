@@ -37,8 +37,8 @@ func (o *OpaProvider) DiscoverApplications(info orchestrator.IntegrationInfo) (a
 	if strings.EqualFold(info.Name, o.Name()) {
 		apps = append(apps, orchestrator.ApplicationInfo{
 			ObjectID:    base64.StdEncoding.EncodeToString([]byte(c.BundleUrl)), // todo - intended to represent a resource identifier
-			Name:        "package authz",
-			Description: "Open policy agent bundle",
+			Name:        c.ProjectID,
+			Description: "Open Policy Agent bundle",
 		})
 	}
 	return apps, err
@@ -183,6 +183,7 @@ func (o *OpaProvider) MakeDefaultBundle(data []byte) (bytes.Buffer, error) {
 // /
 
 type credentials struct {
+	ProjectID string `json:"project_id,omitempty"`
 	BundleUrl string `json:"bundle_url"`
 	CACert    string `json:"ca_cert,omitempty"`
 }
@@ -190,6 +191,9 @@ type credentials struct {
 func (o *OpaProvider) credentials(key []byte) credentials {
 	var foundCredentials credentials
 	_ = json.NewDecoder(bytes.NewReader(key)).Decode(&foundCredentials)
+	if foundCredentials.ProjectID == "" {
+		foundCredentials.ProjectID = "package authz"
+	}
 	return foundCredentials
 }
 

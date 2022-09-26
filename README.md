@@ -91,7 +91,8 @@ configuration file. The file describes the location of the IDQL policy.
 
 ```json
 {
-  "bundle_url":"http://hexa-demo-config:8889/bundles/bundle.tar.gz"
+  "bundle_url": "http://hexa-demo-config:8889/bundles/bundle.tar.gz",
+  "project_id": "Hexa Industries"
 }
 ```
 
