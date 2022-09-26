@@ -172,18 +172,21 @@ Create an Azure Active Directory app.
 ```bash
 az ad app create \
   --display-name ${APP_NAME} \
-  --homepage "https://${APP_NAME}.azurewebsites.net" \
-  --reply-urls "https://${APP_NAME}.azurewebsites.net/.auth/login/aad/callback" \
-  --available-to-other-tenants false \
-  --required-resource-accesses @required-resource-accesses.json.txt \
-  --password ${AZ_APP_SECRET}
+  --web-home-page-url "https://${APP_NAME}.azurewebsites.net" \
+  --web-redirect-uris "https://${APP_NAME}.azurewebsites.net/.auth/login/aad/callback" \
+  --enable-id-token-issuance \
+  --sign-in-audience "AzureADandPersonalMicrosoftAccount" \
+  --required-resource-accesses @required-resource-accesses.json.txt
 ```
 
 Enable webapp authentication and authorization for the demo app.
 
 ```bash
-AD_APP_ID=$(az ad app list --filter "displayname eq '${APP_NAME}'" | jq -r '.[].appId')
+export AD_APP_ID=$(az ad app list --filter "displayname eq '${APP_NAME}'" | jq -r '.[].appId')
 echo "Newly created ad app with id ${APP_NAME}"
+
+az ad app credential reset --id ${AD_APP_ID}
+export AZ_APP_SECRET=...
 
 echo "Adding the authV2 extension"
 az extension add --name authV2
@@ -200,11 +203,12 @@ az webapp auth microsoft update --name ${APP_NAME} \
 echo "Creating the service principal for the ${APP_NAME} app"
 az ad sp create --id ${AD_APP_ID}
 
-AD_SP_ID=$(az ad sp list --all --query "[?appId=='$AD_APP_ID']" | jq -r '.[].objectId')
+export AD_SP_ID=$(az ad sp list --all --query "[?appId=='$AD_APP_ID']" | jq -r '.[].id')
 echo "Newly created service principal with id ${AD_SP_ID}"
 
 echo "Updating the service principal for the ${APP_NAME} app"
-az ad sp update --id ${AD_SP_ID} --set "appRoleAssignmentRequired=true" --add tags WindowsAzureActiveDirectoryIntegratedApp
+az ad sp update --id ${AD_SP_ID} --set "appRoleAssignmentRequired=true"
+az ad sp update --id ${AD_SP_ID} --set "tags=[\"WindowsAzureActiveDirectoryIntegratedApp\"]"
 
 echo "Deleting the azure ad app for ${APP_NAME}"
 az ad app delete --id $(az ad app list --filter "displayname eq '${APP_NAME}'" | jq -r '.[].appId')

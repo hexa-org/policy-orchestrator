@@ -68,10 +68,47 @@ type AzureAppRoleAssignment struct {
 	ResourceId           string `json:"resourceId"`
 }
 
+type appServices struct {
+	List []appService `json:"value"`
+}
+
+type appService struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+func (c *AzureClient) GetWebApplicationsNonGraph(key []byte) ([]orchestrator.ApplicationInfo, error) {
+	decoded, keyErr := c.DecodeKey(key)
+	if keyErr != nil {
+		log.Println("Unable to decode azure provider key.")
+		return nil, keyErr
+	}
+
+	request, _ := http.NewRequest("GET", fmt.Sprintf("https://management.azure.com/subscriptions/%s/providers/Microsoft.Web/sites?api-version=2022-03-01", decoded.Subscription), nil)
+	get, err := c.azureRequest(key, request, "https://management.azure.com/.default")
+	if err != nil || get.StatusCode != http.StatusOK {
+		log.Println("Unable to get azure web applications.")
+		return []orchestrator.ApplicationInfo{}, err
+	}
+
+	var webapps appServices
+	if err = json.NewDecoder(get.Body).Decode(&webapps); err != nil {
+		log.Println("Unable to decode azure web app response.")
+		return []orchestrator.ApplicationInfo{}, err
+	}
+
+	var apps []orchestrator.ApplicationInfo
+	for _, app := range webapps.List {
+		log.Printf("Found azure app service web app %s.\n", app.Name)
+		apps = append(apps, orchestrator.ApplicationInfo{ObjectID: app.ID, Name: app.Name, Description: app.ID})
+	}
+	return apps, err
+}
+
 func (c *AzureClient) GetWebApplications(key []byte) ([]orchestrator.ApplicationInfo, error) {
 
 	request, _ := http.NewRequest("GET", "https://graph.microsoft.com/v1.0/applications", nil)
-	get, err := c.azureRequest(key, request)
+	get, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
 	if err != nil {
 		log.Println("Unable to get azure web applications.")
 		return []orchestrator.ApplicationInfo{}, err
@@ -86,7 +123,9 @@ func (c *AzureClient) GetWebApplications(key []byte) ([]orchestrator.Application
 	var apps []orchestrator.ApplicationInfo
 	for _, app := range webapps.List {
 		log.Printf("Found azure app service web app %s.\n", app.Name)
-		apps = append(apps, orchestrator.ApplicationInfo{ObjectID: app.ID, Name: app.Name, Description: app.AppID})
+		if app.Web.HomePageUrl != "" { // todo - a better way to find enterprise apps, WindowsAzureActiveDirectoryIntegratedApp?
+			apps = append(apps, orchestrator.ApplicationInfo{ObjectID: app.ID, Name: app.Name, Description: app.AppID})
+		}
 	}
 	return apps, err
 }
@@ -96,7 +135,7 @@ func (c *AzureClient) GetServicePrincipals(key []byte, appId string) (AzureServi
 	filter := fmt.Sprintf("$search=\"appId:%s\"", appId)
 	urlWithFilter := fmt.Sprintf("https://graph.microsoft.com/v1.0/servicePrincipals?%s", filter)
 	request, _ := http.NewRequest("GET", urlWithFilter, nil)
-	get, err := c.azureRequest(key, request)
+	get, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
 	if err != nil {
 		log.Println("Unable to get azure service principals.")
 		return AzureServicePrincipals{}, err
@@ -114,7 +153,7 @@ func (c *AzureClient) GetAppRoleAssignedTo(key []byte, servicePrincipalId string
 
 	url := fmt.Sprintf("https://graph.microsoft.com/v1.0/servicePrincipals/%s/appRoleAssignedTo", servicePrincipalId)
 	request, _ := http.NewRequest("GET", url, nil)
-	get, err := c.azureRequest(key, request)
+	get, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
 	if err != nil {
 		log.Println("Unable to get azure app role assignments.")
 		return AzureAppRoleAssignments{}, err
@@ -188,12 +227,12 @@ type azureAppRoleAssignmentPost struct {
 func (c *AzureClient) AddAppRolesAssignedTo(key []byte, servicePrincipalId string, assignments []AzureAppRoleAssignment) (err error) {
 	for _, assignment := range assignments {
 		var buf bytes.Buffer
-		ra := azureAppRoleAssignmentPost{assignment.AppRoleId, assignment.PrincipalId, assignment.ResourceId}
+		ra := azureAppRoleAssignmentPost{assignment.AppRoleId, assignment.PrincipalId, servicePrincipalId} // the resource id is the service principal
 		_ = json.NewEncoder(&buf).Encode(ra)
 		url := fmt.Sprintf("https://graph.microsoft.com/v1.0/servicePrincipals/%s/appRoleAssignedTo", servicePrincipalId)
 		request, _ := http.NewRequest("POST", url, bytes.NewReader(buf.Bytes()))
-		_, err = c.azureRequest(key, request)
-		if err != nil {
+		response, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
+		if err != nil || response.StatusCode != http.StatusCreated {
 			log.Println("Unable to add azure app role assignments.")
 			return err
 		}
@@ -205,8 +244,8 @@ func (c *AzureClient) DeleteAppRolesAssignedTo(key []byte, servicePrincipalId st
 	for _, assignmentId := range assignmentIds {
 		url := fmt.Sprintf("https://graph.microsoft.com/v1.0/servicePrincipals/%s/appRoleAssignedTo/%s", servicePrincipalId, assignmentId)
 		request, _ := http.NewRequest("DELETE", url, nil)
-		_, err = c.azureRequest(key, request)
-		if err != nil {
+		response, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
+		if err != nil || response.StatusCode != http.StatusNoContent {
 			log.Println("Unable to delete azure app role assignments.")
 			return err
 		}
@@ -220,10 +259,10 @@ func (c *AzureClient) DecodeKey(key []byte) (AzureKey, error) {
 	return decoded, err
 }
 
-func (c *AzureClient) AccessTokenRequest(decoded AzureKey) (AzureAccessToken, error) {
+func (c *AzureClient) AccessTokenRequest(decoded AzureKey, scope string) (AzureAccessToken, error) {
 	var accessToken AzureAccessToken
 	tokenUrl := fmt.Sprintf("https://login.microsoftonline.com/%s/oauth2/v2.0/token", decoded.Tenant)
-	postBody := fmt.Sprintf("grant_type=client_credentials&client_id=%s&client_secret=%s&scope=https://graph.microsoft.com/.default", decoded.AppId, decoded.Secret)
+	postBody := fmt.Sprintf("grant_type=client_credentials&client_id=%s&client_secret=%s&scope=%s", decoded.AppId, decoded.Secret, scope)
 	tokenResponse, tokenErr := c.HttpClient.Post(tokenUrl, "", strings.NewReader(postBody))
 	if tokenErr != nil {
 		return accessToken, tokenErr
@@ -232,13 +271,13 @@ func (c *AzureClient) AccessTokenRequest(decoded AzureKey) (AzureAccessToken, er
 	return accessToken, err
 }
 
-func (c *AzureClient) azureRequest(key []byte, request *http.Request) (*http.Response, error) {
+func (c *AzureClient) azureRequest(key []byte, request *http.Request, scope string) (*http.Response, error) {
 	decoded, keyErr := c.DecodeKey(key)
 	if keyErr != nil {
 		log.Println("Unable to decode azure provider key.")
 		return nil, keyErr
 	}
-	accessToken, tokenErr := c.AccessTokenRequest(decoded)
+	accessToken, tokenErr := c.AccessTokenRequest(decoded, scope)
 	if tokenErr != nil {
 		log.Println("Unable to find azure web applications.")
 		return nil, tokenErr

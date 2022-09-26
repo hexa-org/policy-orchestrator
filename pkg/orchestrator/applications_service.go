@@ -50,7 +50,7 @@ func (service ApplicationsService) Apply(jsonRequest Orchestration) error {
 		return getFroErr
 	}
 
-	toPolicies, getToErr := fromProvider.GetPolicyInfo(fromIntegration, fromApplication)
+	toPolicies, getToErr := fromProvider.GetPolicyInfo(toIntegration, toApplication)
 	if getToErr != nil {
 		return getToErr
 	}

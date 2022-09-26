@@ -19,7 +19,10 @@ func TestAzureClient_GetWebApplications(t *testing.T) {
     {
       "id": "anObjectId",
       "appId": "anAppId",
-      "displayName": "anAppName"
+      "displayName": "anAppName",
+			"web": {
+			  "homePageUrl": "https://anAppName.azurewebsites.net"
+      }
     }
   ]
 }
