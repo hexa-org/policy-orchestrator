@@ -21,7 +21,10 @@ func TestDiscoverApplications(t *testing.T) {
     {
       "id": "anId",
       "name": "anAppName",
-      "description": "aDescription"
+      "description": "aDescription",
+			"web": {
+			  "homePageUrl": "https://anAppName.azurewebsites.net"
+      }
     }
   ]
 }
