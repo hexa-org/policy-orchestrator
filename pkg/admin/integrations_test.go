@@ -112,6 +112,15 @@ func (suite *IntegrationsSuite) TestCreateIntegration_withAmazon() {
 	assert.Equal(suite.T(), "region:aRegion", suite.client.Name)
 }
 
+func (suite *IntegrationsSuite) TestCreateIntegration_withOPA() {
+	suite.client.On("CreateIntegration", "http://noop/integrations").Return()
+	buf, contentType := suite.multipartFormSuccessOPA()
+	resp, _ := http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf)
+	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
+	assert.Equal(suite.T(), "open_policy_agent", suite.client.Provider)
+	assert.Equal(suite.T(), "opa-project-id:open-policy-agent", suite.client.Name)
+}
+
 func (suite *IntegrationsSuite) TestCreateIntegrationMissingKey_withAmazon() {
 	suite.client.On("CreateIntegration", "http://noop/integrations").Return()
 	buf, contentType := suite.multipartFormMissingFileForAmazon()
@@ -209,6 +218,20 @@ func (suite *IntegrationsSuite) multipartFormSuccessAmazon() (*bytes.Buffer, str
 
 		file, _ := writer.CreateFormFile("key", "aKey.json")
 		_, _ = file.Write([]byte("{\"region\": \"aRegion\"}"))
+	})
+}
+
+func (suite *IntegrationsSuite) multipartFormSuccessOPA() (*bytes.Buffer, string) {
+	return suite.multipartForm(func(writer *multipart.Writer) {
+		provider, _ := writer.CreateFormField("provider")
+		_, _ = provider.Write([]byte("open_policy_agent"))
+
+		file, _ := writer.CreateFormFile("key", "aKey.json")
+		_, _ = file.Write([]byte(`{
+  "bundle_url": "http://opa-bundle-url",
+  "project_id": "opa-project-id"
+}
+`))
 	})
 }
 

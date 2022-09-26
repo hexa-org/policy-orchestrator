@@ -25,16 +25,39 @@ import (
 )
 
 func TestDiscoverApplications(t *testing.T) {
-	key := []byte(`
-{
-  "bundle_url": "aBigUrl"
-}
-`)
-	p := openpolicyagent.OpaProvider{}
-	applications, _ := p.DiscoverApplications(orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key})
-	assert.Equal(t, 1, len(applications))
-	assert.Equal(t, "package authz", applications[0].Name)
-	assert.Equal(t, "Open policy agent bundle", applications[0].Description)
+	tests := []struct {
+		name              string
+		key               []byte
+		expectedProjectID string
+	}{
+		{
+			name: "with project id",
+			key: []byte(`
+              {
+                "bundle_url": "aBigUrl",
+                "project_id": "some opa project"
+              }`),
+			expectedProjectID: "some opa project",
+		},
+		{
+			name: "without project id",
+			key: []byte(`
+              {
+                "bundle_url": "aBigUrl",
+              }`),
+			expectedProjectID: "package authz",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := openpolicyagent.OpaProvider{}
+			applications, _ := p.DiscoverApplications(orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: tt.key})
+			assert.Equal(t, 1, len(applications))
+			assert.Equal(t, tt.expectedProjectID, applications[0].Name)
+			assert.Equal(t, "Open Policy Agent bundle", applications[0].Description)
+		})
+	}
 }
 
 func TestGetPolicyInfo(t *testing.T) {
@@ -153,8 +176,8 @@ func TestSetPolicyInfo_withInvalidArguments(t *testing.T) {
 		[]policysupport.PolicyInfo{
 			{
 				Actions: []policysupport.ActionInfo{{"http:GET"}}, Subject: policysupport.SubjectInfo{Members: []string{"allusers"}}, Object: policysupport.ObjectInfo{
-				ResourceID: "aResourceId",
-			}},
+					ResourceID: "aResourceId",
+				}},
 		},
 	)
 	assert.Equal(t, 500, status)

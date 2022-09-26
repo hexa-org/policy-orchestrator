@@ -145,7 +145,8 @@ policy.
 
 ```json
 {
-  "bundle_url":"http://hexa-demo-config:8889/bundles/bundle.tar.gz"
+  "bundle_url": "http://hexa-demo-config:8889/bundles/bundle.tar.gz",
+  "project_id": "Hexa Industries"
 }
 ```
 
