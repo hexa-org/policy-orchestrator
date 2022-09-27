@@ -18,7 +18,9 @@ source ${REPO}/bin/support.sh
 #
 # Commands:
 #
+#    serve                    Run the Hexa applications (in development).
 #    setup                    Perform workspace/dev setup tasks.
+#    test                     Run the test suite and related tasks.
 #    version                  Print version information.
 #
 # Options:
