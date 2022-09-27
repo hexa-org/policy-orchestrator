@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -82,6 +83,8 @@ func allows(provider decisionsupportproviders.OpaDecisionProvider, action string
 }
 
 func startCmd(cmd *exec.Cmd, port int) {
+	assertPort(port)
+
 	go func() {
 		err := cmd.Run()
 		if err != nil {
@@ -89,6 +92,16 @@ func startCmd(cmd *exec.Cmd, port int) {
 		}
 	}()
 	waitForHealthy(fmt.Sprintf("localhost:%v", port))
+}
+
+func assertPort(port int) {
+	svc, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		log.Printf("Port %d is unavailable: %s", port, err)
+		os.Exit(1)
+	}
+
+	svc.Close()
 }
 
 func waitForHealthy(address string) {
