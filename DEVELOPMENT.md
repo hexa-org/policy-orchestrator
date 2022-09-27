@@ -8,7 +8,7 @@ run (via `./bin/pkg.d/setup.sh`), these tasks and more may be executed via the
 `dev` and `pkg` CLIs.
 
 For example, try running the following from anywhere within the repository
-(assuming the prerequisite "setup" mentioned has been run).
+(assuming the prerequisite "setup" has been run).
 
 ```bash
 $ dev version
@@ -75,49 +75,51 @@ Use the following command to clean up your test cache when needed.
 go clean -testcache
 ```
 
----
-
 ## Task: Run the Hexa Applications
 
-Create a development database similar to test.
+> This task may optionally be completed (see **NOTE** above) via:
+>
+> - `dev serve`
 
-Source the `.env_development` file.
+### Steps
 
-```bash
-source .env_development
-```
+- Load the environment variables defined in the `.env_development` file:
 
-Run the Hexa Policy Admin web application.
+  ```bash
+  source .env_development
+  ```
 
-```bash
-go run cmd/admin/admin.go
-```
+- Run the Hexa Policy Admin web application.
 
-Run the Hexa Policy Orchestrator server.
+  ```bash
+  go run cmd/admin/admin.go
+  ```
 
-```bash
-go run cmd/orchestrator/orchestrator.go
-```
+- Run the Hexa Policy Orchestrator server.
 
-### Run the demo applications
+  ```bash
+  go run cmd/orchestrator/orchestrator.go
+  ```
 
-Run the demo web application locally.
+- Run the demo web application locally.
 
-```bash
-OPA_SERVER_URL=http://opa-agent:8887/v1/data/authz/allow go run cmd/demo/demo.go
-```
+  ```bash
+  go run cmd/demo/demo.go
+  ```
 
-Run the demo web application locally.
+- Run the demo config application locally.
 
-```bash
-go run cmd/democonfig/democonfig.go
-```
+  ```bash
+  go run cmd/democonfig/democonfig.go
+  ```
 
-Run the open policy agent server locally.
+- Run the open policy agent server locally.
 
-```bash
-HEXA_DEMO_URL=http://localhost:8889 opa run --server --addr :8887 -c deployments/opa-server/config/config.yaml
-```
+  ```bash
+  opa run --server --addr :8887 -c deployments/opa-server/config/config.yaml
+  ```
+
+---
 
 ### CodeQL locally
 

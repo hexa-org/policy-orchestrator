@@ -1,12 +1,17 @@
 #!/usr/bin/env ruby
 
+tap "denisidoro/tools"
+tap "buildpacks/tap"
+
 brew "asdf"
 brew "bash"
 brew "bat"
 brew "coreutils"
+brew "docpars"
 brew "direnv"
-brew "denisidoro/tools/docpars"
+brew "overmind"
 
-brew "buildpacks/tap/pack"
+brew "pack"
 brew "golang-migrate"
+
 cask "docker"
