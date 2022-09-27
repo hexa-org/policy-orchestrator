@@ -119,27 +119,37 @@ go clean -testcache
   opa run --server --addr :8887 -c deployments/opa-server/config/config.yaml
   ```
 
----
+## CodeQL
 
-### CodeQL locally
+GitHub CodeQL is used in the Hexa CI pipeline for vulnerability scanning.
+CodeQL can also be installed and run locally on a developer workstation.
 
-Install via [Homebrew Formulae](https://formulae.brew.sh)
+To run locally:
 
-```bash
-brew install codeql
-```
-Note - the below command references a local clone of the codeql-go repo.
+- Install via [Homebrew Formulae](https://formulae.brew.sh)
 
-Be sure to install codeql-go dependencies. From the codeql-go directory, run `scripts/install-deps.sh`.
+  ```bash
+  brew install codeql
+  ```
 
-Create a local database.
+- Install the CodeQL "packs" for Go analysis. The packs and an installation
+  script are located in the [CodeQL repository](https://github.com/github/codeql)
+  and must be cloned locally.
 
-```bash
-CODEQL_EXTRACTOR_GO_BUILD_TRACING=on codeql database create .codeql --language=go
-```
+  ```bash
+  cd $HOME/workspace
+  git clone https://github.com/github/codeql
+  ./codeql/go/scripts/install-deps.sh
+  ```
 
-Analyze the results.
+- Create a local database.
 
-```bash
-codeql database analyze .codeql --off-heap-ram=0 --format=csv --output=codeql-results.csv ../codeql-go/ql/src/codeql-suites/go-code-scanning.qls
-```
+  ```bash
+  CODEQL_EXTRACTOR_GO_BUILD_TRACING=on codeql database create .codeql --language=go
+  ```
+
+- Analyze the results.
+
+  ```bash
+  codeql database analyze .codeql --off-heap-ram=0 --format=csv --output=codeql-results.csv ../codeql-go/ql/src/codeql-suites/go-code-scanning.qls
+  ```
