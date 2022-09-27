@@ -9,7 +9,7 @@ source ${REPO}/bin/support.sh
 #
 # Description:
 #
-#   Deploy and run the Hexa applications (in local Docker).
+#   Deploy and run the Hexa applications (in Docker).
 #
 # Options:
 #
@@ -27,7 +27,7 @@ _main_() {
       chmod 600 ${REPO}/databases/docker_support/client-cert.pem
       chmod 600 ${REPO}/databases/docker_support/client-key.pem
     "
-    exec::step "Deploy Hexa applications in 'dev'" "docker-compose up"
+    exec::step "Deploy Hexa applications in 'Docker'" "docker-compose up"
   popd > /dev/null
 }
 

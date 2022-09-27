@@ -125,7 +125,7 @@ func newApp(addr string) (*http.Server, net.Listener) {
 	if found := os.Getenv("OPA_SERVER_URL"); found != "" {
 		opaUrl = found
 	}
-	log.Printf("Found open policy agenet server address %v", opaUrl)
+	log.Printf("Found open policy agent server address %v", opaUrl)
 
 	key := "super_private"
 	if found := os.Getenv("SESSION_KEY"); found != "" {

@@ -67,7 +67,7 @@ pack build hexa --builder heroku/buildpacks:20
 > Assuming previous execution of the "setup" script above, this task may be run
 > from anywhere in the repository as `pkg build`.
 
-### Task: Preparing the Database
+### Task: Prepare the Database
 
 The Hexa applications use PostgreSQL. A number of scripts and TLS files need to be installed/executed when running in Docker (see below). So...
 
