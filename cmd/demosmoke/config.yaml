@@ -1,6 +1,6 @@
 services:
   - name: test
-    url: ${HEXA_DEMO_CONFIG_URL}
+    url: ${HEXA_DEMO_URL}
 bundles:
   authz:
     service: test
