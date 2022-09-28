@@ -2,7 +2,7 @@
 
 ## Install Azure CLI
 
-Install the Azure CLI following [these instructions](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) or with 
+Install the Azure CLI following [these instructions](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) or with
 [Homebrew](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-macos)
 
 ## Azure Setup
@@ -34,7 +34,7 @@ A resource group may also be needed.
 
 ```bash
 az group create --name ${AZ_RESOURCE_GROUP} \
-  --location ${AZ_LOCATION} 
+  --location ${AZ_LOCATION}
 ```
 
 ## Build and push images
@@ -135,14 +135,14 @@ az webapp create --name ${APP_NAME}-opa-server \
   --plan ${APP_NAME}plan \
   --startup-file="run --server --addr 0.0.0.0:8887 --config-file /config.yaml" \
   --deployment-container-image-name ${AZ_ACR_NAME}.azurecr.io/hexa-opa-server:latest
-    
+
 az webapp config appsettings set --name ${APP_NAME}-opa-server \
   --resource-group ${AZ_RESOURCE_GROUP} \
   --settings PORT=8887
 
 az webapp config appsettings set --name ${APP_NAME}-opa-server \
   --resource-group ${AZ_RESOURCE_GROUP} \
-  --settings HEXA_DEMO_URL=https://$(az webapp show --name ${APP_NAME}-config --resource-group ${AZ_RESOURCE_GROUP} | jq -r '.defaultHostName')
+  --settings HEXA_DEMO_CONFIG_URL=https://$(az webapp show --name ${APP_NAME}-config --resource-group ${AZ_RESOURCE_GROUP} | jq -r '.defaultHostName')
 
 az webapp restart --name ${APP_NAME}-opa-server \
   --resource-group ${AZ_RESOURCE_GROUP}
@@ -154,9 +154,9 @@ Update the Hexa demo config.
 az webapp config appsettings set --name ${APP_NAME} \
   --resource-group ${AZ_RESOURCE_GROUP} \
   --settings OPA_SERVER_URL=https://$(az webapp show --name ${APP_NAME}-opa-server --resource-group ${AZ_RESOURCE_GROUP} | jq -r '.defaultHostName')/v1/data/authz/allow
-  
+
 az webapp restart --name ${APP_NAME} \
-  --resource-group ${AZ_RESOURCE_GROUP}  
+  --resource-group ${AZ_RESOURCE_GROUP}
 ```
 
 ## Create AD App Registration

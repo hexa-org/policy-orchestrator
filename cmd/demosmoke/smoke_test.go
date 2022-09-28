@@ -51,7 +51,7 @@ func TestDemoFlow(t *testing.T) {
 	config := filepath.Join(file, "../../../cmd/demosmoke/config.yaml")
 	openPolicyAgent := exec.Command("opa", "run", "--server", "--addr", "localhost:8887", "-c", config)
 	openPolicyAgent.Env = os.Environ()
-	openPolicyAgent.Env = append(openPolicyAgent.Env, "HEXA_DEMO_URL=http://localhost:8889")
+	openPolicyAgent.Env = append(openPolicyAgent.Env, "HEXA_DEMO_CONFIG_URL=http://localhost:8889")
 	openPolicyAgent.Stdout = os.Stdout
 	openPolicyAgent.Stderr = os.Stderr
 	openPolicyAgent.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
