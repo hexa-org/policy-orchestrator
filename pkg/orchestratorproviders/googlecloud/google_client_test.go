@@ -20,6 +20,7 @@ func TestGoogleClient_GetAppEngineApplications(t *testing.T) {
 	assert.Equal(t, "hexa-demo", applications[0].ObjectID)
 	assert.Equal(t, "apps/hexa-demo", applications[0].Name)
 	assert.Equal(t, "hexa-demo.uc.r.appspot.com", applications[0].Description)
+	assert.Equal(t, "AppEngine", applications[0].Service)
 }
 
 func TestClient_GetAppEngineApplications_withRequestError(t *testing.T) {
@@ -48,6 +49,7 @@ func TestClient_GetBackendApplications(t *testing.T) {
 	assert.Equal(t, 2, len(applications))
 	assert.Equal(t, "k8s1-aName", applications[0].Name)
 	assert.Equal(t, "k8s1-anotherName", applications[1].Name)
+	assert.Equal(t, "Kubernetes", applications[0].Service)
 }
 
 func TestClient_GetBackendApplications_withRequestError(t *testing.T) {

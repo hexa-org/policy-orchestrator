@@ -8,7 +8,7 @@ import (
 
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud/test"
+	google_cloud_test "github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"github.com/stretchr/testify/assert"
 )
@@ -37,6 +37,10 @@ func TestGoogleProvider_DiscoverApplications(t *testing.T) {
 	info := orchestrator.IntegrationInfo{Name: "google_cloud", Key: []byte("aKey")}
 	applications, _ := p.DiscoverApplications(info)
 	assert.Equal(t, 3, len(applications))
+	assert.Equal(t, "Kubernetes", applications[0].Service)
+	assert.Equal(t, "Kubernetes", applications[1].Service)
+	assert.Equal(t, "AppEngine", applications[2].Service)
+
 	assert.Equal(t, "google_cloud", p.Name())
 }
 
