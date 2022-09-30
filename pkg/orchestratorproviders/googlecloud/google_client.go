@@ -59,7 +59,7 @@ func (c *GoogleClient) GetAppEngineApplications() ([]orchestrator.ApplicationInf
 	log.Printf("Found google cloud backend app engine applications %s.\n", appEngines.Name)
 
 	apps := []orchestrator.ApplicationInfo{
-		{ObjectID: appEngines.ID, Name: appEngines.Name, Description: appEngines.DefaultHostname},
+		{ObjectID: appEngines.ID, Name: appEngines.Name, Description: appEngines.DefaultHostname, Service: "AppEngine"},
 	}
 	return apps, nil
 }
@@ -83,7 +83,7 @@ func (c *GoogleClient) GetBackendApplications() ([]orchestrator.ApplicationInfo,
 	var apps []orchestrator.ApplicationInfo
 	for _, info := range backend.Resources {
 		log.Printf("Found google cloud backend services %s.\n", info.Name)
-		apps = append(apps, orchestrator.ApplicationInfo{ObjectID: info.ID, Name: info.Name, Description: info.Description})
+		apps = append(apps, orchestrator.ApplicationInfo{ObjectID: info.ID, Name: info.Name, Description: info.Description, Service: "Kubernetes"})
 	}
 	return apps, nil
 }

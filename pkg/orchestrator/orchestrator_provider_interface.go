@@ -18,4 +18,5 @@ type ApplicationInfo struct {
 	ObjectID    string `validate:"required"`
 	Name        string
 	Description string
+	Service     string
 }
