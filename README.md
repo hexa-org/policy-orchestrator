@@ -1,4 +1,4 @@
-# Table of Contents 
+# Table of Contents
 - [Hexa Policy Orchestrator](#hexa-policy-orchestrator)
   * [Getting Started](#getting-started)
     + [Build the Hexa image](#build-the-hexa-image)
@@ -141,14 +141,8 @@ Fine-grained policy management with OPA.
 
 Using the **hexa-admin** application available via `docker-compose`, upload an
 OPA integration configuration file. The file describes the location of the IDQL
-policy.
-
-```json
-{
-  "bundle_url": "http://hexa-demo-config:8889/bundles/bundle.tar.gz",
-  "project_id": "Hexa Industries"
-}
-```
+policy. An example integration configuration file may be found in
+[deployments/opa-server/example](deployments/opa-server/example).
 
 Once configured, IDQL policy for the **hexa-demo** application can be modified
 on the [Applications](http://localhost:8884/applications) page. The
