@@ -30,8 +30,7 @@ func TestPolicy(t *testing.T) {
 
 	data, _ := os.ReadFile(filepath.Join(file, "../resources/bundles/bundle/data.json"))
 	dataReq, _ := http.NewRequest(http.MethodPut, "http://localhost:8887/v1/data/bundle", bytes.NewBuffer(data))
-	// consider http.DefaultClient here
-	dataDo, err := (&http.Client{}).Do(dataReq)
+	dataDo, err := http.DefaultClient.Do(dataReq)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusNoContent, dataDo.StatusCode)
 
@@ -39,12 +38,12 @@ func TestPolicy(t *testing.T) {
 	assert.NoError(t, err)
 	regoReq, err := http.NewRequest(http.MethodPut, "http://localhost:8887/v1/policies/authz", bytes.NewBuffer(rego))
 	assert.NoError(t, err)
-	regoDo, err := (&http.Client{}).Do(regoReq)
+	regoDo, err := http.DefaultClient.Do(regoReq)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, regoDo.StatusCode)
 
 	provider := decisionsupportproviders.OpaDecisionProvider{
-		Client: &http.Client{},
+		Client: http.DefaultClient,
 		Url:    "http://localhost:8887/v1/data/authz/allow",
 	}
 
