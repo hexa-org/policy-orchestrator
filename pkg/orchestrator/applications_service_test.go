@@ -3,14 +3,15 @@ package orchestrator_test
 import (
 	"database/sql"
 	"errors"
+	"log"
 	"testing"
 
 	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
+	orchestrator_test "github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
-	"github.com/stretchr/testify/assert"
+	assert "github.com/stretchr/testify/require"
 )
 
 type applicationsServiceData struct {
@@ -24,16 +25,23 @@ type applicationsServiceData struct {
 
 func (data *applicationsServiceData) SetUp() {
 	data.db, _ = databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
-	_, _ = data.db.Exec(`
+	_, err := data.db.Exec(`
 delete from applications;
 delete from integrations;
 insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'aName', 'noop', 'aKey');
-insert into applications (id, integration_id, object_id, name, description) values ('6409776a-367a-483a-a194-5ccf9c4ff210', '50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'anObjectId', 'aName', 'aDescription');
-insert into applications (id, integration_id, object_id, name, description) values ('6409776a-367a-483a-a194-5ccf9c4ff211', '50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'anotherObjectId', 'anotherName', 'anotherDescription');
+insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff210', '50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'anObjectId', 'aName', 'aDescription', 'aService');
+insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff211', '50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'anotherObjectId', 'anotherName', 'anotherDescription', 'anotherService');
 
 insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e8', 'anotherName', 'azure', 'aKey');
-insert into applications (id, integration_id, object_id, name, description) values ('6409776a-367a-483a-a194-5ccf9c4ff212', '50e00619-9f15-4e85-a7e9-f26d87ea12e8', 'andAnotherObjectId', 'andAnotherName', 'andAnotherDescription');
+insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff212', '50e00619-9f15-4e85-a7e9-f26d87ea12e8', 'andAnotherObjectId', 'andAnotherName', 'andAnotherDescription', 'yetAnotherService');
 `)
+
+	// TODO: pass `testing.T` into this `SetUp`.
+	// e.g., so we can `assert.NoError(t, ...)`, `t.Fatal()` instead of...
+	if err != nil {
+		log.Fatalf("failed to setup DB: %v", err)
+	}
+
 	data.fromApp = "6409776a-367a-483a-a194-5ccf9c4ff210"
 	data.toApp = "6409776a-367a-483a-a194-5ccf9c4ff211"
 	data.toAppDifferent = "6409776a-367a-483a-a194-5ccf9c4ff212"

@@ -6,7 +6,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
-	"github.com/stretchr/testify/assert"
+	assert "github.com/stretchr/testify/assert"
 )
 
 type applicationsTestData struct {
@@ -31,7 +31,7 @@ func (data *applicationsTestData) TearDown() {
 
 func TestCreateApp(t *testing.T) {
 	testsupport.WithSetUp(&applicationsTestData{}, func(data *applicationsTestData) {
-		id, err := data.gateway.CreateIfAbsent(data.integrationTestId, "anObjectId", "aName", "aDescription")
+		id, err := data.gateway.CreateIfAbsent(data.integrationTestId, "anObjectId", "aName", "aDescription", "aService")
 		assert.NotEmpty(t, id)
 		assert.NoError(t, err)
 	})
@@ -39,27 +39,43 @@ func TestCreateApp(t *testing.T) {
 
 func TestFindApps(t *testing.T) {
 	testsupport.WithSetUp(&applicationsTestData{}, func(data *applicationsTestData) {
-		_, _ = data.gateway.CreateIfAbsent(data.integrationTestId, "anObjectId", "aName", "aDescription")
+		_, err := data.gateway.CreateIfAbsent(data.integrationTestId, "anObjectId", "aName", "aDescription", "aService")
+		assert.NoError(t, err)
+		records, _ := data.gateway.Find()
+		record := records[0]
+		assert.Equal(t, data.integrationTestId, record.IntegrationId)
+		assert.Equal(t, "anObjectId", record.ObjectId)
+		assert.Equal(t, "aName", record.Name)
+		assert.Equal(t, "aDescription", record.Description)
+		assert.Equal(t, "aService", record.Service)
+	})
+}
+
+func TestFindByIntegrationId(t *testing.T) {
+	testsupport.WithSetUp(&applicationsTestData{}, func(data *applicationsTestData) {
+		_, err := data.gateway.CreateIfAbsent(data.integrationTestId, "anObjectId", "aName", "aDescription", "aService")
+		assert.NoError(t, err)
 		record, _ := data.gateway.FindByIntegrationId(data.integrationTestId)
 		assert.Equal(t, data.integrationTestId, record.IntegrationId)
 		assert.Equal(t, "anObjectId", record.ObjectId)
 		assert.Equal(t, "aName", record.Name)
 		assert.Equal(t, "aDescription", record.Description)
+		assert.Equal(t, "aService", record.Service)
 	})
 }
 
 func TestFindApps_withDatabaseError(t *testing.T) {
 	open, _ := databasesupport.Open("")
 	gateway := orchestrator.ApplicationsDataGateway{DB: open}
-	_, _ = gateway.CreateIfAbsent("anId", "anObjectId", "aName", "aDescription")
+	_, _ = gateway.CreateIfAbsent("anId", "anObjectId", "aName", "aDescription", "aService")
 	_, err := gateway.Find()
 	assert.Error(t, err)
 }
 
 func TestFindApps_ignoresDuplicates(t *testing.T) {
 	testsupport.WithSetUp(&applicationsTestData{}, func(data *applicationsTestData) {
-		_, _ = data.gateway.CreateIfAbsent(data.integrationTestId, "anObjectId", "aName", "aDescription")
-		_, _ = data.gateway.CreateIfAbsent(data.integrationTestId, "anObjectId", "aName", "aDescription")
+		_, _ = data.gateway.CreateIfAbsent(data.integrationTestId, "anObjectId", "aName", "aDescription", "aService")
+		_, _ = data.gateway.CreateIfAbsent(data.integrationTestId, "anObjectId", "aName", "aDescription", "aService")
 		find, _ := data.gateway.Find()
 		assert.Equal(t, 1, len(find))
 	})
@@ -67,11 +83,13 @@ func TestFindApps_ignoresDuplicates(t *testing.T) {
 
 func TestFindAppById(t *testing.T) {
 	testsupport.WithSetUp(&applicationsTestData{}, func(data *applicationsTestData) {
-		id, _ := data.gateway.CreateIfAbsent(data.integrationTestId, "anObjectId", "aName", "aDescription")
-		record, _ := data.gateway.FindById(id)
+		id, _ := data.gateway.CreateIfAbsent(data.integrationTestId, "anObjectId", "aName", "aDescription", "aService")
+		record, err := data.gateway.FindById(id)
+		assert.NoError(t, err)
 		assert.Equal(t, data.integrationTestId, record.IntegrationId)
 		assert.Equal(t, "anObjectId", record.ObjectId)
 		assert.Equal(t, "aName", record.Name)
 		assert.Equal(t, "aDescription", record.Description)
+		assert.Equal(t, "aService", record.Service)
 	})
 }
