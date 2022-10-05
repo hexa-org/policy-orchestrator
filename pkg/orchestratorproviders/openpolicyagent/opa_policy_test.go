@@ -2,9 +2,7 @@ package openpolicyagent_test
 
 import (
 	"bytes"
-	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -12,13 +10,14 @@ import (
 	"runtime"
 	"syscall"
 	"testing"
+	"time"
 
 	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupportproviders"
-	"github.com/stretchr/testify/assert"
+	assert "github.com/stretchr/testify/require"
 )
 
 func TestPolicy(t *testing.T) {
-	openPolicyAgent := exec.Command("opa", "run", "--server", "--addr", "localhost:8887")
+	openPolicyAgent := exec.Command("opa", "run", "--server", "--addr", ":8887")
 	openPolicyAgent.Stdout = os.Stdout
 	openPolicyAgent.Stderr = os.Stderr
 	openPolicyAgent.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
@@ -31,12 +30,17 @@ func TestPolicy(t *testing.T) {
 
 	data, _ := os.ReadFile(filepath.Join(file, "../resources/bundles/bundle/data.json"))
 	dataReq, _ := http.NewRequest(http.MethodPut, "http://localhost:8887/v1/data/bundle", bytes.NewBuffer(data))
-	dataDo, _ := (&http.Client{}).Do(dataReq)
+	// consider http.DefaultClient here
+	dataDo, err := (&http.Client{}).Do(dataReq)
+	assert.NoError(t, err)
 	assert.Equal(t, http.StatusNoContent, dataDo.StatusCode)
 
-	rego, _ := os.ReadFile(filepath.Join(file, "../resources/bundles/bundle/policy.rego"))
-	regoReq, _ := http.NewRequest(http.MethodPut, "http://localhost:8887/v1/policies/authz", bytes.NewBuffer(rego))
-	regoDo, _ := (&http.Client{}).Do(regoReq)
+	rego, err := os.ReadFile(filepath.Join(file, "../resources/bundles/bundle/policy.rego"))
+	assert.NoError(t, err)
+	regoReq, err := http.NewRequest(http.MethodPut, "http://localhost:8887/v1/policies/authz", bytes.NewBuffer(rego))
+	assert.NoError(t, err)
+	regoDo, err := (&http.Client{}).Do(regoReq)
+	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, regoDo.StatusCode)
 
 	provider := decisionsupportproviders.OpaDecisionProvider{
@@ -83,33 +87,22 @@ func allows(provider decisionsupportproviders.OpaDecisionProvider, action string
 }
 
 func startCmd(cmd *exec.Cmd, port int) {
-	assertPort(port)
+	log.Printf("Starting command: %v\n", cmd)
+	errCh := make(chan error)
 
 	go func() {
 		err := cmd.Run()
 		if err != nil {
-			log.Printf("Unable to start cmd %v\n.", err)
+			errCh <- err
 		}
 	}()
-	waitForHealthy(fmt.Sprintf("localhost:%v", port))
-}
 
-func assertPort(port int) {
-	svc, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	if err != nil {
-		log.Printf("Port %d is unavailable: %s", port, err)
-		os.Exit(1)
-	}
-
-	svc.Close()
-}
-
-func waitForHealthy(address string) {
-	var isLive bool
-	for !isLive {
-		resp, err := http.Get(fmt.Sprintf("http://%s/health", address))
-		if err == nil && resp.StatusCode == http.StatusOK {
-			isLive = true
+	select {
+	case <-time.After(time.Second):
+		log.Println("Command started")
+	case err := <-errCh:
+		if err != nil {
+			log.Fatalf("Unable to start cmd %v\n", err)
 		}
 	}
 }

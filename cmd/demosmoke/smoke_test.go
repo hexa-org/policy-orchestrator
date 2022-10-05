@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -258,8 +257,6 @@ func makeCmd(cmdString string, envs []string) *exec.Cmd {
 }
 
 func startCmd(cmd *exec.Cmd, port int) {
-	assertPort(port)
-
 	log.Printf("Starting cmd %v\n", cmd)
 	go func() {
 		err := cmd.Run()
@@ -268,16 +265,6 @@ func startCmd(cmd *exec.Cmd, port int) {
 		}
 	}()
 	waitForHealthy(fmt.Sprintf("localhost:%v", port))
-}
-
-func assertPort(port int) {
-	svc, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	if err != nil {
-		log.Printf("Port %d is unavailable: %s", port, err)
-		os.Exit(1)
-	}
-
-	svc.Close()
 }
 
 func waitForHealthy(address string) {
