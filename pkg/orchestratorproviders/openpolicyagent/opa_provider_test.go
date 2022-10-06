@@ -19,7 +19,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent/test"
+	openpolicyagent_test "github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"github.com/stretchr/testify/assert"
 )
@@ -56,6 +56,7 @@ func TestDiscoverApplications(t *testing.T) {
 			assert.Equal(t, 1, len(applications))
 			assert.Equal(t, tt.expectedProjectID, applications[0].Name)
 			assert.Equal(t, "Open Policy Agent bundle", applications[0].Description)
+			assert.Equal(t, "bundle server", applications[0].Service)
 		})
 	}
 }

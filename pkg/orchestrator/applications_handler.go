@@ -21,6 +21,7 @@ type Application struct {
 	Name          string `json:"name"`
 	Description   string `json:"description"`
 	ProviderName  string `json:"provider_name"`
+	Service       string `json:"service"`
 }
 
 type Policies struct {
@@ -78,7 +79,7 @@ func (handler ApplicationsHandler) List(w http.ResponseWriter, _ *http.Request) 
 
 	var list Applications
 	for _, rec := range records {
-		list.Applications = append(list.Applications, Application{ID: rec.ID, IntegrationId: rec.IntegrationId, ObjectId: rec.ObjectId, Name: rec.Name, Description: rec.Description, ProviderName: integrationNamesById[rec.IntegrationId]})
+		list.Applications = append(list.Applications, Application{ID: rec.ID, IntegrationId: rec.IntegrationId, ObjectId: rec.ObjectId, Name: rec.Name, Description: rec.Description, ProviderName: integrationNamesById[rec.IntegrationId], Service: rec.Service})
 	}
 	data, _ := json.Marshal(list)
 	w.Header().Set("content-type", "application/json")

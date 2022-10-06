@@ -49,6 +49,7 @@ type application struct {
 	Name          string `json:"name"`
 	Description   string `json:"description"`
 	ProviderName  string `json:"provider_name"`
+	Service       string `json:"service"`
 }
 
 func (c orchestratorClient) Applications() (applications []Application, err error) {
@@ -71,7 +72,9 @@ func (c orchestratorClient) Applications() (applications []Application, err erro
 			ObjectId:      app.ObjectId,
 			Name:          app.Name,
 			Description:   app.Description,
-			ProviderName:  app.ProviderName})
+			ProviderName:  app.ProviderName,
+			Service:       app.Service,
+		})
 	}
 
 	return applications, nil

@@ -75,6 +75,7 @@ func TestListApps(t *testing.T) {
 		assert.Equal(t, "aName", application.Name)
 		assert.Equal(t, "noop", application.ProviderName)
 		assert.Equal(t, "aDescription", application.Description)
+		assert.Equal(t, "aService", application.Service)
 	})
 }
 

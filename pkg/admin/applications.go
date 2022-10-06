@@ -18,6 +18,7 @@ type Application struct {
 	Name          string
 	Description   string
 	ProviderName  string
+	Service       string
 }
 
 type Policy struct {
