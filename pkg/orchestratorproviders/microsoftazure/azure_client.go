@@ -124,7 +124,12 @@ func (c *AzureClient) GetWebApplications(key []byte) ([]orchestrator.Application
 	for _, app := range webapps.List {
 		log.Printf("Found azure app service web app %s.\n", app.Name)
 		if app.Web.HomePageUrl != "" { // todo - a better way to find enterprise apps, WindowsAzureActiveDirectoryIntegratedApp?
-			apps = append(apps, orchestrator.ApplicationInfo{ObjectID: app.ID, Name: app.Name, Description: app.AppID})
+			apps = append(apps, orchestrator.ApplicationInfo{
+				ObjectID:    app.ID,
+				Name:        app.Name,
+				Description: app.AppID,
+				Service:     "App Service",
+			})
 		}
 	}
 	return apps, err
