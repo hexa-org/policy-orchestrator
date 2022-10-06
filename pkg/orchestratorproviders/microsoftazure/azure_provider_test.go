@@ -22,8 +22,8 @@ func TestDiscoverApplications(t *testing.T) {
       "id": "anId",
       "name": "anAppName",
       "description": "aDescription",
-			"web": {
-			  "homePageUrl": "https://anAppName.azurewebsites.net"
+      "web": {
+		"homePageUrl": "https://anAppName.azurewebsites.net"
       }
     }
   ]
@@ -41,8 +41,9 @@ func TestDiscoverApplications(t *testing.T) {
 `)
 	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}
 	applications, _ := p.DiscoverApplications(info)
-	assert.Equal(t, 1, len(applications))
+	assert.Len(t, applications, 1)
 	assert.Equal(t, "azure", p.Name())
+	assert.Equal(t, "App Service", applications[0].Service)
 }
 
 func TestGetPolicy(t *testing.T) {
