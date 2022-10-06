@@ -37,7 +37,7 @@ func TestAmazonProvider_DiscoverApplications(t *testing.T) {
 	info := orchestrator.IntegrationInfo{Name: "amazon", Key: key}
 	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: &cognitoidentityprovider.Client{}}
 	_, err := p.DiscoverApplications(info)
-	assert.Equal(t, "operation error Cognito Identity Provider: ListUserPools, expected endpoint resolver to not be nil", err.Error())
+	assert.Error(t, err, "operation error Cognito Identity Provider: ListUserPools, expected endpoint resolver to not be nil")
 }
 
 func TestAmazonProvider_DiscoverApplications_withOtherProvider(t *testing.T) {
@@ -59,9 +59,12 @@ func TestAmazonProvider_ListUserPools(t *testing.T) {
 	mockClient := &amazonwebservices_test.MockClient{}
 	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
 	info := orchestrator.IntegrationInfo{Name: "amazon", Key: key}
-	pools, _ := p.ListUserPools(info)
+	pools, err := p.ListUserPools(info)
+	assert.NoError(t, err)
+	assert.Len(t, pools, 1)
 	assert.Equal(t, "anId", pools[0].ObjectID)
 	assert.Equal(t, "aName", pools[0].Name)
+	assert.Equal(t, "Cognito", pools[0].Service)
 }
 
 func TestAmazonProvider_ListUserPools_withError(t *testing.T) {
