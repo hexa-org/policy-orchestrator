@@ -10,6 +10,7 @@
             <thead>
             <tr>
                 <th>Platform Identifier</th>
+                <th>Service</th>
                 <th>Name</th>
                 <th>Description</th>
             </tr>
@@ -18,6 +19,7 @@
             {{- $app := index .Map "application"}}
             <tr>
                 <td>{{$app.ObjectId}}</td>
+                <td>{{$app.Service}}</td>
                 <td>{{$app.Name}}</td>
                 <td>{{$app.Description}}</td>
             </tr>
