@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/hexa-org/policy-orchestrator/pkg/admin"
-	"github.com/hexa-org/policy-orchestrator/pkg/admin/test"
+	admin_test "github.com/hexa-org/policy-orchestrator/pkg/admin/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"
@@ -53,7 +53,7 @@ func (suite *ApplicationsSuite) TestApplications_templateRenders() {
 
 func (suite *ApplicationsSuite) TestApplications() {
 	suite.client.DesiredApplications = []admin.Application{
-		{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription", ProviderName: "google_cloud"},
+		{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription", ProviderName: "google_cloud", Service: "AppEngine"},
 	}
 
 	url := fmt.Sprintf("http://%s/applications", suite.server.Addr)
@@ -64,6 +64,7 @@ func (suite *ApplicationsSuite) TestApplications() {
 	assert.Contains(suite.T(), string(body), "aName")
 	assert.Contains(suite.T(), string(body), "aDescription")
 	assert.Contains(suite.T(), string(body), "Google Cloud Platform")
+	assert.Contains(suite.T(), string(body), "AppEngine")
 }
 
 func (suite *ApplicationsSuite) TestApplications_with_error() {

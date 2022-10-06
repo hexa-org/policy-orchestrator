@@ -52,12 +52,12 @@ func TestOrchestratorClient_NotHealthy(t *testing.T) {
 
 func TestOrchestratorClient_Applications(t *testing.T) {
 	mockClient := new(MockClient)
-	mockClient.response = []byte("{\"applications\":[{\"id\":\"anId\", \"integration_id\":\"anIntegrationId\", \"object_id\":\"anObjectId\", \"name\":\"anApp\", \"description\":\"aDescription\", \"provider_name\":\"aProviderName\"}]}")
+	mockClient.response = []byte("{\"applications\":[{\"id\":\"anId\", \"integration_id\":\"anIntegrationId\", \"object_id\":\"anObjectId\", \"name\":\"anApp\", \"description\":\"aDescription\", \"provider_name\":\"aProviderName\", \"service\":\"aService\"}]}")
 	mockClient.status = http.StatusOK
 	client := admin.NewOrchestratorClient(mockClient, "localhost:8883", "aKey")
 
 	resp, _ := client.Applications()
-	assert.Equal(t, []admin.Application{{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "anApp", Description: "aDescription", ProviderName: "aProviderName"}}, resp)
+	assert.Equal(t, []admin.Application{{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "anApp", Description: "aDescription", ProviderName: "aProviderName", Service: "aService"}}, resp)
 }
 
 func TestOrchestratorClient_Applications_withErroneousGet(t *testing.T) {

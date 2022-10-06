@@ -10,6 +10,7 @@
             <thead>
             <tr>
                 <th>Provider</th>
+                <th>Service</th>
                 <th>Platform Identifier</th>
                 <th>Name</th>
                 <th>Description</th>
@@ -24,6 +25,7 @@
                         {{if eq .ProviderName "azure"}}Azure Cloud Platform{{end}}
                         {{if eq .ProviderName "open_policy_agent"}}Open Policy Agent{{end}}
                     </td>
+                    <td>{{.Service}}</td>
                     <td><a href="/applications/{{.ID}}">{{.ObjectId}}</a></td>
                     <td>{{.Name}}</td>
                     <td>{{.Description}}</td>
