@@ -39,7 +39,7 @@ func (o *OpaProvider) DiscoverApplications(info orchestrator.IntegrationInfo) (a
 			ObjectID:    base64.StdEncoding.EncodeToString([]byte(c.BundleUrl)), // todo - intended to represent a resource identifier
 			Name:        c.ProjectID,
 			Description: "Open Policy Agent bundle",
-			Service:     "bundle server",
+			Service:     "Hexa OPA",
 		})
 	}
 	return apps, err
