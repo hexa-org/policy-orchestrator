@@ -102,6 +102,7 @@ func TestShowApps(t *testing.T) {
 		assert.Equal(t, "anObjectId", app.ObjectId)
 		assert.Equal(t, "aName", app.Name)
 		assert.Equal(t, "aDescription", app.Description)
+		assert.Equal(t, "aService", app.Service)
 	})
 }
 

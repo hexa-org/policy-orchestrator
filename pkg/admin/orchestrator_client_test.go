@@ -81,12 +81,12 @@ func TestOrchestratorClient_Applications_withBadJson(t *testing.T) {
 
 func TestOrchestratorClient_Application(t *testing.T) {
 	mockClient := new(MockClient)
-	mockClient.response = []byte("{\"id\":\"anId\", \"integration_id\":\"anIntegrationId\", \"object_id\":\"anObjectId\", \"name\":\"anApp\", \"description\":\"aDescription\"}}")
+	mockClient.response = []byte("{\"id\":\"anId\", \"integration_id\":\"anIntegrationId\", \"object_id\":\"anObjectId\", \"name\":\"anApp\", \"description\":\"aDescription\", \"service\":\"aService\"}}")
 	mockClient.status = http.StatusOK
 	client := admin.NewOrchestratorClient(mockClient, "localhost:8883", "aKey")
 
 	resp, _ := client.Application("anId")
-	assert.Equal(t, admin.Application{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "anApp", Description: "aDescription"}, resp)
+	assert.Equal(t, admin.Application{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "anApp", Description: "aDescription", Service: "aService"}, resp)
 }
 
 func TestOrchestratorClient_Application_withBadJson(t *testing.T) {

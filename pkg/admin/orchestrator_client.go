@@ -92,7 +92,14 @@ func (c orchestratorClient) Application(id string) (Application, error) {
 		log.Printf("unable to parse found json: %s\n", err.Error())
 		return Application{}, err
 	}
-	app := Application{ID: jsonResponse.ID, IntegrationId: jsonResponse.IntegrationId, ObjectId: jsonResponse.ObjectId, Name: jsonResponse.Name, Description: jsonResponse.Description}
+	app := Application{
+		ID:            jsonResponse.ID,
+		IntegrationId: jsonResponse.IntegrationId,
+		ObjectId:      jsonResponse.ObjectId,
+		Name:          jsonResponse.Name,
+		Description:   jsonResponse.Description,
+		Service:       jsonResponse.Service,
+	}
 	return app, nil
 }
 

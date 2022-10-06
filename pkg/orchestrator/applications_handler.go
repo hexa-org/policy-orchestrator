@@ -94,7 +94,14 @@ func (handler ApplicationsHandler) Show(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	app := Application{ID: record.ID, IntegrationId: record.IntegrationId, ObjectId: record.ObjectId, Name: record.Name, Description: record.Description}
+	app := Application{
+		ID:            record.ID,
+		IntegrationId: record.IntegrationId,
+		ObjectId:      record.ObjectId,
+		Name:          record.Name,
+		Description:   record.Description,
+		Service:       record.Service,
+	}
 	data, _ := json.Marshal(app)
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
