@@ -55,6 +55,7 @@ func (a *AmazonProvider) ListUserPools(info orchestrator.IntegrationInfo) (apps 
 			ObjectID:    aws.ToString(p.Id),
 			Name:        aws.ToString(p.Name),
 			Description: "Cognito identity provider user pool",
+			Service:     "Cognito",
 		})
 	}
 	return apps, err
