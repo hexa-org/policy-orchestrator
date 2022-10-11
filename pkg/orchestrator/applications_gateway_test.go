@@ -93,3 +93,16 @@ func TestFindAppById(t *testing.T) {
 		assert.Equal(t, "aService", record.Service)
 	})
 }
+
+func TestDeleteAppById(t *testing.T) {
+	testsupport.WithSetUp(&applicationsTestData{}, func(data *applicationsTestData) {
+		id, _ := data.gateway.CreateIfAbsent(data.integrationTestId, "anObjectId", "aName", "aDescription", "aService")
+
+		err := data.gateway.DeleteById(id)
+
+		assert.NoError(t, err)
+		record, err := data.gateway.FindById(id)
+		assert.Error(t, err)
+		assert.Empty(t, record)
+	})
+}

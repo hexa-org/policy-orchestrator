@@ -10,6 +10,7 @@ type DiscoveryWorker struct {
 }
 
 func (n *DiscoveryWorker) Run(work interface{}) error {
+	discoveredApps := make(map[string]struct{})
 	for _, p := range n.Providers {
 		log.Printf("Found discovery provider %s.", p.Name())
 
@@ -19,14 +20,41 @@ func (n *DiscoveryWorker) Run(work interface{}) error {
 
 			log.Printf("Found %d applications for integration provider %s.", len(applications), p.Name())
 			for _, app := range applications {
-				_, err := n.Gateway.CreateIfAbsent(record.ID, app.ObjectID, app.Name, app.Description, app.Service) // idempotent work
+				id, err := n.Gateway.CreateIfAbsent(record.ID, app.ObjectID, app.Name, app.Description, app.Service) // idempotent work
 				if err != nil {
 					log.Printf("Failed to create application: %s", err)
+					continue
 				}
+				discoveredApps[id] = struct{}{}
 			}
 		}
 	}
+
+	if len(discoveredApps) > 0 {
+		n.removeUnknownApps(discoveredApps)
+	}
 	return nil
+}
+
+func (n *DiscoveryWorker) removeUnknownApps(discoveredApps map[string]struct{}) {
+	allApps, err := n.Gateway.Find()
+	if err != nil {
+		log.Printf("Failed to get applications: %s", err)
+		return
+	}
+	appsToDelete := make([]string, 0)
+	for _, app := range allApps {
+		if _, found := discoveredApps[app.ID]; !found {
+			appsToDelete = append(appsToDelete, app.ID)
+		}
+	}
+
+	for _, id := range appsToDelete {
+		derr := n.Gateway.DeleteById(id)
+		if derr != nil {
+			log.Printf("Failed to delete application: %s", err)
+		}
+	}
 }
 
 type DiscoveryWorkFinder struct {

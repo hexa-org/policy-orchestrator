@@ -8,6 +8,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,20 +16,20 @@ import (
 func setUp() (orchestrator.IntegrationsDataGateway, orchestrator.ApplicationsDataGateway) {
 	db, _ := databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
 	_, _ = db.Exec("delete from integrations;")
-	gateway := orchestrator.IntegrationsDataGateway{DB: db}
+	integrationsGateway := orchestrator.IntegrationsDataGateway{DB: db}
 	appGateway := orchestrator.ApplicationsDataGateway{DB: db}
-	return gateway, appGateway
+	return integrationsGateway, appGateway
 }
 
 func TestWorkflow(t *testing.T) {
-	gateway, appGateway := setUp()
-	_, _ = gateway.Create("aName", "noop", []byte("aKey"))
+	integrationsGateway, appGateway := setUp()
+	_, _ = integrationsGateway.Create("aName", "noop", []byte("aKey"))
 
 	noopProvider := orchestrator_test.NoopProvider{}
 	providers := make(map[string]orchestrator.Provider)
 	providers["noop"] = &noopProvider
 	worker := orchestrator.DiscoveryWorker{Providers: providers, Gateway: appGateway}
-	finder := orchestrator.NewDiscoveryWorkFinder(gateway)
+	finder := orchestrator.NewDiscoveryWorkFinder(integrationsGateway)
 	list := []workflowsupport.Worker{&worker}
 	scheduler := workflowsupport.NewScheduler(&finder, list, 50)
 
@@ -39,6 +40,38 @@ func TestWorkflow(t *testing.T) {
 	find, _ := appGateway.Find()
 	assert.Equal(t, 3, len(find))
 	assert.True(t, noopProvider.Discovered > 2)
+}
+
+func TestRemoveDeletedApplications(t *testing.T) {
+	integrationsGateway, appDataGateway := setUp()
+
+	id, _ := integrationsGateway.Create("aName", "noop", []byte("aKey"))
+	_, _ = appDataGateway.CreateIfAbsent(id, "object1", "app1", "", "service1")
+	app2ID, _ := appDataGateway.CreateIfAbsent(id, "object2", "app2", "", "service2")
+
+	provider := fakeProvider{
+		discoveredApplications: []orchestrator.ApplicationInfo{
+			{
+				ObjectID: "object2",
+				Name:     "app2",
+				Service:  "service2",
+			},
+		},
+	}
+	discoveryWorker := &orchestrator.DiscoveryWorker{
+		Providers: map[string]orchestrator.Provider{
+			"fake": provider,
+		},
+		Gateway: appDataGateway,
+	}
+	work := []orchestrator.IntegrationRecord{{Provider: "fake"}}
+
+	discoveryWorker.Run(work)
+
+	found, err := appDataGateway.Find()
+	assert.NoError(t, err)
+	assert.Len(t, found, 1)
+	assert.Equal(t, app2ID, found[0].ID)
 }
 
 func TestWorkflow_withEmptyResults(t *testing.T) {
@@ -76,4 +109,24 @@ func TestWorkflow_erroneousFind(t *testing.T) {
 	scheduler.Start()
 	assert.False(t, <-finder.Results)
 	scheduler.Stop()
+}
+
+type fakeProvider struct {
+	discoveredApplications []orchestrator.ApplicationInfo
+}
+
+func (f fakeProvider) Name() string {
+	return "fake"
+}
+
+func (f fakeProvider) DiscoverApplications(info orchestrator.IntegrationInfo) ([]orchestrator.ApplicationInfo, error) {
+	return f.discoveredApplications, nil
+}
+
+func (f fakeProvider) GetPolicyInfo(info orchestrator.IntegrationInfo, info2 orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
+	panic("implement me")
+}
+
+func (f fakeProvider) SetPolicyInfo(info orchestrator.IntegrationInfo, info2 orchestrator.ApplicationInfo, infos []policysupport.PolicyInfo) (status int, foundErr error) {
+	panic("implement me")
 }

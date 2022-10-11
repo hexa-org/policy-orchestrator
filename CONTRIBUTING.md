@@ -49,6 +49,7 @@ maintainers.
 * Avoid mocking HTTP tests
 * Local unit, integration, and acceptance tests should run within a few seconds, not minutes
 * Refactor ruthlessly
+* Use "query" for non-database generated identifier fields, use "queryRow" for database generated or expected identifier fields (pk, fk, etc)
 
 ### Create a new provider
 
