@@ -181,8 +181,7 @@ func (o *OpaProvider) MakeDefaultBundle(data []byte) (bytes.Buffer, error) {
 	return buffer, nil
 }
 
-// /
-
+// todo - add a gcp key in here. Don't parse it, just keep it as bytes.
 type credentials struct {
 	ProjectID string `json:"project_id,omitempty"`
 	BundleUrl string `json:"bundle_url"`
@@ -198,7 +197,9 @@ func (o *OpaProvider) credentials(key []byte) credentials {
 	return foundCredentials
 }
 
+// todo - based on the key, we need to build out an http client vs. gcp storage client vs. etc...
 func (o *OpaProvider) ensureClientIsAvailable(key []byte) BundleClient {
+	// todo - do we need ResourcesDirectory here? Are we using it?
 	if o.ResourcesDirectory == "" {
 		_, file, _, _ := runtime.Caller(0)
 		o.ResourcesDirectory = filepath.Join(file, "../resources")
