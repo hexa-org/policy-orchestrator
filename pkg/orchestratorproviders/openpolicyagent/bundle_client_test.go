@@ -26,12 +26,12 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
 
 	mockClient := openpolicyagent_test.MockClient{Response: buffer.Bytes()}
 
-	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
+	client := openpolicyagent.BundleClient{BundleServerURL: "someURL", HttpClient: &mockClient}
 
 	dir := os.TempDir()
 	rand.Seed(time.Now().UnixNano())
 	path := filepath.Join(dir, fmt.Sprintf("test-bundles/.bundle-%d", rand.Uint64()))
-	data, err := client.GetDataFromBundle("someUrl", path)
+	data, err := client.GetDataFromBundle(path)
 	assert.NoError(t, err)
 	assert.Equal(t, `{
   "policies": [
@@ -93,16 +93,16 @@ func TestBundleClient_GetExpressionFromBundle(t *testing.T) {
 func TestBundleClient_GetExpressionFromBundle_withBadRequest(t *testing.T) {
 	mockClient := openpolicyagent_test.MockClient{}
 	mockClient.Err = errors.New("oops")
-	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
-	_, err := client.GetDataFromBundle("someUrl", os.TempDir())
+	client := openpolicyagent.BundleClient{BundleServerURL: "someURL", HttpClient: &mockClient}
+	_, err := client.GetDataFromBundle(os.TempDir())
 	assert.Error(t, err)
 }
 
 func TestBundleClient_GetExpressionFromBundle_withBadGzip(t *testing.T) {
 	var buffer bytes.Buffer
 	mockClient := openpolicyagent_test.MockClient{Response: buffer.Bytes()}
-	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
-	_, err := client.GetDataFromBundle("someUrl", "")
+	client := openpolicyagent.BundleClient{BundleServerURL: "someURL", HttpClient: &mockClient}
+	_, err := client.GetDataFromBundle("")
 	assert.Error(t, err)
 }
 
@@ -114,7 +114,7 @@ func TestBundleClient_GetExpressionFromBundle_withBadTar(t *testing.T) {
 	_ = compressionsupport.Gzip(&buffer, tar)
 
 	mockClient := openpolicyagent_test.MockClient{Response: buffer.Bytes()}
-	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
-	_, err := client.GetDataFromBundle("someUrl", "/badPath")
+	client := openpolicyagent.BundleClient{BundleServerURL: "someURL", HttpClient: &mockClient}
+	_, err := client.GetDataFromBundle("/badPath")
 	assert.Error(t, err)
 }
