@@ -74,7 +74,7 @@ func TestGetPolicyInfo(t *testing.T) {
 	_ = compressionsupport.Gzip(&buffer, tar)
 
 	mockClient := openpolicyagent_test.MockClient{Response: buffer.Bytes()}
-	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
+	client := &openpolicyagent.HTTPBundleClient{HttpClient: &mockClient}
 
 	resourcesDirectory := filepath.Join(file, "../resources")
 	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: resourcesDirectory}
@@ -84,7 +84,7 @@ func TestGetPolicyInfo(t *testing.T) {
 }
 
 func TestGetPolicyInfo_withBadKey(t *testing.T) {
-	client := openpolicyagent.BundleClient{}
+	client := &openpolicyagent.HTTPBundleClient{}
 	_, file, _, _ := runtime.Caller(0)
 	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
 	_, err := p.GetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{})
@@ -99,7 +99,7 @@ func TestGetPolicyInfo_withBadRequest(t *testing.T) {
 `)
 	mockClient := openpolicyagent_test.MockClient{}
 	mockClient.Err = errors.New("oops")
-	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
+	client := &openpolicyagent.HTTPBundleClient{HttpClient: &mockClient}
 	_, file, _, _ := runtime.Caller(0)
 	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
 	_, err := p.GetPolicyInfo(orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key}, orchestrator.ApplicationInfo{})
@@ -114,7 +114,7 @@ func TestGetPolicyInfo_withBadResourceDir(t *testing.T) {
 `)
 	mockClient := openpolicyagent_test.MockClient{}
 	mockClient.Err = errors.New("oops")
-	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
+	client := &openpolicyagent.HTTPBundleClient{HttpClient: &mockClient}
 	_, file, _, _ := runtime.Caller(0)
 	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
 	_, err := p.GetPolicyInfo(orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key}, orchestrator.ApplicationInfo{})
@@ -128,7 +128,7 @@ func TestSetPolicyInfo(t *testing.T) {
 }
 `)
 	mockClient := openpolicyagent_test.MockClient{Status: http.StatusCreated}
-	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
+	client := &openpolicyagent.HTTPBundleClient{HttpClient: &mockClient}
 
 	_, file, _, _ := runtime.Caller(0)
 	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
@@ -160,7 +160,7 @@ func TestSetPolicyInfo_withInvalidArguments(t *testing.T) {
 }
 `)
 	mockClient := openpolicyagent_test.MockClient{Status: -1}
-	client := openpolicyagent.BundleClient{HttpClient: &mockClient}
+	client := &openpolicyagent.HTTPBundleClient{HttpClient: &mockClient}
 
 	_, file, _, _ := runtime.Caller(0)
 	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
@@ -223,7 +223,7 @@ func TestSetPolicyInfo_WithHTTPSBundleServer(t *testing.T) {
 }
 
 func TestMakeDefaultBundle(t *testing.T) {
-	client := openpolicyagent.BundleClient{}
+	client := &openpolicyagent.HTTPBundleClient{}
 	_, file, _, _ := runtime.Caller(0)
 	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
 
