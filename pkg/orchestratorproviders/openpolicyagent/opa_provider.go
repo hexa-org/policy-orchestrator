@@ -23,8 +23,13 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
 )
 
+type BundleClient interface {
+	GetDataFromBundle(path string) ([]byte, error)
+	PostBundle(bundle []byte) (int, error)
+}
+
 type OpaProvider struct {
-	BundleClientOverride BundleClient
+	BundleClientOverride *HTTPBundleClient
 	ResourcesDirectory   string
 }
 
@@ -220,11 +225,11 @@ func (o *OpaProvider) ensureClientIsAvailable(key []byte) BundleClient {
 		}
 	}
 
-	if o.BundleClientOverride.HttpClient != nil {
+	if o.BundleClientOverride != nil && o.BundleClientOverride.HttpClient != nil {
 		return o.BundleClientOverride
 	}
 
-	return BundleClient{
+	return &HTTPBundleClient{
 		BundleServerURL: creds.BundleUrl,
 		HttpClient:      client,
 	}
