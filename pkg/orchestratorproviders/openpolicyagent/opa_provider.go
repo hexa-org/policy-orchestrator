@@ -77,7 +77,7 @@ func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, ap
 	client := o.ensureClientIsAvailable(key)
 	rand.Seed(time.Now().UnixNano())
 	path := filepath.Join(os.TempDir(), fmt.Sprintf("/test-bundle-%d", rand.Uint64()))
-	data, err := client.GetDataFromBundle(client.BundleServerURL, path)
+	data, err := client.GetDataFromBundle(path)
 	if err != nil {
 		log.Printf("open-policy-agent, unable to read expression file. %s\n", err)
 		return nil, err
@@ -156,7 +156,7 @@ func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, ap
 			log.Println("unable to set policy.")
 		}
 	}()
-	return client.PostBundle(client.BundleServerURL, bundle.Bytes())
+	return client.PostBundle(bundle.Bytes())
 }
 
 func (o *OpaProvider) MakeDefaultBundle(data []byte) (bytes.Buffer, error) {
