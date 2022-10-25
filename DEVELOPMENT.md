@@ -145,11 +145,12 @@ To run locally:
 - Create a local database.
 
   ```bash
+  cd $HOME/workspace/policy-orchestrator/
   CODEQL_EXTRACTOR_GO_BUILD_TRACING=on codeql database create .codeql --language=go
   ```
 
 - Analyze the results.
 
   ```bash
-  codeql database analyze .codeql --off-heap-ram=0 --format=csv --output=codeql-results.csv ../codeql-go/ql/src/codeql-suites/go-code-scanning.qls
+  codeql database analyze .codeql --off-heap-ram=0 --format=csv --output=codeql-results.csv ../codeql/go/ql/src/codeql-suites/go-security-and-quality.qls
   ```

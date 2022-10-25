@@ -117,7 +117,7 @@ Docker runs the following applications:
 
   Runs on [localhost:8886](http://localhost:8886/). A demo application used to
   highlight enforcing of both coarse and fine-grained policy. The application
-  integrates with platform authentication/ authorization proxies,
+  integrates with platform authentication/authorization proxies,
   [Google IAP](https://cloud.google.com/iap) for example, for coarse-grained
   access and the [Open Policy Agent (OPA)](https://www.openpolicyagent.org/)
   for fine-grained policy access.
