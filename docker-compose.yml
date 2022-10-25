@@ -45,7 +45,7 @@ services:
       - "./deployments/bundle-server/config:/home/config:ro"
 
   postgresql:
-    image: postgres
+    image: postgres:14.5
     container_name: postgresql
     restart: always
     environment:
