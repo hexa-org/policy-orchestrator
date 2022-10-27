@@ -40,3 +40,15 @@ func (m *MockClient) Post(_, contentType string, body io.Reader) (resp *http.Res
 	}
 	return &http.Response{StatusCode: m.Status, Body: ioutil.NopCloser(bytes.NewReader(m.Response))}, m.Err
 }
+
+type MockBundleClient struct{}
+
+func (m *MockBundleClient) GetDataFromBundle(path string) ([]byte, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockBundleClient) PostBundle(bundle []byte) (int, error) {
+	//TODO implement me
+	panic("implement me")
+}

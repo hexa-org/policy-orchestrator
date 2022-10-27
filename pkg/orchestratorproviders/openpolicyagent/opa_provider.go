@@ -29,7 +29,7 @@ type BundleClient interface {
 }
 
 type OpaProvider struct {
-	BundleClientOverride *HTTPBundleClient
+	BundleClientOverride BundleClient
 	ResourcesDirectory   string
 }
 
@@ -79,7 +79,11 @@ type Object struct {
 
 func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, appInfo orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
 	key := integration.Key
-	client := o.ensureClientIsAvailable(key)
+	client, err := o.EnsureClientIsAvailable(key)
+	if err != nil {
+		log.Printf("open-policy-agent, unable to build client: %s", err)
+		return nil, err
+	}
 	rand.Seed(time.Now().UnixNano())
 	path := filepath.Join(os.TempDir(), fmt.Sprintf("/test-bundle-%d", rand.Uint64()))
 	data, err := client.GetDataFromBundle(path)
@@ -126,7 +130,11 @@ func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, ap
 	}
 
 	key := integration.Key
-	client := o.ensureClientIsAvailable(key)
+	client, err := o.EnsureClientIsAvailable(key)
+	if err != nil {
+		log.Printf("open-policy-agent, unable to build client: %s", err)
+		return http.StatusInternalServerError, err
+	}
 
 	var policies []Policy
 	for _, p := range policyInfos {
@@ -158,7 +166,7 @@ func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, ap
 	}
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println("unable to set policy.")
+			log.Printf("unable to set policy: %v", err)
 		}
 	}()
 	return client.PostBundle(bundle.Bytes())
@@ -186,11 +194,17 @@ func (o *OpaProvider) MakeDefaultBundle(data []byte) (bytes.Buffer, error) {
 	return buffer, nil
 }
 
-// todo - add a gcp key in here. Don't parse it, just keep it as bytes.
 type credentials struct {
-	ProjectID string `json:"project_id,omitempty"`
-	BundleUrl string `json:"bundle_url"`
-	CACert    string `json:"ca_cert,omitempty"`
+	ProjectID string          `json:"project_id,omitempty"`
+	BundleUrl string          `json:"bundle_url"`
+	CACert    string          `json:"ca_cert,omitempty"`
+	GCP       *gcpCredentials `json:"gcp,omitempty"`
+}
+
+type gcpCredentials struct {
+	BucketName string          `json:"bucket_name,omitempty"`
+	ObjectName string          `json:"object_name,omitempty"`
+	Key        json.RawMessage `json:"key,omitempty"`
 }
 
 func (o *OpaProvider) credentials(key []byte) credentials {
@@ -202,8 +216,7 @@ func (o *OpaProvider) credentials(key []byte) credentials {
 	return foundCredentials
 }
 
-// todo - based on the key, we need to build out an http client vs. gcp storage client vs. etc...
-func (o *OpaProvider) ensureClientIsAvailable(key []byte) BundleClient {
+func (o *OpaProvider) EnsureClientIsAvailable(key []byte) (BundleClient, error) {
 	// todo - do we need ResourcesDirectory here? Are we using it?
 	if o.ResourcesDirectory == "" {
 		_, file, _, _ := runtime.Caller(0)
@@ -211,10 +224,19 @@ func (o *OpaProvider) ensureClientIsAvailable(key []byte) BundleClient {
 	}
 
 	creds := o.credentials(key)
+
+	if creds.GCP != nil {
+		return NewGCPBundleClient(
+			creds.BundleUrl,
+			creds.GCP.BucketName,
+			creds.GCP.ObjectName,
+			creds.GCP.Key,
+		)
+	}
+
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
-
 	if creds.CACert != "" {
 		caCertPool := x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM([]byte(creds.CACert))
@@ -225,12 +247,12 @@ func (o *OpaProvider) ensureClientIsAvailable(key []byte) BundleClient {
 		}
 	}
 
-	if o.BundleClientOverride != nil && o.BundleClientOverride.HttpClient != nil {
-		return o.BundleClientOverride
+	if o.BundleClientOverride != nil {
+		return o.BundleClientOverride, nil
 	}
 
 	return &HTTPBundleClient{
 		BundleServerURL: creds.BundleUrl,
 		HttpClient:      client,
-	}
+	}, nil
 }
