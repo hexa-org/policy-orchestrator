@@ -61,6 +61,70 @@ func TestDiscoverApplications(t *testing.T) {
 	}
 }
 
+func TestOpaProvider_EnsureClientIsAvailable(t *testing.T) {
+	tests := []struct {
+		name           string
+		key            []byte
+		expectedClient any
+	}{
+		{
+			name: "http bundle client",
+			key: []byte(`
+{
+  "bundle_url": "aBigUrl"
+}
+`),
+			expectedClient: &openpolicyagent.HTTPBundleClient{},
+		},
+		{
+			name: "gcp bundle client",
+			key: []byte(`
+{
+  "bundle_url": "aBigUrl",
+  "gcp": {
+    "bucket_name": "opa-bundles",
+    "object_name": "bundle.tar.gz",
+    "key": {
+      "type": "service_account"
+    }
+  }
+}
+`),
+			expectedClient: &openpolicyagent.GCPBundleClient{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, file, _, _ := runtime.Caller(0)
+
+			resourcesDirectory := filepath.Join(file, "../resources")
+			p := openpolicyagent.OpaProvider{ResourcesDirectory: resourcesDirectory}
+
+			client, err := p.EnsureClientIsAvailable(tt.key)
+
+			assert.NoError(t, err)
+			assert.NotNil(t, client)
+			assert.IsType(t, tt.expectedClient, client)
+		})
+	}
+}
+
+func TestOpaProvider_EnsureClientIsAvailable_Error(t *testing.T) {
+	key := []byte(`
+{
+  "bundle_url": "bundleURL",
+  "gcp": {"key": {"bad":"key"}}
+}
+`)
+
+	p := openpolicyagent.OpaProvider{}
+	client, err := p.EnsureClientIsAvailable(key)
+
+	assert.Nil(t, client)
+	assert.Error(t, err)
+}
+
 func TestGetPolicyInfo(t *testing.T) {
 	key := []byte(`
 {
@@ -84,7 +148,7 @@ func TestGetPolicyInfo(t *testing.T) {
 }
 
 func TestGetPolicyInfo_withBadKey(t *testing.T) {
-	client := &openpolicyagent.HTTPBundleClient{}
+	client := &openpolicyagent.HTTPBundleClient{HttpClient: &openpolicyagent_test.MockClient{}}
 	_, file, _, _ := runtime.Caller(0)
 	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
 	_, err := p.GetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{})
@@ -182,6 +246,18 @@ func TestSetPolicyInfo_withInvalidArguments(t *testing.T) {
 		},
 	)
 	assert.Equal(t, 500, status)
+
+	key = []byte(`{
+  "bundle_url": "aBigUrl",
+  "gcp": {"key": {}}
+}`)
+	status, err := p.SetPolicyInfo(
+		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
+		orchestrator.ApplicationInfo{ObjectID: "anObjectID"},
+		[]policysupport.PolicyInfo{},
+	)
+	assert.Equal(t, 500, status)
+	assert.Error(t, err)
 }
 
 func TestSetPolicyInfo_WithHTTPSBundleServer(t *testing.T) {

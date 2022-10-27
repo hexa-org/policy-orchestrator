@@ -118,3 +118,61 @@ func TestHTTPBundleClient_GetExpressionFromBundle_withBadTar(t *testing.T) {
 	_, err := client.GetDataFromBundle("/badPath")
 	assert.Error(t, err)
 }
+
+func TestNewGCPBundleClient(t *testing.T) {
+	key := []byte(`{"type": "service_account" }`)
+
+	client, err := openpolicyagent.NewGCPBundleClient(
+		"bundleURL",
+		"bucket",
+		"bundle.tar.gz",
+		key,
+	)
+
+	assert.NotNil(t, client)
+	assert.NoError(t, err)
+}
+
+func TestNewGCPBundleClientError_MissingRequired(t *testing.T) {
+	key := []byte(`{"type": "service_account"}`)
+	client, err := openpolicyagent.NewGCPBundleClient(
+		"",
+		"bucket",
+		"bundle.tar.gz",
+		key,
+	)
+
+	assert.Nil(t, client)
+	assert.EqualError(t, err, "required config: bundle_url, bucket_name, object_name")
+
+	client, err = openpolicyagent.NewGCPBundleClient(
+		"bundleURL",
+		"",
+		"bundle.tar.gz",
+		key,
+	)
+
+	assert.Nil(t, client)
+	assert.EqualError(t, err, "required config: bundle_url, bucket_name, object_name")
+
+	client, err = openpolicyagent.NewGCPBundleClient(
+		"bundleURL",
+		"bucket",
+		"",
+		key,
+	)
+
+	assert.Nil(t, client)
+	assert.EqualError(t, err, "required config: bundle_url, bucket_name, object_name")
+
+	key = []byte(`{}`)
+	client, err = openpolicyagent.NewGCPBundleClient(
+		"bundleURL",
+		"bucket",
+		"bundle.tar.gz",
+		key,
+	)
+
+	assert.Nil(t, client)
+	assert.Error(t, err)
+}
