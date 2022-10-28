@@ -187,9 +187,17 @@ func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Re
 		return
 	}
 	status, setErr := provider.SetPolicyInfo(integration, application, policyInfos)
-	if setErr != nil || status != http.StatusCreated {
+	if setErr != nil {
+		log.Printf("unable to update policy: %s", setErr.Error())
+		// todo - should we return the error msg here.
 		http.Error(w, "unable to update policy.", http.StatusInternalServerError)
 		return
 	}
+
+	if status != http.StatusCreated {
+		http.Error(w, "unable to update policy.", http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(status)
 }
