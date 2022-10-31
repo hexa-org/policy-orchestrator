@@ -78,6 +78,9 @@ func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 		var assignments []AzureAppRoleAssignment
 		for _, user := range policyInfo.Subject.Members {
 			principalId, _ := azureClient.GetPrincipalIdFromEmail(key, strings.Split(user, ":")[1])
+			if principalId == "" {
+				continue
+			}
 			assignments = append(assignments, AzureAppRoleAssignment{
 				AppRoleId:   strings.TrimPrefix(policyInfo.Actions[0].ActionUri, "azure:"),
 				PrincipalId: principalId,
