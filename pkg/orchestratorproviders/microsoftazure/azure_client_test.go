@@ -131,6 +131,77 @@ func TestAzureClient_GetServicePrincipals_withBadPrincipalJson(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestAzureClient_GetUserInfoFromPrincipalId_withABadKey(t *testing.T) {
+	client := clientForTesting()
+	_, err := client.GetUserInfoFromPrincipalId([]byte("aBadKey"), "")
+	assert.Equal(t, "invalid character 'a' looking for beginning of value", err.Error())
+}
+
+func TestAzureClient_GetUserInfoFromPrincipalId_withBadJson(t *testing.T) {
+	m := new(microsoftazure_test.MockClient)
+	m.Exchanges = []microsoftazure_test.MockExchange{
+		{Path: "https://login.microsoftonline.com/aTenant/oauth2/v2.0/token", ResponseBody: []byte("{\"access_token\":\"aToken\"}")},
+		{Path: "https://graph.microsoft.com/v1.0/users/aPrincipalId", ResponseBody: []byte("~")},
+	}
+	client := microsoftazure.AzureClient{HttpClient: m}
+	key := []byte(`
+{
+  "appId":"anAppId",
+  "secret":"aSecret",
+  "tenant":"aTenant",
+  "subscription":"aSubscription"
+}
+`)
+	_, err := client.GetUserInfoFromPrincipalId(key, "aPrincipalId")
+	assert.Error(t, err)
+}
+
+func TestAzureClient_GetPrincipalIdFromEmail(t *testing.T) {
+	m := new(microsoftazure_test.MockClient)
+	m.Exchanges = []microsoftazure_test.MockExchange{
+		{Path: "https://login.microsoftonline.com/aTenant/oauth2/v2.0/token", ResponseBody: []byte("{\"access_token\":\"aToken\"}")},
+		{Path: "https://graph.microsoft.com/v1.0/users?$select=id,mail&$filter=mail%20eq%20%27anEmail%40example.com%27",
+			ResponseBody: []byte("{\"value\":[{\"id\":\"anId\",\"mail\":\"anEmail@example.com\"}]}")},
+	}
+	client := microsoftazure.AzureClient{HttpClient: m}
+	key := []byte(`
+{
+  "appId":"anAppId",
+  "secret":"aSecret",
+  "tenant":"aTenant",
+  "subscription":"aSubscription"
+}
+`)
+	response, _ := client.GetPrincipalIdFromEmail(key, "anEmail@example.com")
+	assert.Equal(t, "anId", response)
+}
+
+func TestAzureClient_GetPrincipalIdFromEmail_withABadKey(t *testing.T) {
+	client := clientForTesting()
+	_, err := client.GetPrincipalIdFromEmail([]byte("aBadKey"), "")
+	assert.Equal(t, "invalid character 'a' looking for beginning of value", err.Error())
+}
+
+func TestAzureClient_GetPrincipalIdFromEmail_withBadJson(t *testing.T) {
+	m := new(microsoftazure_test.MockClient)
+	m.Exchanges = []microsoftazure_test.MockExchange{
+		{Path: "https://login.microsoftonline.com/aTenant/oauth2/v2.0/token", ResponseBody: []byte("{\"access_token\":\"aToken\"}")},
+		{Path: "https://graph.microsoft.com/v1.0/users?$select=id,mail&$filter=mail%20eq%20%27anEmail%40example.com%27",
+			ResponseBody: []byte("~")},
+	}
+	client := microsoftazure.AzureClient{HttpClient: m}
+	key := []byte(`
+{
+  "appId":"anAppId",
+  "secret":"aSecret",
+  "tenant":"aTenant",
+  "subscription":"aSubscription"
+}
+`)
+	_, err := client.GetPrincipalIdFromEmail(key, "anEmail@example.com")
+	assert.Error(t, err)
+}
+
 func TestAzureClient_GetAppRoleAssignedTo_withABadKey(t *testing.T) {
 	client := clientForTesting()
 	_, err := client.GetAppRoleAssignedTo([]byte("aBadKey"), "")

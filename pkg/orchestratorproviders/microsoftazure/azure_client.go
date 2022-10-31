@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	url2 "net/url"
 	"strings"
 
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
@@ -58,6 +59,16 @@ type AzureAppRoleAssignments struct {
 	List []AzureAppRoleAssignment `json:"value"`
 }
 
+type AzureUser struct {
+	PrincipalId string `json:"id"`
+	Name        string `json:"userPrincipalName"`
+	Email       string `json:"mail"`
+}
+
+type AzureUserValues struct {
+	List []AzureUser `json:"value"`
+}
+
 type AzureAppRoleAssignment struct {
 	ID                   string `json:"id"`
 	AppRoleId            string `json:"appRoleId"`
@@ -106,7 +117,6 @@ func (c *AzureClient) GetWebApplicationsNonGraph(key []byte) ([]orchestrator.App
 }
 
 func (c *AzureClient) GetWebApplications(key []byte) ([]orchestrator.ApplicationInfo, error) {
-
 	request, _ := http.NewRequest("GET", "https://graph.microsoft.com/v1.0/applications", nil)
 	get, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
 	if err != nil {
@@ -136,7 +146,6 @@ func (c *AzureClient) GetWebApplications(key []byte) ([]orchestrator.Application
 }
 
 func (c *AzureClient) GetServicePrincipals(key []byte, appId string) (AzureServicePrincipals, error) {
-
 	filter := fmt.Sprintf("$search=\"appId:%s\"", appId)
 	urlWithFilter := fmt.Sprintf("https://graph.microsoft.com/v1.0/servicePrincipals?%s", filter)
 	request, _ := http.NewRequest("GET", urlWithFilter, nil)
@@ -154,8 +163,41 @@ func (c *AzureClient) GetServicePrincipals(key []byte, appId string) (AzureServi
 	return sps, nil
 }
 
-func (c *AzureClient) GetAppRoleAssignedTo(key []byte, servicePrincipalId string) (AzureAppRoleAssignments, error) {
+func (c *AzureClient) GetUserInfoFromPrincipalId(key []byte, principalId string) (AzureUser, error) {
+	url := fmt.Sprintf("https://graph.microsoft.com/v1.0/users/%s", principalId)
+	request, _ := http.NewRequest("GET", url, nil)
+	get, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
+	if err != nil {
+		log.Println("Unable to get azure user.")
+		return AzureUser{}, err
+	}
 
+	var user AzureUser
+	if err = json.NewDecoder(get.Body).Decode(&user); err != nil {
+		log.Println("Unable to decode azure web app response.")
+		return AzureUser{}, err
+	}
+	return user, nil
+}
+
+func (c *AzureClient) GetPrincipalIdFromEmail(key []byte, email string) (string, error) {
+	url := fmt.Sprintf("https://graph.microsoft.com/v1.0/users?$select=id,mail&$filter=mail%%20eq%%20%%27%s%%27", url2.QueryEscape(email))
+	request, _ := http.NewRequest("GET", url, nil)
+	get, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
+	if err != nil {
+		log.Println("Unable to get id for azure user.")
+		return "", err
+	}
+
+	var userValues AzureUserValues
+	if err = json.NewDecoder(get.Body).Decode(&userValues); err != nil {
+		log.Println("Unable to decode azure web app response.")
+		return "", err
+	}
+	return userValues.List[0].PrincipalId, nil
+}
+
+func (c *AzureClient) GetAppRoleAssignedTo(key []byte, servicePrincipalId string) (AzureAppRoleAssignments, error) {
 	url := fmt.Sprintf("https://graph.microsoft.com/v1.0/servicePrincipals/%s/appRoleAssignedTo", servicePrincipalId)
 	request, _ := http.NewRequest("GET", url, nil)
 	get, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
