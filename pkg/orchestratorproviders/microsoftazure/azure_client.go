@@ -7,7 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
-	url2 "net/url"
+	"net/url"
 	"strings"
 
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
@@ -65,7 +65,7 @@ type AzureUser struct {
 	Email       string `json:"mail"`
 }
 
-type AzureUserValues struct {
+type AzureUsers struct {
 	List []AzureUser `json:"value"`
 }
 
@@ -164,8 +164,8 @@ func (c *AzureClient) GetServicePrincipals(key []byte, appId string) (AzureServi
 }
 
 func (c *AzureClient) GetUserInfoFromPrincipalId(key []byte, principalId string) (AzureUser, error) {
-	url := fmt.Sprintf("https://graph.microsoft.com/v1.0/users/%s", principalId)
-	request, _ := http.NewRequest("GET", url, nil)
+	endpoint := fmt.Sprintf("https://graph.microsoft.com/v1.0/users/%s", principalId)
+	request, _ := http.NewRequest("GET", endpoint, nil)
 	get, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
 	if err != nil {
 		log.Println("Unable to get azure user.")
@@ -181,15 +181,15 @@ func (c *AzureClient) GetUserInfoFromPrincipalId(key []byte, principalId string)
 }
 
 func (c *AzureClient) GetPrincipalIdFromEmail(key []byte, email string) (string, error) {
-	url := fmt.Sprintf("https://graph.microsoft.com/v1.0/users?$select=id,mail&$filter=mail%%20eq%%20%%27%s%%27", url2.QueryEscape(email))
-	request, _ := http.NewRequest("GET", url, nil)
+	query := fmt.Sprintf("https://graph.microsoft.com/v1.0/users?$select=id,mail&$filter=mail%%20eq%%20%%27%s%%27", url.QueryEscape(email))
+	request, _ := http.NewRequest("GET", query, nil)
 	get, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
 	if err != nil {
 		log.Println("Unable to get id for azure user.")
 		return "", err
 	}
 
-	var userValues AzureUserValues
+	var userValues AzureUsers
 	if err = json.NewDecoder(get.Body).Decode(&userValues); err != nil {
 		log.Println("Unable to decode azure web app response.")
 		return "", err
@@ -198,8 +198,8 @@ func (c *AzureClient) GetPrincipalIdFromEmail(key []byte, email string) (string,
 }
 
 func (c *AzureClient) GetAppRoleAssignedTo(key []byte, servicePrincipalId string) (AzureAppRoleAssignments, error) {
-	url := fmt.Sprintf("https://graph.microsoft.com/v1.0/servicePrincipals/%s/appRoleAssignedTo", servicePrincipalId)
-	request, _ := http.NewRequest("GET", url, nil)
+	endpoint := fmt.Sprintf("https://graph.microsoft.com/v1.0/servicePrincipals/%s/appRoleAssignedTo", servicePrincipalId)
+	request, _ := http.NewRequest("GET", endpoint, nil)
 	get, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
 	if err != nil {
 		log.Println("Unable to get azure app role assignments.")
@@ -276,8 +276,8 @@ func (c *AzureClient) AddAppRolesAssignedTo(key []byte, servicePrincipalId strin
 		var buf bytes.Buffer
 		ra := azureAppRoleAssignmentPost{assignment.AppRoleId, assignment.PrincipalId, servicePrincipalId} // the resource id is the service principal
 		_ = json.NewEncoder(&buf).Encode(ra)
-		url := fmt.Sprintf("https://graph.microsoft.com/v1.0/servicePrincipals/%s/appRoleAssignedTo", servicePrincipalId)
-		request, _ := http.NewRequest("POST", url, bytes.NewReader(buf.Bytes()))
+		endpoint := fmt.Sprintf("https://graph.microsoft.com/v1.0/servicePrincipals/%s/appRoleAssignedTo", servicePrincipalId)
+		request, _ := http.NewRequest("POST", endpoint, bytes.NewReader(buf.Bytes()))
 		response, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
 		if err != nil || response.StatusCode != http.StatusCreated {
 			log.Println("Unable to add azure app role assignments.")
@@ -289,8 +289,8 @@ func (c *AzureClient) AddAppRolesAssignedTo(key []byte, servicePrincipalId strin
 
 func (c *AzureClient) DeleteAppRolesAssignedTo(key []byte, servicePrincipalId string, assignmentIds []string) (err error) {
 	for _, assignmentId := range assignmentIds {
-		url := fmt.Sprintf("https://graph.microsoft.com/v1.0/servicePrincipals/%s/appRoleAssignedTo/%s", servicePrincipalId, assignmentId)
-		request, _ := http.NewRequest("DELETE", url, nil)
+		endpoint := fmt.Sprintf("https://graph.microsoft.com/v1.0/servicePrincipals/%s/appRoleAssignedTo/%s", servicePrincipalId, assignmentId)
+		request, _ := http.NewRequest("DELETE", endpoint, nil)
 		response, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
 		if err != nil || response.StatusCode != http.StatusNoContent {
 			log.Println("Unable to delete azure app role assignments.")
