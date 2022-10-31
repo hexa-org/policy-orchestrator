@@ -40,16 +40,17 @@ func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 	assignments, _ := azureClient.GetAppRoleAssignedTo(key, principal.List[0].ID)
 
 	var appRoleId string
-	var principalIdsAndDisplayNames []string
+	var users []string
 	for _, assignment := range assignments.List {
+		user, _ := azureClient.GetUserInfoFromPrincipalId(key, assignment.PrincipalId)
 		appRoleId = fmt.Sprintf("azure:%s", assignment.AppRoleId)
-		principalIdsAndDisplayNames = append(principalIdsAndDisplayNames, fmt.Sprintf("%s:%s", assignment.PrincipalId, assignment.PrincipalDisplayName))
+		users = append(users, fmt.Sprintf("user:%s", user.Email))
 	}
 
 	policies = append(policies, policysupport.PolicyInfo{
 		Meta:    policysupport.MetaInfo{Version: "0.5"},
 		Actions: []policysupport.ActionInfo{{appRoleId}},
-		Subject: policysupport.SubjectInfo{Members: principalIdsAndDisplayNames},
+		Subject: policysupport.SubjectInfo{Members: users},
 		Object: policysupport.ObjectInfo{
 			ResourceID: applicationInfo.ObjectID,
 		},
@@ -76,9 +77,10 @@ func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 	for _, policyInfo := range policyInfos {
 		var assignments []AzureAppRoleAssignment
 		for _, user := range policyInfo.Subject.Members {
+			principalId, _ := azureClient.GetPrincipalIdFromEmail(key, strings.Split(user, ":")[1])
 			assignments = append(assignments, AzureAppRoleAssignment{
 				AppRoleId:   strings.TrimPrefix(policyInfo.Actions[0].ActionUri, "azure:"),
-				PrincipalId: strings.Split(user, ":")[0],
+				PrincipalId: principalId,
 				ResourceId:  strings.Split(policyInfo.Object.ResourceID, ":")[0],
 			})
 		}

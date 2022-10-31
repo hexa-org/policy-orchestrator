@@ -45,7 +45,7 @@ Create a test database in PostgreSQL:
 
 ```bash
 createuser orchestrator
-createdb orchestrator_test --owner orchestrator
+createdb orchestrator_development --owner orchestrator
 psql --command="alter user orchestrator with password 'orchestrator'"
 psql --command="grant all privileges on database orchestrator_test to orchestrator"
 ```

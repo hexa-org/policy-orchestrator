@@ -51,6 +51,7 @@ func TestGetPolicy(t *testing.T) {
 	m.Exchanges = []microsoftazure_test.MockExchange{
 		{Path: "https://login.microsoftonline.com/aTenant/oauth2/v2.0/token", ResponseBody: []byte("{\"access_token\":\"aToken\"}")},
 		{Path: "https://graph.microsoft.com/v1.0/servicePrincipals?$search=\"appId:aDescription\"", ResponseBody: []byte("{\"value\":[{\"id\":\"aToken\"}]}")},
+		{Path: "https://graph.microsoft.com/v1.0/users/aPrincipalId", ResponseBody: []byte("{\"mail\":\"anEmail@example.com\"}")},
 		{Path: "https://graph.microsoft.com/v1.0/servicePrincipals/aToken/appRoleAssignedTo", ResponseBody: []byte(`
 {
   "value": [
@@ -81,7 +82,7 @@ func TestGetPolicy(t *testing.T) {
 	policies, _ := p.GetPolicyInfo(info, appInfo)
 	assert.Equal(t, 1, len(policies))
 	assert.Equal(t, "azure:anAppRoleId", policies[0].Actions[0].ActionUri)
-	assert.Equal(t, "aPrincipalId:aPrincipalDisplayName", policies[0].Subject.Members[0])
+	assert.Equal(t, "user:anEmail@example.com", policies[0].Subject.Members[0])
 	assert.Equal(t, "anObjectId", policies[0].Object.ResourceID)
 }
 
@@ -103,11 +104,12 @@ func TestSetPolicy(t *testing.T) {
 		[]policysupport.PolicyInfo{{
 			Meta:    policysupport.MetaInfo{Version: "0"},
 			Actions: []policysupport.ActionInfo{{"azure:anAppRoleId"}},
-			Subject: policysupport.SubjectInfo{Members: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
+			Subject: policysupport.SubjectInfo{Members: []string{"user:anEmail@example.com"}},
 			Object: policysupport.ObjectInfo{
 				ResourceID: "anObjectId",
 			},
 		}})
+
 	assert.Equal(t, http.StatusCreated, status)
 	assert.NoError(t, err)
 }
@@ -155,6 +157,8 @@ func mockExchanges(m *microsoftazure_test.MockClient) {
 	m.Exchanges = []microsoftazure_test.MockExchange{
 		{Path: "https://login.microsoftonline.com/aTenant/oauth2/v2.0/token", ResponseBody: []byte("{\"access_token\":\"aToken\"}")},
 		{Path: "https://graph.microsoft.com/v1.0/servicePrincipals?$search=\"appId:aDescription\"", ResponseBody: []byte("{\"value\":[{\"id\":\"aToken\"}]}")},
+		{Path: "https://graph.microsoft.com/v1.0/users?$select=id,mail&$filter=mail%20eq%20%27anEmail@example.com%27",
+			ResponseBody: []byte("{\"value\":[{\"id\":\"anId\",\"mail\":\"anEmail@example.com\"}]}")},
 		{Path: "https://graph.microsoft.com/v1.0/servicePrincipals/aToken/appRoleAssignedTo", ResponseBody: []byte(`
 {
   "value": [
@@ -184,5 +188,6 @@ func mockExchanges(m *microsoftazure_test.MockClient) {
 }
 `)},
 		{Path: "https://graph.microsoft.com/v1.0/servicePrincipals/aToken/appRoleAssignedTo/anotherId"},
+		{Path: "https://graph.microsoft.com/v1.0/servicePrincipals/aToken/appRoleAssignedTo/anId"},
 	}
 }
