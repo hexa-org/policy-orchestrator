@@ -86,6 +86,46 @@ func TestGetPolicy(t *testing.T) {
 	assert.Equal(t, "anObjectId", policies[0].Object.ResourceID)
 }
 
+func TestGetPolicy_withOutAUserEmail(t *testing.T) {
+	m := new(microsoftazure_test.MockClient)
+	m.Exchanges = []microsoftazure_test.MockExchange{
+		{Path: "https://login.microsoftonline.com/aTenant/oauth2/v2.0/token", ResponseBody: []byte("{\"access_token\":\"aToken\"}")},
+		{Path: "https://graph.microsoft.com/v1.0/servicePrincipals?$search=\"appId:aDescription\"", ResponseBody: []byte("{\"value\":[{\"id\":\"aToken\"}]}")},
+		{Path: "https://graph.microsoft.com/v1.0/users/aPrincipalId", ResponseBody: []byte("{\"mail\":\"\"}")},
+		{Path: "https://graph.microsoft.com/v1.0/servicePrincipals/aToken/appRoleAssignedTo", ResponseBody: []byte(`
+{
+  "value": [
+    {
+      "id": "anId",
+      "appRoleId": "anAppRoleId",
+      "principalDisplayName": "aPrincipalDisplayName",
+      "principalId": "aPrincipalId",
+      "principalType": "aPrincipalType",
+      "resourceDisplayName": "aResourceDisplayName",
+      "resourceId": "aResourceId"
+    }
+  ]
+}
+`)}}
+
+	p := &microsoftazure.AzureProvider{HttpClientOverride: m}
+	key := []byte(`
+{
+  "appId":"anAppId",
+  "secret":"aSecret",
+  "tenant":"aTenant",
+  "subscription":"aSubscription"
+}
+`)
+	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}
+	appInfo := orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"}
+	policies, _ := p.GetPolicyInfo(info, appInfo)
+	assert.Equal(t, 1, len(policies))
+	assert.Equal(t, "azure:anAppRoleId", policies[0].Actions[0].ActionUri)
+	assert.Empty(t, policies[0].Subject.Members, "empty")
+	assert.Equal(t, "anObjectId", policies[0].Object.ResourceID)
+}
+
 func TestSetPolicy(t *testing.T) {
 	m := new(microsoftazure_test.MockClient)
 	mockExchanges(m)
