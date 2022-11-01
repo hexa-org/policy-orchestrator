@@ -49,6 +49,12 @@ func (c *GoogleClient) GetAppEngineApplications() ([]orchestrator.ApplicationInf
 		log.Println("Unable to find google cloud app engine applications.")
 		return []orchestrator.ApplicationInfo{}, err
 	}
+
+	if get.StatusCode == 404 {
+		log.Println("No App Engine Found")
+		return []orchestrator.ApplicationInfo{}, nil
+	}
+
 	log.Printf("Google cloud response %s.\n", get.Status)
 
 	if err = json.NewDecoder(get.Body).Decode(&appEngines); err != nil {

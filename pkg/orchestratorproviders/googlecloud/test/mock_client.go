@@ -16,6 +16,7 @@ type MockClient struct {
 	ResponseBody map[string][]byte
 	RequestBody  []byte
 	Url          string
+	StatusCode   int
 }
 
 func NewMockClient() *MockClient {
@@ -25,6 +26,7 @@ func NewMockClient() *MockClient {
 		ResponseBody: make(map[string][]byte),
 		RequestBody:  nil,
 		Url:          "",
+		StatusCode:   200,
 	}
 }
 
@@ -36,7 +38,7 @@ func (m *MockClient) Get(url string) (resp *http.Response, err error) {
 	} else {
 		body = m.ResponseBody["appengine"]
 	}
-	return &http.Response{StatusCode: 200, Body: ioutil.NopCloser(bytes.NewReader(body))}, m.Err
+	return &http.Response{StatusCode: m.StatusCode, Body: ioutil.NopCloser(bytes.NewReader(body))}, m.Err
 }
 
 func (m *MockClient) Post(url, _ string, body io.Reader) (resp *http.Response, err error) {
@@ -48,5 +50,5 @@ func (m *MockClient) Post(url, _ string, body io.Reader) (resp *http.Response, e
 	} else {
 		responseBody = m.ResponseBody["appengine"]
 	}
-	return &http.Response{StatusCode: 200, Body: ioutil.NopCloser(bytes.NewReader(responseBody))}, m.Err
+	return &http.Response{StatusCode: m.StatusCode, Body: ioutil.NopCloser(bytes.NewReader(responseBody))}, m.Err
 }
