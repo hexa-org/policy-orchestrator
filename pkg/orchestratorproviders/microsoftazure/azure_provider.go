@@ -44,6 +44,11 @@ func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 	for _, assignment := range assignments.List {
 		user, _ := azureClient.GetUserInfoFromPrincipalId(key, assignment.PrincipalId)
 		appRoleId = fmt.Sprintf("azure:%s", assignment.AppRoleId)
+
+		if user.Email == "" {
+			continue
+		}
+
 		users = append(users, fmt.Sprintf("user:%s", user.Email))
 	}
 

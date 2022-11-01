@@ -177,6 +177,7 @@ func (c *AzureClient) GetUserInfoFromPrincipalId(key []byte, principalId string)
 		log.Println("Unable to decode azure web app response.")
 		return AzureUser{}, err
 	}
+
 	return user, nil
 }
 
