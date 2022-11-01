@@ -23,6 +23,15 @@ func TestGoogleClient_GetAppEngineApplications(t *testing.T) {
 	assert.Equal(t, "AppEngine", applications[0].Service)
 }
 
+func TestGoogleClient_GetAppEngineApplications_when_404(t *testing.T) {
+	m := google_cloud_test.NewMockClient()
+	m.StatusCode = 404
+	client := googlecloud.GoogleClient{HttpClient: m}
+	applications, _ := client.GetAppEngineApplications()
+
+	assert.Equal(t, 0, len(applications))
+}
+
 func TestClient_GetAppEngineApplications_withRequestError(t *testing.T) {
 	m := google_cloud_test.NewMockClient()
 	m.Err = errors.New("oops")
