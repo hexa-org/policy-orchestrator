@@ -25,10 +25,36 @@
     <div class="card">
         <h2>Example integration file</h2>
         <h3>hexa-open-policy-agent.json</h3>
-        <pre style="padding-left: 1rem"><code>{
+        <pre style="padding-left: 1rem">
+            <code>{
   "project_id": "Hexa Industries",
   "bundle_url": "http://localhost:8889/bundles/bundle.tar.gz"
-}</code>
-</pre>
+}
+            </code>
+        </pre>
+        <h3>hexa-open-policy-agent-https.json</h3>
+        <pre style="padding-left: 1rem">
+            <code>{
+  "project_id": "Hexa Industries",
+  "bundle_url": "https://localhost:8889/bundles/bundle.tar.gz",
+  "ca_cert": "-----BEGIN CERTIFICATE-----\r\nMIIFaTCCA1GgAwIBAgICB\r\nCzAJBgNVBAgTAkNPMRAwDgYDVQQHEwdCb3VsZGVyMRgwFgYDVQQKEw9TdHJhdGEg\r\n-----END CERTIFICATE-----"
+}
+            </code>
+        </pre>
+        <h3>hexa-opa-google-cloud-storage.json</h3>
+        <pre style="padding-left: 1rem">
+            <code>{
+  "project_id": "Hexa Industries GCP",
+  "bundle_url": "https://storage.googleapis.com/storage/v1/b/BUCKET_NAME/o",
+  "gcp": {
+    "bucket_name": "BUCKET_NAME",
+    "object_name": "bundle.tar.gz",
+    "key": {
+      "type": "service_account"
+    }
+  }
+}
+            </code>
+        </pre>
     </div>
 {{- end}}
