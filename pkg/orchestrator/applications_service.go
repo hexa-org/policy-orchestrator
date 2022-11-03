@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 
@@ -55,23 +56,43 @@ func (service ApplicationsService) Apply(jsonRequest Orchestration) error {
 		return getToErr
 	}
 
-	if !verifyAllMembersAreUsers(fromPolicies) || !verifyAllMembersAreUsers(toPolicies) { // note - this should be temporary
-		return errors.New("orchestration across providers with domain members is a work in progress")
+	if onlyWorksWithGoogleAndAzure(toProvider, fromProvider) {
+		if !verifyAllMembersAreUsers(fromPolicies) || !verifyAllMembersAreUsers(toPolicies) { // note - this should be temporary
+			return errors.New("orchestration across providers with domain members is a work in progress")
+		}
 	}
 
-	modifiedToPoliciesRetainingResourceIdAndActions, err := service.RetainResourceAndAction(fromPolicies, toPolicies)
+	modifiedPolicies, err := service.RetainResource(fromPolicies, toPolicies)
 	if err != nil {
 		return err
 	}
 
-	status, setErr := toProvider.SetPolicyInfo(toIntegration, toApplication, modifiedToPoliciesRetainingResourceIdAndActions)
+	if onlyWorksWithGoogleAndAzure(toProvider, fromProvider) {
+		modifiedPolicies, err = service.RetainAction(fromPolicies, modifiedPolicies)
+		if err != nil {
+			return err
+		}
+	}
+	
+	log.Printf("modified policies:  %v", modifiedPolicies)
+	status, setErr := toProvider.SetPolicyInfo(toIntegration, toApplication, modifiedPolicies)
 	if setErr != nil || status != http.StatusCreated {
 		return setErr
 	}
 	return nil
 }
 
-func (service ApplicationsService) RetainResourceAndAction(fromPolicies, toPolicies []policysupport.PolicyInfo) ([]policysupport.PolicyInfo, error) {
+func onlyWorksWithGoogleAndAzure(toProvider Provider, fromProvider Provider) bool {
+	if toProvider.Name() == "google_cloud" && fromProvider.Name() == "azure" {
+		return true
+	}
+	if toProvider.Name() == "azure" && fromProvider.Name() == "google_cloud" {
+		return true
+	}
+	return false
+}
+
+func (service ApplicationsService) RetainResource(fromPolicies, toPolicies []policysupport.PolicyInfo) ([]policysupport.PolicyInfo, error) {
 	var firstResourceId string
 
 	resourceIds := make([]string, 0)
@@ -91,26 +112,18 @@ func (service ApplicationsService) RetainResourceAndAction(fromPolicies, toPolic
 	modified := make([]policysupport.PolicyInfo, 0)
 	for _, policy := range fromPolicies {
 		policy.Object.ResourceID = firstResourceId
-		policy.Actions = toPolicies[0].Actions
 		modified = append(modified, policy)
 	}
 	return modified, nil
 }
 
-func (service ApplicationsService) RetainResourceActions(fromPolicies, toPolicies []policysupport.PolicyInfo) ([]policysupport.PolicyInfo, error) {
-	var resourceActions []policysupport.ActionInfo
-
-	actions := make([]policysupport.ActionInfo, 0)
-	for _, policy := range toPolicies {
-		if len(resourceActions) == 0 {
-			resourceActions = policy.Actions
-		}
-		actions = append(actions, policy.Actions...)
-	}
+func (service ApplicationsService) RetainAction(fromPolicies, toPolicies []policysupport.PolicyInfo) ([]policysupport.PolicyInfo, error) {
+	firstActionUri := toPolicies[0].Actions[0].ActionUri
 
 	modified := make([]policysupport.PolicyInfo, 0)
 	for _, policy := range fromPolicies {
-		policy.Actions = actions
+		policy.Actions = make([]policysupport.ActionInfo, 1)
+		policy.Actions[0].ActionUri = firstActionUri
 		modified = append(modified, policy)
 	}
 	return modified, nil
