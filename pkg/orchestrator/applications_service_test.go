@@ -76,7 +76,7 @@ func TestApplicationsService_Apply(t *testing.T) {
 	})
 }
 
-func TestApplicationsService_RetainResource(t *testing.T) {
+func TestApplicationsService_RetainResourceAndAction(t *testing.T) {
 	testsupport.WithSetUp(&applicationsServiceData{}, func(data *applicationsServiceData) {
 		applicationsGateway := orchestrator.ApplicationsDataGateway{DB: data.db}
 		integrationsGateway := orchestrator.IntegrationsDataGateway{DB: data.db}
@@ -100,13 +100,13 @@ func TestApplicationsService_RetainResource(t *testing.T) {
 			}},
 		}
 
-		modified, _ := applicationsService.RetainResource(from, to)
+		modified, _ := applicationsService.RetainResourceAndAction(from, to)
 		assert.Equal(t, "toAnId", modified[0].Object.ResourceID)
-		assert.Equal(t, "fromAnAction", modified[0].Actions[0].ActionUri)
+		assert.Equal(t, "toAnAction", modified[0].Actions[0].ActionUri)
 		assert.Equal(t, "fromAUser", modified[0].Subject.Members[0])
 
 		assert.Equal(t, "toAnId", modified[1].Object.ResourceID)
-		assert.Equal(t, "fromAnotherAction", modified[1].Actions[0].ActionUri)
+		assert.Equal(t, "toAnAction", modified[1].Actions[0].ActionUri)
 		assert.Equal(t, "fromAnotherUser", modified[1].Subject.Members[0])
 
 		toWithDifferentResources := []policysupport.PolicyInfo{
@@ -117,7 +117,7 @@ func TestApplicationsService_RetainResource(t *testing.T) {
 				ResourceID: "andAnotherId",
 			}},
 		}
-		_, err := applicationsService.RetainResource(from, toWithDifferentResources)
+		_, err := applicationsService.RetainResourceAndAction(from, toWithDifferentResources)
 		assert.Error(t, err)
 	})
 }
