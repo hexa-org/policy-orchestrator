@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/microsoftazure"
 	"net"
 	"net/http"
 	"testing"
@@ -56,6 +57,7 @@ insert into applications (id, integration_id, object_id, name, description) valu
 
 	data.providers = make(map[string]orchestrator.Provider)
 	data.providers["noop"] = &orchestrator_test.NoopProvider{}
+	data.providers["azure"] = &microsoftazure.AzureProvider{}
 	handlers, _ := orchestrator.LoadHandlers(data.db, hawksupport.NewCredentialStore(data.key), addr, data.providers)
 	data.server = websupport.Create(addr, handlers, websupport.Options{})
 	go websupport.Start(data.server, listener)
@@ -82,7 +84,8 @@ func TestOrchestration_failsAcrossProviders(t *testing.T) {
 		url := fmt.Sprintf("http://%s/orchestration", data.server.Addr)
 		marshal, _ := json.Marshal(orchestrator.Orchestration{From: data.fromApp, To: data.toAppDifferent})
 
-		resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", data.key, url, bytes.NewReader(marshal))
+		resp, err := hawksupport.HawkPost(&http.Client{}, "anId", data.key, url, bytes.NewReader(marshal))
+		assert.Nil(t, err)
 		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 	})
 }

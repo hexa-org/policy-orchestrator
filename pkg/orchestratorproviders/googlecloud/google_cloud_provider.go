@@ -97,8 +97,6 @@ func (g *GoogleProvider) NewHttpClient(key []byte) (HTTPClient, error) {
 	return client, err
 }
 
-///
-
 type credentials struct {
 	ProjectId string `json:"project_id"`
 }

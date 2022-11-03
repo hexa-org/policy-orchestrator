@@ -129,7 +129,7 @@ func TestGetPolicies(t *testing.T) {
 		policy := policies.Policies[0]
 		assert.Equal(t, "anAction", policy.Actions[0].ActionUri)
 		assert.Equal(t, "aVersion", policy.Meta.Version)
-		assert.Equal(t, []string{"aUser"}, policy.Subject.Members)
+		assert.Equal(t, []string{"user:aUser"}, policy.Subject.Members)
 		assert.Equal(t, "anId", policy.Object.ResourceID)
 	})
 }

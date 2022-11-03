@@ -41,8 +41,8 @@ func (service ApplicationsService) Apply(jsonRequest Orchestration) error {
 		return toErr
 	}
 
-	if toProvider != fromProvider {
-		return errors.New("sorry, orchestration across providers is work in progress")
+	if !orchestrationSupported(toProvider, fromProvider) { // note - this should be temporary
+		return errors.New("orchestration across providers is a work in progress and currently supports azure and google cloud")
 	}
 
 	fromPolicies, getFroErr := fromProvider.GetPolicyInfo(fromIntegration, fromApplication)
@@ -50,24 +50,28 @@ func (service ApplicationsService) Apply(jsonRequest Orchestration) error {
 		return getFroErr
 	}
 
-	toPolicies, getToErr := fromProvider.GetPolicyInfo(toIntegration, toApplication)
+	toPolicies, getToErr := toProvider.GetPolicyInfo(toIntegration, toApplication)
 	if getToErr != nil {
 		return getToErr
 	}
 
-	modifiedToPoliciesRetainingResourceId, err := service.RetainResource(fromPolicies, toPolicies)
+	if !verifyAllMembersAreUsers(fromPolicies) || !verifyAllMembersAreUsers(toPolicies) { // note - this should be temporary
+		return errors.New("orchestration across providers with domain members is a work in progress")
+	}
+
+	modifiedToPoliciesRetainingResourceIdAndActions, err := service.RetainResourceAndAction(fromPolicies, toPolicies)
 	if err != nil {
 		return err
 	}
 
-	status, setErr := toProvider.SetPolicyInfo(toIntegration, toApplication, modifiedToPoliciesRetainingResourceId)
+	status, setErr := toProvider.SetPolicyInfo(toIntegration, toApplication, modifiedToPoliciesRetainingResourceIdAndActions)
 	if setErr != nil || status != http.StatusCreated {
 		return setErr
 	}
 	return nil
 }
 
-func (service ApplicationsService) RetainResource(fromPolicies, toPolicies []policysupport.PolicyInfo) ([]policysupport.PolicyInfo, error) {
+func (service ApplicationsService) RetainResourceAndAction(fromPolicies, toPolicies []policysupport.PolicyInfo) ([]policysupport.PolicyInfo, error) {
 	var firstResourceId string
 
 	resourceIds := make([]string, 0)
@@ -87,7 +91,50 @@ func (service ApplicationsService) RetainResource(fromPolicies, toPolicies []pol
 	modified := make([]policysupport.PolicyInfo, 0)
 	for _, policy := range fromPolicies {
 		policy.Object.ResourceID = firstResourceId
+		policy.Actions = toPolicies[0].Actions
 		modified = append(modified, policy)
 	}
 	return modified, nil
+}
+
+func (service ApplicationsService) RetainResourceActions(fromPolicies, toPolicies []policysupport.PolicyInfo) ([]policysupport.PolicyInfo, error) {
+	var resourceActions []policysupport.ActionInfo
+
+	actions := make([]policysupport.ActionInfo, 0)
+	for _, policy := range toPolicies {
+		if len(resourceActions) == 0 {
+			resourceActions = policy.Actions
+		}
+		actions = append(actions, policy.Actions...)
+	}
+
+	modified := make([]policysupport.PolicyInfo, 0)
+	for _, policy := range fromPolicies {
+		policy.Actions = actions
+		modified = append(modified, policy)
+	}
+	return modified, nil
+}
+
+func verifyAllMembersAreUsers(policies []policysupport.PolicyInfo) bool {
+	var areMembersUsers bool
+	for _, policy := range policies {
+		for _, member := range policy.Subject.Members {
+			areMembersUsers = strings.Contains(member, "user:")
+		}
+	}
+	return areMembersUsers
+}
+
+func orchestrationSupported(toProvider Provider, fromProvider Provider) bool {
+	if toProvider.Name() == "google_cloud" && fromProvider.Name() == "azure" {
+		return true
+	}
+	if toProvider.Name() == "azure" && fromProvider.Name() == "google_cloud" {
+		return true
+	}
+	if toProvider == fromProvider {
+		return true
+	}
+	return false
 }
