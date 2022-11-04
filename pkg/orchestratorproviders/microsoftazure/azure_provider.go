@@ -99,10 +99,6 @@ func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 	return http.StatusCreated, nil
 }
 
-func setPolicyForDifferentIntgration() {
-
-}
-
 func (a *AzureProvider) getHttpClient() HTTPClient {
 	if a.HttpClientOverride != nil {
 		return a.HttpClientOverride

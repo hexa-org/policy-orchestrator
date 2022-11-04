@@ -2,7 +2,6 @@ package orchestrator
 
 import (
 	"errors"
-	"log"
 	"net/http"
 	"strings"
 
@@ -73,8 +72,7 @@ func (service ApplicationsService) Apply(jsonRequest Orchestration) error {
 			return err
 		}
 	}
-	
-	log.Printf("modified policies:  %v", modifiedPolicies)
+
 	status, setErr := toProvider.SetPolicyInfo(toIntegration, toApplication, modifiedPolicies)
 	if setErr != nil || status != http.StatusCreated {
 		return setErr
@@ -118,7 +116,7 @@ func (service ApplicationsService) RetainResource(fromPolicies, toPolicies []pol
 }
 
 func (service ApplicationsService) RetainAction(fromPolicies, toPolicies []policysupport.PolicyInfo) ([]policysupport.PolicyInfo, error) {
-	firstActionUri := toPolicies[0].Actions[0].ActionUri
+	firstActionUri := toPolicies[0].Actions[0].ActionUri // todo update to handle all action uris from toProvider
 
 	modified := make([]policysupport.PolicyInfo, 0)
 	for _, policy := range fromPolicies {
