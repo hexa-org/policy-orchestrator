@@ -37,7 +37,7 @@
             <code>{
   "project_id": "Hexa Industries",
   "bundle_url": "https://localhost:8889/bundles/bundle.tar.gz",
-  "ca_cert": "-----BEGIN CERTIFICATE-----\r\nMIIFaTCCA1GgAwIBAgICB\r\nCzAJBgNVBAgTAkNPMRAwDgYDVQQHEwdCb3VsZGVyMRgwFgYDVQQKEw9TdHJhdGEg\r\n-----END CERTIFICATE-----"
+  "ca_cert": "-----BEGIN CERTIFICATE-----\r\nMIIFaTCCA1GgAwIBAgICB\r\nCzAJBgNVBAgTAkNPMRAwDg...Eg\r\n-----END CERTIFICATE-----"
 }
             </code>
         </pre>
@@ -46,12 +46,20 @@
         <pre style="padding-left: 1rem">
             <code>{
   "project_id": "Hexa Industries GCP",
-  "bundle_url": "https://storage.googleapis.com/storage/v1/b/BUCKET_NAME/o",
   "gcp": {
     "bucket_name": "BUCKET_NAME",
     "object_name": "bundle.tar.gz",
     "key": {
-      "type": "service_account"
+      "type": "service_account",
+      "project_id": "google-cloud-project-id",
+      "private_key_id": "",
+      "private_key": "-----BEGIN PRIVATE KEY-----\n-----END PRIVATE KEY-----\n",
+      "client_email": "google-cloud-project-id@google-cloud-project-id.iam.gserviceaccount.com",
+      "client_id": "000000000000000000000",
+      "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+      "token_uri": "https://oauth2.googleapis.com/token",
+      "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+      "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/google-cloud-project-id%google-cloud-project-id.iam.gserviceaccount.com"
     }
   }
 }
