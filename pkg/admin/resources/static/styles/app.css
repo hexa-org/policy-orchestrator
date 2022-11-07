@@ -272,6 +272,11 @@ main .side-nav {
     margin: 0 1rem 1rem 1rem;
 }
 
+.card p {
+    margin: 0 1rem 1rem 1rem;
+    font-size: 0.95rem;
+}
+
 .side-nav hr {
     border: none;
     border-top: 1px solid var(--light-gray);
