@@ -39,9 +39,10 @@ func (o *OpaProvider) Name() string {
 
 func (o *OpaProvider) DiscoverApplications(info orchestrator.IntegrationInfo) (apps []orchestrator.ApplicationInfo, err error) {
 	c := o.credentials(info.Key)
+
 	if strings.EqualFold(info.Name, o.Name()) {
 		apps = append(apps, orchestrator.ApplicationInfo{
-			ObjectID:    base64.StdEncoding.EncodeToString([]byte(c.BundleUrl)), // todo - intended to represent a resource identifier
+			ObjectID:    c.objectID(),
 			Name:        c.ProjectID,
 			Description: "Open Policy Agent bundle",
 			Service:     "Hexa OPA",
@@ -201,6 +202,13 @@ type credentials struct {
 	GCP       *gcpCredentials `json:"gcp,omitempty"`
 }
 
+func (c credentials) objectID() string {
+	if c.GCP != nil {
+		return c.GCP.BucketName
+	}
+	return base64.StdEncoding.EncodeToString([]byte(c.BundleUrl))
+}
+
 type gcpCredentials struct {
 	BucketName string          `json:"bucket_name,omitempty"`
 	ObjectName string          `json:"object_name,omitempty"`
@@ -227,7 +235,6 @@ func (o *OpaProvider) EnsureClientIsAvailable(key []byte) (BundleClient, error) 
 
 	if creds.GCP != nil {
 		return NewGCPBundleClient(
-			creds.BundleUrl,
 			creds.GCP.BucketName,
 			creds.GCP.ObjectName,
 			creds.GCP.Key,

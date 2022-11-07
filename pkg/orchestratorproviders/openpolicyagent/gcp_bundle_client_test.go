@@ -22,7 +22,6 @@ func TestNewGCPBundleClient(t *testing.T) {
 	key := []byte(`{"type": "service_account" }`)
 
 	client, err := openpolicyagent.NewGCPBundleClient(
-		"bundleURL",
 		"bucket",
 		"bundle.tar.gz",
 		key,
@@ -36,7 +35,6 @@ func TestNewGCPBundleClientError_MissingRequired(t *testing.T) {
 	key := []byte(`{"type": "service_account"}`)
 	client, err := openpolicyagent.NewGCPBundleClient(
 		"",
-		"bucket",
 		"bundle.tar.gz",
 		key,
 	)
@@ -45,17 +43,6 @@ func TestNewGCPBundleClientError_MissingRequired(t *testing.T) {
 	assert.EqualError(t, err, "required config: bundle_url, bucket_name, object_name")
 
 	client, err = openpolicyagent.NewGCPBundleClient(
-		"bundleURL",
-		"",
-		"bundle.tar.gz",
-		key,
-	)
-
-	assert.Nil(t, client)
-	assert.EqualError(t, err, "required config: bundle_url, bucket_name, object_name")
-
-	client, err = openpolicyagent.NewGCPBundleClient(
-		"bundleURL",
 		"bucket",
 		"",
 		key,
@@ -66,7 +53,6 @@ func TestNewGCPBundleClientError_MissingRequired(t *testing.T) {
 
 	key = []byte(`{}`)
 	client, err = openpolicyagent.NewGCPBundleClient(
-		"bundleURL",
 		"bucket",
 		"bundle.tar.gz",
 		key,
@@ -92,7 +78,6 @@ func TestGCPBundleClient_GetDataFromBundle(t *testing.T) {
 	mockClient.ResponseBody[url] = buffer.Bytes()
 
 	client, err := openpolicyagent.NewGCPBundleClient(
-		"bundleURL",
 		bucketName,
 		objectName,
 		key,
@@ -120,7 +105,6 @@ func TestGCPBundleClient_GetDataFromBundleError(t *testing.T) {
 	mockClient.Err = errors.New("err getting bundle object")
 
 	client, err := openpolicyagent.NewGCPBundleClient(
-		"bundleURL",
 		bucketName,
 		objectName,
 		key,
@@ -160,7 +144,6 @@ func TestGCPBundleClient_PostBundle(t *testing.T) {
 	mockClient.StatusCode = http.StatusCreated
 
 	client, err := openpolicyagent.NewGCPBundleClient(
-		"bundleURL",
 		bucketName,
 		objectName,
 		key,
@@ -209,7 +192,6 @@ func TestGCPBundleClient_PostBundleError(t *testing.T) {
 	mockClient.StatusCode = http.StatusBadRequest
 
 	client, err := openpolicyagent.NewGCPBundleClient(
-		"bundleURL",
 		bucketName,
 		objectName,
 		key,

@@ -34,7 +34,7 @@ func WithHTTPClient(c HTTPClient) GCPBundleClientOpt {
 	}
 }
 
-func NewGCPBundleClient(bundleURL, bucketName, objectName string, key []byte, opts ...GCPBundleClientOpt) (*GCPBundleClient, error) {
+func NewGCPBundleClient(bucketName, objectName string, key []byte, opts ...GCPBundleClientOpt) (*GCPBundleClient, error) {
 	opt := option.WithCredentialsJSON(key)
 	gClientOpts := append([]option.ClientOption{
 		option.WithScopes("https://www.googleapis.com/auth/devstorage.read_write"),
@@ -50,17 +50,15 @@ func NewGCPBundleClient(bundleURL, bucketName, objectName string, key []byte, op
 		return nil, err
 	}
 
-	// todo - remove requirement for bundleURL.
-	if len(bundleURL) == 0 || len(bucketName) == 0 || len(objectName) == 0 {
+	if len(bucketName) == 0 || len(objectName) == 0 {
 		return nil, errors.New("required config: bundle_url, bucket_name, object_name")
 	}
 
 	bundleClient := &GCPBundleClient{
-		bundleServerURL: bundleURL,
-		bucketName:      bucketName,
-		objectName:      objectName,
-		httpClient:      client,
-		gcpClient:       gclient,
+		bucketName: bucketName,
+		objectName: objectName,
+		httpClient: client,
+		gcpClient:  gclient,
 	}
 
 	for _, o := range opts {
