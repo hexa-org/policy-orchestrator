@@ -25,45 +25,37 @@
     <div class="card">
         <h2>Example integration file</h2>
         <h3>hexa-open-policy-agent.json</h3>
-        <pre style="padding-left: 1rem">
-            <code>{
-  "project_id": "Hexa Industries",
-  "bundle_url": "http://localhost:8889/bundles/bundle.tar.gz"
-}
-            </code>
-        </pre>
+        <pre style="padding-left: 1rem"><code>{
+    "project_id": "Hexa Industries",
+    "bundle_url": "http://localhost:8889/bundles/bundle.tar.gz"
+}</code></pre>
         <h3>hexa-open-policy-agent-https.json</h3>
-        <pre style="padding-left: 1rem">
-            <code>{
-  "project_id": "Hexa Industries",
-  "bundle_url": "https://localhost:8889/bundles/bundle.tar.gz",
-  "ca_cert": "-----BEGIN CERTIFICATE-----\r\nMIIFaTCCA1GgAwIBAgICB\r\nCzAJBgNVBAgTAkNPMRAwDg...Eg\r\n-----END CERTIFICATE-----"
-}
-            </code>
-        </pre>
+        <pre style="padding-left: 1rem"><code>{
+    "project_id": "Hexa Industries",
+    "bundle_url": "https://localhost:8889/bundles/bundle.tar.gz",
+    "ca_cert": "-----BEGIN CERTIFICATE-----\r\nMIIFaTCCA1GgAwIBAgICB\r\nCzAJBgNVBAgTAkNPMRAwDg...Eg\r\n-----END CERTIFICATE-----"
+}</code></pre>
         <h3>hexa-opa-google-cloud-storage.json</h3>
-        <p> The key must have the <a class="link" href="https://cloud.google.com/storage/docs/access-control/iam-roles">Storage Object Admin role</a>.</p>
-        <pre style="padding-left: 1rem">
-            <code>{
-  "project_id": "Hexa Industries GCP",
-  "gcp": {
-    "bucket_name": "BUCKET_NAME",
-    "object_name": "bundle.tar.gz",
-    "key": {
-      "type": "service_account",
-      "project_id": "google-cloud-project-id",
-      "private_key_id": "",
-      "private_key": "-----BEGIN PRIVATE KEY-----\n-----END PRIVATE KEY-----\n",
-      "client_email": "google-cloud-project-id@google-cloud-project-id.iam.gserviceaccount.com",
-      "client_id": "000000000000000000000",
-      "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-      "token_uri": "https://oauth2.googleapis.com/token",
-      "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-      "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/google-cloud-project-id%google-cloud-project-id.iam.gserviceaccount.com"
+        <p> The key must have the <a class="link" href="https://cloud.google.com/storage/docs/access-control/iam-roles">Storage
+                Object Admin role</a>.</p>
+        <pre style="padding-left: 1rem"><code>{
+    "project_id": "Hexa Industries GCP",
+    "gcp": {
+        "bucket_name": "BUCKET_NAME",
+        "object_name": "bundle.tar.gz",
+        "key": {
+            "type": "service_account",
+            "project_id": "google-cloud-project-id",
+            "private_key_id": "",
+            "private_key": "-----BEGIN PRIVATE KEY-----\n-----END PRIVATE KEY-----\n",
+            "client_email": "google-cloud-project-id@google-cloud-project-id.iam.gserviceaccount.com",
+            "client_id": "000000000000000000000",
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+            "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/google-cloud-project-id%google-cloud-project-id.iam.gserviceaccount.com"
+        }
     }
-  }
-}
-            </code>
-        </pre>
+}</code></pre>
     </div>
 {{- end}}
