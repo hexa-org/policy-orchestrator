@@ -12,7 +12,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"cloud.google.com/go/storage"
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
 	"google.golang.org/api/option"
 	ghttp "google.golang.org/api/transport/http"
@@ -23,7 +22,6 @@ type GCPBundleClient struct {
 	bucketName      string
 	objectName      string
 	httpClient      HTTPClient
-	gcpClient       *storage.Client
 }
 
 type GCPBundleClientOpt func(client *GCPBundleClient)
@@ -44,12 +42,6 @@ func NewGCPBundleClient(bucketName, objectName string, key []byte, opts ...GCPBu
 		return nil, fmt.Errorf("unable to create gcp storage client: %w", err)
 	}
 
-	// todo - remove after manual testing
-	gclient, err := storage.NewClient(context.Background(), option.WithCredentialsJSON(key))
-	if err != nil {
-		return nil, err
-	}
-
 	if len(bucketName) == 0 || len(objectName) == 0 {
 		return nil, errors.New("required config: bundle_url, bucket_name, object_name")
 	}
@@ -58,7 +50,6 @@ func NewGCPBundleClient(bucketName, objectName string, key []byte, opts ...GCPBu
 		bucketName: bucketName,
 		objectName: objectName,
 		httpClient: client,
-		gcpClient:  gclient,
 	}
 
 	for _, o := range opts {
