@@ -39,7 +39,7 @@ func NewGCPBundleClient(bucketName, objectName string, key []byte, opts ...GCPBu
 	}, opt)
 	client, _, err := ghttp.NewClient(context.Background(), gClientOpts...)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create gcp storage client: %w", err)
+		return nil, fmt.Errorf("unable to create GCS storage client: %w", err)
 	}
 
 	if len(bucketName) == 0 || len(objectName) == 0 {
@@ -60,7 +60,6 @@ func NewGCPBundleClient(bucketName, objectName string, key []byte, opts ...GCPBu
 }
 
 func (g *GCPBundleClient) GetDataFromBundle(path string) ([]byte, error) {
-	// todo - build url with encoded query params
 	url := fmt.Sprintf("https://storage.googleapis.com/storage/v1/b/%s/o/%s?alt=media", g.bucketName, g.objectName)
 	resp, err := g.httpClient.Get(url)
 	if err != nil {
@@ -77,7 +76,7 @@ func (g *GCPBundleClient) GetDataFromBundle(path string) ([]byte, error) {
 	if tarErr != nil {
 		return nil, tarErr
 	}
-	log.Printf("reading bundle object %q from GCP bucket %q", g.objectName, g.bucketName)
+	log.Printf("reading bundle object %q from GCS bucket %q", g.objectName, g.bucketName)
 	return os.ReadFile(filepath.Join(path, "/bundle/data.json"))
 }
 
@@ -110,7 +109,7 @@ func (g *GCPBundleClient) PostBundle(bundle []byte) (int, error) {
 	contentType := http.DetectContentType(bundle)
 	resp, err = g.httpClient.Post(postObjectURL.String(), contentType, bytes.NewReader(bundle))
 	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("unable to write bundle object to GCP bucket: %w", err)
+		return http.StatusInternalServerError, fmt.Errorf("unable to write bundle object to GCS bucket: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -122,7 +121,7 @@ func (g *GCPBundleClient) PostBundle(bundle []byte) (int, error) {
 		return http.StatusInternalServerError, fmt.Errorf("error response from GCS: %s: %s", firstError.Location, firstError.Message)
 	}
 
-	log.Printf("wrote bundle object %q to GCP bucket %q", g.objectName, g.bucketName)
+	log.Printf("wrote bundle object %q to GCS bucket %q", g.objectName, g.bucketName)
 	return http.StatusCreated, nil
 }
 
