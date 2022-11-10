@@ -11,7 +11,6 @@ services:
         additional_claims:
           aud: https://oauth2.googleapis.com/token
           iss: ${BUNDLE_SERVICE_ISS}
-          # iss: opa-client@my-account.iam.gserviceaccount.com
 
 bundles:
   authz:

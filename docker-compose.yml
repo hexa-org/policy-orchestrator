@@ -71,12 +71,9 @@ services:
     container_name: opa-server
     ports:
       - "8887:8887"
-    command: run --server --addr :8887 -c /home/config/gcp-opa-config.yaml
+    command: run --server --addr :8887 -c /home/config/config.yaml
     environment:
       HEXA_DEMO_CONFIG_URL: "https://hexa-demo-config:8889"
       HEXA_DEMO_CA_CERT: "/home/config/ca-cert.pem"
-      BUNDLE_SERVICE_BUCKET_NAME: ${BUNDLE_SERVICE_BUCKET_NAME}
-      BUNDLE_SERVICE_ISS: ${BUNDLE_SERVICE_ISS}
-      BUNDLE_SERVICE_SIGNING_KEY: ${BUNDLE_SERVICE_SIGNING_KEY}
     volumes:
       - "./deployments/opa-server/config:/home/config:ro"
