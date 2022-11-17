@@ -56,7 +56,7 @@ func (service ApplicationsService) Apply(jsonRequest Orchestration) error {
 	}
 
 	if onlyWorksWithGoogleAndAzure(toProvider, fromProvider) {
-		if !verifyAllMembersAreUsers(fromPolicies) || !verifyAllMembersAreUsers(toPolicies) { // note - this should be temporary
+		if !verifyAllMembersAreUsers(fromPolicies) { // note - this should be temporary
 			return errors.New("orchestration across providers with domain members is a work in progress")
 		}
 	}
@@ -67,7 +67,7 @@ func (service ApplicationsService) Apply(jsonRequest Orchestration) error {
 	}
 
 	if onlyWorksWithGoogleAndAzure(toProvider, fromProvider) {
-		modifiedPolicies, err = service.RetainAction(fromPolicies, modifiedPolicies)
+		modifiedPolicies, err = service.RetainAction(modifiedPolicies, toPolicies)
 		if err != nil {
 			return err
 		}
@@ -78,16 +78,6 @@ func (service ApplicationsService) Apply(jsonRequest Orchestration) error {
 		return setErr
 	}
 	return nil
-}
-
-func onlyWorksWithGoogleAndAzure(toProvider Provider, fromProvider Provider) bool {
-	if toProvider.Name() == "google_cloud" && fromProvider.Name() == "azure" {
-		return true
-	}
-	if toProvider.Name() == "azure" && fromProvider.Name() == "google_cloud" {
-		return true
-	}
-	return false
 }
 
 func (service ApplicationsService) RetainResource(fromPolicies, toPolicies []policysupport.PolicyInfo) ([]policysupport.PolicyInfo, error) {
@@ -138,13 +128,17 @@ func verifyAllMembersAreUsers(policies []policysupport.PolicyInfo) bool {
 }
 
 func orchestrationSupported(toProvider Provider, fromProvider Provider) bool {
+	if toProvider == fromProvider {
+		return true
+	}
+	return onlyWorksWithGoogleAndAzure(toProvider, fromProvider)
+}
+
+func onlyWorksWithGoogleAndAzure(toProvider Provider, fromProvider Provider) bool {
 	if toProvider.Name() == "google_cloud" && fromProvider.Name() == "azure" {
 		return true
 	}
 	if toProvider.Name() == "azure" && fromProvider.Name() == "google_cloud" {
-		return true
-	}
-	if toProvider == fromProvider {
 		return true
 	}
 	return false

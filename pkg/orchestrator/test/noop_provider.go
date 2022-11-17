@@ -8,11 +8,15 @@ import (
 )
 
 type NoopProvider struct {
-	Discovered int
-	Err        error
+	OverrideName string
+	Discovered   int
+	Err          error
 }
 
 func (n *NoopProvider) Name() string {
+	if n.OverrideName != "" {
+		return n.OverrideName
+	}
 	return "noop"
 }
 
