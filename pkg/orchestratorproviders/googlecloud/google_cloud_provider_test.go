@@ -36,10 +36,11 @@ func TestGoogleProvider_DiscoverApplications(t *testing.T) {
 
 	info := orchestrator.IntegrationInfo{Name: "google_cloud", Key: []byte("aKey")}
 	applications, _ := p.DiscoverApplications(info)
-	assert.Equal(t, 3, len(applications))
+	assert.Equal(t, 4, len(applications))
 	assert.Equal(t, "Kubernetes", applications[0].Service)
 	assert.Equal(t, "Kubernetes", applications[1].Service)
-	assert.Equal(t, "AppEngine", applications[2].Service)
+	assert.Equal(t, "Cloud Run", applications[2].Service)
+	assert.Equal(t, "AppEngine", applications[3].Service)
 
 	assert.Equal(t, "google_cloud", p.Name())
 }
@@ -52,7 +53,7 @@ func TestGoogleProvider_DiscoverApplications_ignoresProviderCase(t *testing.T) {
 
 	info := orchestrator.IntegrationInfo{Name: "Google_Cloud", Key: []byte("aKey")}
 	applications, _ := p.DiscoverApplications(info)
-	assert.Equal(t, 3, len(applications))
+	assert.Equal(t, 4, len(applications))
 	assert.Equal(t, "google_cloud", p.Name())
 }
 

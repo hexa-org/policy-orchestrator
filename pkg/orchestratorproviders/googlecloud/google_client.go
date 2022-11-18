@@ -89,7 +89,13 @@ func (c *GoogleClient) GetBackendApplications() ([]orchestrator.ApplicationInfo,
 	var apps []orchestrator.ApplicationInfo
 	for _, info := range backend.Resources {
 		log.Printf("Found google cloud backend services %s.\n", info.Name)
-		apps = append(apps, orchestrator.ApplicationInfo{ObjectID: info.ID, Name: info.Name, Description: info.Description, Service: "Kubernetes"})
+		var service string
+		if strings.HasPrefix(info.Name, "k8s") {
+			service = "Kubernetes"
+		} else {
+			service = "Cloud Run"
+		}
+		apps = append(apps, orchestrator.ApplicationInfo{ObjectID: info.ID, Name: info.Name, Description: info.Description, Service: service})
 	}
 	return apps, nil
 }
@@ -109,10 +115,10 @@ type bindingInfo struct {
 
 func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]policysupport.PolicyInfo, error) {
 	var url string
-	if strings.HasPrefix(name, "k8s") { // todo - revisit and improve the decision here
-		url = fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s:getIamPolicy", c.ProjectId, objectId)
-	} else {
+	if strings.HasPrefix(name, "apps") { // todo - revisit and improve the decision here
 		url = fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/appengine-%s/services/default:getIamPolicy", c.ProjectId, objectId)
+	} else {
+		url = fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s:getIamPolicy", c.ProjectId, objectId)
 	}
 
 	post, err := c.HttpClient.Post(url, "application/json", bytes.NewReader([]byte{}))
@@ -145,10 +151,10 @@ func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]policysupport.
 
 func (c *GoogleClient) SetBackendPolicy(name, objectId string, p policysupport.PolicyInfo) error { // todo - objectId may no longer be needed, at least for google
 	var url string
-	if strings.HasPrefix(name, "k8s") { // todo - revisit and improve the decision here
-		url = fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s:setIamPolicy", c.ProjectId, objectId)
-	} else {
+	if strings.HasPrefix(name, "apps") { // todo - revisit and improve the decision here
 		url = fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/appengine-%s/services/default:setIamPolicy", c.ProjectId, objectId)
+	} else {
+		url = fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/compute/services/%s:setIamPolicy", c.ProjectId, objectId)
 	}
 
 	// todo - handle many actions

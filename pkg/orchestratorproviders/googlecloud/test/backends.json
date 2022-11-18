@@ -12,6 +12,12 @@
       "name": "k8s1-anotherName",
       "description": "{\"kubernetes.io/service-name\":\"default/anotherName\",\"kubernetes.io/service-port\":\"8887\",\"x-features\":[\"NEG\"]}",
       "kind": "compute#backendService"
+    },
+    {
+      "id": "0000000000000002",
+      "name": "cloud-run-app",
+      "description": "some description",
+      "kind": "compute#backendService"
     }
   ],
   "selfLink": "https://www.googleapis.com/compute/v1/projects/aProject/global/backendServices",

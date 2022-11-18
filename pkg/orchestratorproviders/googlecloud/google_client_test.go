@@ -55,10 +55,13 @@ func TestClient_GetBackendApplications(t *testing.T) {
 	client := googlecloud.GoogleClient{HttpClient: m}
 	applications, _ := client.GetBackendApplications()
 
-	assert.Equal(t, 2, len(applications))
+	assert.Equal(t, 3, len(applications))
 	assert.Equal(t, "k8s1-aName", applications[0].Name)
 	assert.Equal(t, "k8s1-anotherName", applications[1].Name)
+	assert.Equal(t, "cloud-run-app", applications[2].Name)
 	assert.Equal(t, "Kubernetes", applications[0].Service)
+	assert.Equal(t, "Kubernetes", applications[1].Service)
+	assert.Equal(t, "Cloud Run", applications[2].Service)
 }
 
 func TestClient_GetBackendApplications_withRequestError(t *testing.T) {
@@ -82,7 +85,7 @@ func TestGoogleClient_GetAppEnginePolicies(t *testing.T) {
 	m := google_cloud_test.NewMockClient()
 	m.ResponseBody["appengine"] = google_cloud_test.Resource("policy.json")
 	client := googlecloud.GoogleClient{HttpClient: m, ProjectId: "appengineproject"}
-	infos, _ := client.GetBackendPolicy("appEngineName", "appEngineObjectId")
+	infos, _ := client.GetBackendPolicy("apps/EngineName", "appEngineObjectId")
 
 	expectedUsers := []string{
 		"user:phil@example.com",
@@ -137,7 +140,7 @@ func TestGoogleClient_SetAppEnginePolicies(t *testing.T) {
 	}
 	m := google_cloud_test.NewMockClient()
 	client := googlecloud.GoogleClient{HttpClient: m, ProjectId: "appengineproject"}
-	err := client.SetBackendPolicy("appEngineName", "anObjectId", policy)
+	err := client.SetBackendPolicy("apps/EngineName", "anObjectId", policy)
 	assert.NoError(t, err)
 	assert.Equal(t, "{\"policy\":{\"bindings\":[{\"role\":\"roles/iap.httpsResourceAccessor\",\"members\":[\"aUser\"]}]}}\n", string(m.RequestBody))
 	assert.Equal(t, "https://iap.googleapis.com/v1/projects/appengineproject/iap_web/appengine-anObjectId/services/default:setIamPolicy", m.Url)
