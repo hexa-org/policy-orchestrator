@@ -14,7 +14,7 @@ import (
 
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent"
-	openpolicyagent_test "github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 	assert "github.com/stretchr/testify/require"
 )
 
@@ -73,7 +73,7 @@ func TestGCPBundleClient_GetDataFromBundle(t *testing.T) {
 	objectName := "testbundle.tar.gz"
 	key := []byte(`{"type": "service_account"}`)
 
-	mockClient := openpolicyagent_test.NewMockHTTPClient()
+	mockClient := testsupport.NewMockHTTPClient()
 	url := fmt.Sprintf("https://storage.googleapis.com/storage/v1/b/%s/o/%s?alt=media", bucketName, objectName)
 	mockClient.ResponseBody[url] = buffer.Bytes()
 
@@ -101,7 +101,7 @@ func TestGCPBundleClient_GetDataFromBundleError(t *testing.T) {
 	objectName := "testBundle.tar.gz"
 	key := []byte(`{"type": "service_account"}`)
 
-	mockClient := openpolicyagent_test.NewMockHTTPClient()
+	mockClient := testsupport.NewMockHTTPClient()
 	mockClient.Err = errors.New("err getting bundle object")
 
 	client, err := openpolicyagent.NewGCPBundleClient(
@@ -129,7 +129,7 @@ func TestGCPBundleClient_PostBundle(t *testing.T) {
 	objectName := "testBundle.tar.gz"
 	key := []byte(`{"type": "service_account"}`)
 
-	mockClient := openpolicyagent_test.NewMockHTTPClient()
+	mockClient := testsupport.NewMockHTTPClient()
 	getObjectMetadataURL := fmt.Sprintf("https://storage.googleapis.com/storage/v1/b/%s/o/%s", bucketName, objectName)
 	mockClient.ResponseBody[getObjectMetadataURL] = []byte(`{"generation": "1234567890"}`)
 
@@ -162,7 +162,7 @@ func TestGCPBundleClient_PostBundleError(t *testing.T) {
 	objectName := "testBundle.tar.gz"
 	key := []byte(`{"type": "service_account"}`)
 
-	mockClient := openpolicyagent_test.NewMockHTTPClient()
+	mockClient := testsupport.NewMockHTTPClient()
 	getObjectMetadataURL := fmt.Sprintf("https://storage.googleapis.com/storage/v1/b/%s/o/%s", bucketName, objectName)
 
 	mockClient.ResponseBody[getObjectMetadataURL] = []byte(`{"generation": "1234567890"}`)
