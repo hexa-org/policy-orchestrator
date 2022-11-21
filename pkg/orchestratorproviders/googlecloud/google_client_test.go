@@ -5,15 +5,16 @@ import (
 	"testing"
 
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGoogleClient_GetAppEngineApplications(t *testing.T) {
-	m := google_cloud_test.NewMockClient()
-	m.ResponseBody["appengine"] = google_cloud_test.Resource("appengine.json")
-	client := googlecloud.GoogleClient{HttpClient: m}
+	m := testsupport.NewMockHTTPClient()
+	m.ResponseBody["https://appengine.googleapis.com/v1/apps/projectID"] = appEngineAppsJSON
+	client := googlecloud.GoogleClient{ProjectId: "projectID", HttpClient: m}
+
 	applications, _ := client.GetAppEngineApplications()
 
 	assert.Equal(t, 1, len(applications))
@@ -24,35 +25,40 @@ func TestGoogleClient_GetAppEngineApplications(t *testing.T) {
 }
 
 func TestGoogleClient_GetAppEngineApplications_when_404(t *testing.T) {
-	m := google_cloud_test.NewMockClient()
+	m := testsupport.NewMockHTTPClient()
 	m.StatusCode = 404
 	client := googlecloud.GoogleClient{HttpClient: m}
+
 	applications, _ := client.GetAppEngineApplications()
 
 	assert.Equal(t, 0, len(applications))
 }
 
 func TestClient_GetAppEngineApplications_withRequestError(t *testing.T) {
-	m := google_cloud_test.NewMockClient()
+	m := testsupport.NewMockHTTPClient()
 	m.Err = errors.New("oops")
 
 	client := googlecloud.GoogleClient{HttpClient: m}
+
 	_, err := client.GetAppEngineApplications()
 	assert.Error(t, err)
 }
 
 func TestClient_GetAppEngineApplications_withBadJson(t *testing.T) {
-	m := google_cloud_test.NewMockClient()
+	m := testsupport.NewMockHTTPClient()
 	m.ResponseBody["compute"] = []byte("-")
 	client := googlecloud.GoogleClient{HttpClient: m}
+
 	_, err := client.GetAppEngineApplications()
+
 	assert.Error(t, err)
 }
 
 func TestClient_GetBackendApplications(t *testing.T) {
-	m := google_cloud_test.NewMockClient()
-	m.ResponseBody["compute"] = google_cloud_test.Resource("backends.json")
-	client := googlecloud.GoogleClient{HttpClient: m}
+	m := testsupport.NewMockHTTPClient()
+	m.ResponseBody["https://compute.googleapis.com/compute/v1/projects/projectID/global/backendServices"] = backendAppsJSON
+	client := googlecloud.GoogleClient{ProjectId: "projectID", HttpClient: m}
+
 	applications, _ := client.GetBackendApplications()
 
 	assert.Equal(t, 3, len(applications))
@@ -65,70 +71,76 @@ func TestClient_GetBackendApplications(t *testing.T) {
 }
 
 func TestClient_GetBackendApplications_withRequestError(t *testing.T) {
-	m := google_cloud_test.NewMockClient()
+	m := testsupport.NewMockHTTPClient()
 	m.Err = errors.New("oops")
-
 	client := googlecloud.GoogleClient{HttpClient: m}
+
 	_, err := client.GetBackendApplications()
+
 	assert.Error(t, err)
 }
 
 func TestClient_GetBackendApplications_withBadJson(t *testing.T) {
-	m := google_cloud_test.NewMockClient()
+	m := testsupport.NewMockHTTPClient()
 	m.ResponseBody["compute"] = []byte("-")
 	client := googlecloud.GoogleClient{HttpClient: m}
+
 	_, err := client.GetBackendApplications()
+
 	assert.Error(t, err)
 }
 
 func TestGoogleClient_GetAppEnginePolicies(t *testing.T) {
-	m := google_cloud_test.NewMockClient()
-	m.ResponseBody["appengine"] = google_cloud_test.Resource("policy.json")
+	m := testsupport.NewMockHTTPClient()
+	m.ResponseBody["https://iap.googleapis.com/v1/projects/appengineproject/iap_web/appengine-appEngineObjectId/services/default:getIamPolicy"] = policyJSON
 	client := googlecloud.GoogleClient{HttpClient: m, ProjectId: "appengineproject"}
-	infos, _ := client.GetBackendPolicy("apps/EngineName", "appEngineObjectId")
-
 	expectedUsers := []string{
 		"user:phil@example.com",
 		"group:admins@example.com",
 		"domain:google.com",
 		"serviceAccount:my-project-id@appspot.gserviceaccount.com",
 	}
+
+	infos, _ := client.GetBackendPolicy("apps/EngineName", "appEngineObjectId")
+
 	assert.Equal(t, 2, len(infos))
 	assert.Equal(t, expectedUsers, infos[0].Subject.Members)
-	assert.Equal(t, "https://iap.googleapis.com/v1/projects/appengineproject/iap_web/appengine-appEngineObjectId/services/default:getIamPolicy", m.Url)
 }
 
 func TestGoogleClient_GetBackendPolicies(t *testing.T) {
-	m := google_cloud_test.NewMockClient()
-	m.ResponseBody["compute"] = google_cloud_test.Resource("policy.json")
+	m := testsupport.NewMockHTTPClient()
+	m.ResponseBody["https://iap.googleapis.com/v1/projects/k8sproject/iap_web/compute/services/k8sObjectId:getIamPolicy"] = policyJSON
 	client := googlecloud.GoogleClient{HttpClient: m, ProjectId: "k8sproject"}
-	infos, _ := client.GetBackendPolicy("k8sName", "k8sObjectId")
-
 	expectedUsers := []string{
 		"user:phil@example.com",
 		"group:admins@example.com",
 		"domain:google.com",
 		"serviceAccount:my-project-id@appspot.gserviceaccount.com",
 	}
+
+	infos, _ := client.GetBackendPolicy("k8sName", "k8sObjectId")
+
 	assert.Equal(t, 2, len(infos))
 	assert.Equal(t, expectedUsers, infos[0].Subject.Members)
-	assert.Equal(t, "https://iap.googleapis.com/v1/projects/k8sproject/iap_web/compute/services/k8sObjectId:getIamPolicy", m.Url)
 }
 
 func TestGoogleClient_GetBackendPolicies_withRequestError(t *testing.T) {
-	m := google_cloud_test.NewMockClient()
+	m := testsupport.NewMockHTTPClient()
 	m.Err = errors.New("oops")
-
 	client := googlecloud.GoogleClient{HttpClient: m}
+
 	_, err := client.GetBackendPolicy("k8sName", "anObjectId")
+
 	assert.Error(t, err)
 }
 
 func TestGoogleClient_GetBackendPolicies_withBadJson(t *testing.T) {
-	m := google_cloud_test.NewMockClient()
+	m := testsupport.NewMockHTTPClient()
 	m.ResponseBody["compute"] = []byte("-")
 	client := googlecloud.GoogleClient{HttpClient: m}
+
 	_, err := client.GetBackendPolicy("k8sName", "anObjectId")
+
 	assert.Error(t, err)
 }
 
@@ -138,9 +150,11 @@ func TestGoogleClient_SetAppEnginePolicies(t *testing.T) {
 			ResourceID: "anObjectId",
 		},
 	}
-	m := google_cloud_test.NewMockClient()
+	m := testsupport.NewMockHTTPClient()
 	client := googlecloud.GoogleClient{HttpClient: m, ProjectId: "appengineproject"}
+
 	err := client.SetBackendPolicy("apps/EngineName", "anObjectId", policy)
+
 	assert.NoError(t, err)
 	assert.Equal(t, "{\"policy\":{\"bindings\":[{\"role\":\"roles/iap.httpsResourceAccessor\",\"members\":[\"aUser\"]}]}}\n", string(m.RequestBody))
 	assert.Equal(t, "https://iap.googleapis.com/v1/projects/appengineproject/iap_web/appengine-anObjectId/services/default:setIamPolicy", m.Url)
@@ -152,7 +166,7 @@ func TestGoogleClient_SetBackendPolicies(t *testing.T) {
 			ResourceID: "anObjectId",
 		},
 	}
-	m := google_cloud_test.NewMockClient()
+	m := testsupport.NewMockHTTPClient()
 	client := googlecloud.GoogleClient{HttpClient: m, ProjectId: "k8sproject"}
 	err := client.SetBackendPolicy("k8sName", "anObjectId", policy)
 	assert.NoError(t, err)
@@ -166,7 +180,7 @@ func TestGoogleClient_SetBackendPolicies_withRequestError(t *testing.T) {
 			ResourceID: "anObjectId",
 		},
 	}
-	m := google_cloud_test.NewMockClient()
+	m := testsupport.NewMockHTTPClient()
 	m.Err = errors.New("oops")
 	client := googlecloud.GoogleClient{HttpClient: m}
 	err := client.SetBackendPolicy("k8sName", "anObjectId", policy)

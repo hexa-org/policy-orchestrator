@@ -1,15 +1,12 @@
 package googlecloud_test
 
 import (
-	"io/ioutil"
-	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud"
-	google_cloud_test "github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/googlecloud/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,75 +26,78 @@ func TestGoogleProvider_BadClientKey(t *testing.T) {
 }
 
 func TestGoogleProvider_DiscoverApplications(t *testing.T) {
-	m := google_cloud_test.NewMockClient()
-	m.ResponseBody["compute"] = google_cloud_test.Resource("backends.json")
-	m.ResponseBody["appengine"] = google_cloud_test.Resource("appengine.json")
+	m := testsupport.NewMockHTTPClient()
+	m.ResponseBody["https://compute.googleapis.com/compute/v1/projects/google-cloud-project-id/global/backendServices"] = backendAppsJSON
+	m.ResponseBody["https://appengine.googleapis.com/v1/apps/google-cloud-project-id"] = appEngineAppsJSON
 	p := &googlecloud.GoogleProvider{HttpClientOverride: m}
+	info := orchestrator.IntegrationInfo{Name: "google_cloud", Key: projectJSON}
 
-	info := orchestrator.IntegrationInfo{Name: "google_cloud", Key: []byte("aKey")}
-	applications, _ := p.DiscoverApplications(info)
+	applications, err := p.DiscoverApplications(info)
+
+	assert.NoError(t, err)
 	assert.Equal(t, 4, len(applications))
 	assert.Equal(t, "Kubernetes", applications[0].Service)
 	assert.Equal(t, "Kubernetes", applications[1].Service)
 	assert.Equal(t, "Cloud Run", applications[2].Service)
 	assert.Equal(t, "AppEngine", applications[3].Service)
-
 	assert.Equal(t, "google_cloud", p.Name())
 }
 
 func TestGoogleProvider_DiscoverApplications_ignoresProviderCase(t *testing.T) {
-	m := google_cloud_test.NewMockClient()
-	m.ResponseBody["compute"] = google_cloud_test.Resource("backends.json")
-	m.ResponseBody["appengine"] = google_cloud_test.Resource("appengine.json")
+	m := testsupport.NewMockHTTPClient()
+	m.ResponseBody["https://compute.googleapis.com/compute/v1/projects/google-cloud-project-id/global/backendServices"] = backendAppsJSON
+	m.ResponseBody["https://appengine.googleapis.com/v1/apps/google-cloud-project-id"] = appEngineAppsJSON
 	p := &googlecloud.GoogleProvider{HttpClientOverride: m}
+	info := orchestrator.IntegrationInfo{Name: "google_cloud", Key: projectJSON}
 
-	info := orchestrator.IntegrationInfo{Name: "Google_Cloud", Key: []byte("aKey")}
-	applications, _ := p.DiscoverApplications(info)
+	applications, err := p.DiscoverApplications(info)
+
+	assert.NoError(t, err)
 	assert.Equal(t, 4, len(applications))
 	assert.Equal(t, "google_cloud", p.Name())
 }
 
 func TestGoogleProvider_DiscoverApplications_emptyResponse(t *testing.T) {
-	m := google_cloud_test.NewMockClient()
+	m := testsupport.NewMockHTTPClient()
 	p := &googlecloud.GoogleProvider{HttpClientOverride: m}
-
 	info := orchestrator.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
+
 	applications, _ := p.DiscoverApplications(info)
+
 	assert.Equal(t, 0, len(applications))
 }
 
 func TestGoogleProvider_Project(t *testing.T) {
-	_, file, _, _ := runtime.Caller(0)
-	jsonFile := filepath.Join(file, "./../test/project.json")
-	key, _ := ioutil.ReadFile(jsonFile)
-
 	p := googlecloud.GoogleProvider{}
-	assert.Equal(t, "google-cloud-project-id", p.Project(key))
+
+	assert.Equal(t, "google-cloud-project-id", p.Project(projectJSON))
 }
 
 func TestGoogleProvider_HttpClient(t *testing.T) {
-	_, file, _, _ := runtime.Caller(0)
-	jsonFile := filepath.Join(file, "./../test/project.json")
-	key, _ := ioutil.ReadFile(jsonFile)
-
 	p := googlecloud.GoogleProvider{}
-	client, _ := p.NewHttpClient(key)
+
+	client, err := p.NewHttpClient(projectJSON)
+
 	assert.NotNil(t, client)
+	assert.NoError(t, err)
 }
 
 func TestGoogleProvider_HttpClient_withBadKey(t *testing.T) {
 	p := googlecloud.GoogleProvider{}
+
 	_, err := p.NewHttpClient([]byte(""))
+
 	assert.Error(t, err)
 }
 
 func TestGoogleProvider_GetPolicy(t *testing.T) {
-	m := google_cloud_test.NewMockClient()
-	m.ResponseBody["compute"] = google_cloud_test.Resource("policy.json")
-
+	m := testsupport.NewMockHTTPClient()
+	m.ResponseBody["https://iap.googleapis.com/v1/projects/google-cloud-project-id/iap_web/compute/services/k8sObjectId:getIamPolicy"] = policyJSON
 	p := googlecloud.GoogleProvider{HttpClientOverride: m}
-	info := orchestrator.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
+	info := orchestrator.IntegrationInfo{Name: "google_cloud", Key: projectJSON}
+
 	infos, _ := p.GetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "k8sObjectId", Name: "k8sName"})
+
 	assert.Equal(t, 2, len(infos))
 }
 
@@ -107,10 +107,10 @@ func TestGoogleProvider_SetPolicy(t *testing.T) {
 			ResourceID: "anObjectId",
 		},
 	}
-	m := google_cloud_test.NewMockClient()
+	m := testsupport.NewMockHTTPClient()
 
 	p := googlecloud.GoogleProvider{HttpClientOverride: m}
-	info := orchestrator.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
+	info := orchestrator.IntegrationInfo{Name: "google_cloud", Key: []byte("aKey")}
 	status, err := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{policy})
 	assert.Equal(t, 201, status)
 	assert.NoError(t, err)
@@ -122,7 +122,7 @@ func TestGoogleProvider_SetPolicy_withInvalidArguments(t *testing.T) {
 			ResourceID: "anObjectId",
 		},
 	}
-	m := google_cloud_test.NewMockClient()
+	m := testsupport.NewMockHTTPClient()
 
 	p := googlecloud.GoogleProvider{HttpClientOverride: m}
 	info := orchestrator.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
