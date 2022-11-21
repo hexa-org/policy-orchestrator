@@ -1,4 +1,4 @@
-package openpolicyagent_test
+package testsupport
 
 import (
 	"bytes"
