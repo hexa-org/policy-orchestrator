@@ -36,13 +36,14 @@ func (b *HTTPBundleClient) GetDataFromBundle(path string) ([]byte, error) {
 
 	gz, gzipErr := compressionsupport.UnGzip(bytes.NewReader(all))
 	if gzipErr != nil {
-		return nil, gzipErr
+		return nil, fmt.Errorf("unable to ungzip: %w", gzipErr)
 	}
 
 	tarErr := compressionsupport.UnTarToPath(bytes.NewReader(gz), path)
 	if tarErr != nil {
-		return nil, tarErr
+		return nil, fmt.Errorf("unable to untar to path: %w", tarErr)
 	}
+
 	return os.ReadFile(filepath.Join(path, "/bundle/data.json"))
 }
 

@@ -37,9 +37,13 @@ func (o *OpaProvider) Name() string {
 	return "open_policy_agent"
 }
 
-func (o *OpaProvider) DiscoverApplications(info orchestrator.IntegrationInfo) (apps []orchestrator.ApplicationInfo, err error) {
-	c := o.credentials(info.Key)
+func (o *OpaProvider) DiscoverApplications(info orchestrator.IntegrationInfo) ([]orchestrator.ApplicationInfo, error) {
+	c, err := o.credentials(info.Key)
+	if err != nil {
+		return nil, err
+	}
 
+	var apps []orchestrator.ApplicationInfo
 	if strings.EqualFold(info.Name, o.Name()) {
 		apps = append(apps, orchestrator.ApplicationInfo{
 			ObjectID:    c.objectID(),
@@ -48,7 +52,7 @@ func (o *OpaProvider) DiscoverApplications(info orchestrator.IntegrationInfo) (a
 			Service:     "Hexa OPA",
 		})
 	}
-	return apps, err
+	return apps, nil
 }
 
 type Policies struct {
@@ -80,10 +84,11 @@ type Object struct {
 
 func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, appInfo orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
 	key := integration.Key
+	// todo - rename to configure client
 	client, err := o.EnsureClientIsAvailable(key)
 	if err != nil {
 		log.Printf("open-policy-agent, unable to build client: %s", err)
-		return nil, err
+		return nil, fmt.Errorf("invalid client: %w", err)
 	}
 	rand.Seed(time.Now().UnixNano())
 	path := filepath.Join(os.TempDir(), fmt.Sprintf("/test-bundle-%d", rand.Uint64()))
@@ -123,18 +128,18 @@ func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, ap
 	validate := validator.New() // todo - move this up?
 	errApp := validate.Struct(appInfo)
 	if errApp != nil {
-		return http.StatusInternalServerError, errApp
+		return http.StatusInternalServerError, fmt.Errorf("invalid app info: %w", errApp)
 	}
 	errPolicies := validate.Var(policyInfos, "omitempty,dive")
 	if errPolicies != nil {
-		return http.StatusInternalServerError, errPolicies
+		return http.StatusInternalServerError, fmt.Errorf("invalid policy info: %w", errPolicies)
 	}
 
 	key := integration.Key
 	client, err := o.EnsureClientIsAvailable(key)
 	if err != nil {
 		log.Printf("open-policy-agent, unable to build client: %s", err)
-		return http.StatusInternalServerError, err
+		return http.StatusInternalServerError, fmt.Errorf("invalid client: %w", err)
 	}
 
 	var policies []Policy
@@ -215,13 +220,16 @@ type gcpCredentials struct {
 	Key        json.RawMessage `json:"key,omitempty"`
 }
 
-func (o *OpaProvider) credentials(key []byte) credentials {
+func (o *OpaProvider) credentials(key []byte) (credentials, error) {
 	var foundCredentials credentials
-	_ = json.NewDecoder(bytes.NewReader(key)).Decode(&foundCredentials)
+	err := json.NewDecoder(bytes.NewReader(key)).Decode(&foundCredentials)
+	if err != nil {
+		return credentials{}, fmt.Errorf("invalid integration key: %w", err)
+	}
 	if foundCredentials.ProjectID == "" {
 		foundCredentials.ProjectID = "package authz"
 	}
-	return foundCredentials
+	return foundCredentials, nil
 }
 
 func (o *OpaProvider) EnsureClientIsAvailable(key []byte) (BundleClient, error) {
@@ -231,7 +239,10 @@ func (o *OpaProvider) EnsureClientIsAvailable(key []byte) (BundleClient, error) 
 		o.ResourcesDirectory = filepath.Join(file, "../resources")
 	}
 
-	creds := o.credentials(key)
+	creds, err := o.credentials(key)
+	if err != nil {
+		return nil, err
+	}
 
 	if creds.GCP != nil {
 		return NewGCPBundleClient(
