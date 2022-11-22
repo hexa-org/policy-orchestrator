@@ -28,13 +28,9 @@ func (b *HTTPBundleClient) GetDataFromBundle(path string) ([]byte, error) {
 	if getErr != nil {
 		return nil, getErr
 	}
+	defer get.Body.Close()
 
-	all, readErr := io.ReadAll(get.Body)
-	if readErr != nil {
-		return nil, readErr
-	}
-
-	gz, gzipErr := compressionsupport.UnGzip(bytes.NewReader(all))
+	gz, gzipErr := compressionsupport.UnGzip(get.Body)
 	if gzipErr != nil {
 		return nil, fmt.Errorf("unable to ungzip: %w", gzipErr)
 	}
