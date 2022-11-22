@@ -13,58 +13,9 @@ import (
 
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent"
-	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/openpolicyagent/test"
+	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestHTTPBundleClient_GetExpressionFromBundle(t *testing.T) {
-	_, file, _, _ := runtime.Caller(0)
-	join := filepath.Join(file, "../resources/bundles")
-	tar, _ := compressionsupport.TarFromPath(join)
-	var buffer bytes.Buffer
-	_ = compressionsupport.Gzip(&buffer, tar)
-
-	mockClient := openpolicyagent_test.MockClient{Response: buffer.Bytes()}
-
-	client := openpolicyagent.HTTPBundleClient{BundleServerURL: "someURL", HttpClient: &mockClient}
-
-	dir := os.TempDir()
-	rand.Seed(time.Now().UnixNano())
-	path := filepath.Join(dir, fmt.Sprintf("test-bundles/.bundle-%d", rand.Uint64()))
-	data, err := client.GetDataFromBundle(path)
-	assert.NoError(t, err)
-	assert.Equal(t, expectedBundleData, string(data))
-	_ = os.RemoveAll(path)
-}
-
-func TestHTTPBundleClient_GetExpressionFromBundle_withBadTar(t *testing.T) {
-	_, file, _, _ := runtime.Caller(0)
-	join := filepath.Join(file, "../resources/bundles")
-	tar, _ := compressionsupport.TarFromPath(join)
-	var buffer bytes.Buffer
-	_ = compressionsupport.Gzip(&buffer, tar)
-
-	mockClient := openpolicyagent_test.MockClient{Response: buffer.Bytes()}
-	client := openpolicyagent.HTTPBundleClient{BundleServerURL: "someURL", HttpClient: &mockClient}
-	_, err := client.GetDataFromBundle("/badPath")
-	assert.Error(t, err)
-}
-
-func TestHTTPBundleClient_GetExpressionFromBundle_withBadRequest(t *testing.T) {
-	mockClient := openpolicyagent_test.MockClient{}
-	mockClient.Err = errors.New("oops")
-	client := openpolicyagent.HTTPBundleClient{BundleServerURL: "someURL", HttpClient: &mockClient}
-	_, err := client.GetDataFromBundle(os.TempDir())
-	assert.Error(t, err)
-}
-
-func TestHTTPBundleClient_GetExpressionFromBundle_withBadGzip(t *testing.T) {
-	var buffer bytes.Buffer
-	mockClient := openpolicyagent_test.MockClient{Response: buffer.Bytes()}
-	client := openpolicyagent.HTTPBundleClient{BundleServerURL: "someURL", HttpClient: &mockClient}
-	_, err := client.GetDataFromBundle("")
-	assert.Error(t, err)
-}
 
 const expectedBundleData = `{
   "policies": [
@@ -120,3 +71,58 @@ const expectedBundleData = `{
     }
   ]
 }`
+
+func TestHTTPBundleClient_GetExpressionFromBundle(t *testing.T) {
+	_, file, _, _ := runtime.Caller(0)
+	join := filepath.Join(file, "../resources/bundles")
+	tar, _ := compressionsupport.TarFromPath(join)
+	var buffer bytes.Buffer
+	_ = compressionsupport.Gzip(&buffer, tar)
+	rand.Seed(time.Now().UnixNano())
+	path := filepath.Join(t.TempDir(), fmt.Sprintf("test-bundles/.bundle-%d", rand.Uint64()))
+
+	m := testsupport.NewMockHTTPClient()
+	m.ResponseBody["someURL"] = buffer.Bytes()
+	client := openpolicyagent.HTTPBundleClient{BundleServerURL: "someURL", HttpClient: m}
+
+	data, err := client.GetDataFromBundle(path)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expectedBundleData, string(data))
+}
+
+func TestHTTPBundleClient_GetExpressionFromBundle_withBadTar(t *testing.T) {
+	_, file, _, _ := runtime.Caller(0)
+	join := filepath.Join(file, "../resources/bundles")
+	tar, _ := compressionsupport.TarFromPath(join)
+	var buffer bytes.Buffer
+	_ = compressionsupport.Gzip(&buffer, tar)
+
+	m := testsupport.NewMockHTTPClient()
+	m.ResponseBody["someURL"] = buffer.Bytes()
+	client := openpolicyagent.HTTPBundleClient{BundleServerURL: "someURL", HttpClient: m}
+
+	_, err := client.GetDataFromBundle("/badPath")
+
+	assert.Contains(t, err.Error(), "unable to untar to path")
+}
+
+func TestHTTPBundleClient_GetExpressionFromBundle_withBadRequest(t *testing.T) {
+	m := testsupport.NewMockHTTPClient()
+	m.Err = errors.New("oops")
+	client := openpolicyagent.HTTPBundleClient{BundleServerURL: "someURL", HttpClient: m}
+
+	_, err := client.GetDataFromBundle(os.TempDir())
+
+	assert.EqualError(t, err, "oops")
+}
+
+func TestHTTPBundleClient_GetExpressionFromBundle_withBadGzip(t *testing.T) {
+	m := testsupport.NewMockHTTPClient()
+	m.ResponseBody["someURL"] = []byte("bad gzip")
+	client := openpolicyagent.HTTPBundleClient{BundleServerURL: "someURL", HttpClient: m}
+
+	_, err := client.GetDataFromBundle("")
+
+	assert.Contains(t, err.Error(), "unable to ungzip")
+}
