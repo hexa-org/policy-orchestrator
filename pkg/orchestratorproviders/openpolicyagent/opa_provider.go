@@ -84,8 +84,7 @@ type Object struct {
 
 func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, appInfo orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
 	key := integration.Key
-	// todo - rename to configure client
-	client, err := o.EnsureClientIsAvailable(key)
+	client, err := o.ConfigureClient(key)
 	if err != nil {
 		log.Printf("open-policy-agent, unable to build client: %s", err)
 		return nil, fmt.Errorf("invalid client: %w", err)
@@ -136,7 +135,7 @@ func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, ap
 	}
 
 	key := integration.Key
-	client, err := o.EnsureClientIsAvailable(key)
+	client, err := o.ConfigureClient(key)
 	if err != nil {
 		log.Printf("open-policy-agent, unable to build client: %s", err)
 		return http.StatusInternalServerError, fmt.Errorf("invalid client: %w", err)
@@ -232,7 +231,7 @@ func (o *OpaProvider) credentials(key []byte) (credentials, error) {
 	return foundCredentials, nil
 }
 
-func (o *OpaProvider) EnsureClientIsAvailable(key []byte) (BundleClient, error) {
+func (o *OpaProvider) ConfigureClient(key []byte) (BundleClient, error) {
 	// todo - do we need ResourcesDirectory here? Are we using it?
 	if o.ResourcesDirectory == "" {
 		_, file, _, _ := runtime.Caller(0)
