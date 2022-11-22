@@ -113,7 +113,7 @@ func TestOpaProvider_EnsureClientIsAvailable(t *testing.T) {
 			resourcesDirectory := filepath.Join(file, "../resources")
 			p := openpolicyagent.OpaProvider{ResourcesDirectory: resourcesDirectory}
 
-			client, err := p.EnsureClientIsAvailable(tt.key)
+			client, err := p.ConfigureClient(tt.key)
 
 			assert.NoError(t, err)
 			assert.NotNil(t, client)
@@ -126,7 +126,7 @@ func TestOpaProvider_EnsureClientIsAvailable_Error(t *testing.T) {
 	key := []byte("bad key")
 	p := openpolicyagent.OpaProvider{}
 
-	_, err := p.EnsureClientIsAvailable(key)
+	_, err := p.ConfigureClient(key)
 
 	assert.Contains(t, err.Error(), "invalid integration key")
 
@@ -137,7 +137,7 @@ func TestOpaProvider_EnsureClientIsAvailable_Error(t *testing.T) {
 }
 `)
 	p = openpolicyagent.OpaProvider{}
-	_, err = p.EnsureClientIsAvailable(key)
+	_, err = p.ConfigureClient(key)
 
 	assert.Contains(t, err.Error(), "unable to create GCS storage client")
 }
@@ -246,8 +246,8 @@ func TestSetPolicyInfo_withInvalidArguments(t *testing.T) {
 		[]policysupport.PolicyInfo{
 			{
 				Actions: []policysupport.ActionInfo{{"http:GET"}}, Subject: policysupport.SubjectInfo{Members: []string{"allusers"}}, Object: policysupport.ObjectInfo{
-				ResourceID: "aResourceId",
-			}},
+					ResourceID: "aResourceId",
+				}},
 		},
 	)
 
