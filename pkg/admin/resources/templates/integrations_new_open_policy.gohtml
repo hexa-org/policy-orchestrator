@@ -12,8 +12,9 @@
                     Add Open Policy Agent support by uploading your hexa-open-policy-agent integration configuration
                     file.
                 </p>
-                <label class="file">Choose a integration configuration file<input type="file" name="key"/>
+                <label class="file">Choose a integration configuration file<input id="key-file" type="file"/>
                 </label>
+                <p id="key-file-name"></p>
             </fieldset>
 
             <input type="submit" value="Install Cloud Provider" class="button"/>
@@ -59,3 +60,9 @@
 }</code></pre>
     </div>
 {{- end}}
+
+<script>
+    document.getElementById("key-file").addEventListener("change", (e) => {
+        document.getElementById("key-file-name").innerHTML = e.target.files[0].name
+    })
+</script>

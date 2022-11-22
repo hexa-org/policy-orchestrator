@@ -13,8 +13,9 @@
                 </p>
                 <label class="file">
                     Choose a private key file
-                    <input type="file" name="key"/>
+                    <input id="key-file" type="file" name="key"/>
                 </label>
+                <p id="key-file-name"></p>
             </fieldset>
 
             <input type="submit" value="Install Cloud Provider" class="button"/>
@@ -41,3 +42,9 @@
 </pre>
     </div>
 {{- end}}
+
+<script>
+    document.getElementById("key-file").addEventListener("change", (e) => {
+        document.getElementById("key-file-name").innerHTML = e.target.files[0].name
+    })
+</script>

@@ -11,8 +11,9 @@
                 <p>
                     Add a AWS access keys by uploading your security credentials file.
                 </p>
-                <label class="file">Choose a security credentials file<input type="file" name="key"/>
+                <label class="file">Choose a security credentials file<input id="key-file" type="file" name="key"/>
                 </label>
+                <p id="key-file-name"></p>
             </fieldset>
 
             <input type="submit" value="Install Cloud Provider" class="button"/>
@@ -32,3 +33,9 @@
 </pre>
     </div>
 {{- end}}
+
+<script>
+    document.getElementById("key-file").addEventListener("change", (e) => {
+        document.getElementById("key-file-name").innerHTML = e.target.files[0].name
+    })
+</script>
