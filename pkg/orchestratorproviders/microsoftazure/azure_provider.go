@@ -1,10 +1,12 @@
 package microsoftazure
 
 import (
+	"errors"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
 	"net/http"
 	"strings"
 )
@@ -38,18 +40,17 @@ func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 	principal, _ := azureClient.GetServicePrincipals(key, applicationInfo.Description) // todo - description is named poorly
 	assignments, _ := azureClient.GetAppRoleAssignedTo(key, principal.List[0].ID)
 
-	var appRoleId string
-	var users []string
-	for _, assignment := range assignments.List {
+	appRoleId := fmt.Sprintf("azure:%s", assignments.List[0].AppRoleId)
+
+	users := workflowsupport.ProcessAsync[string, AzureAppRoleAssignment](assignments.List, func(assignment AzureAppRoleAssignment) (string, error) {
 		user, _ := azureClient.GetUserInfoFromPrincipalId(key, assignment.PrincipalId)
-		appRoleId = fmt.Sprintf("azure:%s", assignment.AppRoleId)
 
 		if user.Email == "" {
-			continue
+			return "", errors.New("no email")
 		}
 
-		users = append(users, fmt.Sprintf("user:%s", user.Email))
-	}
+		return fmt.Sprintf("user:%s", user.Email), nil
+	})
 
 	policies = append(policies, policysupport.PolicyInfo{
 		Meta:    policysupport.MetaInfo{Version: "0.5"},

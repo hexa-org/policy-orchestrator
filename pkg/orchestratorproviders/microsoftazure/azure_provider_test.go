@@ -1,14 +1,13 @@
 package microsoftazure_test
 
 import (
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
-	"net/http"
-	"testing"
-
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/orchestratorproviders/microsoftazure"
 	"github.com/hexa-org/policy-orchestrator/pkg/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 	"github.com/stretchr/testify/assert"
+	"net/http"
+	"testing"
 )
 
 func mockClientSetup() *testsupport.MockHTTPClient {
@@ -17,6 +16,7 @@ func mockClientSetup() *testsupport.MockHTTPClient {
 	m.ResponseBody["https://graph.microsoft.com/v1.0/servicePrincipals?$search=\"appId:aDescription\""] = []byte("{\"value\":[{\"id\":\"aToken\"}]}")
 	m.ResponseBody["https://graph.microsoft.com/v1.0/users/aPrincipalId"] = []byte("{\"mail\":\"anEmail@example.com\"}")
 	m.ResponseBody["https://graph.microsoft.com/v1.0/servicePrincipals/aToken/appRoleAssignedTo"] = []byte(`
+
 {
   "value": [
     {
