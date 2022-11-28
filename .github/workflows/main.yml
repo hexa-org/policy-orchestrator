@@ -94,11 +94,15 @@ jobs:
           credentials_json: '${{ secrets.HEXA_DEMO_GOOGLE_CREDENTIALS }}'
       - name: 'set up cloud sdk'
         uses: 'google-github-actions/setup-gcloud@v0'
-      - id: 'gcloud'
-        name: 'build and store hexa demo image'
+      - name: 'build and store hexa demo image'
         run: |-
           gcloud builds submit --pack image=gcr.io/hexa-orchestration/hexa-demos:${{ github.sha }},builder=heroku/buildpacks:20
           gcloud container images add-tag gcr.io/hexa-orchestration/hexa-demos:${{ github.sha }} gcr.io/hexa-orchestration/hexa-demos:latest
+      - name: 'build opa for gcloud'
+        run: |-
+          cd deployments/opa-server
+          gcloud builds submit --tag gcr.io/hexa-orchestration/opa:${{ github.sha }}
+          gcloud container images add-tag gcr.io/hexa-orchestration/opa:${{ github.sha }} gcr.io/hexa-orchestration/opa:latest
   google-deploy-hexa-demos:
     runs-on: ubuntu-latest
     needs: [ google-container ]
@@ -110,8 +114,7 @@ jobs:
           credentials_json: '${{ secrets.HEXA_DEMO_GOOGLE_CREDENTIALS }}'
       - name: 'set up cloud sdk'
         uses: 'google-github-actions/setup-gcloud@v0'
-      - id: 'gcloud'
-        name: 'gcloud'
+      - name: 'deploy hexa-demo to cloud run'
         run: |-
           gcloud run deploy hexa-demo --image gcr.io/hexa-orchestration/hexa-demos:${{ github.sha }} --region us-central1 --platform managed --command=demo
   google-deploy-opa:
@@ -125,10 +128,9 @@ jobs:
           credentials_json: '${{ secrets.HEXA_DEMO_GOOGLE_CREDENTIALS }}'
       - name: 'set up cloud sdk'
         uses: 'google-github-actions/setup-gcloud@v0'
-      - id: 'gcloud'
-        name: 'gcloud'
+      - name: 'deploy opa to cloud run'
         run: |-
-          gcloud run deploy hexa-opa --image openpolicyagent/opa --region us-central1 --platform managed --command="run --server --addr :8080"
+          gcloud run deploy opa --image gcr.io/hexa-orchestration/opa:${{ github.sha }} --region us-central1 --platform managed
 
   azure-container:
     runs-on: ubuntu-latest
