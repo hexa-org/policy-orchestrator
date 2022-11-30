@@ -130,7 +130,7 @@ jobs:
         uses: 'google-github-actions/setup-gcloud@v0'
       - name: 'deploy opa to cloud run'
         run: |-
-          gcloud run deploy opa --image gcr.io/hexa-orchestration/opa:${{ github.sha }} --region us-central1 --platform managed
+          gcloud run deploy hexa-demo-opa-server --image gcr.io/hexa-orchestration/opa:${{ github.sha }} --region us-central1 --platform managed
 
   azure-container:
     runs-on: ubuntu-latest
