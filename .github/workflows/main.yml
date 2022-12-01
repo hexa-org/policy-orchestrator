@@ -1,5 +1,7 @@
 name: build
 on: push
+env:
+  ORCHESTRATOR_KEY: 0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -16,6 +18,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
@@ -116,7 +119,54 @@ jobs:
         uses: 'google-github-actions/setup-gcloud@v0'
       - name: 'deploy hexa-demo to cloud run'
         run: |-
-          gcloud run deploy hexa-demo --image gcr.io/hexa-orchestration/hexa-demos:${{ github.sha }} --region us-central1 --platform managed --command=demo
+          gcloud run deploy hexa-demo \
+            --image gcr.io/hexa-orchestration/hexa-demos:${{ github.sha }} \
+            --region us-central1 \
+            --platform managed \
+            --command=demo
+  google-deploy-hexa-admin:
+    runs-on: ubuntu-latest
+    needs: [ google-container ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: 'authenticate to google cloud'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ secrets.HEXA_DEMO_GOOGLE_CREDENTIALS }}'
+      - name: 'set up cloud sdk'
+        uses: 'google-github-actions/setup-gcloud@v0'
+      - name: 'deploy hexa admin to cloud run'
+        run: |-
+          gcloud run deploy hexa-demo-admin-server \
+            --image gcr.io/hexa-orchestration/hexa-demos:${{ github.sha }} \
+            --region us-central1 \
+            --platform managed \
+            --command=admin \
+            --port=8884 \
+            --set-env-vars ORCHESTRATOR_URL=${{ secrets.HEXA_DEMO_ORCHESTRATOR_URL }} \
+            --set-env-vars ORCHESTRATOR_KEY=${{ env.ORCHESTRATOR_KEY }}
+  google-deploy-hexa-orchestrator:
+    runs-on: ubuntu-latest
+    needs: [ google-container ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: 'authenticate to google cloud'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ secrets.HEXA_DEMO_GOOGLE_CREDENTIALS }}'
+      - name: 'set up cloud sdk'
+        uses: 'google-github-actions/setup-gcloud@v0'
+      - name: 'deploy hexa orchestrator to cloud run'
+        run: |-
+          gcloud run deploy hexa-demo-orchestrator-server \
+            --image gcr.io/hexa-orchestration/hexa-demos:${{ github.sha }} \
+            --region us-central1 \
+            --platform managed \
+            --command=orchestrator \
+            --port=8885 \
+            --set-env-vars ORCHESTRATOR_HOSTPORT=hexa-orchestrator:8885 \
+            --set-env-vars ORCHESTRATOR_KEY=${{ env.ORCHESTRATOR_KEY }} \
+            --set-env-vars POSTGRESQL_URL=${{ secrets.HEXA_DEMO_ORCHESTRATOR_POSTGRESQL_URL }}
   google-deploy-opa:
     runs-on: ubuntu-latest
     needs: [ google-container ]
