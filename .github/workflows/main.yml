@@ -168,11 +168,11 @@ jobs:
             --platform managed \
             --command=admin \
             --port=8884 \
-            --set-env-vars ORCHESTRATOR_URL=${{ secrets.HEXA_DEMO_ORCHESTRATOR_URL }} \
+            --set-env-vars ORCHESTRATOR_URL=${{ secrets.HEXA_DEMO_GOOGLE_ORCHESTRATOR_URL }} \
             --set-env-vars ORCHESTRATOR_KEY=${{ env.ORCHESTRATOR_KEY }}
   google-deploy-hexa-orchestrator:
     runs-on: ubuntu-latest
-    needs: [ google-container ]
+    needs: [ google-container, google-migrate-orchestrator-db ]
     steps:
       - uses: actions/checkout@v3
       - name: 'authenticate to google cloud'
@@ -189,9 +189,9 @@ jobs:
             --platform managed \
             --command=orchestrator \
             --port=8885 \
-            --set-env-vars ORCHESTRATOR_HOSTPORT=hexa-orchestrator:8885 \
+            --set-env-vars ORCHESTRATOR_HOSTPORT=${{secrets.HEXA_DEMO_GOOGLE_ORCHESTRATOR_HOSTPORT}} \
             --set-env-vars ORCHESTRATOR_KEY=${{ env.ORCHESTRATOR_KEY }} \
-            --set-env-vars POSTGRESQL_URL=${{ secrets.HEXA_DEMO_ORCHESTRATOR_POSTGRESQL_URL }}
+            --set-env-vars POSTGRESQL_URL=${{ secrets.HEXA_DEMO_GOOGLE_ORCHESTRATOR_POSTGRESQL_URL }}
   google-deploy-opa:
     runs-on: ubuntu-latest
     needs: [ google-container ]
