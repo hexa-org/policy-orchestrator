@@ -29,10 +29,19 @@ type response struct {
 	Pass string `json:"pass"`
 }
 
-func HealthHandlerFunction(w http.ResponseWriter, r *http.Request) {
-	checks := make([]HealthCheck, 0)
-	checks = append(checks, &NoopCheck{})
-	HealthHandlerFunctionWithChecks(w, r, checks)
+type HealthInfo struct {
+	Status string `json:"status"`
+}
+
+type httpClient interface {
+	Get(url string) (*http.Response, error)
+}
+
+func HealthHandlerFunction(w http.ResponseWriter, _ *http.Request) {
+	data, _ := json.Marshal(&HealthInfo{"pass"})
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(data)
 }
 
 func HealthHandlerFunctionWithChecks(w http.ResponseWriter, _ *http.Request, checks []HealthCheck) { // todo - move to func?
@@ -50,10 +59,10 @@ func HealthHandlerFunctionWithChecks(w http.ResponseWriter, _ *http.Request, che
 }
 
 func WaitForHealthy(server *http.Server) {
-	WaitForHealthyWithClient(server, &http.Client{}, fmt.Sprintf("http://%s/health", server.Addr))
+	WaitForHealthyWithClient(server, http.DefaultClient, fmt.Sprintf("http://%s/health", server.Addr))
 }
 
-func WaitForHealthyWithClient(server *http.Server, client *http.Client, url string) {
+func WaitForHealthyWithClient(server *http.Server, client httpClient, url string) {
 	var isLive bool
 	for !isLive {
 		resp, err := client.Get(url)
