@@ -2,9 +2,11 @@ package websupport
 
 import (
 	"context"
+	"crypto/tls"
 	"log"
 	"net"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
@@ -79,4 +81,22 @@ func StartWithTLS(server *http.Server, l net.Listener) {
 func Stop(server *http.Server) {
 	log.Printf("Stopping the server.")
 	_ = server.Shutdown(context.Background())
+}
+
+func WithTransportLayerSecurity(certFile, keyFile string, app *http.Server) {
+	cert, certErr := os.ReadFile(certFile)
+	if certErr != nil {
+		panic(certErr.Error())
+	}
+	key, keyErr := os.ReadFile(keyFile)
+	if keyErr != nil {
+		panic(certErr.Error())
+	}
+	pair, pairErr := tls.X509KeyPair(cert, key)
+	if pairErr != nil {
+		panic(pairErr.Error())
+	}
+	app.TLSConfig = &tls.Config{
+		Certificates: []tls.Certificate{pair},
+	}
 }

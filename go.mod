@@ -18,6 +18,7 @@ require (
 	github.com/prometheus/client_golang v1.12.1
 	github.com/stretchr/testify v1.7.0
 	google.golang.org/api v0.97.0
+	gopkg.in/square/go-jose.v2 v2.6.0
 )
 
 require (
