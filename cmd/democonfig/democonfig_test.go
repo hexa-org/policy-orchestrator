@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/hexa-org/policy-orchestrator/internal/compressionsupport"
 	"mime/multipart"
 	"net"
 	"net/http"
@@ -14,7 +15,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 	"github.com/stretchr/testify/assert"

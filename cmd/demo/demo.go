@@ -3,6 +3,8 @@ package main
 import (
 	"embed"
 	"fmt"
+	"github.com/hexa-org/policy-orchestrator/internal/decisionsupport"
+	"github.com/hexa-org/policy-orchestrator/internal/decisionsupportproviders"
 	"log"
 	"net"
 	"net/http"
@@ -15,8 +17,6 @@ import (
 	"github.com/hexa-org/policy-orchestrator/cmd/demo/amazonsupport"
 	"github.com/hexa-org/policy-orchestrator/cmd/demo/azuresupport"
 	"github.com/hexa-org/policy-orchestrator/cmd/demo/googlesupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/decisionsupportproviders"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 )
 

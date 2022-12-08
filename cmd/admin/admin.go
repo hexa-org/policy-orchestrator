@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/hexa-org/policy-orchestrator/internal/admin"
 	"log"
 	"net"
 	"net/http"
 	"os"
 
-	"github.com/hexa-org/policy-orchestrator/pkg/admin"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 )
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"fmt"
+	"github.com/hexa-org/policy-orchestrator/internal/compressionsupport"
 	"io/fs"
 	"log"
 	"math/rand"
@@ -17,7 +18,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
 )
 
