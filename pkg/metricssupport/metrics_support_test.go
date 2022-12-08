@@ -3,14 +3,16 @@ package metricssupport_test
 import (
 	"context"
 	"fmt"
+	"github.com/hexa-org/policy-orchestrator/pkg/metricssupport"
+	"log"
+
+	"github.com/gorilla/mux"
+
 	"io"
 	"net"
 	"net/http"
 	"testing"
 
-	"github.com/gorilla/mux"
-	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/metricssupport"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,9 +22,6 @@ func TestMetrics(t *testing.T) {
 	router.Use(metricssupport.MetricsMiddleware)
 	router.Path("/metrics").Handler(metricssupport.MetricsHandler())
 
-	// note - needed for health check below
-	router.HandleFunc("/health", healthsupport.HealthHandlerFunction).Methods("GET")
-
 	server := &http.Server{
 		Addr:    listener.Addr().String(),
 		Handler: router,
@@ -30,10 +29,21 @@ func TestMetrics(t *testing.T) {
 	go func() {
 		_ = server.Serve(listener)
 	}()
-	healthsupport.WaitForHealthy(server)
+	waitForHealthy(server)
 
 	resp, _ := http.Get(fmt.Sprintf("http://%s/metrics", server.Addr))
 	body, _ := io.ReadAll(resp.Body)
-	assert.Contains(t, string(body), "TYPE any_request_duration_seconds histogram")
+	assert.Contains(t, string(body), "{}")
 	_ = server.Shutdown(context.Background())
+}
+
+func waitForHealthy(server *http.Server) {
+	var isLive bool
+	for !isLive {
+		resp, err := http.Get(fmt.Sprintf("http://%s/metrics", server.Addr))
+		if err == nil && resp.StatusCode == http.StatusOK {
+			log.Println("Server is healthy.", server.Addr)
+			isLive = true
+		}
+	}
 }

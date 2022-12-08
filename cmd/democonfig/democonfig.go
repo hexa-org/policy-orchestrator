@@ -135,16 +135,15 @@ func newApp(addr string) (*http.Server, net.Listener) {
 		}
 	}
 
+	if certFile := os.Getenv("SERVER_CERT_PATH"); certFile != "" {
+		keyFile := os.Getenv("SERVER_KEY_PATH")
+		websupport.WithTransportLayerSecurity(certFile, keyFile, app)
+	}
+
 	return app, listener
 }
 
 func main() {
 	app, listener := newApp("0.0.0.0:8889")
-
-	if os.Getenv("SERVER_KEY") != "" && os.Getenv("SERVER_CERT") != "" {
-		websupport.StartWithTLS(app, listener)
-		return
-	}
-
 	websupport.Start(app, listener)
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"database/sql"
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
@@ -83,37 +82,17 @@ func newApp(addr string) (*http.Server, net.Listener, *workflowsupport.WorkSched
 	hostPort := os.Getenv("ORCHESTRATOR_HOSTPORT")
 	listener, _ := net.Listen("tcp", addr)
 	app, scheduler := App(key, listener.Addr().String(), hostPort, dbUrl)
-	if certFile := os.Getenv("SERVER_CERT"); certFile != "" {
-		keyFile := os.Getenv("SERVER_KEY")
-		withTransportLayerSecurity(certFile, keyFile, app)
-	}
-	return app, listener, scheduler
-}
 
-func withTransportLayerSecurity(certFile, keyFile string, app *http.Server) {
-	cert, certErr := os.ReadFile(certFile)
-	if certErr != nil {
-		panic(certErr.Error())
+	if certFile := os.Getenv("SERVER_CERT_PATH"); certFile != "" {
+		keyFile := os.Getenv("SERVER_KEY_PATH")
+		websupport.WithTransportLayerSecurity(certFile, keyFile, app)
 	}
-	key, keyErr := os.ReadFile(keyFile)
-	if keyErr != nil {
-		panic(certErr.Error())
-	}
-	pair, pairErr := tls.X509KeyPair(cert, key)
-	if pairErr != nil {
-		panic(pairErr.Error())
-	}
-	app.TLSConfig = &tls.Config{
-		Certificates: []tls.Certificate{pair},
-	}
+
+	return app, listener, scheduler
 }
 
 func main() {
 	app, listener, scheduler := newApp("0.0.0.0:8885")
 	scheduler.Start()
-	if certFile := os.Getenv("SERVER_CERT"); certFile != "" {
-		websupport.StartWithTLS(app, listener)
-	} else {
-		websupport.Start(app, listener)
-	}
+	websupport.Start(app, listener)
 }

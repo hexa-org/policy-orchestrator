@@ -60,20 +60,19 @@ func Create(addr string, handlers func(x *mux.Router), options Options) *http.Se
 }
 
 func Start(server *http.Server, l net.Listener) {
-	log.Println("Starting the server.", server.Addr)
+	if server.TLSConfig != nil {
+		log.Println("Starting the server with tls support", server.Addr)
+		err := server.ServeTLS(l, "", "")
+		if err != nil {
+			log.Println("error starting the server:", err.Error())
+			return
+		}
+	}
+
+	log.Println("Starting the server", server.Addr)
 	err := server.Serve(l)
 	if err != nil {
-		return
-	}
-}
-
-func StartWithTLS(server *http.Server, l net.Listener) {
-	if server.TLSConfig == nil {
-		panic("tls not configured.")
-	}
-	log.Println("Starting the server with tls support.", server.Addr)
-	err := server.ServeTLS(l, "", "")
-	if err != nil {
+		log.Println("error starting the server:", err.Error())
 		return
 	}
 }

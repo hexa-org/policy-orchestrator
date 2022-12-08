@@ -40,7 +40,7 @@ func TestAppWithTransportLayerSecurity(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	configureWithTransportLayerSecurity(file, app)
 	go func() {
-		websupport.StartWithTLS(app, listener)
+		websupport.Start(app, listener)
 		scheduler.Start()
 	}()
 
@@ -77,27 +77,6 @@ func TestConfigWithTransportLayerSecurity(t *testing.T) {
 	t.Setenv("SERVER_CERT", filepath.Join(file, "../test/server-cert.pem"))
 	t.Setenv("SERVER_KEY", filepath.Join(file, "../test/server-key.pem"))
 	newApp("localhost:0")
-}
-
-func TestConfigWithTransportLayerSecurity_withBadCertFile(t *testing.T) {
-	t.Setenv("SERVER_CERT", "notAFile")
-
-	assert.Panics(t, func() { newApp("localhost:0") })
-}
-
-func TestConfigWithTransportLayerSecurity_withBadKeyFile(t *testing.T) {
-	_, file, _, _ := runtime.Caller(0)
-	t.Setenv("SERVER_CERT", filepath.Join(file, "../test/server-cert.pem"))
-	t.Setenv("SERVER_KEY", "notAFile")
-
-	assert.Panics(t, func() { newApp("localhost:0") })
-}
-
-func TestConfigWithTransportLayerSecurity_withBad509(t *testing.T) {
-	_, file, _, _ := runtime.Caller(0)
-	t.Setenv("SERVER_CERT", filepath.Join(file, "../test/server-cert.pem"))
-
-	assert.Panics(t, func() { newApp("localhost:0") })
 }
 
 // supporting functions

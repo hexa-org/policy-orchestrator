@@ -2,7 +2,6 @@ package websupport_test
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"io"
 	"net"
@@ -31,38 +30,21 @@ func TestServer(t *testing.T) {
 
 	resp, _ = http.Get(fmt.Sprintf("http://%s/metrics", server.Addr))
 	body, _ = io.ReadAll(resp.Body)
-	assert.Contains(t, string(body), "TYPE any_request_duration_seconds histogram")
+	assert.Contains(t, string(body), "{}")
 
 	websupport.Stop(server)
 }
 
-func TestServerWithTLS(t *testing.T) {
+func TestWithTransportLayerSecurity(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
+	certPath := filepath.Join(file, "../test/certs/server-cert.pem")
+	keyPath := filepath.Join(file, "../test/certs/server-key.pem")
 
-	listener, _ := net.Listen("tcp", "localhost:0")
-	server := websupport.Create(listener.Addr().String(), func(x *mux.Router) {}, websupport.Options{})
-	configureWithTransportLayerSecurity(file, server)
-	go websupport.StartWithTLS(server, listener)
+	server := &http.Server{}
 
-	caCert := must(os.ReadFile(filepath.Join(file, "../test/ca-cert.pem")))
-	clientCert, _ := tls.X509KeyPair(
-		must(os.ReadFile(filepath.Join(file, "../test/client-cert.pem"))),
-		must(os.ReadFile(filepath.Join(file, "../test/client-key.pem"))),
-	)
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
+	websupport.WithTransportLayerSecurity(certPath, keyPath, server)
 
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				Certificates: []tls.Certificate{clientCert},
-				RootCAs:      caCertPool,
-			},
-		},
-	}
-	healthsupport.WaitForHealthyWithClient(server, client, fmt.Sprintf("https://%s/health", server.Addr))
-
-	websupport.Stop(server)
+	assert.NotNil(t, server.TLSConfig)
 }
 
 func TestPaths(t *testing.T) {

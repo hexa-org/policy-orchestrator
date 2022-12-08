@@ -87,7 +87,7 @@ func TestNewAppWithTransportLayerSecurity(t *testing.T) {
 	app, listener := newApp("localhost:0")
 
 	go func() {
-		websupport.StartWithTLS(app, listener)
+		websupport.Start(app, listener)
 	}()
 	defer websupport.Stop(app)
 
