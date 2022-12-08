@@ -31,5 +31,8 @@ func ModelAndView(w http.ResponseWriter, resources fs.FS, view string, data Mode
 		"startsWith": func(s string, prefix string) bool {
 			return strings.HasPrefix(s, prefix)
 		},
+		"substring": func(s string, start int, end int) string {
+			return s[start:end]
+		},
 	}).ParseFS(resources, views...)).Execute(w, data)
 }
