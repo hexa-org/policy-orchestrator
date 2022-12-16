@@ -29,7 +29,11 @@ services:
     command: demo
     environment:
       PORT: 8886
+      SERVER_CERT: "/home/certs/server-cert.pem"
+      SERVER_KEY: "/home/certs/server-key.pem"
       OPA_SERVER_URL: http://opa-agent:8887/v1/data/authz/allow
+    volumes:
+      - "./certs:/home/certs:ro"
 
   demo-app-config:
     image: hexa

@@ -148,7 +148,11 @@ jobs:
             --image gcr.io/hexa-orchestration/hexa-demos:${{ github.sha }} \
             --region us-central1 \
             --platform managed \
-            --command=demo
+            --command=demo \
+            --set-env-vars SERVER_CERT=/certs/server-cert/server-cert.pem \
+            --set-env-vars SERVER_KEY=/certs/server-key/server-key.pem \
+            --set-env-vars OPA_SERVER_URL=${{ secrets.HEXA_DEMO_GOOGLE_OPA_URL }}
+
   google-deploy-hexa-admin:
     runs-on: ubuntu-latest
     needs: [ google-container ]
@@ -170,6 +174,7 @@ jobs:
             --port=8884 \
             --set-env-vars ORCHESTRATOR_URL=${{ secrets.HEXA_DEMO_GOOGLE_ORCHESTRATOR_URL }} \
             --set-env-vars ORCHESTRATOR_KEY=${{ env.ORCHESTRATOR_KEY }}
+
   google-deploy-hexa-orchestrator:
     runs-on: ubuntu-latest
     needs: [ google-container, google-migrate-orchestrator-db ]

@@ -27,7 +27,6 @@ import (
 	"encoding/pem"
 	"log"
 	"math/big"
-	"net"
 	"os"
 	"time"
 )
@@ -45,10 +44,12 @@ func certsetup() (err error) {
 	ca := &x509.Certificate{
 		SerialNumber: big.NewInt(2019),
 		Subject: pkix.Name{
-			Organization: []string{"Strata Identity"},
-			Country:      []string{"US"},
-			Province:     []string{"CO"},
-			Locality:     []string{"Boulder"},
+			Organization:       []string{"Strata Identity"},
+			Country:            []string{"US"},
+			Province:           []string{"CO"},
+			Locality:           []string{"Boulder"},
+			OrganizationalUnit: []string{"CA"},
+			CommonName:         "Hexa Identity Demo Certificate Authority",
 		},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().AddDate(10, 0, 0),
@@ -149,8 +150,14 @@ func generateCert(
 			Country:      []string{"US"},
 			Province:     []string{"CO"},
 			Locality:     []string{"Boulder"},
+			CommonName:   "Hexa Identity Demo Certificate Authority",
 		},
-		IPAddresses:  []net.IP{net.IPv4(127, 0, 0, 1), net.IPv6loopback},
+
+		DNSNames: []string{
+			"localhost",
+			"hexa-demo-yqghonxs3a-uc.a.run.app",
+		},
+		//IPAddresses:  []net.IP{net.IPv4(127, 0, 0, 1), net.IPv6loopback},
 		NotBefore:    time.Now(),
 		NotAfter:     time.Now().AddDate(10, 0, 0),
 		SubjectKeyId: []byte{1, 2, 3, 4, 6},

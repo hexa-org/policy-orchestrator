@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"embed"
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/internal/decisionsupport"
@@ -135,7 +136,6 @@ func newApp(addr string) (*http.Server, net.Listener) {
 
 	_, file, _, _ := runtime.Caller(0)
 	resourcesDirectory := filepath.Join(file, "../../../cmd/demo/resources")
-	listener, _ := net.Listen("tcp", addr)
 	var session = sessions.NewCookieStore([]byte(os.Getenv(key)))
 	amazon := amazonsupport.AmazonCognitoConfiguration{
 		Region:               os.Getenv("AWS_REGION"),
@@ -145,7 +145,36 @@ func newApp(addr string) (*http.Server, net.Listener) {
 		UserPoolClientId:     os.Getenv("AWS_COGNITO_USER_POOL_CLIENT_ID"),
 		UserPoolClientSecret: os.Getenv("AWS_COGNITO_USER_POOL_CLIENT_SECRET"),
 	}
-	return App(session, amazon, &http.Client{}, opaUrl, listener.Addr().String(), resourcesDirectory), listener
+
+	listener, _ := net.Listen("tcp", addr)
+	app := App(session, amazon, &http.Client{}, opaUrl, listener.Addr().String(), resourcesDirectory)
+
+	serverCertPath := os.Getenv("SERVER_CERT")
+	serverKeyPath := os.Getenv("SERVER_KEY")
+	if serverKeyPath != "" && serverCertPath != "" {
+		key, err := os.ReadFile(serverKeyPath)
+		if err != nil {
+			panic(fmt.Sprintf("invalid SERVER_KEY path: %s", err))
+		}
+		cert, err := os.ReadFile(serverCertPath)
+		if err != nil {
+			panic(fmt.Sprintf("invalid SERVER_CERT path: %s", err))
+		}
+		pair, err := tls.X509KeyPair(cert, key)
+		if err != nil {
+			panic(fmt.Sprintf("invalid cert/key pair: %s", err))
+		}
+		app.TLSConfig = &tls.Config{
+			Certificates: []tls.Certificate{pair},
+		}
+	}
+
+	if certFile := os.Getenv("SERVER_CERT_PATH"); certFile != "" {
+		keyFile := os.Getenv("SERVER_KEY_PATH")
+		websupport.WithTransportLayerSecurity(certFile, keyFile, app)
+	}
+
+	return app, listener
 }
 
 func main() {
