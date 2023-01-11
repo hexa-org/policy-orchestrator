@@ -113,8 +113,8 @@ go clean -testcache
   go run cmd/democonfig/democonfig.go
   ```
 
-- Run the open policy agent server locally.
-
+- Run the open policy agent server locally OR in a docker container
+  > Run open policy agent server locally
   ```bash
   opa run --server --addr :8887 -c deployments/opa-server/config/config.yaml
   ```
