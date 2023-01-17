@@ -113,19 +113,10 @@ go clean -testcache
   go run cmd/democonfig/democonfig.go
   ```
 
-- Run the open policy agent server locally OR in a docker container
-  > Run open policy agent server locally
+- Run the open policy agent server locally.
+
   ```bash
   opa run --server --addr :8887 -c deployments/opa-server/config/config.yaml
-  ```
-  > Run open policy agent server in a docker container
-  ```bash
-  # Build the container
-  cd policy-orchestrator
-  policy-orchestrator]$ docker build -t hexa-opa -f deployments/opa-server/Dockerfile deployments/opa-server/
-  
-  # Run it
-  docker run -p 8887:8887 hexa-opa run --server --log-level debug --addr :8887
   ```
 
 ## CodeQL
