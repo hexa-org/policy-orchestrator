@@ -118,6 +118,27 @@ go clean -testcache
   ```bash
   opa run --server --addr :8887 -c deployments/opa-server/config/config.yaml
   ```
+## Task: Orchestrator endpoints via Postman
+Hexa Orchestrator uses [Hawk Authentication](https://github.com/mozilla/hawk/blob/main/API.md) to allow clients to make authenticated requests.
+
+During Authentication, the client sends a MAC (Message Authentication Code) as part of the Hawk Authorization Header.
+
+The MAC is calculated using HMAC with SHA256 hashing over the `normalized request string`.
+
+The `normalized reqest string` is made up of the HOST, PORT amongst other things.
+
+If you run the Hexa Policy Orchestrator using `docker-compose up` and try to hit an orchestrator endpoint via Postman `localhost:8885`, you will get a `401 Unauthorized`
+- This is because Postman calculates the MAC using `localhost:8885`.
+- HOST and PORT that Orchestrator users to verify the MAC is specified by the `ORCHESTRATOR_HOSTPORT` environment variable in `docker-compose.yml`
+
+### Steps
+To hit the Orchestrator endpoints via Postman:
+- Remove the `ORCHESTRATOR_HOSTPORT: hexa-orchestrator:8885` environment variable from the `docker-compose.yml`
+
+NOTE: This will cause problems if you are running the admin app to do things with the orchestrator. 
+The admin app uses the orchestrator host and port when sending requests so the key would need to be added back at this time.
+
+See [Hawk authorization failing with Postman](https://github.com/hexa-org/policy-orchestrator/issues/261) for details.
 
 ## CodeQL
 
