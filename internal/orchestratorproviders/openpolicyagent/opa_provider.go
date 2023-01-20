@@ -204,6 +204,7 @@ type credentials struct {
 	BundleUrl string          `json:"bundle_url"`
 	CACert    string          `json:"ca_cert,omitempty"`
 	GCP       *gcpCredentials `json:"gcp,omitempty"`
+	AWS       *awsCredentials `json:"aws,omitempty"`
 }
 
 func (c credentials) objectID() string {
@@ -218,6 +219,8 @@ type gcpCredentials struct {
 	ObjectName string          `json:"object_name,omitempty"`
 	Key        json.RawMessage `json:"key,omitempty"`
 }
+
+type awsCredentials gcpCredentials
 
 func (o *OpaProvider) credentials(key []byte) (credentials, error) {
 	var foundCredentials credentials
@@ -248,6 +251,15 @@ func (o *OpaProvider) ConfigureClient(key []byte) (BundleClient, error) {
 			creds.GCP.BucketName,
 			creds.GCP.ObjectName,
 			creds.GCP.Key,
+		)
+	}
+
+	if creds.AWS != nil {
+		return NewAWSBundleClient(
+			creds.AWS.BucketName,
+			creds.AWS.ObjectName,
+			creds.AWS.Key,
+			AWSBundleClientOptions{},
 		)
 	}
 
