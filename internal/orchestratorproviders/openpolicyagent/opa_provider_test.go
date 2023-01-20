@@ -104,6 +104,21 @@ func TestOpaProvider_EnsureClientIsAvailable(t *testing.T) {
 `),
 			expectedClient: &openpolicyagent.GCPBundleClient{},
 		},
+		{
+			name: "aws bundle client",
+			key: []byte(`
+{
+  "aws": {
+    "bucket_name": "opa-bundles",
+    "object_name": "bundle.tar.gz",
+	"key": {
+      "region": "us-west-1"
+    }
+  }
+}
+`),
+			expectedClient: &openpolicyagent.AWSBundleClient{},
+		},
 	}
 
 	for _, tt := range tests {
@@ -133,7 +148,8 @@ func TestOpaProvider_EnsureClientIsAvailable_Error(t *testing.T) {
 	key = []byte(`
 {
   "bundle_url": "bundleURL",
-  "gcp": {"key": {"bad":"key"}}
+  "gcp": {"key": {"bad":"key"}},
+  "aws": {"key": {"bad":"key"}}
 }
 `)
 	p = openpolicyagent.OpaProvider{}
