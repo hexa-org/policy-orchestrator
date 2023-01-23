@@ -211,6 +211,11 @@ func (c credentials) objectID() string {
 	if c.GCP != nil {
 		return c.GCP.BucketName
 	}
+
+	if c.AWS != nil {
+		return c.AWS.BucketName
+	}
+	
 	return base64.StdEncoding.EncodeToString([]byte(c.BundleUrl))
 }
 
