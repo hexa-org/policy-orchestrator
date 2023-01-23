@@ -2,6 +2,7 @@ package admin_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/internal/admin"
@@ -114,11 +115,33 @@ func (suite *IntegrationsSuite) TestCreateIntegration_withAmazon() {
 
 func (suite *IntegrationsSuite) TestCreateIntegration_withOPA() {
 	suite.client.On("CreateIntegration", "http://noop/integrations").Return()
-	buf, contentType := suite.multipartFormSuccessOPA()
-	resp, _ := http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf)
-	assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
-	assert.Equal(suite.T(), "open_policy_agent", suite.client.Provider)
-	assert.Equal(suite.T(), "opa-project-id:open-policy-agent", suite.client.Name)
+	tests := []struct {
+		name     string
+		provider string
+	}{
+		{
+			name:     "bundle server",
+			provider: "bundle_server",
+		},
+		{
+			name:     "Google Cloud Platform",
+			provider: "gcp",
+		},
+		{
+			name:     "AWS S3",
+			provider: "aws",
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			buf, contentType := suite.multipartFormSuccessOPA(tt.provider)
+			resp, _ := http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf)
+			assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
+			assert.Equal(suite.T(), "open_policy_agent", suite.client.Provider)
+			assert.Equal(suite.T(), "opa-project-id:open-policy-agent", suite.client.Name)
+		})
+	}
 }
 
 func (suite *IntegrationsSuite) TestCreateIntegrationMissingKey_withAmazon() {
@@ -221,17 +244,22 @@ func (suite *IntegrationsSuite) multipartFormSuccessAmazon() (*bytes.Buffer, str
 	})
 }
 
-func (suite *IntegrationsSuite) multipartFormSuccessOPA() (*bytes.Buffer, string) {
+func (suite *IntegrationsSuite) multipartFormSuccessOPA(bundleProvider string) (*bytes.Buffer, string) {
 	return suite.multipartForm(func(writer *multipart.Writer) {
 		provider, _ := writer.CreateFormField("provider")
 		_, _ = provider.Write([]byte("open_policy_agent"))
 
+		bundleFile := make(map[string]string)
+		if bundleProvider == "bundle_server" {
+			bundleFile["bundle_url"] = "http://opa-bundle-url"
+		} else {
+			bundleFile[bundleProvider] = "{}"
+		}
+
+		bundleFile["project_id"] = "opa-project-id"
+		bundleBytes, _ := json.Marshal(bundleFile)
 		file, _ := writer.CreateFormFile("key", "aKey.json")
-		_, _ = file.Write([]byte(`{
-  "bundle_url": "http://opa-bundle-url",
-  "project_id": "opa-project-id"
-}
-`))
+		_, _ = file.Write(bundleBytes)
 	})
 }
 

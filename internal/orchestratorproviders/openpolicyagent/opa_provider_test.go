@@ -2,6 +2,7 @@ package openpolicyagent_test
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -25,10 +26,18 @@ import (
 )
 
 func TestDiscoverApplications(t *testing.T) {
+	type expected struct {
+		ProjectID string
+		ObjectID  string
+	}
+
 	tests := []struct {
-		name              string
-		key               []byte
-		expectedProjectID string
+		name     string
+		key      []byte
+		expected struct {
+			ProjectID string
+			ObjectID  string
+		}
 	}{
 		{
 			name: "with project id",
@@ -37,7 +46,8 @@ func TestDiscoverApplications(t *testing.T) {
                 "bundle_url": "aBigUrl",
                 "project_id": "some opa project"
               }`),
-			expectedProjectID: "some opa project",
+
+			expected: expected{ProjectID: "some opa project", ObjectID: base64.StdEncoding.EncodeToString([]byte("aBigUrl"))},
 		},
 		{
 			name: "without project id",
@@ -45,7 +55,39 @@ func TestDiscoverApplications(t *testing.T) {
               {
                 "bundle_url": "aBigUrl"
               }`),
-			expectedProjectID: "package authz",
+			expected: expected{ProjectID: "package authz", ObjectID: base64.StdEncoding.EncodeToString([]byte("aBigUrl"))},
+		},
+		{
+			name: "gcp bundle storage project",
+			key: []byte(`
+{
+  "project_id": "some gcp project",
+  "gcp": {
+    "bucket_name": "opa-bundles",
+    "object_name": "bundle.tar.gz",
+    "key": {
+      "type": "service_account"
+    }
+  }
+}
+`),
+			expected: expected{ProjectID: "some gcp project", ObjectID: "opa-bundles"},
+		},
+		{
+			name: "aws bundle storage project",
+			key: []byte(`
+{
+  "project_id": "some aws project",
+  "aws": {
+    "bucket_name": "opa-bundles",
+    "object_name": "bundle.tar.gz",
+	"key": {
+      "region": "us-west-1"
+    }
+  }
+}
+`),
+			expected: expected{ProjectID: "some aws project", ObjectID: "opa-bundles"},
 		},
 	}
 
@@ -57,7 +99,8 @@ func TestDiscoverApplications(t *testing.T) {
 
 			assert.NoError(t, err)
 			assert.Equal(t, 1, len(applications))
-			assert.Equal(t, tt.expectedProjectID, applications[0].Name)
+			assert.Equal(t, tt.expected.ProjectID, applications[0].Name)
+			assert.Equal(t, tt.expected.ObjectID, applications[0].ObjectID)
 			assert.Equal(t, "Open Policy Agent bundle", applications[0].Description)
 			assert.Equal(t, "Hexa OPA", applications[0].Service)
 		})
