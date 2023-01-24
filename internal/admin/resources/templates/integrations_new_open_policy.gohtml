@@ -58,6 +58,23 @@
         }
     }
 }</code></pre>
+        <h3>hexa-opa-amazon-s3-storage.json</h3>
+        <p>The key must allow
+            <a class="link" href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html">s3:PutObject</a> and
+            <a class="link" href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html">s3.GetObject</a> actions.
+        </p>
+        <pre style="padding-left: 1rem"><code>{
+  "project_id": "Hexa Industries AWS S3",
+  "aws": {
+    "bucket_name": "aws-s3-bucket-name",
+    "object_name": "bundle.tar.gz",
+    "key": {
+      "region": "aws-region",
+      "accessKeyID": "00000000000000000000",
+      "secretAccessKey": "99999999999999999999999"
+    }
+  }
+}</code></pre>
     </div>
 {{- end}}
 
