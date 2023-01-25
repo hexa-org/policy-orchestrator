@@ -10,7 +10,6 @@ import (
 	awscredentials "github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hexa-org/policy-orchestrator/internal/compressionsupport"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -90,7 +89,6 @@ func (a *AWSBundleClient) PostBundle(bundle []byte) (int, error) {
 		return http.StatusInternalServerError, fmt.Errorf("unable to write bundle object to AWS S3 bucket: %w", err)
 	}
 
-	log.Printf("wrote bundle object %q to AWS bucket %q", a.objectName, a.bucketName)
 	return http.StatusCreated, nil
 }
 
