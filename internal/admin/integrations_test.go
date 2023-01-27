@@ -131,6 +131,10 @@ func (suite *IntegrationsSuite) TestCreateIntegration_withOPA() {
 			name:     "AWS S3",
 			provider: "aws",
 		},
+		{
+			name:     "GITHUB",
+			provider: "github",
+		},
 	}
 
 	for _, tt := range tests {

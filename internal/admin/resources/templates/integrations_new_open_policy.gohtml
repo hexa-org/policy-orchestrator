@@ -75,6 +75,23 @@
     }
   }
 }</code></pre>
+        <h3>hexa-opa-github.json</h3>
+        <p>The
+            <a class="link" href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-personal-access-token-classic">
+                Github Personal Access token (classic).</a>
+            Must allow read:packages, write:packages
+        </p>
+        <pre style="padding-left: 1rem"><code>{
+  "project_id": "Hexa Industries OPA Github",
+  "github": {
+    "account": "github-org-or-account",
+    "repo": "github-repo",
+    "bundlePath": "bundle.tar.gz",
+    "key": {
+      "accessToken": "github_personal_access_token_classic"
+    }
+  }
+}</code></pre>
     </div>
 {{- end}}
 

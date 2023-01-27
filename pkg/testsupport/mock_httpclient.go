@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/stretchr/testify/mock"
@@ -14,9 +13,10 @@ type MockHTTPClient struct {
 	mock.Mock
 	Err          error
 	ResponseBody map[string][]byte
-	RequestBody  []byte
+	RequestBody  map[string][]byte
 	Url          string
-	StatusCode   int
+	StatusCode   int // TODO Fix existing tests to use the map version StatusCodes
+	StatusCodes  map[string]int
 }
 
 func NewMockHTTPClient() *MockHTTPClient {
@@ -24,32 +24,74 @@ func NewMockHTTPClient() *MockHTTPClient {
 		Mock:         mock.Mock{},
 		Err:          nil,
 		ResponseBody: make(map[string][]byte),
-		RequestBody:  nil,
+		RequestBody:  make(map[string][]byte),
 		Url:          "",
 		StatusCode:   200,
+		StatusCodes:  make(map[string]int),
 	}
 }
 
 func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
-	for url, body := range m.ResponseBody {
-		if url == req.URL.String() {
-			return &http.Response{StatusCode: 200, Body: ioutil.NopCloser(bytes.NewReader(body))}, m.Err
+	methodAndUrl := req.Method + " " + req.URL.String()
+
+	for url := range m.ResponseBody {
+		if url == req.URL.String() || url == methodAndUrl {
+			return m.sendRequest(req.Method, req.URL.String(), req.Body)
 		}
 	}
-	return nil, fmt.Errorf("Missing mock response for %s.", req.URL.String())
+	
+	return nil, fmt.Errorf("missing mock response for request")
+
 }
 
 func (m *MockHTTPClient) Get(url string) (resp *http.Response, err error) {
-	m.Url = url
-	var body []byte
-	body = m.ResponseBody[url]
-	return &http.Response{StatusCode: 200, Body: io.NopCloser(bytes.NewReader(body))}, m.Err
+	return m.sendRequest(http.MethodGet, url, nil)
 }
 
 func (m *MockHTTPClient) Post(url, _ string, body io.Reader) (resp *http.Response, err error) {
+	return m.sendRequest(http.MethodPost, url, body)
+}
+
+func (m *MockHTTPClient) sendRequest(method, url string, body io.Reader) (resp *http.Response, err error) {
 	m.Url = url
-	m.RequestBody, _ = io.ReadAll(body)
+	statusCode := m.StatusCode
+	reqKey := url
+
+	methodAndUrl := method + " " + url
+	if code, exists := m.StatusCodes[methodAndUrl]; exists {
+		reqKey = methodAndUrl
+		statusCode = code
+	}
+
+	if body != nil {
+		reqBody, _ := io.ReadAll(body)
+		m.RequestBody[reqKey] = reqBody
+	}
+
 	var responseBody []byte
-	responseBody = m.ResponseBody[url]
-	return &http.Response{StatusCode: m.StatusCode, Body: io.NopCloser(bytes.NewReader(responseBody))}, m.Err
+	responseBody = m.ResponseBody[reqKey]
+	return &http.Response{StatusCode: statusCode, Body: io.NopCloser(bytes.NewReader(responseBody))}, m.Err
+}
+
+func (m *MockHTTPClient) AddRequest(method, url string, statusCode int, responseBody []byte) {
+	reqKey := method + " " + url
+	m.StatusCodes[reqKey] = statusCode
+
+	body := responseBody
+	if responseBody == nil {
+		body = make([]byte, 0)
+	}
+	m.ResponseBody[reqKey] = body
+}
+
+func (m *MockHTTPClient) GetRequestBody(url string) []byte {
+	return m.GetRequestBodyByKey("", url)
+}
+
+func (m *MockHTTPClient) GetRequestBodyByKey(method, url string) []byte {
+	reqKey := method + " " + url
+	if _, exists := m.StatusCodes[reqKey]; exists {
+		return m.RequestBody[reqKey]
+	}
+	return m.RequestBody[url]
 }
