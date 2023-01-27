@@ -89,6 +89,23 @@ func TestDiscoverApplications(t *testing.T) {
 `),
 			expected: expected{ProjectID: "some aws project", ObjectID: "opa-bundles"},
 		},
+		{
+			name: "github bundle storage project",
+			key: []byte(`
+{
+  "project_id": "some github project",
+  "github": {
+    "account": "hexa-org",
+    "repo": "opa-bundles",
+	"bundlePath": "bundle.tar.gz",
+	"key": {
+      "accessToken": "some_github_access_token"
+    }
+  }
+}
+`),
+			expected: expected{ProjectID: "some github project", ObjectID: "opa-bundles"},
+		},
 	}
 
 	for _, tt := range tests {
@@ -162,6 +179,23 @@ func TestOpaProvider_EnsureClientIsAvailable(t *testing.T) {
 `),
 			expectedClient: &openpolicyagent.AWSBundleClient{},
 		},
+		{
+			name: "github bundle client",
+			key: []byte(`
+{
+  "project_id": "some github project",
+  "github": {
+    "account": "hexa-org",
+    "repo": "opa-bundles",
+	"bundlePath": "bundle.tar.gz",
+	"key": {
+      "accessToken": "some_github_access_token"
+    }
+  }
+}
+`),
+			expectedClient: &openpolicyagent.GithubBundleClient{},
+		},
 	}
 
 	for _, tt := range tests {
@@ -192,7 +226,8 @@ func TestOpaProvider_EnsureClientIsAvailable_Error(t *testing.T) {
 {
   "bundle_url": "bundleURL",
   "gcp": {"key": {"bad":"key"}},
-  "aws": {"key": {"bad":"key"}}
+  "aws": {"key": {"bad":"key"}},
+  "github": {"key": {"bad":"key"}}
 }
 `)
 	p = openpolicyagent.OpaProvider{}

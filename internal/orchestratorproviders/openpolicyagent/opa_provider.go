@@ -200,11 +200,12 @@ func (o *OpaProvider) MakeDefaultBundle(data []byte) (bytes.Buffer, error) {
 }
 
 type credentials struct {
-	ProjectID string          `json:"project_id,omitempty"`
-	BundleUrl string          `json:"bundle_url"`
-	CACert    string          `json:"ca_cert,omitempty"`
-	GCP       *gcpCredentials `json:"gcp,omitempty"`
-	AWS       *awsCredentials `json:"aws,omitempty"`
+	ProjectID string             `json:"project_id,omitempty"`
+	BundleUrl string             `json:"bundle_url"`
+	CACert    string             `json:"ca_cert,omitempty"`
+	GCP       *gcpCredentials    `json:"gcp,omitempty"`
+	AWS       *awsCredentials    `json:"aws,omitempty"`
+	GITHUB    *githubCredentials `json:"github,omitempty"`
 }
 
 func (c credentials) objectID() string {
@@ -215,7 +216,11 @@ func (c credentials) objectID() string {
 	if c.AWS != nil {
 		return c.AWS.BucketName
 	}
-	
+
+	if c.GITHUB != nil {
+		return c.GITHUB.Repo
+	}
+
 	return base64.StdEncoding.EncodeToString([]byte(c.BundleUrl))
 }
 
@@ -226,6 +231,13 @@ type gcpCredentials struct {
 }
 
 type awsCredentials gcpCredentials
+
+type githubCredentials struct {
+	Account    string          `json:"account,omitempty"`
+	Repo       string          `json:"repo,omitempty"`
+	BundlePath string          `json:"bundlePath,omitempty"`
+	Key        json.RawMessage `json:"key,omitempty"`
+}
 
 func (o *OpaProvider) credentials(key []byte) (credentials, error) {
 	var foundCredentials credentials
@@ -266,6 +278,15 @@ func (o *OpaProvider) ConfigureClient(key []byte) (BundleClient, error) {
 			creds.AWS.Key,
 			AWSBundleClientOptions{},
 		)
+	}
+
+	if creds.GITHUB != nil {
+		return NewGithubBundleClient(
+			creds.GITHUB.Account,
+			creds.GITHUB.Repo,
+			creds.GITHUB.BundlePath,
+			creds.GITHUB.Key,
+			GithubBundleClientOptions{})
 	}
 
 	client := &http.Client{

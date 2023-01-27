@@ -12,10 +12,11 @@ type bundleFile struct {
 	ProjectID string `json:"project_id,omitempty"`
 	GCP       any    `json:"gcp,omitempty"`
 	AWS       any    `json:"aws,omitempty"`
+	GITHUB    any    `json:"github,omitempty"`
 }
 
 func (b bundleFile) isCloudHosted() bool {
-	return b.GCP != nil || b.AWS != nil
+	return b.GCP != nil || b.AWS != nil || b.GITHUB != nil
 }
 
 type opaProvider struct {
