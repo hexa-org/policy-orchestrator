@@ -15,7 +15,7 @@ type MockHTTPClient struct {
 	ResponseBody map[string][]byte
 	RequestBody  map[string][]byte
 	Url          string
-	StatusCode   int // TODO Fix existing tests to use the map version StatusCodes
+	StatusCode   int
 	StatusCodes  map[string]int
 }
 
@@ -39,7 +39,7 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 			return m.sendRequest(req.Method, req.URL.String(), req.Body)
 		}
 	}
-	
+
 	return nil, fmt.Errorf("missing mock response for request")
 
 }
