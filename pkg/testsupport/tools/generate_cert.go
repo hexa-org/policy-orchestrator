@@ -9,7 +9,8 @@ This code was pulled and modified from the following resources:
 - https://shaneutt.com/blog/golang-ca-and-signed-cert-go/.
 
 USAGE:
-  go run generate_cert.go
+
+	go run generate_cert.go
 
 This will generate a CA cert/key pair and use that to sign Server cert/key pair
 and Client cert/key pair.

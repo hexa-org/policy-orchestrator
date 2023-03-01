@@ -3,12 +3,13 @@ package admin_test
 import (
 	"errors"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/admin"
-	"github.com/hexa-org/policy-orchestrator/internal/admin/test"
 	"io"
 	"net"
 	"net/http"
 	"testing"
+
+	"github.com/hexa-org/policy-orchestrator/internal/admin"
+	"github.com/hexa-org/policy-orchestrator/internal/admin/test"
 
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"

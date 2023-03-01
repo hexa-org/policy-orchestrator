@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/admin"
-	"github.com/hexa-org/policy-orchestrator/internal/admin/test"
 	"io"
 	"mime/multipart"
 	"net"
 	"net/http"
 	"net/url"
 	"testing"
+
+	"github.com/hexa-org/policy-orchestrator/internal/admin"
+	"github.com/hexa-org/policy-orchestrator/internal/admin/test"
 
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"

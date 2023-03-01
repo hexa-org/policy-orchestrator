@@ -170,6 +170,7 @@ tr {
 tr.no-border {
     border-bottom: none;
 }
+
 tr.strong {
     font-weight: 700;
     color: var(--black);

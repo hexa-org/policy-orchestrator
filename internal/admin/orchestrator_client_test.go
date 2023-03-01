@@ -5,10 +5,11 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/admin"
 	"io/ioutil"
 	"net/http"
 	"testing"
+
+	"github.com/hexa-org/policy-orchestrator/internal/admin"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"

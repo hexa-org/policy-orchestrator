@@ -3,8 +3,9 @@ package metricssupport_test
 import (
 	"context"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/metricssupport"
 	"log"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/metricssupport"
 
 	"github.com/gorilla/mux"
 

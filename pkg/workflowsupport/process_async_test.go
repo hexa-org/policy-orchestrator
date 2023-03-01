@@ -2,8 +2,9 @@ package workflowsupport
 
 import (
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 	"testing"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 )
 
 func TestProcessAsync(t *testing.T) {

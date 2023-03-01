@@ -1,8 +1,9 @@
 package testsupport
 
 import (
-	assert "github.com/stretchr/testify/require"
 	"testing"
+
+	assert "github.com/stretchr/testify/require"
 )
 
 func ContainsExactly[T any](t *testing.T, arrayToCheck []T, elementsToCheck ...T) {

@@ -1,9 +1,10 @@
 package orchestrator_test
 
 import (
+	"net/http"
+
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
-	"net/http"
 )
 
 type NoopProvider struct {
