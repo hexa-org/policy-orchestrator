@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/compressionsupport"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+
 	"log"
 	"net/http"
 	"net/url"

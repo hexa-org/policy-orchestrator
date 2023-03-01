@@ -3,7 +3,9 @@ package openpolicyagent
 import (
 	"bytes"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/compressionsupport"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+
 	"io"
 	"mime/multipart"
 	"net/http"

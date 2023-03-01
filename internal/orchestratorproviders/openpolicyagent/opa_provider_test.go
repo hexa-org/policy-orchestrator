@@ -7,11 +7,13 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/compressionsupport"
+
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/openpolicyagent"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/openpolicyagent/test"
 	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+
 	"io/ioutil"
 	"math/rand"
 	"net/http"

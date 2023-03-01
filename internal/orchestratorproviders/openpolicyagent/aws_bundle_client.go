@@ -5,11 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	awscredentials "github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/hexa-org/policy-orchestrator/internal/compressionsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+
 	"net/http"
 	"os"
 	"path/filepath"

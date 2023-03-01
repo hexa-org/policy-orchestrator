@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/compressionsupport"
+
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/openpolicyagent"
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+
 	"math/rand"
 	"os"
 	"path/filepath"

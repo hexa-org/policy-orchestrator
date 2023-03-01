@@ -5,15 +5,16 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/go-playground/validator/v10"
-	"github.com/hexa-org/policy-orchestrator/internal/compressionsupport"
-	"gopkg.in/square/go-jose.v2/json"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+	"gopkg.in/square/go-jose.v2/json"
 )
 
 type GithubHTTPClient interface {

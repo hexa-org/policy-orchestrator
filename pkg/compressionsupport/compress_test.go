@@ -2,7 +2,9 @@ package compressionsupport_test
 
 import (
 	"bytes"
-	"github.com/hexa-org/policy-orchestrator/internal/compressionsupport"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+
 	"os"
 	"path/filepath"
 	"runtime"

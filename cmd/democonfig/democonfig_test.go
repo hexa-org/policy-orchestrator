@@ -5,7 +5,9 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/compressionsupport"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+
 	"mime/multipart"
 	"net"
 	"net/http"

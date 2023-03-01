@@ -7,9 +7,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/compressionsupport"
+
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+
 	"io/ioutil"
 	"log"
 	"math/rand"

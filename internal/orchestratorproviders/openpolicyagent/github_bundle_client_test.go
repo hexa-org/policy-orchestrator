@@ -5,16 +5,17 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/compressionsupport"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/openpolicyagent"
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
-	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"net/http"
 	"path/filepath"
 	"runtime"
 	"testing"
 	"time"
+
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/openpolicyagent"
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
+	"github.com/stretchr/testify/assert"
 )
 
 const (

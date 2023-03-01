@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"crypto/tls"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/compressionsupport"
+
+	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+
 	"io/fs"
 	"log"
 	"math/rand"
