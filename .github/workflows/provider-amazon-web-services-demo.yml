@@ -1,4 +1,4 @@
-name: aws-cloud
+name: aws-cloud-demo
 on:
   workflow_call:
 jobs:
