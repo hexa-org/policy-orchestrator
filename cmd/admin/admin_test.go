@@ -18,13 +18,15 @@ func TestApp(t *testing.T) {
 		websupport.Start(app, listener)
 	}()
 	healthsupport.WaitForHealthy(app)
-	resp, _ := http.Get(fmt.Sprintf("http://%s/health", app.Addr))
+	resp, err := http.Get(fmt.Sprintf("http://%s/health", app.Addr))
+	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	websupport.Stop(app)
 }
 
 func TestConfigWithPort(t *testing.T) {
 	t.Setenv("PORT", "0")
-	newApp("localhost:0")
-
+	assert.NotPanics(t, func() {
+		newApp("localhost:0")
+	})
 }
