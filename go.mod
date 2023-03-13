@@ -1,8 +1,8 @@
 module github.com/hexa-org/policy-orchestrator
 
-go 1.18
+go 1.19
 
-// +heroku goVersion go1.18
+// +heroku goVersion go1.19
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.17.3

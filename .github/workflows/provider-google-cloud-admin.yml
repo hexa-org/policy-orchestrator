@@ -1,0 +1,50 @@
+name: google-cloud
+on:
+  workflow_call:
+jobs:
+  google-container-admin:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - uses: actions/checkout@v2
+      - name: build-image
+        run: |
+          echo "wip"
+
+  google-migrate-orchestrator:
+    runs-on: ubuntu-latest
+    needs: [ google-container-admin ]
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - uses: actions/checkout@v2
+      - name: build-image
+        run: |
+          echo "wip"
+
+  google-deploy-hexa-orchestrator:
+    runs-on: ubuntu-latest
+    needs: [ google-migrate-orchestrator ]
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - uses: actions/checkout@v2
+      - name: build-image
+        run: |
+          echo "wip"
+
+  google-deploy-hexa-admin:
+    runs-on: ubuntu-latest
+    needs: [ google-deploy-hexa-orchestrator ]
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - uses: actions/checkout@v2
+      - name: build-image
+        run: |
+          echo "wip"

@@ -42,7 +42,7 @@ setup::brew() {
 # asdf packages (just golang)
 # ----------------------------------------------------------
 ensure::asdf() {
-  (go version | grep 'go1.18' > /dev/null) || setup::asdf
+  (go version | grep 'go1.19' > /dev/null) || setup::asdf
 }
 
 setup::asdf() {

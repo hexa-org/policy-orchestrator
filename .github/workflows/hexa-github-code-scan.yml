@@ -1,5 +1,6 @@
-name: "CodeQL"
-on: push
+name: github-security-scan
+on:
+  workflow_call:
 jobs:
   analyze:
     name: Analyze

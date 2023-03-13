@@ -1,0 +1,50 @@
+name: aws-cloud
+on:
+  workflow_call:
+jobs:
+  aws-container-demo:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - uses: actions/checkout@v2
+      - name: build-image
+        run: |
+          echo "wip"
+
+  aws-deploy-hexa-demo:
+    runs-on: ubuntu-latest
+    needs: [ aws-container-demo ]
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - uses: actions/checkout@v2
+      - name: build-image
+        run: |
+          echo "wip"
+
+  aws-container-open-policy-agent:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - uses: actions/checkout@v2
+      - name: build-image
+        run: |
+          echo "wip"
+
+  aws-deploy-hexa-open-policy-agent:
+    runs-on: ubuntu-latest
+    needs: [ aws-container-open-policy-agent ]
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - uses: actions/checkout@v2
+      - name: build-image
+        run: |
+          echo "wip"
+

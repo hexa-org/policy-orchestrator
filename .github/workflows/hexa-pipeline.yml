@@ -1,0 +1,44 @@
+name: hexa-pipeline
+on:
+  push:
+    branches:
+      - main
+jobs:
+  run-security-scan:
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/hexa-github-code-scan.yml
+    secrets: inherit
+
+  run-tests:
+    needs: [ run-security-scan ]
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/hexa-test-suite.yml
+    secrets: inherit
+
+  google-pipeline:
+    needs: [ run-tests ]
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/provider-google-cloud-demo.yml
+    secrets: inherit
+
+  amazon-pipeline:
+    needs: [ run-tests ]
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/provider-amazon-web-services-demo.yml
+    secrets: inherit
+
+  azure-pipeline:
+    needs: [ run-tests ]
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/provider-microsoft-azure-demo.yml
+    secrets: inherit

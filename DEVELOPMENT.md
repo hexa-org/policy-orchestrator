@@ -28,7 +28,7 @@ $ pkg --help
 Clone or download this codebase from GitHub to your local machine and install
 the following prerequisites:
 
-* [Go 1.18](https://go.dev)
+* [Go 1.19](https://go.dev)
 * [Pack](https://buildpacks.io)
 * [Docker Desktop](https://www.docker.com/products/docker-desktop)
 * [Open Policy Agent](https://www.openpolicyagent.org) (OPA)

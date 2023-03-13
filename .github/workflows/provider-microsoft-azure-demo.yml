@@ -1,0 +1,50 @@
+name: azure-cloud
+on:
+  workflow_call:
+jobs:
+  azure-container-demo:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - uses: actions/checkout@v2
+      - name: build-image
+        run: |
+          echo "wip"
+
+  azure-deploy-hexa-demo:
+    runs-on: ubuntu-latest
+    needs: [ azure-container-demo ]
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - uses: actions/checkout@v2
+      - name: build-image
+        run: |
+          echo "wip"
+
+  azure-container-open-policy-agent:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - uses: actions/checkout@v2
+      - name: build-image
+        run: |
+          echo "wip"
+
+  azure-deploy-hexa-open-policy-agent:
+    runs-on: ubuntu-latest
+    needs: [ azure-container-open-policy-agent ]
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - uses: actions/checkout@v2
+      - name: build-image
+        run: |
+          echo "wip"
+

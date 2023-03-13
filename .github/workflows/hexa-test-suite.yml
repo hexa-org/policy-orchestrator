@@ -1,0 +1,55 @@
+name: hexa-test
+on:
+  workflow_call:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14.5
+        env:
+          POSTGRES_USER: postgresql
+          POSTGRES_PASSWORD: postgresql
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.19'
+      - name: psql
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: create
+        run: |
+          psql -v on_error_stop=1 --host localhost --username postgresql <<-EOSQL
+            create database orchestrator_test;
+            create user orchestrator with password 'orchestrator';
+            grant all privileges on database orchestrator_test to orchestrator;
+          EOSQL
+        env:
+          PGPASSWORD: postgresql
+      - name: golang-migrate
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.12.2/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate.linux-amd64 /usr/bin/migrate
+      - name: migrate
+        run: |
+          migrate -verbose -path ./databases/orchestrator -database postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable up
+      - name: opa
+        run: |
+          curl -L -o opa https://github.com/open-policy-agent/opa/releases/download/v0.38.1/opa_linux_amd64
+          chmod 755 opa
+          sudo mv opa /usr/bin/opa
+      - name: test
+        run: |
+          go test -tags integration -coverprofile coverage.out  ./.../
+      - name: Upload coverage to Codecov
+        run: bash <(curl -s https://codecov.io/bash)
