@@ -3,14 +3,15 @@ package main
 import (
 	"embed"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/decisionsupport"
-	"github.com/hexa-org/policy-orchestrator/internal/decisionsupportproviders"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/hexa-org/policy-orchestrator/internal/decisionsupport"
+	"github.com/hexa-org/policy-orchestrator/internal/decisionsupportproviders"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -84,8 +85,6 @@ func (a *BasicApp) loadHandlers() func(router *mux.Router) {
 	}
 }
 
-// addPrefix returns a handler that serves HTTP requests by adding the given
-// prefix to the request URL's Path and invoking the handler h.
 func addPrefix(prefix string, h http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		req.URL.Path = prefix + req.URL.Path
