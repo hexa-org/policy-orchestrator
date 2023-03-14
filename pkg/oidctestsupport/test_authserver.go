@@ -1,4 +1,4 @@
-package testsupport
+package oidctestsupport
 
 import (
 	"crypto/rand"

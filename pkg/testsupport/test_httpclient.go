@@ -41,7 +41,6 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	return nil, fmt.Errorf("missing mock response for request")
-
 }
 
 func (m *MockHTTPClient) Get(url string) (resp *http.Response, err error) {
