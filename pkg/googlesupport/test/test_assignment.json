@@ -1,0 +1,13 @@
+{
+  "resource_id": "cResourceId",
+  "bindings": [
+    {
+      "condition": {
+        "expression": "req.ip.startsWith(\"127\") \u0026\u0026 req.method == \"POST\""
+      },
+      "members": [
+        "accounting@hexaindustries.io"
+      ]
+    }
+  ]
+}

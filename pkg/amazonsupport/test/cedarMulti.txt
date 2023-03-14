@@ -1,0 +1,18 @@
+permit(
+principal == User::"bob",
+action in [Action::"view", Action::"comment"], resource in Photo::"trip"
+) unless{
+resource.tag == "private" };
+
+permit(
+principal == User::"cat",
+action in [Action::"view", Action::"comment"], resource in Doc::"sales"
+) when{
+resource.tag.contains("private") || resource.tag.contains("confidential") };
+
+forbid(principal, action, resource) unless{
+principal in Group::"family" };
+
+permit(principal, action == Action::"remoteAccess", resource) when {
+principal.numberOfLaptops < 5 &&
+principal.jobLevel > 6 && principal.active == true };
