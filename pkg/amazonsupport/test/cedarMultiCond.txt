@@ -1,0 +1,7 @@
+permit(
+principal == User::"bob",
+action in [Action::"view", Action::"comment"],
+resource in Photo::"trip"
+) unless{
+resource.tag == "private" }
+when{ resource.type == "file"};

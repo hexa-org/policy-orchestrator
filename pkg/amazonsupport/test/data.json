@@ -1,0 +1,91 @@
+{
+  "policies": [
+    {
+      "Meta": {
+        "Version": "0.5"
+      },
+      "Actions": [
+        {
+          "ActionUri": "cedar:Action::\"view\""
+        }
+      ],
+      "Subject": {
+        "Members": [
+          "User:\"stacey\""
+        ]
+      },
+      "Object": {
+        "resource_id": ""
+      },
+      "Condition": {
+        "Rule": "resource in \"Account:stacey\"",
+        "Action": "permit"
+      }
+    },
+    {
+      "meta": {"version": "0.5"},
+      "actions": [{"actionUri": "cedar:Action::ReadFile"},{"actionuri": "cedar:Action::ListFiles"}],
+      "subject": {
+        "members": [
+          "any"
+        ]
+      },
+      "condition": {
+        "rule": "action.isReadOperation eq true",
+        "action": "allow"
+      },
+      "object": {
+        "resource_id": "Folder::3b276b13858d46839d8cbfb45e5c6c2a"
+      }
+    },
+    {
+      "meta": {"version": "0.5"},
+      "actions": [{"actionUri": "cedar:Action::writeFile"}],
+      "subject": {
+        "members": [
+          "anyAuthenticated",
+          "User:sales@hexaindustries.io",
+          "Group:marketing@hexaindustries.io"
+        ]
+      },
+      "object": {
+        "resource_id": "File::ec37b3b17a1e4ae08a641dcd9d915535"
+      }
+    },
+    {
+      "meta": {"version": "0.5"},
+      "actions": [{"actionUri": "cedar:Action::ReadFile"},{"actionUri": "cedar:Action::ListFiles"}],
+      "subject": {
+        "members": [
+          "User:accounting@hexaindustries.io"
+        ]
+      },
+      "condition": {
+        "rule": "context.sourceIp eq \"192.158.1.38\" and context.http.method eq GET",
+        "action": "allow"
+      },
+      "object": {
+        "resource_id": "Folder::900af98fc3ab47cbaa982d94da7c90e3"
+      }
+    },
+    {
+      "Meta": {
+        "Version": "0.5"
+      },
+      "Actions": [
+        {
+          "ActionUri": "cedar:Action::\"view\""
+        }
+      ],
+      "Subject": {
+        "Members": [
+          "User:\"alice\""
+        ]
+      },
+      "Object": {
+        "resource_id": "cedar:Photo::\"VacationPhoto94.jpg\""
+      }
+    }
+
+  ]
+}
