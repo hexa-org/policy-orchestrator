@@ -1,11 +1,11 @@
 package googlecloud_test
 
 import (
+	"testing"
+
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/googlecloud"
 	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
-	"testing"
-
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 	"github.com/stretchr/testify/assert"
 )

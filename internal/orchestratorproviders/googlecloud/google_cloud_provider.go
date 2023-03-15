@@ -5,11 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 	"google.golang.org/api/option"
 	"google.golang.org/api/transport/http"
 )

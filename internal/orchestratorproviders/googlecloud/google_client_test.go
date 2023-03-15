@@ -2,10 +2,10 @@ package googlecloud_test
 
 import (
 	"errors"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/googlecloud"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 	"testing"
 
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/googlecloud"
+	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 	"github.com/stretchr/testify/assert"
 )
@@ -156,7 +156,18 @@ func TestGoogleClient_SetAppEnginePolicies(t *testing.T) {
 	err := client.SetBackendPolicy("apps/EngineName", "anObjectId", policy)
 
 	assert.NoError(t, err)
-	assert.Equal(t, "{\"policy\":{\"bindings\":[{\"role\":\"roles/iap.httpsResourceAccessor\",\"members\":[\"aUser\"]}]}}\n", string(m.GetRequestBody(m.Url)))
+	assert.JSONEq(t, `{
+  "policy": {
+    "bindings": [
+      {
+        "role": "roles/iap.httpsResourceAccessor",
+        "members": [
+          "aUser"
+        ]
+      }
+    ]
+  }
+}`, string(m.GetRequestBody(m.Url)))
 	assert.Equal(t, "https://iap.googleapis.com/v1/projects/appengineproject/iap_web/appengine-anObjectId/services/default:setIamPolicy", m.Url)
 }
 
@@ -170,7 +181,18 @@ func TestGoogleClient_SetBackendPolicies(t *testing.T) {
 	client := googlecloud.GoogleClient{HttpClient: m, ProjectId: "k8sproject"}
 	err := client.SetBackendPolicy("k8sName", "anObjectId", policy)
 	assert.NoError(t, err)
-	assert.Equal(t, "{\"policy\":{\"bindings\":[{\"role\":\"roles/iap.httpsResourceAccessor\",\"members\":[\"aUser\"]}]}}\n", string(m.GetRequestBody(m.Url)))
+	assert.JSONEq(t, `{
+  "policy": {
+    "bindings": [
+      {
+        "role": "roles/iap.httpsResourceAccessor",
+        "members": [
+          "aUser"
+        ]
+      }
+    ]
+  }
+}`, string(m.GetRequestBody(m.Url)))
 	assert.Equal(t, "https://iap.googleapis.com/v1/projects/k8sproject/iap_web/compute/services/anObjectId:setIamPolicy", m.Url)
 }
 

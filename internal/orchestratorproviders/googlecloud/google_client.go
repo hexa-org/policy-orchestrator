@@ -4,12 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 	"io"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/functionalsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/googlesupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
+	"google.golang.org/api/iam/v1"
 )
 
 type HTTPClient interface {
@@ -107,9 +112,16 @@ type bindings struct {
 	Bindings []bindingInfo `json:"bindings"`
 }
 
+type condition struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Expression  string `json:"expression"`
+}
+
 type bindingInfo struct {
-	Role    string   `json:"role"`
-	Members []string `json:"members"`
+	Role      string     `json:"role"`
+	Members   []string   `json:"members"`
+	Condition *condition `json:"condition,omitempty"`
 }
 
 func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]policysupport.PolicyInfo, error) {
@@ -133,19 +145,40 @@ func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]policysupport.
 		return []policysupport.PolicyInfo{}, err
 	}
 
-	var policies []policysupport.PolicyInfo
-	for _, found := range binds.Bindings {
-		log.Printf("Found google cloud policy for role %s.\n", found.Role)
-		policies = append(policies, policysupport.PolicyInfo{
-			Meta:    policysupport.MetaInfo{Version: "0.5"},
-			Actions: []policysupport.ActionInfo{{"gcp:" + found.Role}},
-			Subject: policysupport.SubjectInfo{Members: found.Members},
-			Object: policysupport.ObjectInfo{
-				ResourceID: objectId,
-			},
-		})
-	}
-	return policies, err
+	/// todo - below is work in progress
+
+	iamBindings := functionalsupport.Map(binds.Bindings, func(binding bindingInfo) iam.Binding {
+		return iam.Binding{
+			Condition:       nil,
+			Members:         binding.Members,
+			Role:            binding.Role,
+			ForceSendFields: nil,
+			NullFields:      nil,
+		}
+	})
+
+	policies := functionalsupport.Map(iamBindings, func(iamBinding iam.Binding) hexapolicy.PolicyInfo {
+		p, mappingErr := googlesupport.New(map[string]string{}).MapBindingToPolicy(objectId, iamBinding)
+		if mappingErr != nil {
+			return hexapolicy.PolicyInfo{}
+		}
+		return p
+	})
+
+	// todo - use mapper policy support here...
+	hexaPolicies := functionalsupport.Map(policies, func(policy hexapolicy.PolicyInfo) policysupport.PolicyInfo {
+		return policysupport.PolicyInfo{
+			Meta: policysupport.MetaInfo{Version: policy.Meta.Version},
+			Actions: functionalsupport.Map(policy.Actions, func(action hexapolicy.ActionInfo) policysupport.ActionInfo {
+				return policysupport.ActionInfo{
+					ActionUri: action.ActionUri,
+				}
+			}),
+			Subject: policysupport.SubjectInfo{Members: policy.Subject.Members},
+			Object:  policysupport.ObjectInfo{ResourceID: policy.Object.ResourceID},
+		}
+	})
+	return hexaPolicies, err
 }
 
 func (c *GoogleClient) SetBackendPolicy(name, objectId string, p policysupport.PolicyInfo) error { // todo - objectId may no longer be needed, at least for google
@@ -159,7 +192,7 @@ func (c *GoogleClient) SetBackendPolicy(name, objectId string, p policysupport.P
 	// todo - handle many actions
 	uri := strings.TrimPrefix(p.Actions[0].ActionUri, "gcp:")
 
-	body := policy{bindings{[]bindingInfo{{uri, p.Subject.Members}}}}
+	body := policy{Policy: bindings{[]bindingInfo{{Role: uri, Members: p.Subject.Members}}}}
 	b := new(bytes.Buffer)
 	_ = json.NewEncoder(b).Encode(body)
 
