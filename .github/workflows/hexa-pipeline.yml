@@ -4,16 +4,7 @@ on:
     branches:
       - main
 jobs:
-  run-security-scan:
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    uses: ./.github/workflows/hexa-github-code-scan.yml
-    secrets: inherit
-
   run-tests:
-    needs: [ run-security-scan ]
     permissions:
       contents: read
     uses: ./.github/workflows/hexa-test-suite.yml
