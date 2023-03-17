@@ -2,16 +2,26 @@ name: google-cloud-demo
 on:
   workflow_call:
 jobs:
+
   google-container-demo:
     runs-on: ubuntu-latest
+    needs: [run-tests]
     permissions:
-      contents: 'read'
-      id-token: 'write'
+      contents: "read"
+      id-token: "write"
     steps:
-      - uses: actions/checkout@v2
-      - name: build-image
-        run: |
-          echo "wip"
+      - uses: actions/checkout@v3
+      - name: "authenticate to google cloud"
+        uses: "google-github-actions/auth@v1"
+        with:
+          workload_identity_provider: "${{ secrets.GOOGLE_FEDERATION_WORKLOAD_IDENTITY_PROVIDER }}"
+          service_account: "${{ secrets.GOOGLE_FEDERATION_SERVICE_ACCOUNT }}"
+      - name: "set up cloud sdk"
+        uses: "google-github-actions/setup-gcloud@v1"
+      - id: "gcloud"
+        name: "gcloud"
+        run: |-
+          gcloud builds submit --tag us-central1-docker.pkg.dev/hexa-policy-orchestrator/hexa-policy-orchestrator-review/hexa-policy-orchestrator:${{ github.sha }},builder=heroku/buildpacks:20
 
   google-deploy-hexa-demo:
     runs-on: ubuntu-latest
