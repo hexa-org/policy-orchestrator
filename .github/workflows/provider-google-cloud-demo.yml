@@ -12,6 +12,7 @@ jobs:
       - name: "authenticate to google cloud"
         uses: "google-github-actions/auth@v1"
         with:
+          token_format: 'access_token'
           workload_identity_provider: "${{ secrets.GOOGLE_FEDERATION_WORKLOAD_IDENTITY_PROVIDER }}"
           service_account: "${{ secrets.GOOGLE_FEDERATION_SERVICE_ACCOUNT }}"
       - name: "set up cloud sdk"
