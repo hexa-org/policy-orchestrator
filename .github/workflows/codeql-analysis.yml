@@ -1,5 +1,7 @@
 name: "CodeQL"
-on: push
+on:
+  schedule:
+    - cron: "0 0 * * *"
 jobs:
   analyze:
     name: Analyze
