@@ -19,7 +19,7 @@ jobs:
       - id: "gcloud"
         name: "gcloud"
         run: |
-          gcloud builds submit --tag us-central1-docker.pkg.dev/hexa-policy-orchestrator/hexa-policy-orchestrator-review/hexa-policy-orchestrator:${{ github.sha }},builder=heroku/buildpacks:20
+          gcloud builds submit --pack image=us-central1-docker.pkg.dev/hexa-policy-orchestrator/hexa-policy-orchestrator-review/hexa-policy-orchestrator:${{ github.sha }},builder=heroku/buildpacks:20
 
   google-deploy-hexa-demo:
     runs-on: ubuntu-latest
