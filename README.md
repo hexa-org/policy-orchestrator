@@ -1,8 +1,9 @@
 # Table of Contents
 - [Hexa Policy Orchestrator](#hexa-policy-orchestrator)
   * [Getting Started](#getting-started)
-    + [Build the Hexa image](#build-the-hexa-image)
-    + [Run the Policy Orchestrator](#run-the-policy-orchestrator)
+    + [Build the Hexa image](#task-build-the-hexa-image)
+    + [Prepare the Database](#task-prepare-the-database)
+    + [Run the Policy Orchestrator](#task-run-the-policy-orchestrator)
   * [Application descriptions](#application-descriptions)
     + [Example workflow](#example-workflow)
   * [Getting involved](#getting-involved)
