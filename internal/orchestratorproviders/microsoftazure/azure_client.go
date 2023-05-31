@@ -3,7 +3,9 @@ package microsoftazure
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"io"
 	"log"
@@ -17,7 +19,16 @@ type HTTPClient interface {
 	Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
 }
 
-type AzureClient struct {
+type AzureClient interface {
+	GetWebApplications(key []byte) ([]orchestrator.ApplicationInfo, error)
+	GetServicePrincipals(key []byte, appId string) (AzureServicePrincipals, error)
+	GetUserInfoFromPrincipalId(key []byte, principalId string) (AzureUser, error)
+	GetPrincipalIdFromEmail(key []byte, email string) (string, error)
+	GetAppRoleAssignedTo(key []byte, servicePrincipalId string) (AzureAppRoleAssignments, error)
+	SetAppRoleAssignedTo(key []byte, servicePrincipalId string, assignments []AzureAppRoleAssignment) error
+}
+
+type azureClient struct {
 	HttpClient HTTPClient
 }
 
@@ -51,7 +62,18 @@ type AzureServicePrincipals struct {
 }
 
 type azureServicePrincipal struct {
-	ID string `json:"id"`
+	ID       string         `json:"id"`
+	AppRoles []azureAppRole `json:"appRoles"`
+}
+
+type azureAppRole struct {
+	AllowedMemberTypes []string `json:"allowedMemberTypes"`
+	Description        string   `json:"description"`
+	DisplayName        string   `json:"displayName"`
+	ID                 string   `json:"id"`
+	IsEnabled          bool     `json:"isEnabled"`
+	Origin             string   `json:"origin"`
+	Value              string   `json:"value"`
 }
 
 type AzureAppRoleAssignments struct {
@@ -70,57 +92,30 @@ type AzureUsers struct {
 
 type AzureAppRoleAssignment struct {
 	ID                   string `json:"id"`
-	AppRoleId            string `json:"appRoleId"`
+	AppRoleId            string `json:"appRoleId" validate:"required"`
 	PrincipalDisplayName string `json:"principalDisplayName"`
 	PrincipalId          string `json:"principalId"`
 	PrincipalType        string `json:"principalType"`
 	ResourceDisplayName  string `json:"resourceDisplayName"`
-	ResourceId           string `json:"resourceId"`
+	ResourceId           string `json:"resourceId" validate:"required"`
 }
 
-type appServices struct {
-	List []appService `json:"value"`
+func NewAzureClient(httpClient HTTPClient) AzureClient {
+	return &azureClient{HttpClient: httpClient}
 }
 
-type appService struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-func (c *AzureClient) GetWebApplicationsNonGraph(key []byte) ([]orchestrator.ApplicationInfo, error) {
-	decoded, keyErr := c.DecodeKey(key)
-	if keyErr != nil {
-		log.Println("Unable to decode azure provider key.")
-		return nil, keyErr
-	}
-
-	request, _ := http.NewRequest("GET", fmt.Sprintf("https://management.azure.com/subscriptions/%s/providers/Microsoft.Web/sites?api-version=2022-03-01", decoded.Subscription), nil)
-	get, err := c.azureRequest(key, request, "https://management.azure.com/.default")
-	if err != nil || get.StatusCode != http.StatusOK {
-		log.Println("Unable to get azure web applications.")
-		return []orchestrator.ApplicationInfo{}, err
-	}
-
-	var webapps appServices
-	if err = json.NewDecoder(get.Body).Decode(&webapps); err != nil {
-		log.Println("Unable to decode azure web app response.")
-		return []orchestrator.ApplicationInfo{}, err
-	}
-
-	var apps []orchestrator.ApplicationInfo
-	for _, app := range webapps.List {
-		log.Printf("Found azure app service web app %s.\n", app.Name)
-		apps = append(apps, orchestrator.ApplicationInfo{ObjectID: app.ID, Name: app.Name, Description: app.ID})
-	}
-	return apps, err
-}
-
-func (c *AzureClient) GetWebApplications(key []byte) ([]orchestrator.ApplicationInfo, error) {
+func (c *azureClient) GetWebApplications(key []byte) ([]orchestrator.ApplicationInfo, error) {
 	request, _ := http.NewRequest("GET", "https://graph.microsoft.com/v1.0/applications", nil)
 	get, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
 	if err != nil {
-		log.Println("Unable to get azure web applications.")
+		log.Println("Unable to get azure web applications. Error=" + err.Error())
 		return []orchestrator.ApplicationInfo{}, err
+	}
+
+	if get.StatusCode != http.StatusOK {
+		errMsg := "unable to get azure web applications. Unexpected status " + get.Status
+		log.Println(errMsg)
+		return []orchestrator.ApplicationInfo{}, errors.New(errMsg)
 	}
 
 	var webapps azureWebApps
@@ -144,88 +139,118 @@ func (c *AzureClient) GetWebApplications(key []byte) ([]orchestrator.Application
 	return apps, err
 }
 
-func (c *AzureClient) GetServicePrincipals(key []byte, appId string) (AzureServicePrincipals, error) {
+func (c *azureClient) GetServicePrincipals(key []byte, appId string) (AzureServicePrincipals, error) {
 	filter := fmt.Sprintf("$search=\"appId:%s\"", appId)
 	urlWithFilter := fmt.Sprintf("https://graph.microsoft.com/v1.0/servicePrincipals?%s", filter)
 	request, _ := http.NewRequest("GET", urlWithFilter, nil)
 	get, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
 	if err != nil {
-		log.Println("Unable to get azure service principals.")
+		log.Println("Unable to get azure service principals. Error=" + err.Error())
 		return AzureServicePrincipals{}, err
+	}
+
+	if get.StatusCode != http.StatusOK {
+		errMsg := "unable to get azure service principals. Unexpected status " + get.Status
+		log.Println(errMsg)
+		return AzureServicePrincipals{}, errors.New(errMsg)
 	}
 
 	var sps AzureServicePrincipals
 	if err = json.NewDecoder(get.Body).Decode(&sps); err != nil {
-		log.Println("Unable to decode azure web app response.")
+		log.Println("Unable to decode azure service principals response. Error=", err)
 		return AzureServicePrincipals{}, err
 	}
 	return sps, nil
 }
 
-func (c *AzureClient) GetUserInfoFromPrincipalId(key []byte, principalId string) (AzureUser, error) {
+func (c *azureClient) GetUserInfoFromPrincipalId(key []byte, principalId string) (AzureUser, error) {
 	endpoint := fmt.Sprintf("https://graph.microsoft.com/v1.0/users/%s", principalId)
 	request, _ := http.NewRequest("GET", endpoint, nil)
 	get, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
 	if err != nil {
-		log.Println("Unable to get azure user.")
+		log.Println("Unable to get azure user. Error=" + err.Error())
 		return AzureUser{}, err
+	}
+
+	if get.StatusCode != http.StatusOK {
+		errMsg := "unable to get azure user. Unexpected status " + get.Status
+		log.Println(errMsg)
+		return AzureUser{}, errors.New(errMsg)
 	}
 
 	var user AzureUser
 	if err = json.NewDecoder(get.Body).Decode(&user); err != nil {
-		log.Println("Unable to decode azure web app response.")
+		log.Println("Unable to decode azure web app response. Error=" + err.Error())
 		return AzureUser{}, err
 	}
 
 	return user, nil
 }
 
-func (c *AzureClient) GetPrincipalIdFromEmail(key []byte, email string) (string, error) {
+func (c *azureClient) GetPrincipalIdFromEmail(key []byte, email string) (string, error) {
 	query := fmt.Sprintf("https://graph.microsoft.com/v1.0/users?$select=id,mail&$filter=mail%%20eq%%20%%27%s%%27", url.QueryEscape(email))
 	request, _ := http.NewRequest("GET", query, nil)
 	get, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
 	if err != nil {
-		log.Println("Unable to get id for azure user.")
+		log.Println("Unable to get id for azure user. Error=" + err.Error())
 		return "", err
+	}
+
+	if get.StatusCode != http.StatusOK {
+		errMsg := "unable to get id for azure user. Unexpected status " + get.Status
+		log.Println(errMsg)
+		return "", errors.New(errMsg)
 	}
 
 	var userValues AzureUsers
 	if err = json.NewDecoder(get.Body).Decode(&userValues); err != nil {
-		log.Println("Unable to decode azure web app response.")
+		log.Println("Unable to decode azure web app response. Error=", err)
 		return "", err
 	}
 	return userValues.List[0].PrincipalId, nil
 }
 
-func (c *AzureClient) GetAppRoleAssignedTo(key []byte, servicePrincipalId string) (AzureAppRoleAssignments, error) {
+func (c *azureClient) GetAppRoleAssignedTo(key []byte, servicePrincipalId string) (AzureAppRoleAssignments, error) {
 	endpoint := fmt.Sprintf("https://graph.microsoft.com/v1.0/servicePrincipals/%s/appRoleAssignedTo", servicePrincipalId)
 	request, _ := http.NewRequest("GET", endpoint, nil)
 	get, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
 	if err != nil {
-		log.Println("Unable to get azure app role assignments.")
+		log.Println("Unable to get azure app role assignments. Error=" + err.Error())
 		return AzureAppRoleAssignments{}, err
+	}
+
+	if get.StatusCode != http.StatusOK {
+		errMsg := "unable to get id for azure app role assignments. Unexpected status " + get.Status
+		log.Println(errMsg)
+		return AzureAppRoleAssignments{}, errors.New(errMsg)
 	}
 
 	var assignments AzureAppRoleAssignments
 	if err = json.NewDecoder(get.Body).Decode(&assignments); err != nil {
-		log.Println("Unable to decode azure web app response.")
+		log.Println("Unable to decode azure web app response. Error=" + err.Error())
 		return AzureAppRoleAssignments{}, err
 	}
 	return assignments, nil
 }
 
-func (c *AzureClient) SetAppRoleAssignedTo(key []byte, servicePrincipalId string, assignments []AzureAppRoleAssignment) error {
+func (c *azureClient) SetAppRoleAssignedTo(key []byte, servicePrincipalId string, assignments []AzureAppRoleAssignment) error {
+	validate := validator.New()
+	vErr := validate.Var(assignments, "omitempty,dive")
+	if vErr != nil {
+		log.Println("Validate error ", vErr)
+		return vErr
+	}
 	existingRoleAssignments, err := c.GetAppRoleAssignedTo(key, servicePrincipalId)
 	if err != nil {
-		log.Println("Unable to get azure app role assignments.")
+		log.Println("Unable to get azure app role assignments. Error=" + err.Error())
 		return err
 	}
-	addErr := c.AddAppRolesAssignedTo(key, servicePrincipalId, c.ShouldAdd(assignments, existingRoleAssignments))
+	addErr := c.addAppRolesAssignedTo(key, servicePrincipalId, c.shouldAdd(assignments, existingRoleAssignments))
 	if addErr != nil {
 		log.Println("Unable to add azure app role assignments.")
 		return addErr
 	}
-	removeErr := c.DeleteAppRolesAssignedTo(key, servicePrincipalId, c.ShouldRemove(existingRoleAssignments, assignments))
+	removeErr := c.deleteAppRolesAssignedTo(key, servicePrincipalId, c.shouldRemove(existingRoleAssignments, assignments))
 	if removeErr != nil {
 		log.Println("Unable to delete azure app role assignments.")
 		return removeErr
@@ -233,35 +258,48 @@ func (c *AzureClient) SetAppRoleAssignedTo(key []byte, servicePrincipalId string
 	return nil
 }
 
-func (c *AzureClient) ShouldAdd(assignments []AzureAppRoleAssignment, existingRoleAssignments AzureAppRoleAssignments) []AzureAppRoleAssignment {
+func (c *azureClient) shouldAdd(assignments []AzureAppRoleAssignment, existingRoleAssignments AzureAppRoleAssignments) []AzureAppRoleAssignment {
 	var shouldAdd []AzureAppRoleAssignment
 	for _, assignment := range assignments {
-		var contains = false
+		if assignment.PrincipalId == "" {
+			continue
+		}
+
+		exists := false
 		for _, existingAssignment := range existingRoleAssignments.List {
-			if strings.Contains(assignment.PrincipalId, existingAssignment.PrincipalId) {
-				contains = true
+			if existingAssignment.AppRoleId == assignment.AppRoleId &&
+				existingAssignment.ResourceId == assignment.ResourceId &&
+				existingAssignment.PrincipalId == assignment.PrincipalId {
+				exists = true
+				break
 			}
 		}
-		if !contains {
+
+		if !exists {
 			shouldAdd = append(shouldAdd, assignment)
 		}
 	}
+
 	return shouldAdd
 }
 
-func (c *AzureClient) ShouldRemove(existingRoleAssignments AzureAppRoleAssignments, assignments []AzureAppRoleAssignment) []string {
+func (c *azureClient) shouldRemove(existingRoleAssignments AzureAppRoleAssignments, assignments []AzureAppRoleAssignment) []string {
 	var shouldRemove []string
-	for _, existingAssignment := range existingRoleAssignments.List {
-		var contains = false
-		for _, assignment := range assignments {
-			if strings.Contains(assignment.PrincipalId, existingAssignment.PrincipalId) {
-				contains = true
+
+	for _, eAra := range existingRoleAssignments.List {
+		doRemove := false
+		for _, ara := range assignments {
+			if eAra.AppRoleId == ara.AppRoleId && eAra.ResourceId == ara.ResourceId && eAra.PrincipalId != ara.PrincipalId {
+				doRemove = true
+				break
 			}
 		}
-		if !contains {
-			shouldRemove = append(shouldRemove, existingAssignment.ID)
+
+		if doRemove {
+			shouldRemove = append(shouldRemove, eAra.ID)
 		}
 	}
+
 	return shouldRemove
 }
 
@@ -271,7 +309,7 @@ type azureAppRoleAssignmentPost struct {
 	ResourceId  string `json:"resourceId"`
 }
 
-func (c *AzureClient) AddAppRolesAssignedTo(key []byte, servicePrincipalId string, assignments []AzureAppRoleAssignment) (err error) {
+func (c *azureClient) addAppRolesAssignedTo(key []byte, servicePrincipalId string, assignments []AzureAppRoleAssignment) (err error) {
 	for _, assignment := range assignments {
 		var buf bytes.Buffer
 		ra := azureAppRoleAssignmentPost{assignment.AppRoleId, assignment.PrincipalId, servicePrincipalId} // the resource id is the service principal
@@ -279,34 +317,46 @@ func (c *AzureClient) AddAppRolesAssignedTo(key []byte, servicePrincipalId strin
 		endpoint := fmt.Sprintf("https://graph.microsoft.com/v1.0/servicePrincipals/%s/appRoleAssignedTo", servicePrincipalId)
 		request, _ := http.NewRequest("POST", endpoint, bytes.NewReader(buf.Bytes()))
 		response, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
-		if err != nil || response.StatusCode != http.StatusCreated {
-			log.Println("Unable to add azure app role assignments.")
+		if err != nil {
+			log.Println("Unable to add azure app role assignments. Error=", err)
 			return err
+		}
+
+		if response.StatusCode != http.StatusCreated {
+			errMsg := fmt.Sprintf("unable to add azure app role assignments. Unexpected status %d", response.StatusCode)
+			log.Println(errMsg)
+			return errors.New(errMsg)
 		}
 	}
 	return err
 }
 
-func (c *AzureClient) DeleteAppRolesAssignedTo(key []byte, servicePrincipalId string, assignmentIds []string) (err error) {
+func (c *azureClient) deleteAppRolesAssignedTo(key []byte, servicePrincipalId string, assignmentIds []string) (err error) {
 	for _, assignmentId := range assignmentIds {
 		endpoint := fmt.Sprintf("https://graph.microsoft.com/v1.0/servicePrincipals/%s/appRoleAssignedTo/%s", servicePrincipalId, assignmentId)
 		request, _ := http.NewRequest("DELETE", endpoint, nil)
 		response, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
-		if err != nil || response.StatusCode != http.StatusNoContent {
-			log.Println("Unable to delete azure app role assignments.")
+		if err != nil {
+			log.Println("Unable to delete azure app role assignments. Error=", err)
 			return err
+		}
+
+		if response.StatusCode != http.StatusNoContent {
+			errMsg := fmt.Sprintf("unable to delete azure app role assignments. Unexpected status %d", response.StatusCode)
+			log.Println(errMsg)
+			return errors.New(errMsg)
 		}
 	}
 	return err
 }
 
-func (c *AzureClient) DecodeKey(key []byte) (AzureKey, error) {
+func (c *azureClient) decodeKey(key []byte) (AzureKey, error) {
 	var decoded AzureKey
 	err := json.NewDecoder(bytes.NewReader(key)).Decode(&decoded)
 	return decoded, err
 }
 
-func (c *AzureClient) AccessTokenRequest(decoded AzureKey, scope string) (AzureAccessToken, error) {
+func (c *azureClient) accessTokenRequest(decoded AzureKey, scope string) (AzureAccessToken, error) {
 	var accessToken AzureAccessToken
 	tokenUrl := fmt.Sprintf("https://login.microsoftonline.com/%s/oauth2/v2.0/token", decoded.Tenant)
 	postBody := fmt.Sprintf("grant_type=client_credentials&client_id=%s&client_secret=%s&scope=%s", decoded.AppId, decoded.Secret, scope)
@@ -314,17 +364,18 @@ func (c *AzureClient) AccessTokenRequest(decoded AzureKey, scope string) (AzureA
 	if tokenErr != nil {
 		return accessToken, tokenErr
 	}
+
 	err := json.NewDecoder(tokenResponse.Body).Decode(&accessToken)
 	return accessToken, err
 }
 
-func (c *AzureClient) azureRequest(key []byte, request *http.Request, scope string) (*http.Response, error) {
-	decoded, keyErr := c.DecodeKey(key)
+func (c *azureClient) azureRequest(key []byte, request *http.Request, scope string) (*http.Response, error) {
+	decoded, keyErr := c.decodeKey(key)
 	if keyErr != nil {
-		log.Println("Unable to decode azure provider key.")
+		log.Println("Unable to decode azure provider key. Error=", keyErr)
 		return nil, keyErr
 	}
-	accessToken, tokenErr := c.AccessTokenRequest(decoded, scope)
+	accessToken, tokenErr := c.accessTokenRequest(decoded, scope)
 	if tokenErr != nil {
 		log.Println("Unable to find azure web applications.")
 		return nil, tokenErr
