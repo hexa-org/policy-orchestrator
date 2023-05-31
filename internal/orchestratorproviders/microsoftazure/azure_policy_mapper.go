@@ -1,6 +1,9 @@
 package microsoftazure
 
-import "github.com/hexa-org/policy-orchestrator/internal/policysupport"
+import (
+	"fmt"
+	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+)
 
 type AzurePolicyMapper struct {
 	objectId                   string
@@ -37,7 +40,7 @@ func (azm *AzurePolicyMapper) appRoleAssignmentToIDQL(assignments []AzureAppRole
 	for _, oneAssignment := range assignments {
 		email := azm.azureUserEmail[oneAssignment.PrincipalId]
 		if email != "" {
-			members = append(members, email)
+			members = append(members, fmt.Sprintf("user:%s", email))
 		}
 
 	}
