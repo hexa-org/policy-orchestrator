@@ -17,15 +17,15 @@ func TestAzurePolicyMapper_ToIDQL(t *testing.T) {
 	assert.NotNil(t, actPolicies)
 	assert.Equal(t, len(sps.List[0].AppRoles), len(actPolicies))
 
-	actPolicyMap := make(map[string][]string)
+	actActionMembersMap := make(map[string][]string)
 	for _, pol := range actPolicies {
 		assert.Equal(t, 1, len(pol.Actions))
-		actPolicyMap[pol.Actions[0].ActionUri] = pol.Subject.Members
+		actActionMembersMap[pol.Actions[0].ActionUri] = pol.Subject.Members
 	}
 
 	for _, expAction := range []string{policytestsupport.ActionGetHrUs, policytestsupport.ActionGetProfile} {
 
-		assert.NotNil(t, actPolicyMap[expAction])
+		assert.NotNil(t, actActionMembersMap[expAction])
 		var mainEmail string
 		switch expAction {
 		case policytestsupport.ActionGetHrUs:
@@ -34,8 +34,8 @@ func TestAzurePolicyMapper_ToIDQL(t *testing.T) {
 		case policytestsupport.ActionGetProfile:
 			mainEmail = policytestsupport.UserEmailGetProfile
 		}
-		assert.Contains(t, actPolicyMap[expAction], mainEmail)
-		assert.Contains(t, actPolicyMap[expAction], policytestsupport.UserEmailGetHrUsAndProfile)
+		assert.Contains(t, actActionMembersMap[expAction], "user:"+mainEmail)
+		assert.Contains(t, actActionMembersMap[expAction], "user:"+policytestsupport.UserEmailGetHrUsAndProfile)
 	}
 }
 

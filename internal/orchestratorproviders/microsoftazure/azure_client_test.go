@@ -534,7 +534,7 @@ func TestAzureClient_SetAppRoleAssignedTo_withBadDelete(t *testing.T) {
 	assert.True(t, m.MockHttpClient.VerifyCalled())
 }
 
-func TestAzureClient_SetAppRoleAssignedTo_AddRoleAssignment(t *testing.T) {
+func TestAzureClient_SetAppRoleAssignedTo_AddNewRoleAssignment(t *testing.T) {
 	m := azuretestsupport.NewAzureHttpClient()
 	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
 
@@ -542,7 +542,54 @@ func TestAzureClient_SetAppRoleAssignedTo_AddRoleAssignment(t *testing.T) {
 	m.GetAppRoleAssignmentsRequest(existingAssignments)
 	m.PostAppRoleAssignmentsRequest()
 
-	newRoleAssignments := append(existingAssignments, azuretestsupport.AppRoleAssignmentForAdd...)
+	newRoleAssignments := make([]microsoftazure.AzureAppRoleAssignment, 0)
+	newRoleAssignments = append(newRoleAssignments, azuretestsupport.AppRoleAssignmentForAdd...)
+	newRoleAssignments = append(newRoleAssignments, existingAssignments...)
+
+	client := m.AzureClient()
+	err := client.SetAppRoleAssignedTo(
+		azuretestsupport.AzureClientKey(),
+		azuretestsupport.ServicePrincipalId,
+		newRoleAssignments)
+	assert.NoError(t, err)
+
+	assert.True(t, m.MockHttpClient.VerifyCalled())
+}
+
+func TestAzureClient_SetAppRoleAssignedTo_AddOneMoreMember_ExistingRole(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
+
+	m.TokenRequest("accessToken")
+	m.GetAppRoleAssignmentsRequest(existingAssignments)
+	m.PostAppRoleAssignmentsRequest()
+
+	newRoleAssignments := make([]microsoftazure.AzureAppRoleAssignment, 0)
+	newRoleAssignments = append(newRoleAssignments, existingAssignments...)
+	newRoleAssignments = append(newRoleAssignments, azuretestsupport.NewAppRoleAssignments(azuretestsupport.AppRoleIdGetHrUs, policytestsupport.UserIdUnassigned1))
+
+	client := m.AzureClient()
+	err := client.SetAppRoleAssignedTo(
+		azuretestsupport.AzureClientKey(),
+		azuretestsupport.ServicePrincipalId,
+		newRoleAssignments)
+	assert.NoError(t, err)
+
+	assert.True(t, m.MockHttpClient.VerifyCalled())
+}
+
+func TestAzureClient_SetAppRoleAssignedTo_AddMoreMembers_ExistingRole(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
+
+	m.TokenRequest("accessToken")
+	m.GetAppRoleAssignmentsRequest(existingAssignments)
+	m.PostAppRoleAssignmentsRequest()
+
+	newRoleAssignments := make([]microsoftazure.AzureAppRoleAssignment, 0)
+	newRoleAssignments = append(newRoleAssignments, existingAssignments...)
+	newRoleAssignments = append(newRoleAssignments, azuretestsupport.NewAppRoleAssignments(azuretestsupport.AppRoleIdGetHrUs, policytestsupport.UserIdUnassigned1))
+	newRoleAssignments = append(newRoleAssignments, azuretestsupport.NewAppRoleAssignments(azuretestsupport.AppRoleIdGetHrUs, policytestsupport.UserIdUnassigned2))
 
 	client := m.AzureClient()
 	err := client.SetAppRoleAssignedTo(
@@ -571,7 +618,7 @@ func TestAzureClient_SetAppRoleAssignedTo_DoesNotAddExistingAssignment(t *testin
 	assert.True(t, m.MockHttpClient.VerifyCalled())
 }
 
-func TestAzureClient_SetAppRoleAssignedTo_DoesNotDeleteWithPrincipalInPolicy(t *testing.T) {
+func TestAzureClient_SetAppRoleAssignedTo_DoesNotDeleteMemberInPolicy(t *testing.T) {
 	m := azuretestsupport.NewAzureHttpClient()
 
 	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUsAndProfile
@@ -592,13 +639,11 @@ func TestAzureClient_SetAppRoleAssignedTo_DoesNotDeleteWithPrincipalInPolicy(t *
 
 func TestAzureClient_SetAppRoleAssignedTo_DoesNotDeleteDifferentRole(t *testing.T) {
 	m := azuretestsupport.NewAzureHttpClient()
-
 	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
+	assignmentsFromPolicy := azuretestsupport.AssignmentsForDelete(azuretestsupport.AppRoleAssignmentGetProfile)
 
 	m.TokenRequest("accessToken")
 	m.GetAppRoleAssignmentsRequest(existingAssignments)
-
-	assignmentsFromPolicy := azuretestsupport.AssignmentsForDelete(azuretestsupport.AppRoleAssignmentGetProfile)
 
 	client := m.AzureClient()
 	err := client.SetAppRoleAssignedTo(
@@ -612,13 +657,12 @@ func TestAzureClient_SetAppRoleAssignedTo_DoesNotDeleteDifferentRole(t *testing.
 
 func TestAzureClient_SetAppRoleAssignedTo_DoesNotDeleteDifferentResource(t *testing.T) {
 	m := azuretestsupport.NewAzureHttpClient()
-
 	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
+	assignmentsFromPolicy := make([]microsoftazure.AzureAppRoleAssignment, 0)
 
 	m.TokenRequest("accessToken")
 	m.GetAppRoleAssignmentsRequest(existingAssignments)
 
-	assignmentsFromPolicy := make([]microsoftazure.AzureAppRoleAssignment, 0)
 	for _, ara := range existingAssignments {
 		newAra := microsoftazure.AzureAppRoleAssignment{
 			AppRoleId:  ara.AppRoleId,
@@ -637,33 +681,14 @@ func TestAzureClient_SetAppRoleAssignedTo_DoesNotDeleteDifferentResource(t *test
 	assert.True(t, m.MockHttpClient.VerifyCalled())
 }
 
-func TestAzureClient_SetAppRoleAssignedTo_DoesNotDeleteUnmatchedAssignment(t *testing.T) {
-	m := azuretestsupport.NewAzureHttpClient()
-	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
-	assignmentsFromPolicy := azuretestsupport.AssignmentsForDelete(azuretestsupport.AppRoleAssignmentGetProfile)
-
-	m.TokenRequest("accessToken")
-	m.GetAppRoleAssignmentsRequest(existingAssignments)
-	client := m.AzureClient()
-	err := client.SetAppRoleAssignedTo(
-		azuretestsupport.AzureClientKey(),
-		azuretestsupport.ServicePrincipalId,
-		assignmentsFromPolicy)
-
-	assert.NoError(t, err)
-	assert.True(t, m.MockHttpClient.VerifyCalled())
-}
-
 func TestAzureClient_SetAppRoleAssignedTo_DeleteAllRoleAssignments(t *testing.T) {
 	m := azuretestsupport.NewAzureHttpClient()
-
 	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUsAndProfile
+	assignmentsFromPolicy := azuretestsupport.AssignmentsForDelete(existingAssignments)
 
 	m.TokenRequest("accessToken")
 	m.GetAppRoleAssignmentsRequest(existingAssignments)
 	m.DeleteAppRoleAssignmentsRequest(existingAssignments)
-
-	assignmentsFromPolicy := azuretestsupport.AssignmentsForDelete(existingAssignments)
 
 	client := m.AzureClient()
 	err := client.SetAppRoleAssignedTo(
@@ -677,15 +702,13 @@ func TestAzureClient_SetAppRoleAssignedTo_DeleteAllRoleAssignments(t *testing.T)
 
 func TestAzureClient_SetAppRoleAssignedTo_DeleteOneOfMultipleMemberAssignments(t *testing.T) {
 	m := azuretestsupport.NewAzureHttpClient()
-
 	existingAssignments := azuretestsupport.AppRoleAssignmentMultipleMembers
-
-	m.TokenRequest("accessToken")
-	m.GetAppRoleAssignmentsRequest(existingAssignments)
 	assignmentsFromPolicy := []microsoftazure.AzureAppRoleAssignment{
 		existingAssignments[1],
 	}
 
+	m.TokenRequest("accessToken")
+	m.GetAppRoleAssignmentsRequest(existingAssignments)
 	m.DeleteAppRoleAssignmentsRequest(existingAssignments[0:1])
 
 	client := m.AzureClient()
@@ -700,19 +723,17 @@ func TestAzureClient_SetAppRoleAssignedTo_DeleteOneOfMultipleMemberAssignments(t
 
 func TestAzureClient_SetAppRoleAssignedTo_AddDeleteRoleAssignment(t *testing.T) {
 	m := azuretestsupport.NewAzureHttpClient()
-
 	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
-
-	m.TokenRequest("accessToken")
-	m.GetAppRoleAssignmentsRequest(existingAssignments)
-	m.PostAppRoleAssignmentsRequest()
-	m.DeleteAppRoleAssignmentsRequest(existingAssignments)
-
 	newRoleAssignments := azuretestsupport.AppRoleAssignmentForAdd
 	assignmentsFromPolicy := make([]microsoftazure.AzureAppRoleAssignment, 0)
 	assignmentsFromPolicy = append(assignmentsFromPolicy, newRoleAssignments...)
 	assignmentsFromPolicy = append(assignmentsFromPolicy, azuretestsupport.AssignmentsForDelete(existingAssignments)...)
 
+	m.TokenRequest("accessToken")
+	m.GetAppRoleAssignmentsRequest(existingAssignments)
+	m.PostAppRoleAssignmentsRequest()
+	m.DeleteAppRoleAssignmentsRequest(existingAssignments)
+	
 	client := m.AzureClient()
 	err := client.SetAppRoleAssignedTo(
 		azuretestsupport.AzureClientKey(),

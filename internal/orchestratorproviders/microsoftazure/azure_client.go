@@ -289,9 +289,12 @@ func (c *azureClient) shouldRemove(existingRoleAssignments AzureAppRoleAssignmen
 	for _, eAra := range existingRoleAssignments.List {
 		doRemove := false
 		for _, ara := range assignments {
-			if eAra.AppRoleId == ara.AppRoleId && eAra.ResourceId == ara.ResourceId && eAra.PrincipalId != ara.PrincipalId {
+			if eAra.AppRoleId == ara.AppRoleId && eAra.ResourceId == ara.ResourceId {
+				if eAra.PrincipalId == ara.PrincipalId {
+					doRemove = false
+					break
+				}
 				doRemove = true
-				break
 			}
 		}
 
