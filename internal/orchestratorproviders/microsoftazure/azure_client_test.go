@@ -1,18 +1,16 @@
 package microsoftazure_test
 
 import (
-	"errors"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAzureClient_GetWebApplications(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte("{\"access_token\":\"aToken\"}")
-	m.ResponseBody["https://graph.microsoft.com/v1.0/applications"] = []byte(`
+var ExpAppsAzureResp = `
 {
   "value": [
     {
@@ -25,365 +23,701 @@ func TestAzureClient_GetWebApplications(t *testing.T) {
     }
   ]
 }
-`)
-	client := microsoftazure.AzureClient{HttpClient: m}
-	key := []byte(`
-{
-  "appId":"anAppId",
-  "secret":"aSecret",
-  "tenant":"aTenant",
-  "subscription":"aSubscription"
+`
+
+func TestAzureClient_GetWebApplications_Errors(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+	tests := []struct {
+		name        string
+		badToken    bool
+		badKey      bool
+		badRequest  bool
+		badResponse bool
+		errSubstr   string
+	}{
+		{
+			name:      "Bad Key",
+			badKey:    true,
+			errSubstr: "invalid character 'k'",
+		},
+		{
+			name:      "Bad Access Token",
+			badToken:  true,
+			errSubstr: "invalid character 'a'",
+		},
+		{
+			name:       "Unexpected Status",
+			badRequest: true,
+			errSubstr:  "Unexpected status",
+		},
+		{
+			name:        "Bad Response",
+			badResponse: true,
+			errSubstr:   "invalid character '~'",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			accessToken := "accessToken"
+			key := azuretestsupport.AzureClientKey()
+
+			if tt.badKey {
+				key = []byte("keyInvalid")
+			}
+
+			if tt.badToken {
+				accessToken = `"accessToken"`
+			}
+
+			m.TokenRequest(accessToken)
+			if tt.badRequest {
+				m.ErrorRequest(http.MethodGet, azuretestsupport.GraphApiBaseUrl+"/applications", http.StatusBadRequest, nil)
+			}
+
+			if tt.badResponse {
+				m.GetWebApplicationsRequest("~")
+			}
+
+			client := m.AzureClient()
+			apps, err := client.GetWebApplications(key)
+			assert.Error(t, err)
+			assert.ErrorContains(t, err, tt.errSubstr)
+			assert.NotNil(t, apps)
+			assert.Empty(t, apps)
+		})
+	}
 }
-`)
 
-	applications, _ := client.GetWebApplications(key)
+func TestAzureClient_GetWebApplications(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
 
+	m.TokenRequest("accessToken")
+	m.GetWebApplicationsRequest(ExpAppsAzureResp)
+
+	client := m.AzureClient()
+	applications, err := client.GetWebApplications(azuretestsupport.AzureClientKey())
+	assert.NoError(t, err)
+	assert.NotNil(t, applications)
 	assert.Equal(t, 1, len(applications))
 	assert.Equal(t, "anAppName", applications[0].Name)
 	assert.Equal(t, "anAppId", applications[0].Description)
 }
 
-func TestAzureClient_GetWebApplications_withBadAppJson(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte("{\"access_token\":\"aToken\"}")
-	m.ResponseBody["https://graph.microsoft.com/v1.0/applications"] = []byte(`=P`)
-	client := microsoftazure.AzureClient{HttpClient: m}
-	key := []byte(`
-{
-  "appId":"anAppId",
-  "secret":"aSecret",
-  "tenant":"aTenant",
-  "subscription":"aSubscription"
-}
-`)
-	_, err := client.GetWebApplications(key)
+func TestAzureClient_GetServicePrincipals_Errors(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+	tests := []struct {
+		name        string
+		badToken    bool
+		badKey      bool
+		badRequest  bool
+		badResponse bool
+		errSubstr   string
+	}{
+		{
+			name:      "Bad Key",
+			badKey:    true,
+			errSubstr: "invalid character 'k'",
+		},
+		{
+			name:      "Bad Access Token",
+			badToken:  true,
+			errSubstr: "invalid character 'a'",
+		},
+		{
+			name:       "Unexpected Status",
+			badRequest: true,
+			errSubstr:  "Unexpected status",
+		},
+		{
+			name:        "Bad Response",
+			badResponse: true,
+			errSubstr:   "invalid character '~'",
+		},
+	}
 
-	assert.Error(t, err)
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			accessToken := "accessToken"
+			key := azuretestsupport.AzureClientKey()
 
-func TestAzureClient_GetWebApplications_withABadKey(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte(`{"value": []}`)
-	client := microsoftazure.AzureClient{HttpClient: m}
+			if tt.badKey {
+				key = []byte("keyInvalid")
+			}
 
-	_, err := client.GetWebApplications([]byte("aBadKey"))
+			if tt.badToken {
+				accessToken = `"accessToken"`
+			}
 
-	assert.Equal(t, "invalid character 'a' looking for beginning of value", err.Error())
-}
+			m.TokenRequest(accessToken)
+			if tt.badRequest {
+				m.ErrorRequest(http.MethodGet, m.GetServicePrincipalsUrl(), http.StatusBadRequest, nil)
+			}
 
-func TestAzureClient_GetWebApplications_withRequestError(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte(`{"value": []}`)
-	m.Err = errors.New("oops")
-	client := microsoftazure.AzureClient{HttpClient: m}
-	key := []byte(`
-{
-  "appId":"anAppId",
-  "secret":"aSecret",
-  "tenant":"aTenant",
-  "subscription":"aSubscription"
-}
-`)
+			if tt.badResponse {
+				m.ErrorRequest(http.MethodGet, m.GetServicePrincipalsUrl(), http.StatusOK, []byte("~"))
+			}
 
-	_, err := client.GetWebApplications(key)
-
-	assert.Equal(t, "oops", err.Error())
-}
-
-func TestAzureClient_GetWebApplications_withBadJsonToken(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte("_")
-	client := microsoftazure.AzureClient{HttpClient: m}
-	key := []byte(`
-{
-  "appId":"anAppId",
-  "secret":"aSecret",
-  "tenant":"aTenant",
-  "subscription":"aSubscription"
-}
-`)
-
-	_, err := client.GetWebApplications(key)
-
-	assert.Equal(t, "invalid character '_' looking for beginning of value", err.Error())
-}
-
-func TestAzureClient_GetServicePrincipals_withABadKey(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte(`{"value": []}`)
-	client := microsoftazure.AzureClient{HttpClient: m}
-
-	_, err := client.GetServicePrincipals([]byte("aBadKey"), "")
-
-	assert.Equal(t, "invalid character 'a' looking for beginning of value", err.Error())
+			client := m.AzureClient()
+			sps, err := client.GetServicePrincipals(key, azuretestsupport.AzureAppId)
+			assert.Error(t, err)
+			assert.ErrorContains(t, err, tt.errSubstr)
+			assert.NotNil(t, sps)
+			assert.Empty(t, sps.List)
+		})
+	}
 }
 
-func TestAzureClient_GetServicePrincipals_withBadPrincipalJson(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte("{\"access_token\":\"aToken\"}")
-	m.ResponseBody["https://graph.microsoft.com/v1.0/servicePrincipals?$search=\"appId:anAppId\""] = []byte("~")
+func TestAzureClient_GetServicePrincipals(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+	key := azuretestsupport.AzureClientKey()
+	m.TokenRequest("accessToken")
+	m.GetServicePrincipalsRequest()
+	client := m.AzureClient()
+	sps, err := client.GetServicePrincipals(key, azuretestsupport.AzureAppId)
 
-	client := microsoftazure.AzureClient{HttpClient: m}
-	key := []byte(`
-{
-  "appId":"anAppId",
-  "secret":"aSecret",
-  "tenant":"aTenant",
-  "subscription":"aSubscription"
-}
-`)
+	assert.NoError(t, err)
+	assert.NotNil(t, sps)
+	assert.Equal(t, 1, len(sps.List))
+	assert.Equal(t, "some-service-principal-id", sps.List[0].ID)
+	assert.NotNil(t, sps.List[0].AppRoles)
 
-	_, err := client.GetServicePrincipals(key, "anAppId")
-
-	assert.Error(t, err)
+	expSps := azuretestsupport.AzureServicePrincipals()
+	assert.Equal(t, len(expSps.List[0].AppRoles), len(sps.List[0].AppRoles))
 }
 
-func TestAzureClient_GetUserInfoFromPrincipalId_withABadKey(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte(`{"value": []}`)
-	client := microsoftazure.AzureClient{HttpClient: m}
+func TestAzureClient_GetUserInfoFromPrincipalId_Errors(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+	principalId := policytestsupport.UserIdGetHrUsAndProfile
+	getUrl := m.GetUserInfoFromPrincipalIdUrl(principalId)
+	tests := []struct {
+		name        string
+		badToken    bool
+		badKey      bool
+		badRequest  bool
+		badResponse bool
+		errSubstr   string
+	}{
+		{
+			name:      "Bad Key",
+			badKey:    true,
+			errSubstr: "invalid character 'k'",
+		},
+		{
+			name:      "Bad Access Token",
+			badToken:  true,
+			errSubstr: "invalid character 'a'",
+		},
+		{
+			name:       "Unexpected Status",
+			badRequest: true,
+			errSubstr:  "Unexpected status",
+		},
+		{
+			name:        "Bad Response",
+			badResponse: true,
+			errSubstr:   "invalid character '~'",
+		},
+	}
 
-	_, err := client.GetUserInfoFromPrincipalId([]byte("aBadKey"), "")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			accessToken := "accessToken"
+			key := azuretestsupport.AzureClientKey()
 
-	assert.Equal(t, "invalid character 'a' looking for beginning of value", err.Error())
+			if tt.badKey {
+				key = []byte("keyInvalid")
+			}
+
+			if tt.badToken {
+				accessToken = `"accessToken"`
+			}
+
+			m.TokenRequest(accessToken)
+			if tt.badRequest {
+				m.ErrorRequest(http.MethodGet, getUrl, http.StatusBadRequest, nil)
+			}
+
+			if tt.badResponse {
+				m.ErrorRequest(http.MethodGet, getUrl, http.StatusOK, []byte("~"))
+			}
+
+			client := m.AzureClient()
+			actUser, err := client.GetUserInfoFromPrincipalId(key, principalId)
+			assert.Error(t, err)
+			assert.ErrorContains(t, err, tt.errSubstr)
+			assert.NotNil(t, actUser)
+			assert.Empty(t, actUser)
+		})
+	}
 }
 
-func TestAzureClient_GetUserInfoFromPrincipalId_withBadJson(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte("{\"access_token\":\"aToken\"}")
-	m.ResponseBody["https://graph.microsoft.com/v1.0/users/aPrincipalId"] = []byte("~")
+func TestAzureClient_GetUserInfoFromPrincipalId(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+	key := azuretestsupport.AzureClientKey()
+	principalId := policytestsupport.UserIdGetProfile
+	m.TokenRequest("accessToken")
+	m.GetUserInfoFromPrincipalIdRequest(principalId)
 
-	client := microsoftazure.AzureClient{HttpClient: m}
-	key := []byte(`
-{
-  "appId":"anAppId",
-  "secret":"aSecret",
-  "tenant":"aTenant",
-  "subscription":"aSubscription"
+	client := m.AzureClient()
+	actUser, err := client.GetUserInfoFromPrincipalId(key, principalId)
+	assert.NoError(t, err)
+	assert.NotNil(t, actUser)
+	assert.Equal(t, principalId, actUser.PrincipalId)
+	assert.Equal(t, policytestsupport.MakeEmail(principalId), actUser.Email)
 }
-`)
 
-	_, err := client.GetUserInfoFromPrincipalId(key, "aPrincipalId")
+func TestAzureClient_GetPrincipalIdFromEmail_Errors(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+	principalId := policytestsupport.UserIdGetHrUs
+	email := policytestsupport.UserEmailGetHrUs
+	getUrl := m.GetPrincipalIdFromEmailUrl(principalId)
 
-	assert.Error(t, err)
+	tests := []struct {
+		name        string
+		badToken    bool
+		badKey      bool
+		badRequest  bool
+		badResponse bool
+		errSubstr   string
+	}{
+		{
+			name:      "Bad Key",
+			badKey:    true,
+			errSubstr: "invalid character 'k'",
+		},
+		{
+			name:      "Bad Access Token",
+			badToken:  true,
+			errSubstr: "invalid character 'a'",
+		},
+		{
+			name:       "Unexpected Status",
+			badRequest: true,
+			errSubstr:  "Unexpected status",
+		},
+		{
+			name:        "Bad Response",
+			badResponse: true,
+			errSubstr:   "invalid character '~'",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			accessToken := "accessToken"
+			key := azuretestsupport.AzureClientKey()
+
+			if tt.badKey {
+				key = []byte("keyInvalid")
+			}
+
+			if tt.badToken {
+				accessToken = `"accessToken"`
+			}
+
+			m.TokenRequest(accessToken)
+			if tt.badRequest {
+				m.ErrorRequest(http.MethodGet, getUrl, http.StatusBadRequest, nil)
+			}
+
+			if tt.badResponse {
+				m.ErrorRequest(http.MethodGet, getUrl, http.StatusOK, []byte("~"))
+			}
+
+			client := m.AzureClient()
+			actPrincipalId, err := client.GetPrincipalIdFromEmail(key, email)
+			assert.Error(t, err)
+			assert.ErrorContains(t, err, tt.errSubstr)
+			assert.Empty(t, actPrincipalId)
+		})
+	}
 }
 
 func TestAzureClient_GetPrincipalIdFromEmail(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte("{\"access_token\":\"aToken\"}")
-	m.ResponseBody["https://graph.microsoft.com/v1.0/users?$select=id,mail&$filter=mail%20eq%20%27anEmail%40example.com%27"] = []byte(
-		"{\"value\":[{\"id\":\"anId\",\"mail\":\"anEmail@example.com\"}]}")
+	m := azuretestsupport.NewAzureHttpClient()
+	key := azuretestsupport.AzureClientKey()
+	m.TokenRequest("accessToken")
+	principalId := policytestsupport.UserIdGetHrUs
+	email := policytestsupport.UserEmailGetHrUs
+	m.GetPrincipalIdFromEmailRequest(principalId)
 
-	client := microsoftazure.AzureClient{HttpClient: m}
-	key := []byte(`
-{
-  "appId":"anAppId",
-  "secret":"aSecret",
-  "tenant":"aTenant",
-  "subscription":"aSubscription"
-}
-`)
-
-	response, _ := client.GetPrincipalIdFromEmail(key, "anEmail@example.com")
-
-	assert.Equal(t, "anId", response)
-}
-
-func TestAzureClient_GetPrincipalIdFromEmail_withABadKey(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte(`{"value": []}`)
-	client := microsoftazure.AzureClient{HttpClient: m}
-	_, err := client.GetPrincipalIdFromEmail([]byte("aBadKey"), "")
-	assert.Equal(t, "invalid character 'a' looking for beginning of value", err.Error())
-}
-
-func TestAzureClient_GetPrincipalIdFromEmail_withBadJson(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte("{\"access_token\":\"aToken\"}")
-	m.ResponseBody["https://graph.microsoft.com/v1.0/users?$select=id,mail&$filter=mail%20eq%20%27anEmail%40example.com%27"] = []byte("~")
-
-	client := microsoftazure.AzureClient{HttpClient: m}
-	key := []byte(`
-{
-  "appId":"anAppId",
-  "secret":"aSecret",
-  "tenant":"aTenant",
-  "subscription":"aSubscription"
-}
-`)
-
-	_, err := client.GetPrincipalIdFromEmail(key, "anEmail@example.com")
-
-	assert.Error(t, err)
-}
-
-func TestAzureClient_GetAppRoleAssignedTo_withABadKey(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte(`{"value": []}`)
-
-	client := microsoftazure.AzureClient{HttpClient: m}
-	_, err := client.GetAppRoleAssignedTo([]byte("aBadKey"), "")
-	assert.Equal(t, "invalid character 'a' looking for beginning of value", err.Error())
-}
-
-func TestAzureClient_GetAppRoleAssignedTo_withBadJson(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte("{\"access_token\":\"aToken\"}")
-	m.ResponseBody["https://graph.microsoft.com/v1.0/servicePrincipals/anAppId/appRoleAssignedTo"] = []byte("~")
-
-	client := microsoftazure.AzureClient{HttpClient: m}
-	key := []byte(`
-{
-  "appId":"anAppId",
-  "secret":"aSecret",
-  "tenant":"aTenant",
-  "subscription":"aSubscription"
-}
-`)
-
-	_, err := client.GetAppRoleAssignedTo(key, "anAppId")
-
-	assert.Error(t, err)
-}
-
-func TestAzureClient_SetAppRoleAssignedTo(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte("{\"access_token\":\"aToken\"}")
-	m.ResponseBody["https://graph.microsoft.com/v1.0/servicePrincipals?$search=\"appId:aDescription\""] = []byte("{\"value\":[{\"id\":\"aToken\"}]}")
-	m.ResponseBody["https://graph.microsoft.com/v1.0/servicePrincipals/anAppId/appRoleAssignedTo"] = []byte(`
-{
-  "value": [
-    {
-      "id": "anId",
-      "appRoleId": "anAppRoleId", 
-      "principalId": "aPrincipalId",
-      "principalDisplayName": "aPrincipalDisplayName",
-      "resourceId": "aResourceId",
-      "resourceDisplayName": "aResourceDisplayName"
-    }
-  ]
-}
-`)
-	m.ResponseBody["https://graph.microsoft.com/v1.0/servicePrincipals/anAppId/appRoleAssignedTo/anId"] = []byte("")
-
-	client := microsoftazure.AzureClient{HttpClient: m}
-	key := []byte(`
-{
-  "appId":"anAppId",
-  "secret":"aSecret",
-  "tenant":"aTenant",
-  "subscription":"aSubscription"
-}
-`)
-
-	err := client.SetAppRoleAssignedTo(key, "anAppId", []microsoftazure.AzureAppRoleAssignment{
-		{ID: "anId"},
-	})
-
+	client := m.AzureClient()
+	actPrincipalId, err := client.GetPrincipalIdFromEmail(key, email)
 	assert.NoError(t, err)
+	assert.Equal(t, principalId, actPrincipalId)
 }
 
-func TestAzureClient_SetAppRoleAssignedTo_withBadGet(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte("{\"access_token\":\"aToken\"}")
-	m.ResponseBody["https://graph.microsoft.com/v1.0/servicePrincipals?$search=\"appId:aDescription\""] = []byte("{\"value\":[{\"id\":\"aToken\"}]}")
-	m.ResponseBody["https://graph.microsoft.com/v1.0/servicePrincipals/anAppId/appRoleAssignedTo"] = []byte(`~`)
+func TestAzureClient_GetAppRoleAssignedTo_Errors(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+	getUrl := m.AppRoleAssignmentsUrl()
 
-	client := microsoftazure.AzureClient{HttpClient: m}
-	key := []byte(`
-{
-  "appId":"anAppId",
-  "secret":"aSecret",
-  "tenant":"aTenant",
-  "subscription":"aSubscription"
+	tests := []struct {
+		name        string
+		badToken    bool
+		badKey      bool
+		badRequest  bool
+		badResponse bool
+		errSubstr   string
+	}{
+		{
+			name:      "Bad Key",
+			badKey:    true,
+			errSubstr: "invalid character 'k'",
+		},
+		{
+			name:      "Bad Access Token",
+			badToken:  true,
+			errSubstr: "invalid character 'a'",
+		},
+		{
+			name:       "Unexpected Status",
+			badRequest: true,
+			errSubstr:  "Unexpected status",
+		},
+		{
+			name:        "Bad Response",
+			badResponse: true,
+			errSubstr:   "invalid character '~'",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			accessToken := "accessToken"
+			key := azuretestsupport.AzureClientKey()
+
+			if tt.badKey {
+				key = []byte("keyInvalid")
+			}
+
+			if tt.badToken {
+				accessToken = `"accessToken"`
+			}
+
+			m.TokenRequest(accessToken)
+			if tt.badRequest {
+				m.ErrorRequest(http.MethodGet, getUrl, http.StatusBadRequest, nil)
+			}
+
+			if tt.badResponse {
+				m.ErrorRequest(http.MethodGet, getUrl, http.StatusOK, []byte("~"))
+			}
+
+			client := m.AzureClient()
+			actAssignments, err := client.GetAppRoleAssignedTo(key, azuretestsupport.ServicePrincipalId)
+			assert.Error(t, err)
+			assert.ErrorContains(t, err, tt.errSubstr)
+			assert.Empty(t, actAssignments)
+		})
+	}
 }
-`)
-	err := client.SetAppRoleAssignedTo(key, "anAppId", []microsoftazure.AzureAppRoleAssignment{
-		{ID: "anId"},
-	})
+
+func TestAzureClient_GetAppRoleAssignedTo(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+	key := azuretestsupport.AzureClientKey()
+	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
+
+	m.TokenRequest("accessToken")
+	m.GetAppRoleAssignmentsRequest(existingAssignments)
+
+	client := m.AzureClient()
+	actAssignments, err := client.GetAppRoleAssignedTo(key, azuretestsupport.ServicePrincipalId)
+	assert.NoError(t, err)
+	assert.NotNil(t, actAssignments.List)
+	assert.Equal(t, len(existingAssignments), len(actAssignments.List))
+
+	existingAssignmentIdMap := make(map[string]microsoftazure.AzureAppRoleAssignment)
+	for _, ara := range existingAssignments {
+		existingAssignmentIdMap[ara.ID] = ara
+	}
+
+	foundCount := 0
+	for _, ara := range actAssignments.List {
+		exAra, found := existingAssignmentIdMap[ara.ID]
+		if found {
+			assert.Equal(t, exAra.AppRoleId, ara.AppRoleId)
+			assert.Equal(t, exAra.PrincipalId, ara.PrincipalId)
+			assert.Equal(t, exAra.ResourceId, ara.ResourceId)
+			foundCount++
+		}
+	}
+
+	assert.Equal(t, len(existingAssignments), foundCount)
+}
+
+func TestAzureClient_SetAppRoleAssignedTo_InvalidAppRoleAssignment(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+	client := m.AzureClient()
+
+	tests := []struct {
+		name       string
+		assignment microsoftazure.AzureAppRoleAssignment
+		errSubstr  string
+	}{
+		{
+			name:       "Missing appRoleId",
+			assignment: microsoftazure.AzureAppRoleAssignment{PrincipalId: "aUserId", ResourceId: "aResourceId"},
+			errSubstr:  "AppRoleId",
+		},
+		{
+			name:       "Missing Resource",
+			assignment: microsoftazure.AzureAppRoleAssignment{AppRoleId: "aRoleId", PrincipalId: "aUserId"},
+			errSubstr:  "ResourceId",
+		},
+	}
+
+	key := []byte("xx")
+	appId := "anAppId"
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := client.SetAppRoleAssignedTo(key, appId, []microsoftazure.AzureAppRoleAssignment{tt.assignment})
+			assert.Error(t, err)
+			assert.ErrorContains(t, err, "Error:Field validation")
+			assert.ErrorContains(t, err, tt.errSubstr)
+		})
+	}
+}
+
+func TestAzureClient_SetAppRoleAssignedTo_WithBadGetAssignments(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+	m.TokenRequest("accessToken")
+	m.ErrorRequest(http.MethodGet, m.AppRoleAssignmentsUrl(), http.StatusOK, []byte(`~`))
+	client := m.AzureClient()
+	err := client.SetAppRoleAssignedTo(
+		azuretestsupport.AzureClientKey(),
+		azuretestsupport.ServicePrincipalId,
+		[]microsoftazure.AzureAppRoleAssignment{})
 	assert.Error(t, err)
+	assert.ErrorContains(t, err, "invalid character '~'")
 }
 
 func TestAzureClient_SetAppRoleAssignedTo_withBadAdd(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte("{\"access_token\":\"aToken\"}")
-	m.ResponseBody["https://graph.microsoft.com/v1.0/servicePrincipals?$search=\"appId:aDescription\""] = []byte("{\"value\":[{\"id\":\"aToken\"}]}")
-	m.ResponseBody["https://graph.microsoft.com/v1.0/servicePrincipals/anAppId/appRoleAssignedTo"] = []byte(`
-{
-  "value": [
-    {
-      "id": "anId",
-      "appRoleId": "anAppRoleId", 
-      "principalId": "aPrincipalId",
-      "principalDisplayName": "aPrincipalDisplayName",
-      "resourceId": "aResourceId",
-      "resourceDisplayName": "aResourceDisplayName"
-    }
-  ]
-}
-`)
-	m.ResponseBody["https://graph.microsoft.com/v1.0/servicePrincipals/anAppId/appRoleAssignedTo/anId"] = []byte("{\"value\":[{\"id\":\"aToken\"}]}")
-	m.Err = errors.New("oops")
+	m := azuretestsupport.NewAzureHttpClient()
+	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
 
-	client := microsoftazure.AzureClient{HttpClient: m}
-	key := []byte(`
-{
-  "appId":"anAppId",
-  "secret":"aSecret",
-  "tenant":"aTenant",
-  "subscription":"aSubscription"
-}
-`)
-	err := client.SetAppRoleAssignedTo(key, "anAppId", []microsoftazure.AzureAppRoleAssignment{
-		{ID: "anId"},
-	})
-	assert.EqualError(t, err, "oops")
+	m.TokenRequest("accessToken")
+	m.GetAppRoleAssignmentsRequest(existingAssignments)
+	m.ErrorRequest(http.MethodPost, m.AppRoleAssignmentsUrl(), http.StatusBadRequest, nil)
+
+	newRoleAssignments := append(existingAssignments, azuretestsupport.AppRoleAssignmentForAdd...)
+
+	client := m.AzureClient()
+	err := client.SetAppRoleAssignedTo(
+		azuretestsupport.AzureClientKey(),
+		azuretestsupport.ServicePrincipalId,
+		newRoleAssignments)
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "Unexpected status 400")
+	assert.True(t, m.MockHttpClient.VerifyCalled())
 }
 
 func TestAzureClient_SetAppRoleAssignedTo_withBadDelete(t *testing.T) {
-	//todo
+	m := azuretestsupport.NewAzureHttpClient()
+
+	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
+
+	m.TokenRequest("accessToken")
+	m.GetAppRoleAssignmentsRequest(existingAssignments)
+	deleteUrl := m.AppRoleAssignmentsUrl() + "/" + existingAssignments[0].ID
+	m.ErrorRequest(http.MethodDelete, deleteUrl, http.StatusBadRequest, nil)
+
+	assignmentsFromPolicy := azuretestsupport.AssignmentsForDelete(existingAssignments)
+	client := m.AzureClient()
+	err := client.SetAppRoleAssignedTo(
+		azuretestsupport.AzureClientKey(),
+		azuretestsupport.ServicePrincipalId,
+		assignmentsFromPolicy)
+
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "Unexpected status 400")
+	assert.True(t, m.MockHttpClient.VerifyCalled())
 }
 
-func TestAzureClient_AddAppRolesAssignedTo(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte(`{"value": []}`)
+func TestAzureClient_SetAppRoleAssignedTo_AddRoleAssignment(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
 
-	client := microsoftazure.AzureClient{HttpClient: m}
-	err := client.AddAppRolesAssignedTo([]byte("aBadKey"), "", []microsoftazure.AzureAppRoleAssignment{
-		{ID: "anId"},
-	})
-	assert.Equal(t, "invalid character 'a' looking for beginning of value", err.Error())
+	m.TokenRequest("accessToken")
+	m.GetAppRoleAssignmentsRequest(existingAssignments)
+	m.PostAppRoleAssignmentsRequest()
+
+	newRoleAssignments := append(existingAssignments, azuretestsupport.AppRoleAssignmentForAdd...)
+
+	client := m.AzureClient()
+	err := client.SetAppRoleAssignedTo(
+		azuretestsupport.AzureClientKey(),
+		azuretestsupport.ServicePrincipalId,
+		newRoleAssignments)
+	assert.NoError(t, err)
+
+	assert.True(t, m.MockHttpClient.VerifyCalled())
 }
 
-func TestAzureClient_DeleteAppRolesAssignedTo(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte(`{"value": []}`)
-	client := microsoftazure.AzureClient{HttpClient: m}
-	err := client.DeleteAppRolesAssignedTo([]byte("aBadKey"), "", []string{"anId"})
-	assert.Equal(t, "invalid character 'a' looking for beginning of value", err.Error())
+func TestAzureClient_SetAppRoleAssignedTo_DoesNotAddExistingAssignment(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
+
+	m.TokenRequest("accessToken")
+	m.GetAppRoleAssignmentsRequest(existingAssignments)
+
+	client := m.AzureClient()
+	err := client.SetAppRoleAssignedTo(
+		azuretestsupport.AzureClientKey(),
+		azuretestsupport.ServicePrincipalId,
+		existingAssignments)
+	assert.NoError(t, err)
+
+	assert.True(t, m.MockHttpClient.VerifyCalled())
 }
 
-func TestAzureClient_ShouldAdd(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte(`{"value": []}`)
-	client := microsoftazure.AzureClient{HttpClient: m}
-	assignments := []microsoftazure.AzureAppRoleAssignment{{"anId", "anAppRoleId",
-		"aPrincipalDisplayName", "aPrincipalId", "aPrincipalType",
-		"aResourceDisplayName", "aResourceId"}}
-	shouldAdd := client.ShouldAdd(assignments,
-		microsoftazure.AzureAppRoleAssignments{List: []microsoftazure.AzureAppRoleAssignment{}})
-	assert.Equal(t, 1, len(shouldAdd))
+func TestAzureClient_SetAppRoleAssignedTo_DoesNotDeleteWithPrincipalInPolicy(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+
+	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUsAndProfile
+
+	m.TokenRequest("accessToken")
+	m.GetAppRoleAssignmentsRequest(existingAssignments)
+	assignmentsFromPolicy := existingAssignments
+
+	client := m.AzureClient()
+	err := client.SetAppRoleAssignedTo(
+		azuretestsupport.AzureClientKey(),
+		azuretestsupport.ServicePrincipalId,
+		assignmentsFromPolicy)
+
+	assert.NoError(t, err)
+	assert.True(t, m.MockHttpClient.VerifyCalled())
 }
 
-func TestAzureClient_ShouldRemove(t *testing.T) {
-	m := testsupport.NewMockHTTPClient()
-	m.ResponseBody["https://login.microsoftonline.com/aTenant/oauth2/v2.0/token"] = []byte(`{"value": []}`)
-	client := microsoftazure.AzureClient{HttpClient: m}
-	assignments := []microsoftazure.AzureAppRoleAssignment{{"anId", "anAppRoleId",
-		"aPrincipalDisplayName", "aPrincipalId", "aPrincipalType",
-		"aResourceDisplayName", "aResourceId"}}
-	shouldAdd := client.ShouldRemove(
-		microsoftazure.AzureAppRoleAssignments{List: []microsoftazure.AzureAppRoleAssignment{}},
-		assignments)
-	assert.Equal(t, 0, len(shouldAdd))
+func TestAzureClient_SetAppRoleAssignedTo_DoesNotDeleteDifferentRole(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+
+	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
+
+	m.TokenRequest("accessToken")
+	m.GetAppRoleAssignmentsRequest(existingAssignments)
+
+	assignmentsFromPolicy := azuretestsupport.AssignmentsForDelete(azuretestsupport.AppRoleAssignmentGetProfile)
+
+	client := m.AzureClient()
+	err := client.SetAppRoleAssignedTo(
+		azuretestsupport.AzureClientKey(),
+		azuretestsupport.ServicePrincipalId,
+		assignmentsFromPolicy)
+
+	assert.NoError(t, err)
+	assert.True(t, m.MockHttpClient.VerifyCalled())
+}
+
+func TestAzureClient_SetAppRoleAssignedTo_DoesNotDeleteDifferentResource(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+
+	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
+
+	m.TokenRequest("accessToken")
+	m.GetAppRoleAssignmentsRequest(existingAssignments)
+
+	assignmentsFromPolicy := make([]microsoftazure.AzureAppRoleAssignment, 0)
+	for _, ara := range existingAssignments {
+		newAra := microsoftazure.AzureAppRoleAssignment{
+			AppRoleId:  ara.AppRoleId,
+			ResourceId: "some-other-resource",
+		}
+		assignmentsFromPolicy = append(assignmentsFromPolicy, newAra)
+	}
+
+	client := m.AzureClient()
+	err := client.SetAppRoleAssignedTo(
+		azuretestsupport.AzureClientKey(),
+		azuretestsupport.ServicePrincipalId,
+		assignmentsFromPolicy)
+
+	assert.NoError(t, err)
+	assert.True(t, m.MockHttpClient.VerifyCalled())
+}
+
+func TestAzureClient_SetAppRoleAssignedTo_DoesNotDeleteUnmatchedAssignment(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
+	assignmentsFromPolicy := azuretestsupport.AssignmentsForDelete(azuretestsupport.AppRoleAssignmentGetProfile)
+
+	m.TokenRequest("accessToken")
+	m.GetAppRoleAssignmentsRequest(existingAssignments)
+	client := m.AzureClient()
+	err := client.SetAppRoleAssignedTo(
+		azuretestsupport.AzureClientKey(),
+		azuretestsupport.ServicePrincipalId,
+		assignmentsFromPolicy)
+
+	assert.NoError(t, err)
+	assert.True(t, m.MockHttpClient.VerifyCalled())
+}
+
+func TestAzureClient_SetAppRoleAssignedTo_DeleteAllRoleAssignments(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+
+	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUsAndProfile
+
+	m.TokenRequest("accessToken")
+	m.GetAppRoleAssignmentsRequest(existingAssignments)
+	m.DeleteAppRoleAssignmentsRequest(existingAssignments)
+
+	assignmentsFromPolicy := azuretestsupport.AssignmentsForDelete(existingAssignments)
+
+	client := m.AzureClient()
+	err := client.SetAppRoleAssignedTo(
+		azuretestsupport.AzureClientKey(),
+		azuretestsupport.ServicePrincipalId,
+		assignmentsFromPolicy)
+
+	assert.NoError(t, err)
+	assert.True(t, m.MockHttpClient.VerifyCalled())
+}
+
+func TestAzureClient_SetAppRoleAssignedTo_DeleteOneOfMultipleMemberAssignments(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+
+	existingAssignments := azuretestsupport.AppRoleAssignmentMultipleMembers
+
+	m.TokenRequest("accessToken")
+	m.GetAppRoleAssignmentsRequest(existingAssignments)
+	assignmentsFromPolicy := []microsoftazure.AzureAppRoleAssignment{
+		existingAssignments[1],
+	}
+
+	m.DeleteAppRoleAssignmentsRequest(existingAssignments[0:1])
+
+	client := m.AzureClient()
+	err := client.SetAppRoleAssignedTo(
+		azuretestsupport.AzureClientKey(),
+		azuretestsupport.ServicePrincipalId,
+		assignmentsFromPolicy)
+
+	assert.NoError(t, err)
+	assert.True(t, m.MockHttpClient.VerifyCalled())
+}
+
+func TestAzureClient_SetAppRoleAssignedTo_AddDeleteRoleAssignment(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+
+	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
+
+	m.TokenRequest("accessToken")
+	m.GetAppRoleAssignmentsRequest(existingAssignments)
+	m.PostAppRoleAssignmentsRequest()
+	m.DeleteAppRoleAssignmentsRequest(existingAssignments)
+
+	newRoleAssignments := azuretestsupport.AppRoleAssignmentForAdd
+	assignmentsFromPolicy := make([]microsoftazure.AzureAppRoleAssignment, 0)
+	assignmentsFromPolicy = append(assignmentsFromPolicy, newRoleAssignments...)
+	assignmentsFromPolicy = append(assignmentsFromPolicy, azuretestsupport.AssignmentsForDelete(existingAssignments)...)
+
+	client := m.AzureClient()
+	err := client.SetAppRoleAssignedTo(
+		azuretestsupport.AzureClientKey(),
+		azuretestsupport.ServicePrincipalId,
+		assignmentsFromPolicy)
+	assert.NoError(t, err)
+	assert.True(t, m.MockHttpClient.VerifyCalled())
 }

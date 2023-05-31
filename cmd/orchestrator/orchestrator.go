@@ -52,7 +52,7 @@ func App(key string, addr string, hostPort string, dbUrl string) (*http.Server, 
 	store := hawksupport.NewCredentialStore(key)
 	providers := make(map[string]orchestrator.Provider)
 	providers["google_cloud"] = &googlecloud.GoogleProvider{}
-	providers["azure"] = &microsoftazure.AzureProvider{}
+	providers["azure"] = microsoftazure.NewAzureProvider()
 	providers["amazon"] = &amazonwebservices.AmazonProvider{}
 	providers["open_policy_agent"] = &openpolicyagent.OpaProvider{}
 	handlers, scheduler := orchestrator.LoadHandlers(db, store, hostPort, providers)

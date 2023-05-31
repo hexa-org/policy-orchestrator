@@ -17,6 +17,9 @@ import (
 )
 
 func TestPolicy(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping test with opa run")
+	}
 	openPolicyAgent := exec.Command("opa", "run", "--server", "--addr", ":8887")
 	openPolicyAgent.Stdout = os.Stdout
 	openPolicyAgent.Stderr = os.Stderr

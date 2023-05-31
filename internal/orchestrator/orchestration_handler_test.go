@@ -57,7 +57,7 @@ insert into applications (id, integration_id, object_id, name, description) valu
 
 	data.providers = make(map[string]orchestrator.Provider)
 	data.providers["noop"] = &orchestrator_test.NoopProvider{}
-	data.providers["azure"] = &microsoftazure.AzureProvider{}
+	data.providers["azure"] = microsoftazure.NewAzureProvider()
 	handlers, _ := orchestrator.LoadHandlers(data.db, hawksupport.NewCredentialStore(data.key), addr, data.providers)
 	data.server = websupport.Create(addr, handlers, websupport.Options{})
 	go websupport.Start(data.server, listener)
