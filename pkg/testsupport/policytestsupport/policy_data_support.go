@@ -2,7 +2,7 @@ package policytestsupport
 
 import "strings"
 
-const ProtectedApiResourceId = "some-resource-id"
+const PolicyObjectResourceId = "some-resource-id"
 const ActionGetProfile = "GET/profile"
 const ActionGetHrUs = "GET/humanresources/us"
 

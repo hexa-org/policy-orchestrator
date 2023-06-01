@@ -18,7 +18,7 @@ func NewAzurePolicyMapper(sps AzureServicePrincipals, appRoleAssignments []Azure
 	}
 
 	return &AzurePolicyMapper{
-		objectId:                   sps.List[0].ID,
+		objectId:                   sps.List[0].Name,
 		roleIdToAppRole:            mapAppRoles(sps.List[0].AppRoles),
 		roleIdToAppRoleAssignments: mapAppRoleAssignments(appRoleAssignments),
 		azureUserEmail:             azureUserEmail}

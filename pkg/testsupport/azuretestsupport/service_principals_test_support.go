@@ -18,8 +18,8 @@ const AppRoleIdGetProfile AppRoleId = "app-role-get-profile"
 
 var ServicePrincipalsRespJson = fmt.Sprintf(`{"value": [
 {
-	"id": "%s", 
-	"AppId": "%s",
+	"id": "%s",
+	"displayName": "%s",
 	"appRoles": [
 		{
 			"allowedMemberTypes": [
@@ -44,7 +44,7 @@ var ServicePrincipalsRespJson = fmt.Sprintf(`{"value": [
 			"value": "%s"
 		}
 	] 
-}]}`, ServicePrincipalId, AzureAppId, AppRoleIdGetHrUs, policytestsupport.ActionGetHrUs, AppRoleIdGetProfile, policytestsupport.ActionGetProfile)
+}]}`, ServicePrincipalId, policytestsupport.PolicyObjectResourceId, AppRoleIdGetHrUs, policytestsupport.ActionGetHrUs, AppRoleIdGetProfile, policytestsupport.ActionGetProfile)
 
 func AzureClientKey() []byte {
 	key := microsoftazure.AzureKey{

@@ -179,7 +179,8 @@ func TestAzureClient_GetServicePrincipals(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, sps)
 	assert.Equal(t, 1, len(sps.List))
-	assert.Equal(t, "some-service-principal-id", sps.List[0].ID)
+	assert.Equal(t, azuretestsupport.ServicePrincipalId, sps.List[0].ID)
+	assert.Equal(t, policytestsupport.PolicyObjectResourceId, sps.List[0].Name)
 	assert.NotNil(t, sps.List[0].AppRoles)
 
 	expSps := azuretestsupport.AzureServicePrincipals()
@@ -411,6 +412,21 @@ func TestAzureClient_GetAppRoleAssignedTo_Errors(t *testing.T) {
 			assert.Empty(t, actAssignments)
 		})
 	}
+}
+
+func TestAzureClient_GetAppRoleAssignedTo_NoAssignments(t *testing.T) {
+	m := azuretestsupport.NewAzureHttpClient()
+	key := azuretestsupport.AzureClientKey()
+	var existingAssignments []microsoftazure.AzureAppRoleAssignment
+
+	m.TokenRequest("accessToken")
+	m.GetAppRoleAssignmentsRequest(existingAssignments)
+
+	client := m.AzureClient()
+	actAssignments, err := client.GetAppRoleAssignedTo(key, azuretestsupport.ServicePrincipalId)
+	assert.NoError(t, err)
+	assert.NotNil(t, actAssignments.List)
+	assert.Equal(t, 0, len(actAssignments.List))
 }
 
 func TestAzureClient_GetAppRoleAssignedTo(t *testing.T) {
@@ -733,7 +749,7 @@ func TestAzureClient_SetAppRoleAssignedTo_AddDeleteRoleAssignment(t *testing.T) 
 	m.GetAppRoleAssignmentsRequest(existingAssignments)
 	m.PostAppRoleAssignmentsRequest()
 	m.DeleteAppRoleAssignmentsRequest(existingAssignments)
-	
+
 	client := m.AzureClient()
 	err := client.SetAppRoleAssignedTo(
 		azuretestsupport.AzureClientKey(),

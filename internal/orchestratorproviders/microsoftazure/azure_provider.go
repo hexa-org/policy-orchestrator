@@ -107,7 +107,9 @@ func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 		if len(policyInfo.Subject.Members) == 0 {
 			assignments = append(assignments, AzureAppRoleAssignment{
 				AppRoleId:  appRoleId,
-				ResourceId: strings.Split(policyInfo.Object.ResourceID, ":")[0],
+				ResourceId: sps.List[0].ID,
+				//ResourceId: strings.Split(policyInfo.Object.ResourceID, ":")[0],
+
 			})
 		}
 
@@ -119,7 +121,8 @@ func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 			assignments = append(assignments, AzureAppRoleAssignment{
 				AppRoleId:   appRoleId,
 				PrincipalId: principalId,
-				ResourceId:  strings.Split(policyInfo.Object.ResourceID, ":")[0],
+				ResourceId:  sps.List[0].ID,
+				//ResourceId:  strings.Split(policyInfo.Object.ResourceID, ":")[0],
 			})
 		}
 

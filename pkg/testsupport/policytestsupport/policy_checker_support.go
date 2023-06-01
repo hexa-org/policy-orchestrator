@@ -33,6 +33,10 @@ func HasPolicy(expPolicies []policysupport.PolicyInfo, act policysupport.PolicyI
 }
 
 func MatchPolicy(exp policysupport.PolicyInfo, act policysupport.PolicyInfo) bool {
+	if exp.Object.ResourceID != act.Object.ResourceID {
+		return false
+	}
+
 	expActions := sortAction(exp.Actions)
 	actActions := sortAction(act.Actions)
 	if !reflect.DeepEqual(expActions, actActions) {
