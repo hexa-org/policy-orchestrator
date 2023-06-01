@@ -5,6 +5,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/assert"
+	"log"
 	"testing"
 )
 
@@ -20,6 +21,7 @@ func TestAzurePolicyMapper_ToIDQL(t *testing.T) {
 	actActionMembersMap := make(map[string][]string)
 	for _, pol := range actPolicies {
 		assert.Equal(t, 1, len(pol.Actions))
+		assert.Equal(t, sps.List[0].Name, pol.Object.ResourceID)
 		actActionMembersMap[pol.Actions[0].ActionUri] = pol.Subject.Members
 	}
 
@@ -46,15 +48,18 @@ func TestAzurePolicyMapper_ToIDQL_NoRoleAssignments(t *testing.T) {
 	assert.NotNil(t, actPolicies)
 	assert.Equal(t, len(sps.List[0].AppRoles), len(actPolicies))
 
-	actPolicyMap := make(map[string][]string)
+	actPolicyActionMap := make(map[string]bool)
+	log.Println(actPolicies)
 	for _, pol := range actPolicies {
 		assert.Equal(t, 1, len(pol.Actions))
-		actPolicyMap[pol.Actions[0].ActionUri] = pol.Subject.Members
+		assert.Equal(t, sps.List[0].Name, pol.Object.ResourceID)
+		assert.NotNil(t, pol.Subject.Members)
+		assert.Empty(t, pol.Subject.Members)
+		actPolicyActionMap[pol.Actions[0].ActionUri] = true
 	}
 
 	for _, expAction := range []string{policytestsupport.ActionGetHrUs, policytestsupport.ActionGetProfile} {
-		assert.NotNil(t, actPolicyMap[expAction])
-		assert.Equal(t, 0, len(actPolicyMap[expAction]))
+		assert.True(t, actPolicyActionMap[expAction])
 	}
 }
 

@@ -63,6 +63,7 @@ type AzureServicePrincipals struct {
 
 type azureServicePrincipal struct {
 	ID       string         `json:"id"`
+	Name     string         `json:"displayName"`
 	AppRoles []azureAppRole `json:"appRoles"`
 }
 
@@ -230,6 +231,11 @@ func (c *azureClient) GetAppRoleAssignedTo(key []byte, servicePrincipalId string
 		log.Println("Unable to decode azure web app response. Error=" + err.Error())
 		return AzureAppRoleAssignments{}, err
 	}
+
+	if assignments.List == nil {
+		assignments.List = []AzureAppRoleAssignment{}
+	}
+	
 	return assignments, nil
 }
 

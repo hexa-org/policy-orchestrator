@@ -43,7 +43,7 @@ func NewAppRoleAssignments(appRoleId AppRoleId, principalId string) microsoftazu
 		ID:          uuid.NewString(),
 		AppRoleId:   string(appRoleId),
 		PrincipalId: principalId,
-		ResourceId:  policytestsupport.ProtectedApiResourceId,
+		ResourceId:  ServicePrincipalId,
 	}
 }
 

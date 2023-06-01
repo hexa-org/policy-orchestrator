@@ -64,6 +64,7 @@ func TestGetPolicy_WithoutUserEmail(t *testing.T) {
 		assert.True(t, len(pol.Actions) > 0)
 		assert.NotEmpty(t, pol.Actions[0].ActionUri)
 		assert.Equal(t, 0, len(pol.Subject.Members))
+		assert.Equal(t, policytestsupport.PolicyObjectResourceId, pol.Object.ResourceID)
 	}
 	mockAzClient.AssertExpectations(t)
 }
@@ -199,7 +200,7 @@ func TestSetPolicy_IgnoresAllPrincipalIdsNotFound(t *testing.T) {
 			Subject: policysupport.SubjectInfo{Members: []string{"user:" + policytestsupport.UserEmailGetHrUs,
 				"user:" + policytestsupport.UserEmailGetProfile}},
 			Object: policysupport.ObjectInfo{
-				ResourceID: policytestsupport.ProtectedApiResourceId,
+				ResourceID: policytestsupport.PolicyObjectResourceId,
 			},
 		}})
 
@@ -229,7 +230,7 @@ func TestSetPolicy_IgnoresAnyNotFoundPrincipalId(t *testing.T) {
 			Subject: policysupport.SubjectInfo{Members: []string{"user:" + policytestsupport.UserEmailGetHrUs,
 				"user:" + policytestsupport.UserEmailGetProfile}},
 			Object: policysupport.ObjectInfo{
-				ResourceID: policytestsupport.ProtectedApiResourceId,
+				ResourceID: policytestsupport.PolicyObjectResourceId,
 			},
 		}})
 
@@ -257,7 +258,7 @@ func TestSetPolicy_AddAssignment_IgnoresInvalidAction(t *testing.T) {
 					"user:" + policytestsupport.UserEmailGetHrUs,
 					"user:" + policytestsupport.UserEmailGetProfile}},
 			Object: policysupport.ObjectInfo{
-				ResourceID: policytestsupport.ProtectedApiResourceId,
+				ResourceID: policytestsupport.PolicyObjectResourceId,
 			},
 		}})
 
@@ -284,7 +285,7 @@ func TestSetPolicy(t *testing.T) {
 			Actions: []policysupport.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
 			Subject: policysupport.SubjectInfo{Members: []string{"user:" + policytestsupport.UserEmailGetHrUs}},
 			Object: policysupport.ObjectInfo{
-				ResourceID: policytestsupport.ProtectedApiResourceId,
+				ResourceID: policytestsupport.PolicyObjectResourceId,
 			},
 		}})
 
@@ -311,7 +312,7 @@ func TestSetPolicy_RemovedAllMembers_FromOnePolicy(t *testing.T) {
 			Actions: []policysupport.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
 			Subject: policysupport.SubjectInfo{Members: []string{}},
 			Object: policysupport.ObjectInfo{
-				ResourceID: policytestsupport.ProtectedApiResourceId,
+				ResourceID: policytestsupport.PolicyObjectResourceId,
 			},
 		}})
 
@@ -341,7 +342,7 @@ func TestSetPolicy_RemovedAllMembers_FromAllPolicies(t *testing.T) {
 				Actions: []policysupport.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
 				Subject: policysupport.SubjectInfo{Members: []string{}},
 				Object: policysupport.ObjectInfo{
-					ResourceID: policytestsupport.ProtectedApiResourceId,
+					ResourceID: policytestsupport.PolicyObjectResourceId,
 				},
 			},
 			{
@@ -349,7 +350,7 @@ func TestSetPolicy_RemovedAllMembers_FromAllPolicies(t *testing.T) {
 				Actions: []policysupport.ActionInfo{{"azure:" + policytestsupport.ActionGetProfile}},
 				Subject: policysupport.SubjectInfo{Members: []string{}},
 				Object: policysupport.ObjectInfo{
-					ResourceID: policytestsupport.ProtectedApiResourceId,
+					ResourceID: policytestsupport.PolicyObjectResourceId,
 				},
 			},
 		})
@@ -381,7 +382,7 @@ func TestSetPolicy_MultipleAppRolePolicies(t *testing.T) {
 				Actions: []policysupport.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
 				Subject: policysupport.SubjectInfo{Members: []string{"user:" + policytestsupport.UserEmailGetHrUs}},
 				Object: policysupport.ObjectInfo{
-					ResourceID: policytestsupport.ProtectedApiResourceId,
+					ResourceID: policytestsupport.PolicyObjectResourceId,
 				},
 			},
 			{
@@ -389,7 +390,7 @@ func TestSetPolicy_MultipleAppRolePolicies(t *testing.T) {
 				Actions: []policysupport.ActionInfo{{"azure:" + policytestsupport.ActionGetProfile}},
 				Subject: policysupport.SubjectInfo{Members: []string{"user:" + policytestsupport.UserEmailGetProfile}},
 				Object: policysupport.ObjectInfo{
-					ResourceID: policytestsupport.ProtectedApiResourceId,
+					ResourceID: policytestsupport.PolicyObjectResourceId,
 				},
 			},
 		})
