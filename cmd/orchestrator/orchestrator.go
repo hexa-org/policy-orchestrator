@@ -8,7 +8,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/googlecloud"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/openpolicyagent"
-	"log"
+	log "golang.org/x/exp/slog"
 	"net"
 	"net/http"
 	"os"
@@ -69,13 +69,13 @@ func newApp(addr string) (*http.Server, net.Listener, *workflowsupport.WorkSched
 		host, _, _ := net.SplitHostPort(addr)
 		addr = fmt.Sprintf("%v:%v", host, found)
 	}
-	log.Printf("Found server address %v", addr)
+	log.Info("Found server address %v", addr)
 
 	if found := os.Getenv("HOST"); found != "" {
 		_, port, _ := net.SplitHostPort(addr)
 		addr = fmt.Sprintf("%v:%v", found, port)
 	}
-	log.Printf("Found server host %v", addr)
+	log.Info("Found server host %v", addr)
 
 	dbUrl := os.Getenv("POSTGRESQL_URL")
 	key := os.Getenv("ORCHESTRATOR_KEY")
