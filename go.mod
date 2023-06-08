@@ -1,8 +1,8 @@
 module github.com/hexa-org/policy-orchestrator
 
-go 1.19
+go 1.20
 
-// +heroku goVersion go1.19
+// +heroku goVersion go1.20
 
 require (
 	github.com/alecthomas/assert/v2 v2.0.3
@@ -16,6 +16,7 @@ require (
 	github.com/go-playground/validator/v10 v10.11.2
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/cel-go v0.13.0
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/sessions v1.2.1
 	github.com/hiyosi/hawk v1.0.1
@@ -50,7 +51,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.7.0 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect

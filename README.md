@@ -40,7 +40,7 @@ git clone git@github.com:hexa-org/policy-orchestrator.git
 
 Install the following dependencies.
 
-- [Go 1.19](https://go.dev)
+- [Go 1.20](https://go.dev)
 - [Pack](https://buildpacks.io)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop)
 
@@ -86,11 +86,18 @@ chmod 600 ./databases/docker_support/client-key.pem
 
 ### Task: Run the Policy Orchestrator
 
+ 
 Run all the applications with Docker Compose.
 
-```bash
-docker-compose up
-```
+> On Apple Silicon M1 (and M2) ARM
+> ```bash
+> DOCKER_DEFAULT_PLATFORM=linux/amd64 docker-compose up
+> ```
+
+> Others
+> ```bash
+> docker-compose up
+> ```
 
 > NOTE:
 >
