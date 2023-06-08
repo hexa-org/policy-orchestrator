@@ -35,11 +35,13 @@ func NewMockHTTPClient() *MockHTTPClient {
 }
 
 func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
-	methodAndUrl := req.Method + " " + req.URL.String()
+
+	cognitoServiceOp := req.Header.Get("X-Amz-Target")
+	methodAndUrl := m.reqKey(req.Method, req.URL.String(), cognitoServiceOp)
 
 	for url := range m.ResponseBody {
 		if url == req.URL.String() || url == methodAndUrl {
-			return m.sendRequest(req.Method, req.URL.String(), req.Body)
+			return m.sendRequest(req.Method, req.URL.String(), cognitoServiceOp, req.Body)
 		}
 	}
 
@@ -47,19 +49,19 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 }
 
 func (m *MockHTTPClient) Get(url string) (resp *http.Response, err error) {
-	return m.sendRequest(http.MethodGet, url, nil)
+	return m.sendRequest(http.MethodGet, url, "", nil)
 }
 
 func (m *MockHTTPClient) Post(url, _ string, body io.Reader) (resp *http.Response, err error) {
-	return m.sendRequest(http.MethodPost, url, body)
+	return m.sendRequest(http.MethodPost, url, "", body)
 }
 
-func (m *MockHTTPClient) sendRequest(method, url string, body io.Reader) (resp *http.Response, err error) {
+func (m *MockHTTPClient) sendRequest(method, url, cognitoServiceOp string, body io.Reader) (resp *http.Response, err error) {
 	m.Url = url
 	statusCode := m.StatusCode
 	reqKey := url
 
-	methodAndUrl := method + " " + url
+	methodAndUrl := m.reqKey(method, url, cognitoServiceOp)
 	if code, exists := m.StatusCodes[methodAndUrl]; exists {
 		reqKey = methodAndUrl
 		statusCode = code
@@ -78,6 +80,15 @@ func (m *MockHTTPClient) sendRequest(method, url string, body io.Reader) (resp *
 
 func (m *MockHTTPClient) AddRequest(method, url string, statusCode int, responseBody []byte) {
 	reqKey := method + " " + url
+	m.addRequest(reqKey, statusCode, responseBody)
+}
+
+func (m *MockHTTPClient) AddCognitoRequest(method, url, apiOp string, statusCode int, responseBody []byte) {
+	serviceOp := "AWSCognitoIdentityProviderService." + apiOp
+	m.addRequest(m.reqKey(method, url, serviceOp), statusCode, responseBody)
+}
+
+func (m *MockHTTPClient) addRequest(reqKey string, statusCode int, responseBody []byte) {
 	m.StatusCodes[reqKey] = statusCode
 
 	body := responseBody
@@ -99,6 +110,14 @@ func (m *MockHTTPClient) GetRequestBodyByKey(method, url string) []byte {
 	return m.RequestBody[url]
 }
 
+func (m *MockHTTPClient) GetCognitoRequestBody(method, url, serviceOp string) []byte {
+	reqKey := m.reqKey(method, url, serviceOp)
+	if _, exists := m.StatusCodes[reqKey]; exists {
+		return m.RequestBody[reqKey]
+	}
+	return m.RequestBody[url]
+}
+
 func (m *MockHTTPClient) CalledWithStatus(method, url string, expStatusCode int) bool {
 	reqKey := method + " " + url
 	actStatusCode, exists := m.Called[reqKey]
@@ -111,7 +130,7 @@ func (m *MockHTTPClient) CalledWithStatus(method, url string, expStatusCode int)
 
 func (m *MockHTTPClient) VerifyCalled() bool {
 	failCount := 0
-	for reqKey, _ := range m.StatusCodes {
+	for reqKey := range m.StatusCodes {
 		_, exists := m.Called[reqKey]
 		if !exists {
 			log.Println("Expected request not called. Request=", reqKey)
@@ -119,4 +138,11 @@ func (m *MockHTTPClient) VerifyCalled() bool {
 		}
 	}
 	return failCount == 0
+}
+
+func (m *MockHTTPClient) reqKey(method, url, cognitoServiceOp string) string {
+	if cognitoServiceOp != "" {
+		return fmt.Sprintf("%s %s %s", method, url, cognitoServiceOp)
+	}
+	return method + " " + url
 }

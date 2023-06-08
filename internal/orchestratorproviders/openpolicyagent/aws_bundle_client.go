@@ -3,12 +3,10 @@ package openpolicyagent
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	awscredentials "github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
 
@@ -17,34 +15,23 @@ import (
 	"path/filepath"
 )
 
-type AWSHttpClient interface {
-	Do(req *http.Request) (*http.Response, error)
-}
-
-type AWSBundleClientOptions struct {
-	HTTPClient   AWSHttpClient
-	DisableRetry bool
-}
-
 type AWSBundleClient struct {
 	bucketName string
 	objectName string
 	httpClient *s3.Client
 }
 
-func (c *AWSBundleClientOptions) WithAWSHTTPClient(client AWSHttpClient) {
-	c.HTTPClient = client
-}
-
-func NewAWSBundleClient(bucketName, objectName string, key []byte, opts AWSBundleClientOptions) (*AWSBundleClient, error) {
+func NewAWSBundleClient(bucketName, objectName string, key []byte, opts amazonwebservices.AWSClientOptions) (*AWSBundleClient, error) {
 	if len(bucketName) == 0 || len(objectName) == 0 {
 		return nil, fmt.Errorf("required config: bucket_name, object_name")
 	}
 
-	s3Client, err := getS3Client(key, opts)
+	cfg, err := amazonwebservices.GetAwsClientConfig(key, opts)
 	if err != nil {
 		return nil, err
 	}
+
+	s3Client := s3.NewFromConfig(cfg)
 
 	bundleClient := &AWSBundleClient{
 		bucketName: bucketName,
@@ -92,41 +79,4 @@ func (a *AWSBundleClient) PostBundle(bundle []byte) (int, error) {
 	}
 
 	return http.StatusCreated, nil
-}
-
-func getS3Client(key []byte, opts AWSBundleClientOptions) (*s3.Client, error) {
-	var awsCredentials CredentialsInfo
-	err := json.NewDecoder(bytes.NewReader(key)).Decode(&awsCredentials)
-	if err != nil {
-		return nil, err
-	}
-
-	awsOptions := []func(options *config.LoadOptions) error{
-		config.WithCredentialsProvider(awscredentials.StaticCredentialsProvider{
-			Value: aws.Credentials{AccessKeyID: awsCredentials.AccessKeyID, SecretAccessKey: awsCredentials.SecretAccessKey},
-		}),
-		config.WithRegion(awsCredentials.Region),
-	}
-
-	if opts.HTTPClient != nil {
-		awsOptions = append(awsOptions, config.WithHTTPClient(opts.HTTPClient))
-	}
-
-	if opts.DisableRetry {
-		awsOptions = append(awsOptions, config.WithRetryer(func() aws.Retryer { return aws.NopRetryer{} }))
-	}
-
-	cfg, err := config.LoadDefaultConfig(context.Background(), awsOptions...)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return s3.NewFromConfig(cfg), nil
-}
-
-type CredentialsInfo struct {
-	AccessKeyID     string `json:"accessKeyID"`
-	SecretAccessKey string `json:"secretAccessKey"`
-	Region          string `json:"region"`
 }

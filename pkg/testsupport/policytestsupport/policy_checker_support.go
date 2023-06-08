@@ -9,10 +9,6 @@ import (
 	"testing"
 )
 
-type PolicyChecker struct {
-	policies []policysupport.PolicyInfo
-}
-
 func ContainsPolicies(t *testing.T, expPolicies []policysupport.PolicyInfo, actPolicies []policysupport.PolicyInfo) bool {
 	for _, act := range actPolicies {
 		if HasPolicy(expPolicies, act) {
@@ -46,6 +42,30 @@ func MatchPolicy(exp policysupport.PolicyInfo, act policysupport.PolicyInfo) boo
 	expMembers := sortMembers(exp.Subject)
 	actMembers := sortMembers(act.Subject)
 	return reflect.DeepEqual(expMembers, actMembers)
+}
+
+func MakePolicies(actionMembers map[string][]string, resourceId string) []policysupport.PolicyInfo {
+	policies := make([]policysupport.PolicyInfo, 0)
+
+	for action, membersNoPrefix := range actionMembers {
+		members := make([]string, 0)
+		for _, mem := range membersNoPrefix {
+			members = append(members, "user:"+mem)
+		}
+
+		pol := policysupport.PolicyInfo{
+			Meta:    policysupport.MetaInfo{Version: "0.5"},
+			Actions: []policysupport.ActionInfo{{action}},
+			Subject: policysupport.SubjectInfo{Members: members},
+			Object: policysupport.ObjectInfo{
+				ResourceID: resourceId,
+			},
+		}
+
+		policies = append(policies, pol)
+	}
+
+	return policies
 }
 
 func sortAction(orig []policysupport.ActionInfo) []policysupport.ActionInfo {
