@@ -1,41 +1,20 @@
 package amazonwebservices_test
 
 import (
-	"errors"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/test"
 	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/cognitotestsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"net/http"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAmazonProvider_Credentials(t *testing.T) {
-	key := []byte(`
-{
-  "accessKeyID": "anAccessKeyID",
-  "secretAccessKey": "aSecretAccessKey",
-  "region": "aRegion"
-}
-`)
-	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: &cognitoidentityprovider.Client{}}
-	c := p.Credentials(key)
-	assert.Equal(t, "anAccessKeyID", c.AccessKeyID)
-}
-
 func TestAmazonProvider_DiscoverApplications(t *testing.T) {
-	key := []byte(`
-{
-  "accessKeyID": "anAccessKeyID",
-  "secretAccessKey": "aSecretAccessKey",
-  "region": "aRegion"
-}
-`)
-	info := orchestrator.IntegrationInfo{Name: "amazon", Key: key}
-	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: &cognitoidentityprovider.Client{}}
+	info := cognitotestsupport.IntegrationInfo()
+	p := amazonwebservices.AmazonProvider{AwsClientOpts: amazonwebservices.AWSClientOptions{DisableRetry: true}}
 	_, err := p.DiscoverApplications(info)
 	assert.Error(t, err, "operation error Cognito Identity Provider: ListUserPools, expected endpoint resolver to not be nil")
 }
@@ -43,144 +22,413 @@ func TestAmazonProvider_DiscoverApplications(t *testing.T) {
 func TestAmazonProvider_DiscoverApplications_withOtherProvider(t *testing.T) {
 	p := &amazonwebservices.AmazonProvider{}
 	info := orchestrator.IntegrationInfo{Name: "not_amazon", Key: []byte("aKey")}
-	_, err := p.DiscoverApplications(info)
+	apps, err := p.DiscoverApplications(info)
 	assert.NoError(t, err)
-	assert.Nil(t, p.CognitoClientOverride)
+	assert.Empty(t, apps)
 }
 
-func TestAmazonProvider_ListUserPools(t *testing.T) {
-	key := []byte(`
-{
-  "accessKeyID": "anAccessKeyID",
-  "secretAccessKey": "aSecretAccessKey",
-  "region": "aRegion"
-}
-`)
-	mockClient := &amazonwebservices_test.MockClient{}
-	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
-	info := orchestrator.IntegrationInfo{Name: "amazon", Key: key}
-	pools, err := p.ListUserPools(info)
-	assert.NoError(t, err)
-	assert.Len(t, pools, 1)
-	assert.Equal(t, "anId", pools[0].ObjectID)
-	assert.Equal(t, "aName", pools[0].Name)
-	assert.Equal(t, "Cognito", pools[0].Service)
-}
+func TestAmazonProvider_ListUserPools_ErrorCallingListUserPoolsApi(t *testing.T) {
+	mockClient := cognitotestsupport.NewMockCognitoHTTPClient()
+	mockClient.MockListUserPoolsWithHttpStatus(http.StatusBadRequest)
 
-func TestAmazonProvider_ListUserPools_withError(t *testing.T) {
-	key := []byte(`
-{
-  "accessKeyID": "anAccessKeyID",
-  "secretAccessKey": "aSecretAccessKey",
-  "region": "aRegion"
-}
-`)
-	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
-	mockClient.Errs["ListUserPools"] = errors.New("oops")
-	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
-	info := orchestrator.IntegrationInfo{Name: "amazon", Key: key}
-	_, err := p.ListUserPools(info)
+	p := amazonwebservices.AmazonProvider{
+		AwsClientOpts: amazonwebservices.AWSClientOptions{
+			HTTPClient:   mockClient,
+			DisableRetry: true}}
+
+	info := cognitotestsupport.IntegrationInfo()
+	apps, err := p.DiscoverApplications(info)
 	assert.Error(t, err)
+	assert.ErrorContains(t, err, "error StatusCode: 400")
+	assert.ErrorContains(t, err, "ListUserPools")
+	assert.Empty(t, apps)
+	assert.True(t, mockClient.VerifyCalled())
+}
+
+func TestAmazonProvider_ListUserPools_ErrorCallingListResourceServicesApi(t *testing.T) {
+	mockClient := cognitotestsupport.NewMockCognitoHTTPClient()
+	mockClient.MockListUserPools()
+	mockClient.MockListResourceServersWithHttpStatus(http.StatusBadRequest)
+
+	p := amazonwebservices.AmazonProvider{
+		AwsClientOpts: amazonwebservices.AWSClientOptions{
+			HTTPClient:   mockClient,
+			DisableRetry: true}}
+
+	info := cognitotestsupport.IntegrationInfo()
+	apps, err := p.DiscoverApplications(info)
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "error StatusCode: 400")
+	assert.ErrorContains(t, err, "ListResourceServers")
+	assert.Empty(t, apps)
+	assert.True(t, mockClient.VerifyCalled())
+}
+
+func TestAmazonProvider_ListUserPools_Success(t *testing.T) {
+	mockClient := cognitotestsupport.NewMockCognitoHTTPClient()
+	mockClient.MockListUserPools()
+	mockClient.MockListResourceServers()
+	p := amazonwebservices.AmazonProvider{
+		AwsClientOpts: amazonwebservices.AWSClientOptions{
+			HTTPClient:   mockClient,
+			DisableRetry: true}}
+
+	info := cognitotestsupport.IntegrationInfo()
+	apps, err := p.DiscoverApplications(info)
+	assert.NoError(t, err)
+	assert.Len(t, apps, 1)
+	assert.Equal(t, cognitotestsupport.TestUserPoolId, apps[0].ObjectID)
+	assert.Equal(t, cognitotestsupport.TestResourceServerName, apps[0].Name)
+	assert.Equal(t, cognitotestsupport.TestResourceServerIdentifier, apps[0].Description)
+	assert.Equal(t, "Cognito", apps[0].Service)
+	assert.True(t, mockClient.VerifyCalled())
+}
+
+func TestAmazonProvider_GetPolicyInfo_CognitoClientError(t *testing.T) {
+	p := amazonwebservices.AmazonProvider{}
+	info := orchestrator.IntegrationInfo{Name: "amazon", Key: []byte("!!!")}
+	appInfo := cognitotestsupport.AppInfo()
+	policyInfo, err := p.GetPolicyInfo(info, appInfo)
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "invalid character")
+	assert.Nil(t, policyInfo)
 }
 
 func TestAmazonProvider_GetPolicyInfo(t *testing.T) {
-	mockClient := &amazonwebservices_test.MockClient{}
-	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
-	info, _ := p.GetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{ObjectID: "anObjectId"})
-	assert.Equal(t, 1, len(info))
-	assert.Equal(t, "aws:amazon.cognito/access", info[0].Actions[0].ActionUri)
-	assert.Equal(t, "aUser:aUser@amazon.com", info[0].Subject.Members[0])
-	assert.Equal(t, "anObjectId", info[0].Object.ResourceID)
-}
+	mockClient := cognitotestsupport.NewMockCognitoHTTPClient()
+	mockClient.MockListGroups(policytestsupport.ActionGetProfile, policytestsupport.ActionGetHrUs)
+	mockClient.MockListUsersInGroup(policytestsupport.UserIdGetProfile)
+	mockClient.MockAdminGetUser(policytestsupport.UserIdGetProfile, policytestsupport.UserEmailGetProfile)
+	mockClient.MockListUsersInGroup(policytestsupport.UserIdGetHrUs)
+	mockClient.MockAdminGetUser(policytestsupport.UserIdGetHrUs, policytestsupport.UserEmailGetHrUs)
 
-func TestAmazonProvider_GetPolicyInfo_withError(t *testing.T) {
-	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
-	mockClient.Errs["ListUsers"] = errors.New("oops")
-	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
-	_, err := p.GetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{ObjectID: "anObjectId"})
-	assert.Error(t, err)
-}
+	p := amazonwebservices.AmazonProvider{
+		AwsClientOpts: amazonwebservices.AWSClientOptions{
+			HTTPClient:   mockClient,
+			DisableRetry: true}}
 
-func TestAmazonProvider_ShouldEnable(t *testing.T) {
-	mockClient := &amazonwebservices_test.MockClient{}
-	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
-	shouldAdd := p.ShouldEnable([]string{"aUser@amazon.com", "yetAnotherUser@amazon.com"}, []string{"anotherUser@amazon.com"})
-	assert.Equal(t, []string{"anotherUser@amazon.com"}, shouldAdd)
-}
-
-func TestAmazonProvider_ShouldDisable(t *testing.T) {
-	mockClient := &amazonwebservices_test.MockClient{}
-	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
-	shouldAdd := p.ShouldDisable([]string{"aUser@amazon.com", "yetAnotherUser@amazon.com"}, []string{"yetAnotherUser@amazon.com"})
-	assert.Equal(t, []string{"aUser@amazon.com"}, shouldAdd)
-}
-
-func TestAmazonProvider_SetPolicyInfo(t *testing.T) {
-	mockClient := &amazonwebservices_test.MockClient{}
-	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
-	status, err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{{
-		Meta:    policysupport.MetaInfo{Version: "0"},
-		Actions: []policysupport.ActionInfo{{"aws:amazon.cognito/access"}},
-		Subject: policysupport.SubjectInfo{Members: []string{"aUser:aUser@amazon.com", "anotherUser:anotherUser@amazon.com"}},
-		Object:  policysupport.ObjectInfo{ResourceID: "aResourceId"},
-	}})
-	assert.Equal(t, http.StatusCreated, status)
+	info := cognitotestsupport.IntegrationInfo()
+	appInfo := cognitotestsupport.AppInfo()
+	actualPolicies, err := p.GetPolicyInfo(info, appInfo)
 	assert.NoError(t, err)
+	assert.NotEmpty(t, actualPolicies)
+	expActionMembers := map[string][]string{
+		policytestsupport.ActionGetProfile: {policytestsupport.UserEmailGetProfile},
+		policytestsupport.ActionGetHrUs:    {policytestsupport.UserEmailGetHrUs},
+	}
+
+	expPolicies := policytestsupport.MakePolicies(expActionMembers, cognitotestsupport.TestResourceServerName)
+	assert.Equal(t, len(expPolicies), len(actualPolicies))
+	assert.True(t, policytestsupport.ContainsPolicies(t, expPolicies, actualPolicies))
+	assert.True(t, mockClient.VerifyCalled())
 }
 
-func TestAmazonProvider_SetPolicyInfo_withInvalidArguments(t *testing.T) {
-	mockClient := &amazonwebservices_test.MockClient{}
-	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
+func TestAmazonProvider_GetPolicyInfo_withListGroupsError(t *testing.T) {
+	mockClient := cognitotestsupport.NewMockCognitoHTTPClient()
 
-	status, _ := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{})
-	assert.Equal(t, http.StatusInternalServerError, status)
+	mockClient.MockListGroupsWithHttpStatus(http.StatusBadRequest, policytestsupport.ActionGetProfile, policytestsupport.ActionGetHrUs)
+	p := amazonwebservices.AmazonProvider{
+		AwsClientOpts: amazonwebservices.AWSClientOptions{
+			HTTPClient:   mockClient,
+			DisableRetry: true}}
 
-	status, _ = p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{{
-		Actions: []policysupport.ActionInfo{},
-		Subject: policysupport.SubjectInfo{Members: []string{}},
-		Object:  policysupport.ObjectInfo{ResourceID: "aResourceId"},
-	}})
-	assert.Equal(t, http.StatusInternalServerError, status)
-}
-
-func TestAmazonProvider_SetPolicyInfo_withListErr(t *testing.T) {
-	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
-	mockClient.Errs["ListUsers"] = errors.New("oops")
-	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
-	status, err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{{
-		Meta:    policysupport.MetaInfo{Version: "0"},
-		Actions: []policysupport.ActionInfo{},
-		Subject: policysupport.SubjectInfo{Members: []string{}},
-		Object:  policysupport.ObjectInfo{ResourceID: "aResourceId"},
-	}})
-	assert.Equal(t, http.StatusInternalServerError, status)
+	info := cognitotestsupport.IntegrationInfo()
+	appInfo := cognitotestsupport.AppInfo()
+	_, err := p.GetPolicyInfo(info, appInfo)
 	assert.Error(t, err)
+	assert.ErrorContains(t, err, "error StatusCode: 400")
 }
 
-func TestAmazonProvider_SetPolicyInfo_withEnableErr(t *testing.T) {
-	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
-	mockClient.Errs["AdminEnableUser"] = errors.New("oops")
-	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
-	status, err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{{
-		Meta:    policysupport.MetaInfo{Version: "0"},
-		Actions: []policysupport.ActionInfo{{"aws:amazon.cognito/access"}},
-		Subject: policysupport.SubjectInfo{Members: []string{"aUser:aUser@amazon.com", "anotherUser:anotherUser@amazon.com"}},
-		Object:  policysupport.ObjectInfo{ResourceID: "aResourceId"},
-	}})
+func TestSetPolicy_withInvalidArguments(t *testing.T) {
+	key := []byte("key")
+	p := amazonwebservices.AmazonProvider{}
+
+	status, err := p.SetPolicyInfo(
+		orchestrator.IntegrationInfo{Name: "azure", Key: key},
+		orchestrator.ApplicationInfo{Name: "anAppName", Description: "anAppId"},
+		[]policysupport.PolicyInfo{{
+			Meta:    policysupport.MetaInfo{Version: "0"},
+			Actions: []policysupport.ActionInfo{{"azure:anAppRoleId"}},
+			Subject: policysupport.SubjectInfo{Members: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
+			Object: policysupport.ObjectInfo{
+				ResourceID: "anObjectId",
+			},
+		}})
+
 	assert.Equal(t, http.StatusInternalServerError, status)
-	assert.Error(t, err)
+	assert.EqualError(t, err, "Key: 'ApplicationInfo.ObjectID' Error:Field validation for 'ObjectID' failed on the 'required' tag")
+
+	status, err = p.SetPolicyInfo(
+		orchestrator.IntegrationInfo{Name: "azure", Key: key},
+		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"},
+		[]policysupport.PolicyInfo{{
+			Meta:    policysupport.MetaInfo{Version: "0"},
+			Actions: []policysupport.ActionInfo{{"azure:anAppRoleId"}},
+			Subject: policysupport.SubjectInfo{Members: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
+			Object:  policysupport.ObjectInfo{},
+		}})
+
+	assert.Equal(t, http.StatusInternalServerError, status)
+	assert.EqualError(t, err, "Key: '[0].Object.ResourceID' Error:Field validation for 'ResourceID' failed on the 'required' tag")
 }
 
-func TestAmazonProvider_SetPolicyInfo_withDisableErr(t *testing.T) {
-	mockClient := &amazonwebservices_test.MockClient{Errs: map[string]error{}}
-	mockClient.Errs["AdminDisableUser"] = errors.New("oops")
-	p := &amazonwebservices.AmazonProvider{CognitoClientOverride: mockClient}
-	status, err := p.SetPolicyInfo(orchestrator.IntegrationInfo{}, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{{
-		Meta:    policysupport.MetaInfo{Version: "0"},
-		Actions: []policysupport.ActionInfo{},
-		Subject: policysupport.SubjectInfo{Members: []string{}},
-		Object:  policysupport.ObjectInfo{ResourceID: "aResourceId"},
-	}})
-	assert.Equal(t, http.StatusInternalServerError, status)
+func TestSetPolicyInfo_CognitoClientError(t *testing.T) {
+	p := amazonwebservices.AmazonProvider{}
+	info := cognitotestsupport.IntegrationInfo()
+	info.Key = []byte("!!!!")
+	appInfo := cognitotestsupport.AppInfo()
+	_, err := p.SetPolicyInfo(info, appInfo, []policysupport.PolicyInfo{})
 	assert.Error(t, err)
+	assert.ErrorContains(t, err, "invalid character '!'")
+}
+
+func TestSetPolicyInfo_ListGroupsError(t *testing.T) {
+	mockClient := cognitotestsupport.NewMockCognitoHTTPClient()
+	mockClient.MockListGroupsWithHttpStatus(http.StatusBadRequest)
+	p := amazonwebservices.AmazonProvider{
+		AwsClientOpts: amazonwebservices.AWSClientOptions{
+			HTTPClient:   mockClient,
+			DisableRetry: true}}
+
+	info := cognitotestsupport.IntegrationInfo()
+	appInfo := cognitotestsupport.AppInfo()
+	_, err := p.SetPolicyInfo(info, appInfo, []policysupport.PolicyInfo{})
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "ListGroups")
+	assert.ErrorContains(t, err, "error StatusCode: 400")
+}
+
+func TestSetPolicyInfo_NoPoliciesInput(t *testing.T) {
+	mockClient := cognitotestsupport.NewMockCognitoHTTPClient()
+	expGroups := []string{policytestsupport.ActionGetProfile, policytestsupport.ActionGetHrUs}
+	mockClient.MockListGroups(expGroups...)
+
+	p := amazonwebservices.AmazonProvider{
+		AwsClientOpts: amazonwebservices.AWSClientOptions{
+			HTTPClient:   mockClient,
+			DisableRetry: true}}
+
+	info := cognitotestsupport.IntegrationInfo()
+	appInfo := cognitotestsupport.AppInfo()
+	status, err := p.SetPolicyInfo(info, appInfo, []policysupport.PolicyInfo{})
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, status)
+}
+
+func TestSetPolicyInfo_ListUsersInGroupError(t *testing.T) {
+	mockClient := cognitotestsupport.NewMockCognitoHTTPClient()
+	expGroups := []string{policytestsupport.ActionGetProfile, policytestsupport.ActionGetHrUs}
+	mockClient.MockListGroups(expGroups...)
+	mockClient.MockListUsersInGroupWithHttpStatus(http.StatusBadRequest)
+
+	actionMemberMap := policytestsupport.MakeActionMembers()
+
+	p := amazonwebservices.AmazonProvider{
+		AwsClientOpts: amazonwebservices.AWSClientOptions{
+			HTTPClient:   mockClient,
+			DisableRetry: true}}
+
+	info := cognitotestsupport.IntegrationInfo()
+	appInfo := cognitotestsupport.AppInfo()
+
+	expPolicies := policytestsupport.MakeTestPolicies(actionMemberMap)
+	_, err := p.SetPolicyInfo(info, appInfo, expPolicies)
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "ListUsersInGroup")
+	assert.ErrorContains(t, err, "error StatusCode: 400")
+}
+
+func TestSetPolicyInfo_IgnoresNotFoundPrincipal(t *testing.T) {
+	mockClient := cognitotestsupport.NewMockCognitoHTTPClient()
+	expGroups := []string{policytestsupport.ActionGetHrUs}
+	mockClient.MockListGroups(expGroups...)
+
+	actionMemberMap := map[string]policytestsupport.ActionMembers{
+		policytestsupport.ActionGetHrUs: {
+			MemberIds: []string{policytestsupport.UserIdGetHrUs, ""},
+			Emails:    []string{policytestsupport.UserEmailGetHrUs, policytestsupport.UserEmailGetHrUsAndProfile},
+		},
+	}
+	for range actionMemberMap {
+		mockClient.MockListUsersInGroup()
+	}
+
+	for _, actionMem := range actionMemberMap {
+		for _, principalId := range actionMem.MemberIds {
+			mockClient.MockListUsers(principalId)
+			if principalId != "" {
+				mockClient.MockAdminAddUserToGroup()
+			}
+		}
+	}
+
+	p := amazonwebservices.AmazonProvider{
+		AwsClientOpts: amazonwebservices.AWSClientOptions{
+			HTTPClient:   mockClient,
+			DisableRetry: true}}
+
+	info := cognitotestsupport.IntegrationInfo()
+	appInfo := cognitotestsupport.AppInfo()
+	expPolicies := policytestsupport.MakeTestPolicies(actionMemberMap)
+	_, err := p.SetPolicyInfo(info, appInfo, expPolicies)
+	assert.NoError(t, err)
+	assert.True(t, mockClient.VerifyCalled())
+}
+
+func TestSetPolicyInfo_AddUserToGroupError(t *testing.T) {
+	mockClient := cognitotestsupport.NewMockCognitoHTTPClient()
+	expGroups := []string{policytestsupport.ActionGetProfile, policytestsupport.ActionGetHrUs}
+	mockClient.MockListGroups(expGroups...)
+
+	actionMemberMap := policytestsupport.MakeActionMembers()
+	mockClient.MockListUsersInGroup()
+	for _, principalId := range actionMemberMap[expGroups[0]].MemberIds {
+		mockClient.MockListUsers(principalId)
+	}
+
+	mockClient.MockAdminAddUserToGroupWithHttpStatus(http.StatusBadRequest)
+
+	p := amazonwebservices.AmazonProvider{
+		AwsClientOpts: amazonwebservices.AWSClientOptions{
+			HTTPClient:   mockClient,
+			DisableRetry: true}}
+
+	info := cognitotestsupport.IntegrationInfo()
+	appInfo := cognitotestsupport.AppInfo()
+	expPolicies := policytestsupport.MakeTestPolicies(actionMemberMap)
+	stat, err := p.SetPolicyInfo(info, appInfo, expPolicies)
+	assert.Equal(t, http.StatusInternalServerError, stat)
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "AdminAddUserToGroup")
+	assert.ErrorContains(t, err, "error StatusCode: 400")
+	assert.True(t, mockClient.VerifyCalled())
+}
+
+func TestSetPolicyInfo_RemoveUserFromGroupError(t *testing.T) {
+	mockClient := cognitotestsupport.NewMockCognitoHTTPClient()
+	expGroups := []string{policytestsupport.ActionGetProfile, policytestsupport.ActionGetHrUs}
+	mockClient.MockListGroups(expGroups...)
+
+	actionMemberMap := map[string]policytestsupport.ActionMembers{
+		policytestsupport.ActionGetProfile: {
+			MemberIds: []string{policytestsupport.UserIdGetProfile, policytestsupport.UserIdGetHrUsAndProfile},
+		},
+		policytestsupport.ActionGetHrUs: {
+			MemberIds: []string{policytestsupport.UserIdGetHrUs, policytestsupport.UserIdGetHrUsAndProfile},
+		},
+	}
+
+	mockClient.MockListUsersInGroup(actionMemberMap[expGroups[0]].MemberIds...)
+	for _, principalId := range actionMemberMap[expGroups[0]].MemberIds {
+		mockClient.MockAdminGetUser(principalId, "random@email.io")
+	}
+
+	mockClient.MockAdminRemoveUserFromGroupWithHttpStatus(http.StatusBadRequest)
+
+	p := amazonwebservices.AmazonProvider{
+		AwsClientOpts: amazonwebservices.AWSClientOptions{
+			HTTPClient:   mockClient,
+			DisableRetry: true}}
+
+	info := cognitotestsupport.IntegrationInfo()
+	appInfo := cognitotestsupport.AppInfo()
+	expPolicies := policytestsupport.MakeTestPolicies(actionMemberMap)
+	stat, err := p.SetPolicyInfo(info, appInfo, expPolicies)
+	assert.Equal(t, http.StatusInternalServerError, stat)
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "AdminRemoveUserFromGroup")
+	assert.ErrorContains(t, err, "error StatusCode: 400")
+	assert.True(t, mockClient.VerifyCalled())
+}
+
+func TestSetPolicyInfo_RemoveAllExistingAssignments(t *testing.T) {
+	mockClient := cognitotestsupport.NewMockCognitoHTTPClient()
+	expGroups := []string{policytestsupport.ActionGetProfile, policytestsupport.ActionGetHrUs}
+	mockClient.MockListGroups(expGroups...)
+
+	actionMemberMap := map[string]policytestsupport.ActionMembers{
+		policytestsupport.ActionGetProfile: {
+			MemberIds: []string{policytestsupport.UserIdGetProfile, policytestsupport.UserIdGetHrUsAndProfile},
+		},
+		policytestsupport.ActionGetHrUs: {
+			MemberIds: []string{policytestsupport.UserIdGetHrUs, policytestsupport.UserIdGetHrUsAndProfile},
+		},
+	}
+
+	for _, actionMem := range actionMemberMap {
+		mockClient.MockListUsersInGroup(actionMem.MemberIds...)
+		for _, principalId := range actionMem.MemberIds {
+			mockClient.MockAdminGetUser(principalId, "random@email.io")
+			mockClient.MockAdminRemoveUserFromGroup()
+		}
+	}
+
+	p := amazonwebservices.AmazonProvider{
+		AwsClientOpts: amazonwebservices.AWSClientOptions{
+			HTTPClient:   mockClient,
+			DisableRetry: true}}
+
+	info := cognitotestsupport.IntegrationInfo()
+	appInfo := cognitotestsupport.AppInfo()
+	expPolicies := policytestsupport.MakeTestPolicies(actionMemberMap)
+	_, err := p.SetPolicyInfo(info, appInfo, expPolicies)
+	assert.NoError(t, err)
+	assert.True(t, mockClient.VerifyCalled())
+}
+
+func TestSetPolicyInfo_NoExistingAssignments_AddAll(t *testing.T) {
+	mockClient := cognitotestsupport.NewMockCognitoHTTPClient()
+	expGroups := []string{policytestsupport.ActionGetProfile, policytestsupport.ActionGetHrUs}
+	mockClient.MockListGroups(expGroups...)
+
+	actionMemberMap := policytestsupport.MakeActionMembers()
+	for range actionMemberMap {
+		mockClient.MockListUsersInGroup()
+	}
+
+	for _, actionMem := range actionMemberMap {
+		for _, principalId := range actionMem.MemberIds {
+			mockClient.MockListUsers(principalId)
+			mockClient.MockAdminAddUserToGroup()
+		}
+	}
+
+	p := amazonwebservices.AmazonProvider{
+		AwsClientOpts: amazonwebservices.AWSClientOptions{
+			HTTPClient:   mockClient,
+			DisableRetry: true}}
+
+	info := cognitotestsupport.IntegrationInfo()
+	appInfo := cognitotestsupport.AppInfo()
+	expPolicies := policytestsupport.MakeTestPolicies(actionMemberMap)
+	_, err := p.SetPolicyInfo(info, appInfo, expPolicies)
+	assert.NoError(t, err)
+	assert.True(t, mockClient.VerifyCalled())
+}
+
+func TestSetPolicyInfo_NoneAddedOrRemoved(t *testing.T) {
+	mockClient := cognitotestsupport.NewMockCognitoHTTPClient()
+	expGroups := []string{policytestsupport.ActionGetProfile, policytestsupport.ActionGetHrUs}
+	mockClient.MockListGroups(expGroups...)
+
+	actionMemberMap := policytestsupport.MakeActionMembers()
+	for _, actionMem := range actionMemberMap {
+		mockClient.MockListUsersInGroup(actionMem.MemberIds...)
+		for p, principalId := range actionMem.MemberIds {
+			mockClient.MockAdminGetUser(principalId, actionMem.Emails[p])
+			mockClient.MockListUsers(principalId)
+		}
+	}
+
+	p := amazonwebservices.AmazonProvider{
+		AwsClientOpts: amazonwebservices.AWSClientOptions{
+			HTTPClient:   mockClient,
+			DisableRetry: true}}
+
+	info := cognitotestsupport.IntegrationInfo()
+	appInfo := cognitotestsupport.AppInfo()
+	expPolicies := policytestsupport.MakeTestPolicies(actionMemberMap)
+	_, err := p.SetPolicyInfo(info, appInfo, expPolicies)
+	assert.NoError(t, err)
+	assert.True(t, mockClient.VerifyCalled())
 }

@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices"
 
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
@@ -278,7 +279,7 @@ func (o *OpaProvider) ConfigureClient(key []byte) (BundleClient, error) {
 			creds.AWS.BucketName,
 			creds.AWS.ObjectName,
 			creds.AWS.Key,
-			AWSBundleClientOptions{},
+			amazonwebservices.AWSClientOptions{},
 		)
 	}
 

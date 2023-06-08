@@ -1,6 +1,10 @@
 package policytestsupport
 
-import "strings"
+import (
+	"fmt"
+	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"strings"
+)
 
 const PolicyObjectResourceId = "some-resource-id"
 const ActionGetProfile = "GET/profile"
@@ -31,4 +35,52 @@ func MakePrincipalEmailMap() map[string]string {
 		UserIdGetProfile:        MakeEmail(UserIdGetProfile),
 		UserIdGetHrUsAndProfile: MakeEmail(UserIdGetHrUsAndProfile),
 	}
+}
+
+type ActionMembers struct {
+	MemberIds []string
+	Emails    []string
+}
+
+func MakeActionMembers() map[string]ActionMembers {
+	return map[string]ActionMembers{
+		ActionGetHrUs: {
+			MemberIds: []string{UserIdGetHrUs, UserIdGetHrUsAndProfile},
+			Emails:    []string{UserEmailGetHrUs, UserEmailGetHrUsAndProfile},
+		},
+		ActionGetProfile: {
+			MemberIds: []string{UserIdGetProfile, UserIdGetHrUsAndProfile},
+			Emails:    []string{UserEmailGetProfile, UserEmailGetHrUsAndProfile},
+		},
+	}
+}
+
+func MakeTestPolicies(actionMembers map[string]ActionMembers) []policysupport.PolicyInfo {
+	policies := make([]policysupport.PolicyInfo, 0)
+	for action, members := range actionMembers {
+		policies = append(policies, MakeTestPolicy(action, members))
+	}
+	return policies
+}
+
+func MakeTestPolicy(action string, actionMembers ActionMembers) policysupport.PolicyInfo {
+	return policysupport.PolicyInfo{
+		Meta:    policysupport.MetaInfo{Version: "0.5"},
+		Actions: []policysupport.ActionInfo{{action}},
+		Subject: policysupport.SubjectInfo{Members: MakePolicyTestUsers(actionMembers)},
+		Object: policysupport.ObjectInfo{
+			ResourceID: PolicyObjectResourceId,
+		},
+	}
+}
+
+func MakePolicyTestUsers(actionMember ActionMembers) []string {
+	policyUsers := make([]string, 0)
+	for _, email := range actionMember.Emails {
+		policyUsers = append(policyUsers, MakePolicyTestUser(email))
+	}
+	return policyUsers
+}
+func MakePolicyTestUser(emailNoPrefix string) string {
+	return fmt.Sprintf("user:%s", emailNoPrefix)
 }
