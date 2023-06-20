@@ -3,6 +3,7 @@ package azuretestsupport
 import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
+	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport/armtestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/mock"
 	"reflect"
@@ -10,6 +11,11 @@ import (
 
 type MockAzureClient struct {
 	mock.Mock
+}
+
+func (m *MockAzureClient) GetAzureApplications(key []byte) ([]microsoftazure.AzureWebApp, error) {
+	returnArgs := m.Called(key)
+	return returnArgs.Get(0).([]microsoftazure.AzureWebApp), returnArgs.Error(1)
 }
 
 func (m *MockAzureClient) GetWebApplications(key []byte) ([]orchestrator.ApplicationInfo, error) {
@@ -44,6 +50,18 @@ func (m *MockAzureClient) SetAppRoleAssignedTo(key []byte, servicePrincipalId st
 
 func NewMockAzureClient() *MockAzureClient {
 	return &MockAzureClient{}
+}
+
+func (m *MockAzureClient) ExpectGetAzureApplications() {
+	expApps := []microsoftazure.AzureWebApp{
+		{
+			ID:             AzureAppId,
+			AppID:          ServicePrincipalId,
+			Name:           AzureAppName,
+			IdentifierUris: []string{armtestsupport.ApimServiceGatewayUrl},
+		},
+	}
+	m.On("GetAzureApplications", AzureClientKey()).Return(expApps, nil)
 }
 
 func (m *MockAzureClient) ExpectGetServicePrincipals() {

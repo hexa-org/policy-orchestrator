@@ -87,7 +87,7 @@ func (as *FakeAuthServer) handleToken(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := as.buildJWT()
+	token, err := as.BuildJWT()
 	if err != nil {
 		http.Error(rw, fmt.Sprintf("unable to build token: %s", err), http.StatusInternalServerError)
 		return
@@ -108,6 +108,30 @@ func (as *FakeAuthServer) handleToken(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (as *FakeAuthServer) handleJWKS(rw http.ResponseWriter, _ *http.Request) {
+	/*
+		jwk := jose.JSONWebKey{
+			Key:       as.signingKey.key.Public(),
+			KeyID:     as.signingKey.id,
+			Algorithm: "RS256",
+			Use:       "sig",
+		}
+		var keys []jose.JSONWebKey
+		keys = append(keys, jwk)
+
+		jwks := jose.JSONWebKeySet{
+			Keys: keys,
+		}
+		err := json.NewEncoder(rw).Encode(jwks)
+	*/
+	rw.Header().Set("Content-Type", "application/json")
+	_, err := rw.Write(as.Jwks())
+
+	if err != nil {
+		log.Println("unable to encode jwks: ", err.Error())
+	}
+}
+
+func (as *FakeAuthServer) Jwks() []byte {
 	jwk := jose.JSONWebKey{
 		Key:       as.signingKey.key.Public(),
 		KeyID:     as.signingKey.id,
@@ -120,14 +144,12 @@ func (as *FakeAuthServer) handleJWKS(rw http.ResponseWriter, _ *http.Request) {
 	jwks := jose.JSONWebKeySet{
 		Keys: keys,
 	}
-	rw.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(rw).Encode(jwks)
-	if err != nil {
-		log.Println("unable to encode jwks: ", err.Error())
-	}
+
+	resp, _ := json.Marshal(jwks)
+	return resp
 }
 
-func (as *FakeAuthServer) buildJWT() (string, error) {
+func (as *FakeAuthServer) BuildJWT() (string, error) {
 	issuedAt := time.Now()
 	expiresAt := issuedAt.Add(time.Minute)
 

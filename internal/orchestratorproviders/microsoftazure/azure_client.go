@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azurecommon"
 	"io"
 	"log"
 	"net/http"
@@ -20,6 +21,7 @@ type HTTPClient interface {
 }
 
 type AzureClient interface {
+	GetAzureApplications(key []byte) ([]AzureWebApp, error)
 	GetWebApplications(key []byte) ([]orchestrator.ApplicationInfo, error)
 	GetServicePrincipals(key []byte, appId string) (AzureServicePrincipals, error)
 	GetUserInfoFromPrincipalId(key []byte, principalId string) (AzureUser, error)
@@ -32,26 +34,20 @@ type azureClient struct {
 	HttpClient HTTPClient
 }
 
-type AzureKey struct {
-	AppId        string `json:"appId"`
-	Secret       string `json:"secret"`
-	Tenant       string `json:"tenant"`
-	Subscription string `json:"subscription"`
-}
-
 type AzureAccessToken struct {
 	Token string `json:"access_token"`
 }
 
 type azureWebApps struct {
-	List []azureWebApp `json:"value"`
+	List []AzureWebApp `json:"value"`
 }
 
-type azureWebApp struct {
-	ID    string       `json:"id"`
-	AppID string       `json:"appId"`
-	Name  string       `json:"displayName"`
-	Web   azureWebInfo `json:"web"`
+type AzureWebApp struct {
+	ID             string       `json:"id"`
+	AppID          string       `json:"appId"`
+	Name           string       `json:"displayName"`
+	IdentifierUris []string     `json:"identifierUris"`
+	Web            azureWebInfo `json:"web"`
 }
 
 type azureWebInfo struct {
@@ -102,7 +98,33 @@ type AzureAppRoleAssignment struct {
 }
 
 func NewAzureClient(httpClient HTTPClient) AzureClient {
+	if httpClient == nil {
+		return &azureClient{HttpClient: &http.Client{}}
+	}
 	return &azureClient{HttpClient: httpClient}
+}
+
+func (c *azureClient) GetAzureApplications(key []byte) ([]AzureWebApp, error) {
+	request, _ := http.NewRequest("GET", "https://graph.microsoft.com/v1.0/applications", nil)
+	get, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
+	if err != nil {
+		log.Println("Unable to get azure web applications. Error=" + err.Error())
+		return nil, err
+	}
+
+	if get.StatusCode != http.StatusOK {
+		errMsg := "unable to get azure web applications. Unexpected status " + get.Status
+		log.Println(errMsg)
+		return nil, errors.New(errMsg)
+	}
+
+	var webapps azureWebApps
+	if err = json.NewDecoder(get.Body).Decode(&webapps); err != nil {
+		log.Println("Unable to decode azure web app response.")
+		return nil, err
+	}
+
+	return webapps.List, nil
 }
 
 func (c *azureClient) GetWebApplications(key []byte) ([]orchestrator.ApplicationInfo, error) {
@@ -235,7 +257,7 @@ func (c *azureClient) GetAppRoleAssignedTo(key []byte, servicePrincipalId string
 	if assignments.List == nil {
 		assignments.List = []AzureAppRoleAssignment{}
 	}
-	
+
 	return assignments, nil
 }
 
@@ -359,13 +381,13 @@ func (c *azureClient) deleteAppRolesAssignedTo(key []byte, servicePrincipalId st
 	return err
 }
 
-func (c *azureClient) decodeKey(key []byte) (AzureKey, error) {
-	var decoded AzureKey
+func (c *azureClient) decodeKey(key []byte) (azurecommon.AzureKey, error) {
+	var decoded azurecommon.AzureKey
 	err := json.NewDecoder(bytes.NewReader(key)).Decode(&decoded)
 	return decoded, err
 }
 
-func (c *azureClient) accessTokenRequest(decoded AzureKey, scope string) (AzureAccessToken, error) {
+func (c *azureClient) accessTokenRequest(decoded azurecommon.AzureKey, scope string) (AzureAccessToken, error) {
 	var accessToken AzureAccessToken
 	tokenUrl := fmt.Sprintf("https://login.microsoftonline.com/%s/oauth2/v2.0/token", decoded.Tenant)
 	postBody := fmt.Sprintf("grant_type=client_credentials&client_id=%s&client_secret=%s&scope=%s", decoded.AppId, decoded.Secret, scope)

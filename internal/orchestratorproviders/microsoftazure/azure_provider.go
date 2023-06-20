@@ -35,6 +35,17 @@ func (a *AzureProvider) Name() string {
 	return "azure"
 }
 
+// DiscoverApplications For APIM
+// ObjectID = service principal ID of Enterprise App
+// Service = identifier (i.e. service URL) from App registration or APIM.serviceUrl
+//
+//	appReg.identifer == APIM.serviceUrl
+//
+// Name = APIM service name (also resource name)
+//
+//	apim.properties.serviceName == resource.name
+//
+// Description = APIM.properties.displayName
 func (a *AzureProvider) DiscoverApplications(info orchestrator.IntegrationInfo) (apps []orchestrator.ApplicationInfo, err error) {
 	if !strings.EqualFold(info.Name, a.Name()) {
 		return apps, err

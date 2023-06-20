@@ -18,7 +18,7 @@ func (service ApplicationsService) GatherRecords(identifier string) (Application
 	if err != nil {
 		return ApplicationInfo{}, IntegrationInfo{}, nil, err
 	}
-	application := ApplicationInfo{ObjectID: applicationRecord.ObjectId, Name: applicationRecord.Name, Description: applicationRecord.Description}
+	application := ApplicationInfo{ObjectID: applicationRecord.ObjectId, Name: applicationRecord.Name, Description: applicationRecord.Description, Service: applicationRecord.Service}
 
 	integrationRecord, err := service.IntegrationsGateway.FindById(applicationRecord.IntegrationId)
 	if err != nil {
