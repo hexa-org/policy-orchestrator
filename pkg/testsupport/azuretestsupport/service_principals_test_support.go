@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azurecommon"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 )
 
+const AzureSubscription = "aSubscription"
 const ServicePrincipalId = "some-service-principal-id"
 const AzureAppId = "anAppId"
+const AzureAppName = "anAppName"
 const AzureTenantId = "aTenant"
 
 type AppRoleId string
@@ -47,11 +50,11 @@ var ServicePrincipalsRespJson = fmt.Sprintf(`{"value": [
 }]}`, ServicePrincipalId, policytestsupport.PolicyObjectResourceId, AppRoleIdGetHrUs, policytestsupport.ActionGetHrUs, AppRoleIdGetProfile, policytestsupport.ActionGetProfile)
 
 func AzureClientKey() []byte {
-	key := microsoftazure.AzureKey{
+	key := azurecommon.AzureKey{
 		AppId:        AzureAppId,
 		Secret:       "aSecret",
 		Tenant:       AzureTenantId,
-		Subscription: "aSubscription",
+		Subscription: AzureSubscription,
 	}
 
 	keyBytes, _ := json.Marshal(key)

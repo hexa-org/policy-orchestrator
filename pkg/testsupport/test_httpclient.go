@@ -3,11 +3,12 @@ package testsupport
 import (
 	"bytes"
 	"fmt"
+	"github.com/stretchr/testify/mock"
 	"io"
 	"log"
 	"net/http"
-
-	"github.com/stretchr/testify/mock"
+	"net/url"
+	"sort"
 )
 
 type MockHTTPClient struct {
@@ -79,7 +80,7 @@ func (m *MockHTTPClient) sendRequest(method, url, cognitoServiceOp string, body 
 }
 
 func (m *MockHTTPClient) AddRequest(method, url string, statusCode int, responseBody []byte) {
-	reqKey := method + " " + url
+	reqKey := m.reqKey(method, url, "")
 	m.addRequest(reqKey, statusCode, responseBody)
 }
 
@@ -140,9 +141,39 @@ func (m *MockHTTPClient) VerifyCalled() bool {
 	return failCount == 0
 }
 
-func (m *MockHTTPClient) reqKey(method, url, cognitoServiceOp string) string {
+func (m *MockHTTPClient) reqKey(method, reqUrl, cognitoServiceOp string) string {
+	sortedUrl := sortedQueryUrl(reqUrl)
 	if cognitoServiceOp != "" {
-		return fmt.Sprintf("%s %s %s", method, url, cognitoServiceOp)
+		return fmt.Sprintf("%s %s %s", method, sortedUrl, cognitoServiceOp)
 	}
-	return method + " " + url
+	return method + " " + sortedUrl
+}
+
+func sortedQueryUrl(origUrl string) string {
+	sortedUrl, _ := url.Parse(origUrl)
+	if len(sortedUrl.Query()) == 0 {
+		return origUrl
+	}
+
+	sortedParamNames := make([]string, 0)
+	for pName, _ := range sortedUrl.Query() {
+		sortedParamNames = append(sortedParamNames, pName)
+	}
+	sort.Slice(sortedParamNames, func(i, j int) bool {
+		return sortedParamNames[i] <= sortedParamNames[j]
+	})
+
+	sortedParams := url.Values{}
+	for _, pName := range sortedParamNames {
+		newVal := make([]string, 0)
+		newVal = append(newVal, sortedUrl.Query()[pName]...)
+		sort.Slice(newVal, func(i, j int) bool {
+			return newVal[i] <= newVal[j]
+		})
+		sortedParams[pName] = newVal
+	}
+
+	sortedUrl.RawQuery = ""
+	sortedUrl.ForceQuery = true
+	return sortedUrl.String() + sortedParams.Encode()
 }
