@@ -2,8 +2,9 @@ package apim_testsupport
 
 import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/armmodel"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azureapim"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/armmodel"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/providerscommon"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport/armtestsupport"
@@ -23,9 +24,14 @@ func (m *MockArmApimSvc) GetApimServiceInfo(serviceUrl string) (armmodel.ApimSer
 	return returnArgs.Get(0).(armmodel.ApimServiceInfo), returnArgs.Error(1)
 }
 
-func (m *MockArmApimSvc) GetResourceRoles(s armmodel.ApimServiceInfo) ([]armmodel.ResourceActionRoles, error) {
+func (m *MockArmApimSvc) GetResourceRoles(s armmodel.ApimServiceInfo) ([]providerscommon.ResourceActionRoles, error) {
 	returnArgs := m.Called(s)
-	return returnArgs.Get(0).([]armmodel.ResourceActionRoles), returnArgs.Error(1)
+	return returnArgs.Get(0).([]providerscommon.ResourceActionRoles), returnArgs.Error(1)
+}
+
+func (m *MockArmApimSvc) UpdateResourceRole(s armmodel.ApimServiceInfo, nv providerscommon.ResourceActionRoles) error {
+	returnArgs := m.Called(s, nv)
+	return returnArgs.Error(0)
 }
 
 func (m *MockArmApimSvc) ExpectGetApimServiceInfo(gatewayUrl string) {
@@ -44,14 +50,14 @@ func (m *MockArmApimSvc) ExpectGetApimServiceInfo(gatewayUrl string) {
 		Return(expServiceInfo, nil)
 }
 
+func BuildApimSvc(mockHttpClient *testsupport.MockHTTPClient) azapim.ArmApimSvc {
+	key := azuretestsupport.AzureClientKey()
+	factory, _ := microsoftazure.NewSvcFactory(key, mockHttpClient)
+	service, _ := factory.NewApimSvc()
+	return service
+}
+
 //func (m *MockArmApimSvc) getApimApiInfo(armResource armmodel.ArmResource, serviceUrl string) (*azureapim.ApimServiceInfo, error) {
 //	returnArgs := m.Called(armResource, serviceUrl)
 //	return returnArgs.Get(0).(*azureapim.ApimServiceInfo), returnArgs.Error(1)
 //}
-
-func BuildApimSvc(mockHttpClient *testsupport.MockHTTPClient) azureapim.ArmApimSvc {
-	key := azuretestsupport.AzureClientKey()
-	factory, _ := microsoftazure.NewApimProviderSvcFactory(key, mockHttpClient)
-	service, _ := factory.NewApimSvc()
-	return service
-}

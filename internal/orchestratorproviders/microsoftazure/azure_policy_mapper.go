@@ -2,17 +2,18 @@ package microsoftazure
 
 import (
 	"fmt"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
 	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 )
 
 type AzurePolicyMapper struct {
 	objectId                   string
-	roleIdToAppRole            map[string]azureAppRole
-	roleIdToAppRoleAssignments map[string][]AzureAppRoleAssignment
+	roleIdToAppRole            map[string]azad.AzureAppRole
+	roleIdToAppRoleAssignments map[string][]azad.AzureAppRoleAssignment
 	azureUserEmail             map[string]string
 }
 
-func NewAzurePolicyMapper(sps AzureServicePrincipals, appRoleAssignments []AzureAppRoleAssignment, azureUserEmail map[string]string) *AzurePolicyMapper {
+func NewAzurePolicyMapper(sps azad.AzureServicePrincipals, appRoleAssignments []azad.AzureAppRoleAssignment, azureUserEmail map[string]string) *AzurePolicyMapper {
 	if len(sps.List) == 0 {
 		return &AzurePolicyMapper{}
 	}
@@ -34,7 +35,7 @@ func (azm *AzurePolicyMapper) ToIDQL() []policysupport.PolicyInfo {
 
 }
 
-func (azm *AzurePolicyMapper) appRoleAssignmentToIDQL(assignments []AzureAppRoleAssignment, action string) policysupport.PolicyInfo {
+func (azm *AzurePolicyMapper) appRoleAssignmentToIDQL(assignments []azad.AzureAppRoleAssignment, action string) policysupport.PolicyInfo {
 
 	members := make([]string, 0)
 	for _, oneAssignment := range assignments {
@@ -53,21 +54,21 @@ func (azm *AzurePolicyMapper) appRoleAssignmentToIDQL(assignments []AzureAppRole
 	}
 }
 
-func mapAppRoles(appRoles []azureAppRole) map[string]azureAppRole {
-	appRolesMap := make(map[string]azureAppRole)
+func mapAppRoles(appRoles []azad.AzureAppRole) map[string]azad.AzureAppRole {
+	appRolesMap := make(map[string]azad.AzureAppRole)
 	for _, role := range appRoles {
 		appRolesMap[role.ID] = role
 	}
 	return appRolesMap
 }
 
-func mapAppRoleAssignments(appRoleAssignments []AzureAppRoleAssignment) map[string][]AzureAppRoleAssignment {
-	roleAssignmentMap := make(map[string][]AzureAppRoleAssignment)
+func mapAppRoleAssignments(appRoleAssignments []azad.AzureAppRoleAssignment) map[string][]azad.AzureAppRoleAssignment {
+	roleAssignmentMap := make(map[string][]azad.AzureAppRoleAssignment)
 	for _, roleAssignment := range appRoleAssignments {
 		roleId := roleAssignment.AppRoleId
 		raArray, found := roleAssignmentMap[roleId]
 		if !found {
-			raArray = make([]AzureAppRoleAssignment, 0)
+			raArray = make([]azad.AzureAppRoleAssignment, 0)
 		}
 
 		roleAssignmentMap[roleId] = append(raArray, roleAssignment)

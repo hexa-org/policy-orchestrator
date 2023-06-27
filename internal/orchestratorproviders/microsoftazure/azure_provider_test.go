@@ -3,6 +3,7 @@ package microsoftazure_test
 import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
 	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
@@ -46,7 +47,7 @@ func TestGetPolicy_WithoutUserEmail(t *testing.T) {
 	mockAzClient.ExpectGetServicePrincipals()
 	mockAzClient.ExpectAppRoleAssignedTo(azuretestsupport.AppRoleAssignmentGetProfile)
 	mockAzClient.On("GetUserInfoFromPrincipalId", mock.Anything, mock.Anything).
-		Return(microsoftazure.AzureUser{
+		Return(azad.AzureUser{
 			PrincipalId: policytestsupport.UserIdGetProfile,
 		}, nil)
 

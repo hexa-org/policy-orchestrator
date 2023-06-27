@@ -1,4 +1,4 @@
-package azureapim
+package apimapi
 
 import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -17,7 +17,7 @@ type armApimApiClient struct {
 	internal *armapimanagement.APIClient
 }
 
-func newApimApiClient(subscriptionID string, credential azcore.TokenCredential, options *arm.ClientOptions) (ArmApimApiClient, error) {
+func NewApimApiClient(subscriptionID string, credential azcore.TokenCredential, options *arm.ClientOptions) (ArmApimApiClient, error) {
 	factory, err := armapimanagement.NewClientFactory(subscriptionID, credential, options)
 	// TODO - above call doesnt seem to be throwing any errors. See TestNewArmApimSvc
 	if err != nil {

@@ -2,7 +2,7 @@ package azuretestsupport
 
 import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport/armtestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/mock"
@@ -13,9 +13,9 @@ type MockAzureClient struct {
 	mock.Mock
 }
 
-func (m *MockAzureClient) GetAzureApplications(key []byte) ([]microsoftazure.AzureWebApp, error) {
+func (m *MockAzureClient) GetAzureApplications(key []byte) ([]azad.AzureWebApp, error) {
 	returnArgs := m.Called(key)
-	return returnArgs.Get(0).([]microsoftazure.AzureWebApp), returnArgs.Error(1)
+	return returnArgs.Get(0).([]azad.AzureWebApp), returnArgs.Error(1)
 }
 
 func (m *MockAzureClient) GetWebApplications(key []byte) ([]orchestrator.ApplicationInfo, error) {
@@ -23,14 +23,14 @@ func (m *MockAzureClient) GetWebApplications(key []byte) ([]orchestrator.Applica
 	return returnArgs.Get(0).([]orchestrator.ApplicationInfo), returnArgs.Error(1)
 }
 
-func (m *MockAzureClient) GetServicePrincipals(key []byte, appId string) (microsoftazure.AzureServicePrincipals, error) {
+func (m *MockAzureClient) GetServicePrincipals(key []byte, appId string) (azad.AzureServicePrincipals, error) {
 	returnArgs := m.Called(key, appId)
-	return returnArgs.Get(0).(microsoftazure.AzureServicePrincipals), returnArgs.Error(1)
+	return returnArgs.Get(0).(azad.AzureServicePrincipals), returnArgs.Error(1)
 }
 
-func (m *MockAzureClient) GetUserInfoFromPrincipalId(key []byte, principalId string) (microsoftazure.AzureUser, error) {
+func (m *MockAzureClient) GetUserInfoFromPrincipalId(key []byte, principalId string) (azad.AzureUser, error) {
 	returnArgs := m.Called(key, principalId)
-	return returnArgs.Get(0).(microsoftazure.AzureUser), returnArgs.Error(1)
+	return returnArgs.Get(0).(azad.AzureUser), returnArgs.Error(1)
 }
 
 func (m *MockAzureClient) GetPrincipalIdFromEmail(key []byte, email string) (string, error) {
@@ -38,12 +38,12 @@ func (m *MockAzureClient) GetPrincipalIdFromEmail(key []byte, email string) (str
 	return returnArgs.String(0), returnArgs.Error(1)
 }
 
-func (m *MockAzureClient) GetAppRoleAssignedTo(key []byte, servicePrincipalId string) (microsoftazure.AzureAppRoleAssignments, error) {
+func (m *MockAzureClient) GetAppRoleAssignedTo(key []byte, servicePrincipalId string) (azad.AzureAppRoleAssignments, error) {
 	returnArgs := m.Called(key, servicePrincipalId)
-	return returnArgs.Get(0).(microsoftazure.AzureAppRoleAssignments), returnArgs.Error(1)
+	return returnArgs.Get(0).(azad.AzureAppRoleAssignments), returnArgs.Error(1)
 }
 
-func (m *MockAzureClient) SetAppRoleAssignedTo(key []byte, servicePrincipalId string, assignments []microsoftazure.AzureAppRoleAssignment) error {
+func (m *MockAzureClient) SetAppRoleAssignedTo(key []byte, servicePrincipalId string, assignments []azad.AzureAppRoleAssignment) error {
 	returnArgs := m.Called(key, servicePrincipalId, assignments)
 	return returnArgs.Error(0)
 }
@@ -53,7 +53,7 @@ func NewMockAzureClient() *MockAzureClient {
 }
 
 func (m *MockAzureClient) ExpectGetAzureApplications() {
-	expApps := []microsoftazure.AzureWebApp{
+	expApps := []azad.AzureWebApp{
 		{
 			ID:             AzureAppId,
 			AppID:          ServicePrincipalId,
@@ -69,7 +69,7 @@ func (m *MockAzureClient) ExpectGetServicePrincipals() {
 		Return(AzureServicePrincipals(), nil)
 }
 
-func (m *MockAzureClient) ExpectAppRoleAssignedTo(assignments []microsoftazure.AzureAppRoleAssignment) {
+func (m *MockAzureClient) ExpectAppRoleAssignedTo(assignments []azad.AzureAppRoleAssignment) {
 	m.On("GetAppRoleAssignedTo", AzureClientKey(), ServicePrincipalId).
 		Return(MakeAssignments(assignments), nil)
 }
@@ -77,7 +77,7 @@ func (m *MockAzureClient) ExpectAppRoleAssignedTo(assignments []microsoftazure.A
 func (m *MockAzureClient) ExpectGetUserInfoFromPrincipalId(principalIds ...string) {
 	for _, pId := range principalIds {
 		m.On("GetUserInfoFromPrincipalId", AzureClientKey(), pId).
-			Return(microsoftazure.AzureUser{
+			Return(azad.AzureUser{
 				PrincipalId: pId,
 				Email:       policytestsupport.MakeEmail(pId),
 			}, nil)
@@ -89,8 +89,8 @@ func (m *MockAzureClient) ExpectGetPrincipalIdFromEmail(email, principalId strin
 		Return(principalId, nil)
 }
 
-func (m *MockAzureClient) ExpectSetAppRoleAssignedTo(requestedAssignments []microsoftazure.AzureAppRoleAssignment) {
-	theFunc := mock.MatchedBy(func(actAssignments []microsoftazure.AzureAppRoleAssignment) bool {
+func (m *MockAzureClient) ExpectSetAppRoleAssignedTo(requestedAssignments []azad.AzureAppRoleAssignment) {
+	theFunc := mock.MatchedBy(func(actAssignments []azad.AzureAppRoleAssignment) bool {
 		if len(actAssignments) != len(requestedAssignments) {
 			return false
 		}

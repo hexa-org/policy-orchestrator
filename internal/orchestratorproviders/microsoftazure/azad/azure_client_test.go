@@ -1,7 +1,7 @@
-package microsoftazure_test
+package azad_test
 
 import (
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"net/http"
@@ -417,7 +417,7 @@ func TestAzureClient_GetAppRoleAssignedTo_Errors(t *testing.T) {
 func TestAzureClient_GetAppRoleAssignedTo_NoAssignments(t *testing.T) {
 	m := azuretestsupport.NewAzureHttpClient()
 	key := azuretestsupport.AzureClientKey()
-	var existingAssignments []microsoftazure.AzureAppRoleAssignment
+	var existingAssignments []azad.AzureAppRoleAssignment
 
 	m.TokenRequest("accessToken")
 	m.GetAppRoleAssignmentsRequest(existingAssignments)
@@ -443,7 +443,7 @@ func TestAzureClient_GetAppRoleAssignedTo(t *testing.T) {
 	assert.NotNil(t, actAssignments.List)
 	assert.Equal(t, len(existingAssignments), len(actAssignments.List))
 
-	existingAssignmentIdMap := make(map[string]microsoftazure.AzureAppRoleAssignment)
+	existingAssignmentIdMap := make(map[string]azad.AzureAppRoleAssignment)
 	for _, ara := range existingAssignments {
 		existingAssignmentIdMap[ara.ID] = ara
 	}
@@ -468,17 +468,17 @@ func TestAzureClient_SetAppRoleAssignedTo_InvalidAppRoleAssignment(t *testing.T)
 
 	tests := []struct {
 		name       string
-		assignment microsoftazure.AzureAppRoleAssignment
+		assignment azad.AzureAppRoleAssignment
 		errSubstr  string
 	}{
 		{
 			name:       "Missing appRoleId",
-			assignment: microsoftazure.AzureAppRoleAssignment{PrincipalId: "aUserId", ResourceId: "aResourceId"},
+			assignment: azad.AzureAppRoleAssignment{PrincipalId: "aUserId", ResourceId: "aResourceId"},
 			errSubstr:  "AppRoleId",
 		},
 		{
 			name:       "Missing Resource",
-			assignment: microsoftazure.AzureAppRoleAssignment{AppRoleId: "aRoleId", PrincipalId: "aUserId"},
+			assignment: azad.AzureAppRoleAssignment{AppRoleId: "aRoleId", PrincipalId: "aUserId"},
 			errSubstr:  "ResourceId",
 		},
 	}
@@ -487,7 +487,7 @@ func TestAzureClient_SetAppRoleAssignedTo_InvalidAppRoleAssignment(t *testing.T)
 	appId := "anAppId"
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := client.SetAppRoleAssignedTo(key, appId, []microsoftazure.AzureAppRoleAssignment{tt.assignment})
+			err := client.SetAppRoleAssignedTo(key, appId, []azad.AzureAppRoleAssignment{tt.assignment})
 			assert.Error(t, err)
 			assert.ErrorContains(t, err, "Error:Field validation")
 			assert.ErrorContains(t, err, tt.errSubstr)
@@ -503,7 +503,7 @@ func TestAzureClient_SetAppRoleAssignedTo_WithBadGetAssignments(t *testing.T) {
 	err := client.SetAppRoleAssignedTo(
 		azuretestsupport.AzureClientKey(),
 		azuretestsupport.ServicePrincipalId,
-		[]microsoftazure.AzureAppRoleAssignment{})
+		[]azad.AzureAppRoleAssignment{})
 	assert.Error(t, err)
 	assert.ErrorContains(t, err, "invalid character '~'")
 }
@@ -558,7 +558,7 @@ func TestAzureClient_SetAppRoleAssignedTo_AddNewRoleAssignment(t *testing.T) {
 	m.GetAppRoleAssignmentsRequest(existingAssignments)
 	m.PostAppRoleAssignmentsRequest()
 
-	newRoleAssignments := make([]microsoftazure.AzureAppRoleAssignment, 0)
+	newRoleAssignments := make([]azad.AzureAppRoleAssignment, 0)
 	newRoleAssignments = append(newRoleAssignments, azuretestsupport.AppRoleAssignmentForAdd...)
 	newRoleAssignments = append(newRoleAssignments, existingAssignments...)
 
@@ -580,7 +580,7 @@ func TestAzureClient_SetAppRoleAssignedTo_AddOneMoreMember_ExistingRole(t *testi
 	m.GetAppRoleAssignmentsRequest(existingAssignments)
 	m.PostAppRoleAssignmentsRequest()
 
-	newRoleAssignments := make([]microsoftazure.AzureAppRoleAssignment, 0)
+	newRoleAssignments := make([]azad.AzureAppRoleAssignment, 0)
 	newRoleAssignments = append(newRoleAssignments, existingAssignments...)
 	newRoleAssignments = append(newRoleAssignments, azuretestsupport.NewAppRoleAssignments(azuretestsupport.AppRoleIdGetHrUs, policytestsupport.UserIdUnassigned1))
 
@@ -602,7 +602,7 @@ func TestAzureClient_SetAppRoleAssignedTo_AddMoreMembers_ExistingRole(t *testing
 	m.GetAppRoleAssignmentsRequest(existingAssignments)
 	m.PostAppRoleAssignmentsRequest()
 
-	newRoleAssignments := make([]microsoftazure.AzureAppRoleAssignment, 0)
+	newRoleAssignments := make([]azad.AzureAppRoleAssignment, 0)
 	newRoleAssignments = append(newRoleAssignments, existingAssignments...)
 	newRoleAssignments = append(newRoleAssignments, azuretestsupport.NewAppRoleAssignments(azuretestsupport.AppRoleIdGetHrUs, policytestsupport.UserIdUnassigned1))
 	newRoleAssignments = append(newRoleAssignments, azuretestsupport.NewAppRoleAssignments(azuretestsupport.AppRoleIdGetHrUs, policytestsupport.UserIdUnassigned2))
@@ -674,13 +674,13 @@ func TestAzureClient_SetAppRoleAssignedTo_DoesNotDeleteDifferentRole(t *testing.
 func TestAzureClient_SetAppRoleAssignedTo_DoesNotDeleteDifferentResource(t *testing.T) {
 	m := azuretestsupport.NewAzureHttpClient()
 	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
-	assignmentsFromPolicy := make([]microsoftazure.AzureAppRoleAssignment, 0)
+	assignmentsFromPolicy := make([]azad.AzureAppRoleAssignment, 0)
 
 	m.TokenRequest("accessToken")
 	m.GetAppRoleAssignmentsRequest(existingAssignments)
 
 	for _, ara := range existingAssignments {
-		newAra := microsoftazure.AzureAppRoleAssignment{
+		newAra := azad.AzureAppRoleAssignment{
 			AppRoleId:  ara.AppRoleId,
 			ResourceId: "some-other-resource",
 		}
@@ -719,7 +719,7 @@ func TestAzureClient_SetAppRoleAssignedTo_DeleteAllRoleAssignments(t *testing.T)
 func TestAzureClient_SetAppRoleAssignedTo_DeleteOneOfMultipleMemberAssignments(t *testing.T) {
 	m := azuretestsupport.NewAzureHttpClient()
 	existingAssignments := azuretestsupport.AppRoleAssignmentMultipleMembers
-	assignmentsFromPolicy := []microsoftazure.AzureAppRoleAssignment{
+	assignmentsFromPolicy := []azad.AzureAppRoleAssignment{
 		existingAssignments[1],
 	}
 
@@ -741,7 +741,7 @@ func TestAzureClient_SetAppRoleAssignedTo_AddDeleteRoleAssignment(t *testing.T) 
 	m := azuretestsupport.NewAzureHttpClient()
 	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
 	newRoleAssignments := azuretestsupport.AppRoleAssignmentForAdd
-	assignmentsFromPolicy := make([]microsoftazure.AzureAppRoleAssignment, 0)
+	assignmentsFromPolicy := make([]azad.AzureAppRoleAssignment, 0)
 	assignmentsFromPolicy = append(assignmentsFromPolicy, newRoleAssignments...)
 	assignmentsFromPolicy = append(assignmentsFromPolicy, azuretestsupport.AssignmentsForDelete(existingAssignments)...)
 

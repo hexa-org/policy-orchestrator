@@ -3,7 +3,7 @@ package azuretestsupport
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"net/http"
@@ -29,8 +29,8 @@ func NewAzureHttpClient() *AzureHttpClient {
 	}
 }
 
-func (ac *AzureHttpClient) AzureClient() microsoftazure.AzureClient {
-	client := microsoftazure.NewAzureClient(ac.MockHttpClient)
+func (ac *AzureHttpClient) AzureClient() azad.AzureClient {
+	client := azad.NewAzureClient(ac.MockHttpClient)
 	return client
 }
 func (ac *AzureHttpClient) ErrorRequest(method string, url string, expStatus int, body []byte) {
@@ -50,14 +50,14 @@ func (ac *AzureHttpClient) TokenCalled() bool {
 }
 
 func (ac *AzureHttpClient) GetWebApplicationsRequest(expResp string) {
-	url := GraphApiBaseUrl + "/applications"
+	aUrl := GraphApiBaseUrl + "/applications"
 	resp := []byte(expResp)
-	ac.MockHttpClient.AddRequest(http.MethodGet, url, http.StatusOK, resp)
+	ac.MockHttpClient.AddRequest(http.MethodGet, aUrl, http.StatusOK, resp)
 }
 
 func (ac *AzureHttpClient) GetServicePrincipalsUrl() string {
-	url := fmt.Sprintf(`%s/servicePrincipals?$search="appId:%s"`, GraphApiBaseUrl, ac.AppId)
-	return url
+	aUrl := fmt.Sprintf(`%s/servicePrincipals?$search="appId:%s"`, GraphApiBaseUrl, ac.AppId)
+	return aUrl
 }
 
 func (ac *AzureHttpClient) GetServicePrincipalsRequest() {
@@ -66,12 +66,12 @@ func (ac *AzureHttpClient) GetServicePrincipalsRequest() {
 }
 
 func (ac *AzureHttpClient) GetUserInfoFromPrincipalIdUrl(principalId string) string {
-	url := fmt.Sprintf(`%s/users/%s`, GraphApiBaseUrl, principalId)
-	return url
+	aUrl := fmt.Sprintf(`%s/users/%s`, GraphApiBaseUrl, principalId)
+	return aUrl
 }
 
 func (ac *AzureHttpClient) GetUserInfoFromPrincipalIdRequest(principalId string) {
-	azUser := microsoftazure.AzureUser{
+	azUser := azad.AzureUser{
 		PrincipalId: principalId,
 		Email:       policytestsupport.MakeEmail(principalId),
 	}
@@ -81,13 +81,13 @@ func (ac *AzureHttpClient) GetUserInfoFromPrincipalIdRequest(principalId string)
 
 func (ac *AzureHttpClient) GetPrincipalIdFromEmailUrl(principalId string) string {
 	email := policytestsupport.MakeEmail(principalId)
-	url := fmt.Sprintf("%s/users?$select=id,mail&$filter=mail%%20eq%%20%%27%s%%27", GraphApiBaseUrl, url.QueryEscape(email))
-	return url
+	aUrl := fmt.Sprintf("%s/users?$select=id,mail&$filter=mail%%20eq%%20%%27%s%%27", GraphApiBaseUrl, url.QueryEscape(email))
+	return aUrl
 }
 
 func (ac *AzureHttpClient) GetPrincipalIdFromEmailRequest(principalId string) {
-	azUser := microsoftazure.AzureUsers{
-		List: []microsoftazure.AzureUser{{
+	azUser := azad.AzureUsers{
+		List: []azad.AzureUser{{
 			PrincipalId: principalId,
 			Email:       policytestsupport.MakeEmail(principalId),
 		}},
@@ -102,8 +102,8 @@ func (ac *AzureHttpClient) AppRoleAssignmentsUrl() string {
 	return appRoleAssignmentsUrl
 }
 
-func (ac *AzureHttpClient) GetAppRoleAssignmentsRequest(appRoleAssignments []microsoftazure.AzureAppRoleAssignment) {
-	assignmentList := microsoftazure.AzureAppRoleAssignments{
+func (ac *AzureHttpClient) GetAppRoleAssignmentsRequest(appRoleAssignments []azad.AzureAppRoleAssignment) {
+	assignmentList := azad.AzureAppRoleAssignments{
 		List: appRoleAssignments,
 	}
 
@@ -123,7 +123,7 @@ func (ac *AzureHttpClient) PostAppRoleAssignmentsCalled() bool {
 	return ac.MockHttpClient.CalledWithStatus(http.MethodPost, ac.AppRoleAssignmentsUrl(), http.StatusCreated)
 }
 
-func (ac *AzureHttpClient) DeleteAppRoleAssignmentsRequest(toDelete []microsoftazure.AzureAppRoleAssignment) {
+func (ac *AzureHttpClient) DeleteAppRoleAssignmentsRequest(toDelete []azad.AzureAppRoleAssignment) {
 	for _, ara := range toDelete {
 		deleteUrl := ac.AppRoleAssignmentsUrl() + "/" + ara.ID
 		ac.MockHttpClient.AddRequest(http.MethodDelete, deleteUrl, http.StatusNoContent, nil)
@@ -131,7 +131,7 @@ func (ac *AzureHttpClient) DeleteAppRoleAssignmentsRequest(toDelete []microsofta
 
 }
 
-func (ac *AzureHttpClient) DeleteAppRoleAssignmentsCalled(deleted microsoftazure.AzureAppRoleAssignment) bool {
+func (ac *AzureHttpClient) DeleteAppRoleAssignmentsCalled(deleted azad.AzureAppRoleAssignment) bool {
 	deleteUrl := ac.AppRoleAssignmentsUrl() + "/" + deleted.ID
 	return ac.MockHttpClient.CalledWithStatus(http.MethodDelete, deleteUrl, http.StatusNoContent)
 }

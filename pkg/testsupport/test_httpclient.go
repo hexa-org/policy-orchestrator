@@ -57,12 +57,12 @@ func (m *MockHTTPClient) Post(url, _ string, body io.Reader) (resp *http.Respons
 	return m.sendRequest(http.MethodPost, url, "", body)
 }
 
-func (m *MockHTTPClient) sendRequest(method, url, cognitoServiceOp string, body io.Reader) (resp *http.Response, err error) {
-	m.Url = url
+func (m *MockHTTPClient) sendRequest(method, reqUrl, cognitoServiceOp string, body io.Reader) (resp *http.Response, err error) {
+	m.Url = reqUrl
 	statusCode := m.StatusCode
-	reqKey := url
+	reqKey := reqUrl
 
-	methodAndUrl := m.reqKey(method, url, cognitoServiceOp)
+	methodAndUrl := m.reqKey(method, reqUrl, cognitoServiceOp)
 	if code, exists := m.StatusCodes[methodAndUrl]; exists {
 		reqKey = methodAndUrl
 		statusCode = code
@@ -76,7 +76,10 @@ func (m *MockHTTPClient) sendRequest(method, url, cognitoServiceOp string, body 
 	var responseBody []byte
 	responseBody = m.ResponseBody[reqKey]
 	m.Called[reqKey] = statusCode
-	return &http.Response{StatusCode: statusCode, Body: io.NopCloser(bytes.NewReader(responseBody))}, m.Err
+
+	parsedUrl, _ := url.Parse(reqUrl)
+	req := http.Request{Method: method, URL: parsedUrl}
+	return &http.Response{StatusCode: statusCode, Body: io.NopCloser(bytes.NewReader(responseBody)), Request: &req}, m.Err
 }
 
 func (m *MockHTTPClient) AddRequest(method, url string, statusCode int, responseBody []byte) {
