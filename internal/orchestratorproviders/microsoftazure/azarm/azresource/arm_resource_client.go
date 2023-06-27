@@ -1,4 +1,4 @@
-package azureresource
+package azresource
 
 import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"

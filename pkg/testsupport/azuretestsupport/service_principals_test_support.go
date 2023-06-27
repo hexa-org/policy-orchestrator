@@ -3,7 +3,7 @@ package azuretestsupport
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azurecommon"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 )
@@ -49,20 +49,22 @@ var ServicePrincipalsRespJson = fmt.Sprintf(`{"value": [
 	] 
 }]}`, ServicePrincipalId, policytestsupport.PolicyObjectResourceId, AppRoleIdGetHrUs, policytestsupport.ActionGetHrUs, AppRoleIdGetProfile, policytestsupport.ActionGetProfile)
 
-func AzureClientKey() []byte {
-	key := azurecommon.AzureKey{
+func AzureKey() azurecommon.AzureKey {
+	return azurecommon.AzureKey{
 		AppId:        AzureAppId,
 		Secret:       "aSecret",
 		Tenant:       AzureTenantId,
 		Subscription: AzureSubscription,
 	}
+}
 
-	keyBytes, _ := json.Marshal(key)
+func AzureClientKey() []byte {
+	keyBytes, _ := json.Marshal(AzureKey())
 	return keyBytes
 }
 
-func AzureServicePrincipals() microsoftazure.AzureServicePrincipals {
-	var sps microsoftazure.AzureServicePrincipals
+func AzureServicePrincipals() azad.AzureServicePrincipals {
+	var sps azad.AzureServicePrincipals
 	_ = json.Unmarshal([]byte(ServicePrincipalsRespJson), &sps)
 	return sps
 }

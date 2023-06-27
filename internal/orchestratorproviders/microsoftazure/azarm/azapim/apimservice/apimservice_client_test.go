@@ -1,4 +1,4 @@
-package azureapim_test
+package apimservice_test
 
 import (
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport/apim_testsupport"
@@ -15,7 +15,7 @@ func TestListService_ErrorResp(t *testing.T) {
 	mockApiClient.HttpClient.AddRequest("GET", reqUrl, http.StatusBadRequest, []byte(""))
 	_, err := service.GetApimServiceInfo(armtestsupport.ApimServiceGatewayUrl)
 	assert.Error(t, err)
-	assert.ErrorContains(t, err, "httpStatus=400")
+	assert.ErrorContains(t, err, "400")
 }
 
 func TestListService(t *testing.T) {

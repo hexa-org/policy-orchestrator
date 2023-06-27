@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/go-playground/validator/v10"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
 	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
 	"log"
@@ -12,19 +13,19 @@ import (
 )
 
 type AzureProvider struct {
-	client AzureClient
+	client azad.AzureClient
 }
 
 type ProviderOpt func(provider *AzureProvider)
 
-func WithAzureClient(clientOverride AzureClient) func(provider *AzureProvider) {
+func WithAzureClient(clientOverride azad.AzureClient) func(provider *AzureProvider) {
 	return func(provider *AzureProvider) {
 		provider.client = clientOverride
 	}
 }
 
 func NewAzureProvider(opts ...ProviderOpt) *AzureProvider {
-	provider := &AzureProvider{client: NewAzureClient(&http.Client{})}
+	provider := &AzureProvider{client: azad.NewAzureClient(&http.Client{})}
 	for _, opt := range opts {
 		opt(provider)
 	}
@@ -35,17 +36,6 @@ func (a *AzureProvider) Name() string {
 	return "azure"
 }
 
-// DiscoverApplications For APIM
-// ObjectID = service principal ID of Enterprise App
-// Service = identifier (i.e. service URL) from App registration or APIM.serviceUrl
-//
-//	appReg.identifer == APIM.serviceUrl
-//
-// Name = APIM service name (also resource name)
-//
-//	apim.properties.serviceName == resource.name
-//
-// Description = APIM.properties.displayName
 func (a *AzureProvider) DiscoverApplications(info orchestrator.IntegrationInfo) (apps []orchestrator.ApplicationInfo, err error) {
 	if !strings.EqualFold(info.Name, a.Name()) {
 		return apps, err
@@ -65,13 +55,13 @@ func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 	}
 	assignments, _ := a.client.GetAppRoleAssignedTo(key, servicePrincipals.List[0].ID)
 
-	userEmailList := workflowsupport.ProcessAsync[AzureUser, AzureAppRoleAssignment](assignments.List, func(ara AzureAppRoleAssignment) (AzureUser, error) {
+	userEmailList := workflowsupport.ProcessAsync[azad.AzureUser, azad.AzureAppRoleAssignment](assignments.List, func(ara azad.AzureAppRoleAssignment) (azad.AzureUser, error) {
 		user, _ := a.client.GetUserInfoFromPrincipalId(key, ara.PrincipalId)
 
 		if user.Email == "" {
-			return AzureUser{}, errors.New("no email found for principalId " + ara.PrincipalId)
+			return azad.AzureUser{}, errors.New("no email found for principalId " + ara.PrincipalId)
 		}
-		return AzureUser{PrincipalId: ara.PrincipalId, Email: user.Email}, nil
+		return azad.AzureUser{PrincipalId: ara.PrincipalId, Email: user.Email}, nil
 	})
 
 	userEmailMap := make(map[string]string)
@@ -106,7 +96,7 @@ func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 	}
 
 	for _, policyInfo := range policyInfos {
-		var assignments []AzureAppRoleAssignment
+		var assignments []azad.AzureAppRoleAssignment
 
 		actionUri := strings.TrimPrefix(policyInfo.Actions[0].ActionUri, "azure:")
 		appRoleId, found := appRoleValueToId[actionUri]
@@ -116,11 +106,9 @@ func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 		}
 
 		if len(policyInfo.Subject.Members) == 0 {
-			assignments = append(assignments, AzureAppRoleAssignment{
+			assignments = append(assignments, azad.AzureAppRoleAssignment{
 				AppRoleId:  appRoleId,
 				ResourceId: sps.List[0].ID,
-				//ResourceId: strings.Split(policyInfo.Object.ResourceID, ":")[0],
-
 			})
 		}
 
@@ -129,7 +117,7 @@ func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 			if principalId == "" {
 				continue
 			}
-			assignments = append(assignments, AzureAppRoleAssignment{
+			assignments = append(assignments, azad.AzureAppRoleAssignment{
 				AppRoleId:   appRoleId,
 				PrincipalId: principalId,
 				ResourceId:  sps.List[0].ID,

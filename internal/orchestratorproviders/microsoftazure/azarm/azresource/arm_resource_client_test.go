@@ -1,4 +1,4 @@
-package azureresource_test
+package azresource_test
 
 import (
 	"encoding/json"
@@ -76,7 +76,7 @@ func (m *armResourceClient) expectListResources(expStatus int, expBody []byte) {
 func TestGetApiManagementResources(t *testing.T) {
 	key := azuretestsupport.AzureClientKey()
 	client := newMockArnResourceClient()
-	factory, err := microsoftazure.NewApimProviderSvcFactory(key, client.mockClient)
+	factory, err := microsoftazure.NewSvcFactory(key, client.mockClient)
 
 	assert.NoError(t, err)
 

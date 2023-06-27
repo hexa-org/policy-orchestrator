@@ -1,4 +1,4 @@
-package microsoftazure
+package azad
 
 import (
 	"bytes"
@@ -8,17 +8,11 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azurecommon"
-	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
 )
-
-type HTTPClient interface {
-	Do(req *http.Request) (*http.Response, error)
-	Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
-}
 
 type AzureClient interface {
 	GetAzureApplications(key []byte) ([]AzureWebApp, error)
@@ -31,7 +25,7 @@ type AzureClient interface {
 }
 
 type azureClient struct {
-	HttpClient HTTPClient
+	HttpClient azurecommon.HTTPClient
 }
 
 type AzureAccessToken struct {
@@ -60,10 +54,10 @@ type AzureServicePrincipals struct {
 type azureServicePrincipal struct {
 	ID       string         `json:"id"`
 	Name     string         `json:"displayName"`
-	AppRoles []azureAppRole `json:"appRoles"`
+	AppRoles []AzureAppRole `json:"appRoles"`
 }
 
-type azureAppRole struct {
+type AzureAppRole struct {
 	AllowedMemberTypes []string `json:"allowedMemberTypes"`
 	Description        string   `json:"description"`
 	DisplayName        string   `json:"displayName"`
@@ -97,7 +91,7 @@ type AzureAppRoleAssignment struct {
 	ResourceId           string `json:"resourceId" validate:"required"`
 }
 
-func NewAzureClient(httpClient HTTPClient) AzureClient {
+func NewAzureClient(httpClient azurecommon.HTTPClient) AzureClient {
 	if httpClient == nil {
 		return &azureClient{HttpClient: &http.Client{}}
 	}

@@ -38,8 +38,6 @@ func (m *AzureApimHttpClient) ExpectListService() {
 	}
 
 	theBytes, _ := json.Marshal(resp)
-	//theBytes = []byte("")
-	// GET https://management.azure.com/subscriptions/aSubscription/providers/Microsoft.ApiManagement/service?api-version=2021-08-01"
 	reqUrl := ListServiceUrl()
 	m.HttpClient.AddRequest("GET", reqUrl, http.StatusOK, theBytes)
 }
@@ -55,9 +53,6 @@ func (m *AzureApimHttpClient) expectGetApiClient() {
 		APIContract: armapimanagement.APIContract{},
 		ETag:        nil,
 	}
-
 	resp, _ := json.Marshal(output)
-
 	m.HttpClient.AddRequest(http.MethodGet, url, http.StatusOK, resp)
-
 }

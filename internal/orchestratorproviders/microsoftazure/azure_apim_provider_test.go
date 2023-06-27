@@ -3,7 +3,7 @@ package microsoftazure_test
 import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/armmodel"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/armmodel"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport/apim_testsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport/armtestsupport"
@@ -56,5 +56,6 @@ func TestDiscoverApplications_NoApimServices(t *testing.T) {
 
 	applications, err := provider.DiscoverApplications(info)
 	assert.NoError(t, err)
-	assert.Nil(t, applications)
+	assert.NotNil(t, applications)
+	assert.Equal(t, []orchestrator.ApplicationInfo{}, applications)
 }

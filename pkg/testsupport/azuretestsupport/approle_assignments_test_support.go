@@ -3,43 +3,44 @@ package azuretestsupport
 import (
 	"github.com/google/uuid"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
 	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"sort"
 )
 
-var AppRoleAssignmentGetHrUsAndProfile = []microsoftazure.AzureAppRoleAssignment{
+var AppRoleAssignmentGetHrUsAndProfile = []azad.AzureAppRoleAssignment{
 	NewAppRoleAssignments(AppRoleIdGetHrUs, policytestsupport.UserIdGetHrUsAndProfile),
 	NewAppRoleAssignments(AppRoleIdGetProfile, policytestsupport.UserIdGetHrUsAndProfile),
 }
 
-var AppRoleAssignmentGetHrUs = []microsoftazure.AzureAppRoleAssignment{
+var AppRoleAssignmentGetHrUs = []azad.AzureAppRoleAssignment{
 	NewAppRoleAssignments(AppRoleIdGetHrUs, policytestsupport.UserIdGetHrUs),
 }
 
-var AppRoleAssignmentGetProfile = []microsoftazure.AzureAppRoleAssignment{
+var AppRoleAssignmentGetProfile = []azad.AzureAppRoleAssignment{
 	NewAppRoleAssignments(AppRoleIdGetProfile, policytestsupport.UserIdGetProfile),
 }
 
-var AppRoleAssignmentMultipleMembers = []microsoftazure.AzureAppRoleAssignment{
+var AppRoleAssignmentMultipleMembers = []azad.AzureAppRoleAssignment{
 	NewAppRoleAssignments(AppRoleIdGetHrUs, policytestsupport.UserIdGetHrUs),
 	NewAppRoleAssignments(AppRoleIdGetHrUs, policytestsupport.UserIdGetHrUsAndProfile),
 }
 
-var AppRoleAssignmentForAdd = []microsoftazure.AzureAppRoleAssignment{
+var AppRoleAssignmentForAdd = []azad.AzureAppRoleAssignment{
 	NewAppRoleAssignments(AppRoleIdGetProfile, policytestsupport.UserIdUnassigned1),
 	NewAppRoleAssignments(AppRoleIdGetProfile, policytestsupport.UserIdUnassigned2),
 }
 
-var AppRoleAssignments = []microsoftazure.AzureAppRoleAssignment{
+var AppRoleAssignments = []azad.AzureAppRoleAssignment{
 	NewAppRoleAssignments(AppRoleIdGetHrUs, policytestsupport.UserIdGetHrUs),
 	NewAppRoleAssignments(AppRoleIdGetProfile, policytestsupport.UserIdGetProfile),
 	NewAppRoleAssignments(AppRoleIdGetHrUs, policytestsupport.UserIdGetHrUsAndProfile),
 	NewAppRoleAssignments(AppRoleIdGetProfile, policytestsupport.UserIdGetHrUsAndProfile),
 }
 
-func NewAppRoleAssignments(appRoleId AppRoleId, principalId string) microsoftazure.AzureAppRoleAssignment {
-	return microsoftazure.AzureAppRoleAssignment{
+func NewAppRoleAssignments(appRoleId AppRoleId, principalId string) azad.AzureAppRoleAssignment {
+	return azad.AzureAppRoleAssignment{
 		ID:          uuid.NewString(),
 		AppRoleId:   string(appRoleId),
 		PrincipalId: principalId,
@@ -47,14 +48,14 @@ func NewAppRoleAssignments(appRoleId AppRoleId, principalId string) microsoftazu
 	}
 }
 
-func MakeAssignments(assignments []microsoftazure.AzureAppRoleAssignment) microsoftazure.AzureAppRoleAssignments {
-	return microsoftazure.AzureAppRoleAssignments{List: assignments}
+func MakeAssignments(assignments []azad.AzureAppRoleAssignment) azad.AzureAppRoleAssignments {
+	return azad.AzureAppRoleAssignments{List: assignments}
 }
 
-func AssignmentsWithoutId(assignments []microsoftazure.AzureAppRoleAssignment) []microsoftazure.AzureAppRoleAssignment {
-	newAssignments := make([]microsoftazure.AzureAppRoleAssignment, 0)
+func AssignmentsWithoutId(assignments []azad.AzureAppRoleAssignment) []azad.AzureAppRoleAssignment {
+	newAssignments := make([]azad.AzureAppRoleAssignment, 0)
 	for _, ara := range assignments {
-		newAra := microsoftazure.AzureAppRoleAssignment{
+		newAra := azad.AzureAppRoleAssignment{
 			AppRoleId:   ara.AppRoleId,
 			PrincipalId: ara.PrincipalId,
 			ResourceId:  ara.ResourceId,
@@ -65,10 +66,10 @@ func AssignmentsWithoutId(assignments []microsoftazure.AzureAppRoleAssignment) [
 	return newAssignments
 }
 
-func AssignmentsForDelete(assignments []microsoftazure.AzureAppRoleAssignment) []microsoftazure.AzureAppRoleAssignment {
-	newAssignments := make([]microsoftazure.AzureAppRoleAssignment, 0)
+func AssignmentsForDelete(assignments []azad.AzureAppRoleAssignment) []azad.AzureAppRoleAssignment {
+	newAssignments := make([]azad.AzureAppRoleAssignment, 0)
 	for _, ara := range assignments {
-		newAra := microsoftazure.AzureAppRoleAssignment{
+		newAra := azad.AzureAppRoleAssignment{
 			AppRoleId:  ara.AppRoleId,
 			ResourceId: ara.ResourceId,
 		}
@@ -78,7 +79,7 @@ func AssignmentsForDelete(assignments []microsoftazure.AzureAppRoleAssignment) [
 	return newAssignments
 }
 
-func MakePolicies(assignments []microsoftazure.AzureAppRoleAssignment) []policysupport.PolicyInfo {
+func MakePolicies(assignments []azad.AzureAppRoleAssignment) []policysupport.PolicyInfo {
 	policyMapper := microsoftazure.NewAzurePolicyMapper(AzureServicePrincipals(),
 		assignments,
 		policytestsupport.MakePrincipalEmailMap())
@@ -86,8 +87,8 @@ func MakePolicies(assignments []microsoftazure.AzureAppRoleAssignment) []policys
 	return policyMapper.ToIDQL()
 }
 
-func SortAssignments(orig []microsoftazure.AzureAppRoleAssignment) []microsoftazure.AzureAppRoleAssignment {
-	sorted := make([]microsoftazure.AzureAppRoleAssignment, 0)
+func SortAssignments(orig []azad.AzureAppRoleAssignment) []azad.AzureAppRoleAssignment {
+	sorted := make([]azad.AzureAppRoleAssignment, 0)
 	sorted = append(sorted, orig...)
 	sort.Slice(sorted, func(i, j int) bool {
 		if sorted[i].AppRoleId == sorted[j].AppRoleId {

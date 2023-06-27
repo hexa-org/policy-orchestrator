@@ -2,6 +2,7 @@ package microsoftazure_test
 
 import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/assert"
@@ -64,7 +65,7 @@ func TestAzurePolicyMapper_ToIDQL_NoRoleAssignments(t *testing.T) {
 }
 
 func TestAzurePolicyMapper_ToIDQL_NoAppRoles(t *testing.T) {
-	mapper := microsoftazure.NewAzurePolicyMapper(microsoftazure.AzureServicePrincipals{}, nil, nil)
+	mapper := microsoftazure.NewAzurePolicyMapper(azad.AzureServicePrincipals{}, nil, nil)
 	actPolicies := mapper.ToIDQL()
 	assert.NotNil(t, actPolicies)
 	assert.Equal(t, 0, len(actPolicies))

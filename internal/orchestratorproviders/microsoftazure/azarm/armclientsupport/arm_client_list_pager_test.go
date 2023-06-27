@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	"github.com/google/uuid"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azureapim/armclientsupport"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/armclientsupport"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -44,6 +44,7 @@ func TestNewArmListPageMapper_Get(t *testing.T) {
 			respArr, mappedResArr := buildExpResponseAndResource(3)
 
 			pager := buildTestResourcePager(tt.errIndex, respArr...)
+
 			mapper := armclientsupport.NewArmListPageMapper[testListResourceResponse, mappedResource](pager, mapperFunc, "SomeCaller")
 			act, err := mapper.Get()
 

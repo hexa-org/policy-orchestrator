@@ -47,6 +47,5 @@ func MockAuthorizedHttpClient(issuer string) *testsupport.MockHTTPClient {
 	token, _ := json.Marshal(tokenResp)
 	httpClient.AddRequest(http.MethodGet, "https://login.microsoftonline.com/atenant/v2.0/.well-known/openid-configuration", http.StatusOK, wellKnownResp)
 	httpClient.AddRequest(http.MethodPost, "https://staratatest.io/token", http.StatusOK, token)
-	//return &azureApimHttpClient{mockClient: apimHttpClient}
 	return httpClient
 }
