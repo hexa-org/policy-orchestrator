@@ -28,7 +28,6 @@ func NewSvcFactory(key []byte, httpClient azurecommon.HTTPClient) (SvcFactory, e
 		return nil, err
 	}
 
-	//credentials, err := clientSecretCredentials(azureKey, httpClient)
 	credentials, err := azurecommon.ClientSecretCredentials(azureKey, httpClient)
 	if err != nil {
 		return nil, err

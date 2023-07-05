@@ -30,7 +30,6 @@ func (s *armResourceSvc) GetApiManagementResources() ([]armmodel.ArmResource, er
 	filter := "resourceType eq 'Microsoft.ApiManagement/service'"
 	opts := armresources.ClientListOptions{Filter: &filter}
 
-	// *runtime.Pager[ClientListResponse]
 	pager := s.client.NewListPager(&opts)
 	resources := make([]armmodel.ArmResource, 0)
 
@@ -42,16 +41,9 @@ func (s *armResourceSvc) GetApiManagementResources() ([]armmodel.ArmResource, er
 			log.Error("error calling GetApiManagementResources", "Error", parsedError)
 			return nil, parsedError
 		}
-		//page.ResourceListResult
+
 		for _, genericRes := range page.ResourceListResult.Value {
-
 			log.Info("GetApiManagementResources", "genericRes", *genericRes)
-			/*resBytes, err := genericRes.MarshalJSON()
-			if err != nil {
-				log.Error("Generic resource", "Error=", err)
-			}
-			log.Info("GetApiManagementResources", "Generic resource=", string(resBytes))*/
-
 			res, err := armmodel.NewArmResource(*genericRes.ID, *genericRes.Type, *genericRes.Name, *genericRes.Name)
 			if err != nil {
 				return nil, err
