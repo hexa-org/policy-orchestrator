@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
+	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport/armtestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport/armtestsupport"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"net/http"
@@ -20,7 +20,7 @@ type armResourceClient struct {
 }
 
 func newMockArnResourceClient() *armResourceClient {
-	httpClient := armtestsupport.MockAuthorizedHttpClient(armtestsupport.Issuer)
+	httpClient := armtestsupport.FakeTokenCredentialHttpClient(armtestsupport.Issuer)
 	return &armResourceClient{mockClient: httpClient}
 }
 
@@ -35,7 +35,6 @@ func listApimResourcesUrl() string {
 
 	log.Println(resUrl)
 	return resUrl
-	//m.mockClient.AddRequest("GET", url, http.)
 }
 
 func (m *armResourceClient) expectListResources(expStatus int, expBody []byte) {
@@ -74,7 +73,7 @@ func (m *armResourceClient) expectListResources(expStatus int, expBody []byte) {
 }
 
 func TestGetApiManagementResources(t *testing.T) {
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 	client := newMockArnResourceClient()
 	factory, err := microsoftazure.NewSvcFactory(key, client.mockClient)
 

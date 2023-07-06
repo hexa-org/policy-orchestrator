@@ -17,20 +17,11 @@ type AzureKey struct {
 }
 
 func ClientSecretCredentials(azureKey AzureKey, httpClient HTTPClient) (*azidentity.ClientSecretCredential, error) {
-	var apimCredOpts *azidentity.ClientSecretCredentialOptions
-	if httpClient != nil {
-		apimCredOpts = &azidentity.ClientSecretCredentialOptions{
-			ClientOptions: azcore.ClientOptions{
-				Retry:     policy.RetryOptions{MaxRetries: -1},
-				Transport: httpClient,
-			},
-		}
-	}
-
-	credentials, err := azidentity.NewClientSecretCredential(azureKey.Tenant, azureKey.AppId, azureKey.Secret, apimCredOpts)
+	credOpts := credentialOptions(httpClient)
+	credentials, err := azidentity.NewClientSecretCredential(azureKey.Tenant, azureKey.AppId, azureKey.Secret, credOpts)
 
 	if err != nil {
-		log.Error("error create azure credential", err)
+		log.Error("error creating azure credential", err)
 		return nil, err
 	}
 
@@ -41,4 +32,17 @@ func DecodeKey(key []byte) (AzureKey, error) {
 	var decoded AzureKey
 	err := json.NewDecoder(bytes.NewReader(key)).Decode(&decoded)
 	return decoded, err
+}
+
+func credentialOptions(httpClient HTTPClient) *azidentity.ClientSecretCredentialOptions {
+	var credOpts *azidentity.ClientSecretCredentialOptions
+	if httpClient != nil {
+		credOpts = &azidentity.ClientSecretCredentialOptions{
+			ClientOptions: azcore.ClientOptions{
+				Retry:     policy.RetryOptions{MaxRetries: -1},
+				Transport: httpClient,
+			},
+		}
+	}
+	return credOpts
 }

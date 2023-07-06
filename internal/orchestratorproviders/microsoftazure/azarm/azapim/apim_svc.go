@@ -7,7 +7,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
-	azapim "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/apimanagement/armapimanagement"
+	azarmapim "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/apimanagement/armapimanagement"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/armclientsupport"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/armmodel"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim/apimapi"
@@ -39,9 +39,16 @@ func WithNamedValuesClient(nvClient apimnv.NamedValuesClient) ArmApimSvcOption {
 		s.namedValuesClient = nvClient
 	}
 }
+
+func WithApimServiceClient(apimServiceClient apimservice.Client) ArmApimSvcOption {
+	return func(s *armApimSvc) {
+		s.apimServiceClient = apimServiceClient
+	}
+}
+
 func NewArmApimSvc(subscriptionID string, credential azcore.TokenCredential, options *arm.ClientOptions, opts ...ArmApimSvcOption) (ArmApimSvc, error) {
-	apimApiClient, _ := apimapi.NewApimApiClient(subscriptionID, credential, options)
-	serviceClient, _ := apimservice.NewClient(subscriptionID, credential, options)
+	apimApiClient := apimapi.NewApimApiClient(subscriptionID, credential, options)
+	serviceClient := apimservice.NewClient(subscriptionID, credential, options)
 	namedValuesClient := apimnv.NewNamedValuesClient(subscriptionID, credential, options)
 
 	svc := &armApimSvc{
@@ -61,7 +68,7 @@ func (svc *armApimSvc) GetApimServiceInfo(serviceUrl string) (armmodel.ApimServi
 		return armmodel.ApimServiceInfo{}, nil
 	}
 
-	pager := svc.apimServiceClient.List(nil)
+	pager := svc.apimServiceClient.NewListPager(nil)
 	mapper := apimServiceInfoMapper(serviceUrl)
 
 	services, err := doListAndMap(pager, mapper, "GetApimServiceInfo")
@@ -94,10 +101,10 @@ func (svc *armApimSvc) UpdateResourceRole(s armmodel.ApimServiceInfo, nv provide
 	return err
 }
 
-func (svc *armApimSvc) beginUpdateFunc(ctx context.Context, resourceGroup string, service string, nvName string, nvVal string) armclientsupport.GetPollerFunc[azapim.NamedValueClientUpdateResponse] {
-	updater := func() (*runtime.Poller[azapim.NamedValueClientUpdateResponse], error) {
-		updateParams := azapim.NamedValueUpdateParameters{
-			Properties: &azapim.NamedValueUpdateParameterProperties{
+func (svc *armApimSvc) beginUpdateFunc(ctx context.Context, resourceGroup string, service string, nvName string, nvVal string) armclientsupport.GetPollerFunc[azarmapim.NamedValueClientUpdateResponse] {
+	updater := func() (*runtime.Poller[azarmapim.NamedValueClientUpdateResponse], error) {
+		updateParams := azarmapim.NamedValueUpdateParameters{
+			Properties: &azarmapim.NamedValueUpdateParameterProperties{
 				Value: &nvVal,
 			},
 		}
@@ -107,11 +114,11 @@ func (svc *armApimSvc) beginUpdateFunc(ctx context.Context, resourceGroup string
 	return updater
 }
 
-// apimServiceInfoMapper - maps azapim.ServiceClientListResponse to armmodel.ApimServiceInfo
+// apimServiceInfoMapper - maps azarmapim.ServiceClientListResponse to armmodel.ApimServiceInfo
 // filters by serviceUrl
 // returns empty slice if no apim services found, or if no services match the serviceUrl
-func apimServiceInfoMapper(serviceUrl string) func(page azapim.ServiceClientListResponse) []armmodel.ApimServiceInfo {
-	return func(page azapim.ServiceClientListResponse) []armmodel.ApimServiceInfo {
+func apimServiceInfoMapper(serviceUrl string) func(page azarmapim.ServiceClientListResponse) []armmodel.ApimServiceInfo {
+	return func(page azarmapim.ServiceClientListResponse) []armmodel.ApimServiceInfo {
 		if len(page.Value) == 0 {
 			return []armmodel.ApimServiceInfo{}
 		}
@@ -126,8 +133,8 @@ func apimServiceInfoMapper(serviceUrl string) func(page azapim.ServiceClientList
 	}
 }
 
-func apimResourceRolesMapper() func(page azapim.NamedValueClientListByServiceResponse) []providerscommon.ResourceActionRoles {
-	return func(page azapim.NamedValueClientListByServiceResponse) []providerscommon.ResourceActionRoles {
+func apimResourceRolesMapper() func(page azarmapim.NamedValueClientListByServiceResponse) []providerscommon.ResourceActionRoles {
+	return func(page azarmapim.NamedValueClientListByServiceResponse) []providerscommon.ResourceActionRoles {
 		resRoles := make([]providerscommon.ResourceActionRoles, 0)
 		for _, nv := range page.Value {
 			roles, err := nvValueToArray(*nv.Properties.Value)

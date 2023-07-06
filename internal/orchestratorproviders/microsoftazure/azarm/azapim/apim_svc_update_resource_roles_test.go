@@ -6,12 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
-	apim "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/apimanagement/armapimanagement"
+	azarmapim "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/apimanagement/armapimanagement"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/armmodel"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim/apimnv"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/providerscommon"
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport/armtestsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport/armtestsupport"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
@@ -40,7 +40,7 @@ func TestUpdateResourceRole_Error(t *testing.T) {
 
 	existingNV := providerscommon.NewResourceActionRoles("/humanresources", http.MethodGet, []string{""})
 	updateReqParams := makeNVClientUpdateParam(existingNV)
-	var poller *runtime.Poller[apim.NamedValueClientUpdateResponse]
+	var poller *runtime.Poller[azarmapim.NamedValueClientUpdateResponse]
 	nvClient.On("BeginUpdate", context.Background(), serviceInfo.ResourceGroup, serviceInfo.Name, existingNV.Name(), "*", updateReqParams, nil).
 		Return(poller, errors.New("poller error"))
 
@@ -79,12 +79,12 @@ func makeServiceInfo() armmodel.ApimServiceInfo {
 	}
 }
 
-func makeNVClientResp(nv providerscommon.ResourceActionRoles) apim.NamedValueClientUpdateResponse {
+func makeNVClientResp(nv providerscommon.ResourceActionRoles) azarmapim.NamedValueClientUpdateResponse {
 	nvName := nv.Name()
 	nvVal := nv.Value()
-	return apim.NamedValueClientUpdateResponse{
-		NamedValueContract: apim.NamedValueContract{
-			Properties: &apim.NamedValueContractProperties{
+	return azarmapim.NamedValueClientUpdateResponse{
+		NamedValueContract: azarmapim.NamedValueContract{
+			Properties: &azarmapim.NamedValueContractProperties{
 				Value: &nvVal,
 			},
 			Name: &nvName,
@@ -92,20 +92,20 @@ func makeNVClientResp(nv providerscommon.ResourceActionRoles) apim.NamedValueCli
 	}
 }
 
-func makeNVClientUpdateParam(updatedNv providerscommon.ResourceActionRoles) apim.NamedValueUpdateParameters {
+func makeNVClientUpdateParam(updatedNv providerscommon.ResourceActionRoles) azarmapim.NamedValueUpdateParameters {
 	nvVal := updatedNv.Value()
-	return apim.NamedValueUpdateParameters{
-		Properties: &apim.NamedValueUpdateParameterProperties{
+	return azarmapim.NamedValueUpdateParameters{
+		Properties: &azarmapim.NamedValueUpdateParameterProperties{
 			Value: &nvVal,
 		},
 	}
 }
 
-func makePoller(expResp apim.NamedValueClientUpdateResponse) *runtime.Poller[apim.NamedValueClientUpdateResponse] {
+func makePoller(expResp azarmapim.NamedValueClientUpdateResponse) *runtime.Poller[azarmapim.NamedValueClientUpdateResponse] {
 	respBytes, _ := json.Marshal(expResp)
 	firstResp := initialResponse(http.MethodPatch, "", respBytes)
 	firstResp.StatusCode = http.StatusOK
-	poller, _ := runtime.NewPoller[apim.NamedValueClientUpdateResponse](firstResp, runtime.Pipeline{}, nil)
+	poller, _ := runtime.NewPoller[azarmapim.NamedValueClientUpdateResponse](firstResp, runtime.Pipeline{}, nil)
 	return poller
 }
 

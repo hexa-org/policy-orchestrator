@@ -5,9 +5,9 @@ import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/armmodel"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/providerscommon"
+	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport/armtestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport/armtestsupport"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -51,7 +51,7 @@ func (m *MockArmApimSvc) ExpectGetApimServiceInfo(gatewayUrl string) {
 }
 
 func BuildApimSvc(mockHttpClient *testsupport.MockHTTPClient) azapim.ArmApimSvc {
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 	factory, _ := microsoftazure.NewSvcFactory(key, mockHttpClient)
 	service, _ := factory.NewApimSvc()
 	return service

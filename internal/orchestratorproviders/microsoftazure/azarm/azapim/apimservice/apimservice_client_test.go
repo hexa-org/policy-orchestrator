@@ -1,27 +1,33 @@
 package apimservice_test
 
 import (
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport/apim_testsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport/armtestsupport"
+	"context"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/armclientsupport"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim/apimservice"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azurecommon"
+	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport/apim_testsupport"
 	"github.com/stretchr/testify/assert"
-	"net/http"
 	"testing"
 )
 
-func TestListService_ErrorResp(t *testing.T) {
+func TestClient_List(t *testing.T) {
 	mockApiClient := apim_testsupport.MockApimHttpClient()
-	service := apim_testsupport.BuildApimSvc(mockApiClient.HttpClient)
-	reqUrl := apim_testsupport.ListServiceUrl()
-	mockApiClient.HttpClient.AddRequest("GET", reqUrl, http.StatusBadRequest, []byte(""))
-	_, err := service.GetApimServiceInfo(armtestsupport.ApimServiceGatewayUrl)
-	assert.Error(t, err)
-	assert.ErrorContains(t, err, "400")
+	client := apimServiceClient(mockApiClient.HttpClient)
+	mockApiClient.ExpectListService()
+	pager := client.NewListPager(nil)
+	assert.True(t, pager.More())
+	assert.NotNil(t, pager)
+
+	page, err := pager.NextPage(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, page)
+	assert.False(t, pager.More())
 }
 
-func TestListService(t *testing.T) {
-	mockApiClient := apim_testsupport.MockApimHttpClient()
-	service := apim_testsupport.BuildApimSvc(mockApiClient.HttpClient)
-	mockApiClient.ExpectListService()
-	_, err := service.GetApimServiceInfo(armtestsupport.ApimServiceGatewayUrl)
-	assert.NoError(t, err)
+func apimServiceClient(httpClient azurecommon.HTTPClient) apimservice.Client {
+	tokenCredential, _ := azurecommon.ClientSecretCredentials(azuretestsupport.AzureKey(), httpClient)
+	clientOptions := armclientsupport.NewArmClientOptions(httpClient)
+	serviceClient := apimservice.NewClient(azuretestsupport.AzureSubscription, tokenCredential, clientOptions)
+	return serviceClient
 }

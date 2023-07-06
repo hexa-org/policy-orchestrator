@@ -5,7 +5,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
 	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -15,7 +15,7 @@ import (
 )
 
 func TestDiscoverApplications(t *testing.T) {
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 	mockAzClient := azuretestsupport.NewMockAzureClient()
 	expApps := []orchestrator.ApplicationInfo{
 		{
@@ -41,7 +41,7 @@ func TestDiscoverApplications(t *testing.T) {
 
 func TestGetPolicy_WithoutUserEmail(t *testing.T) {
 	appId := azuretestsupport.AzureAppId
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 
 	mockAzClient := azuretestsupport.NewMockAzureClient()
 	mockAzClient.ExpectGetServicePrincipals()
@@ -72,7 +72,7 @@ func TestGetPolicy_WithoutUserEmail(t *testing.T) {
 
 func TestGetPolicy_WithRoleAssignment(t *testing.T) {
 	appId := azuretestsupport.AzureAppId
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 	expAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
 
 	mockAzClient := azuretestsupport.NewMockAzureClient()
@@ -98,7 +98,7 @@ func TestGetPolicy_WithRoleAssignment(t *testing.T) {
 
 func TestGetPolicy_MultiplePolicies(t *testing.T) {
 	appId := azuretestsupport.AzureAppId
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 	expAssignments := azuretestsupport.AppRoleAssignmentGetHrUsAndProfile
 
 	mockAzClient := azuretestsupport.NewMockAzureClient()
@@ -124,7 +124,7 @@ func TestGetPolicy_MultiplePolicies(t *testing.T) {
 
 func TestGetPolicy_MultipleMembersInOnePolicy(t *testing.T) {
 	appId := azuretestsupport.AzureAppId
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 	expAssignments := azuretestsupport.AppRoleAssignmentMultipleMembers
 
 	mockAzClient := azuretestsupport.NewMockAzureClient()
@@ -183,7 +183,7 @@ func TestSetPolicy_withInvalidArguments(t *testing.T) {
 
 func TestSetPolicy_IgnoresAllPrincipalIdsNotFound(t *testing.T) {
 	appId := azuretestsupport.AzureAppId
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 
 	mockAzClient := azuretestsupport.NewMockAzureClient()
 	mockAzClient.ExpectGetServicePrincipals()
@@ -212,7 +212,7 @@ func TestSetPolicy_IgnoresAllPrincipalIdsNotFound(t *testing.T) {
 
 func TestSetPolicy_IgnoresAnyNotFoundPrincipalId(t *testing.T) {
 	appId := azuretestsupport.AzureAppId
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 
 	mockAzClient := azuretestsupport.NewMockAzureClient()
 	mockAzClient.ExpectGetServicePrincipals()
@@ -242,7 +242,7 @@ func TestSetPolicy_IgnoresAnyNotFoundPrincipalId(t *testing.T) {
 
 func TestSetPolicy_AddAssignment_IgnoresInvalidAction(t *testing.T) {
 	appId := azuretestsupport.AzureAppId
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 
 	mockAzClient := azuretestsupport.NewMockAzureClient()
 	mockAzClient.ExpectGetServicePrincipals()
@@ -270,7 +270,7 @@ func TestSetPolicy_AddAssignment_IgnoresInvalidAction(t *testing.T) {
 
 func TestSetPolicy(t *testing.T) {
 	appId := azuretestsupport.AzureAppId
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 
 	mockAzClient := azuretestsupport.NewMockAzureClient()
 	mockAzClient.ExpectGetServicePrincipals()
@@ -297,7 +297,7 @@ func TestSetPolicy(t *testing.T) {
 
 func TestSetPolicy_RemovedAllMembers_FromOnePolicy(t *testing.T) {
 	appId := azuretestsupport.AzureAppId
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 
 	mockAzClient := azuretestsupport.NewMockAzureClient()
 	mockAzClient.ExpectGetServicePrincipals()
@@ -324,7 +324,7 @@ func TestSetPolicy_RemovedAllMembers_FromOnePolicy(t *testing.T) {
 
 func TestSetPolicy_RemovedAllMembers_FromAllPolicies(t *testing.T) {
 	appId := azuretestsupport.AzureAppId
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 
 	mockAzClient := azuretestsupport.NewMockAzureClient()
 	mockAzClient.ExpectGetServicePrincipals()
@@ -363,7 +363,7 @@ func TestSetPolicy_RemovedAllMembers_FromAllPolicies(t *testing.T) {
 
 func TestSetPolicy_MultipleAppRolePolicies(t *testing.T) {
 	appId := azuretestsupport.AzureAppId
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 
 	mockAzClient := azuretestsupport.NewMockAzureClient()
 	mockAzClient.ExpectGetServicePrincipals()

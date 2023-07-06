@@ -3,7 +3,7 @@ package azuretestsupport
 import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport/armtestsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport/armtestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/mock"
 	"reflect"
@@ -61,22 +61,22 @@ func (m *MockAzureClient) ExpectGetAzureApplications() {
 			IdentifierUris: []string{armtestsupport.ApimServiceGatewayUrl},
 		},
 	}
-	m.On("GetAzureApplications", AzureClientKey()).Return(expApps, nil)
+	m.On("GetAzureApplications", AzureKeyBytes()).Return(expApps, nil)
 }
 
 func (m *MockAzureClient) ExpectGetServicePrincipals() {
-	m.On("GetServicePrincipals", AzureClientKey(), AzureAppId).
+	m.On("GetServicePrincipals", AzureKeyBytes(), AzureAppId).
 		Return(AzureServicePrincipals(), nil)
 }
 
 func (m *MockAzureClient) ExpectAppRoleAssignedTo(assignments []azad.AzureAppRoleAssignment) {
-	m.On("GetAppRoleAssignedTo", AzureClientKey(), ServicePrincipalId).
+	m.On("GetAppRoleAssignedTo", AzureKeyBytes(), ServicePrincipalId).
 		Return(MakeAssignments(assignments), nil)
 }
 
 func (m *MockAzureClient) ExpectGetUserInfoFromPrincipalId(principalIds ...string) {
 	for _, pId := range principalIds {
-		m.On("GetUserInfoFromPrincipalId", AzureClientKey(), pId).
+		m.On("GetUserInfoFromPrincipalId", AzureKeyBytes(), pId).
 			Return(azad.AzureUser{
 				PrincipalId: pId,
 				Email:       policytestsupport.MakeEmail(pId),
@@ -85,7 +85,7 @@ func (m *MockAzureClient) ExpectGetUserInfoFromPrincipalId(principalIds ...strin
 }
 
 func (m *MockAzureClient) ExpectGetPrincipalIdFromEmail(email, principalId string) {
-	m.On("GetPrincipalIdFromEmail", AzureClientKey(), email).
+	m.On("GetPrincipalIdFromEmail", AzureKeyBytes(), email).
 		Return(principalId, nil)
 }
 
@@ -101,6 +101,6 @@ func (m *MockAzureClient) ExpectSetAppRoleAssignedTo(requestedAssignments []azad
 		return reflect.DeepEqual(expSorted, actSorted)
 	})
 
-	m.On("SetAppRoleAssignedTo", AzureClientKey(), ServicePrincipalId, theFunc).
+	m.On("SetAppRoleAssignedTo", AzureKeyBytes(), ServicePrincipalId, theFunc).
 		Return(nil)
 }
