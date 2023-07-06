@@ -1,8 +1,8 @@
 package apim_testsupport
 
 import (
+	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport/armtestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport/armtestsupport"
 )
 
 type AzureApimHttpClient struct {
@@ -10,5 +10,5 @@ type AzureApimHttpClient struct {
 }
 
 func MockApimHttpClient() *AzureApimHttpClient {
-	return &AzureApimHttpClient{HttpClient: armtestsupport.MockAuthorizedHttpClient(armtestsupport.Issuer)}
+	return &AzureApimHttpClient{HttpClient: armtestsupport.FakeTokenCredentialHttpClient(armtestsupport.Issuer)}
 }

@@ -2,7 +2,7 @@ package azad_test
 
 import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"net/http"
 	"testing"
@@ -60,7 +60,7 @@ func TestAzureClient_GetWebApplications_Errors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			accessToken := "accessToken"
-			key := azuretestsupport.AzureClientKey()
+			key := azuretestsupport.AzureKeyBytes()
 
 			if tt.badKey {
 				key = []byte("keyInvalid")
@@ -96,7 +96,7 @@ func TestAzureClient_GetWebApplications(t *testing.T) {
 	m.GetWebApplicationsRequest(ExpAppsAzureResp)
 
 	client := m.AzureClient()
-	applications, err := client.GetWebApplications(azuretestsupport.AzureClientKey())
+	applications, err := client.GetWebApplications(azuretestsupport.AzureKeyBytes())
 	assert.NoError(t, err)
 	assert.NotNil(t, applications)
 	assert.Equal(t, 1, len(applications))
@@ -139,7 +139,7 @@ func TestAzureClient_GetServicePrincipals_Errors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			accessToken := "accessToken"
-			key := azuretestsupport.AzureClientKey()
+			key := azuretestsupport.AzureKeyBytes()
 
 			if tt.badKey {
 				key = []byte("keyInvalid")
@@ -170,7 +170,7 @@ func TestAzureClient_GetServicePrincipals_Errors(t *testing.T) {
 
 func TestAzureClient_GetServicePrincipals(t *testing.T) {
 	m := azuretestsupport.NewAzureHttpClient()
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 	m.TokenRequest("accessToken")
 	m.GetServicePrincipalsRequest()
 	client := m.AzureClient()
@@ -224,7 +224,7 @@ func TestAzureClient_GetUserInfoFromPrincipalId_Errors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			accessToken := "accessToken"
-			key := azuretestsupport.AzureClientKey()
+			key := azuretestsupport.AzureKeyBytes()
 
 			if tt.badKey {
 				key = []byte("keyInvalid")
@@ -255,7 +255,7 @@ func TestAzureClient_GetUserInfoFromPrincipalId_Errors(t *testing.T) {
 
 func TestAzureClient_GetUserInfoFromPrincipalId(t *testing.T) {
 	m := azuretestsupport.NewAzureHttpClient()
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 	principalId := policytestsupport.UserIdGetProfile
 	m.TokenRequest("accessToken")
 	m.GetUserInfoFromPrincipalIdRequest(principalId)
@@ -307,7 +307,7 @@ func TestAzureClient_GetPrincipalIdFromEmail_Errors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			accessToken := "accessToken"
-			key := azuretestsupport.AzureClientKey()
+			key := azuretestsupport.AzureKeyBytes()
 
 			if tt.badKey {
 				key = []byte("keyInvalid")
@@ -337,7 +337,7 @@ func TestAzureClient_GetPrincipalIdFromEmail_Errors(t *testing.T) {
 
 func TestAzureClient_GetPrincipalIdFromEmail(t *testing.T) {
 	m := azuretestsupport.NewAzureHttpClient()
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 	m.TokenRequest("accessToken")
 	principalId := policytestsupport.UserIdGetHrUs
 	email := policytestsupport.UserEmailGetHrUs
@@ -386,7 +386,7 @@ func TestAzureClient_GetAppRoleAssignedTo_Errors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			accessToken := "accessToken"
-			key := azuretestsupport.AzureClientKey()
+			key := azuretestsupport.AzureKeyBytes()
 
 			if tt.badKey {
 				key = []byte("keyInvalid")
@@ -416,7 +416,7 @@ func TestAzureClient_GetAppRoleAssignedTo_Errors(t *testing.T) {
 
 func TestAzureClient_GetAppRoleAssignedTo_NoAssignments(t *testing.T) {
 	m := azuretestsupport.NewAzureHttpClient()
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 	var existingAssignments []azad.AzureAppRoleAssignment
 
 	m.TokenRequest("accessToken")
@@ -431,7 +431,7 @@ func TestAzureClient_GetAppRoleAssignedTo_NoAssignments(t *testing.T) {
 
 func TestAzureClient_GetAppRoleAssignedTo(t *testing.T) {
 	m := azuretestsupport.NewAzureHttpClient()
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 	existingAssignments := azuretestsupport.AppRoleAssignmentGetHrUs
 
 	m.TokenRequest("accessToken")
@@ -501,7 +501,7 @@ func TestAzureClient_SetAppRoleAssignedTo_WithBadGetAssignments(t *testing.T) {
 	m.ErrorRequest(http.MethodGet, m.AppRoleAssignmentsUrl(), http.StatusOK, []byte(`~`))
 	client := m.AzureClient()
 	err := client.SetAppRoleAssignedTo(
-		azuretestsupport.AzureClientKey(),
+		azuretestsupport.AzureKeyBytes(),
 		azuretestsupport.ServicePrincipalId,
 		[]azad.AzureAppRoleAssignment{})
 	assert.Error(t, err)
@@ -520,7 +520,7 @@ func TestAzureClient_SetAppRoleAssignedTo_withBadAdd(t *testing.T) {
 
 	client := m.AzureClient()
 	err := client.SetAppRoleAssignedTo(
-		azuretestsupport.AzureClientKey(),
+		azuretestsupport.AzureKeyBytes(),
 		azuretestsupport.ServicePrincipalId,
 		newRoleAssignments)
 	assert.Error(t, err)
@@ -541,7 +541,7 @@ func TestAzureClient_SetAppRoleAssignedTo_withBadDelete(t *testing.T) {
 	assignmentsFromPolicy := azuretestsupport.AssignmentsForDelete(existingAssignments)
 	client := m.AzureClient()
 	err := client.SetAppRoleAssignedTo(
-		azuretestsupport.AzureClientKey(),
+		azuretestsupport.AzureKeyBytes(),
 		azuretestsupport.ServicePrincipalId,
 		assignmentsFromPolicy)
 
@@ -564,7 +564,7 @@ func TestAzureClient_SetAppRoleAssignedTo_AddNewRoleAssignment(t *testing.T) {
 
 	client := m.AzureClient()
 	err := client.SetAppRoleAssignedTo(
-		azuretestsupport.AzureClientKey(),
+		azuretestsupport.AzureKeyBytes(),
 		azuretestsupport.ServicePrincipalId,
 		newRoleAssignments)
 	assert.NoError(t, err)
@@ -586,7 +586,7 @@ func TestAzureClient_SetAppRoleAssignedTo_AddOneMoreMember_ExistingRole(t *testi
 
 	client := m.AzureClient()
 	err := client.SetAppRoleAssignedTo(
-		azuretestsupport.AzureClientKey(),
+		azuretestsupport.AzureKeyBytes(),
 		azuretestsupport.ServicePrincipalId,
 		newRoleAssignments)
 	assert.NoError(t, err)
@@ -609,7 +609,7 @@ func TestAzureClient_SetAppRoleAssignedTo_AddMoreMembers_ExistingRole(t *testing
 
 	client := m.AzureClient()
 	err := client.SetAppRoleAssignedTo(
-		azuretestsupport.AzureClientKey(),
+		azuretestsupport.AzureKeyBytes(),
 		azuretestsupport.ServicePrincipalId,
 		newRoleAssignments)
 	assert.NoError(t, err)
@@ -626,7 +626,7 @@ func TestAzureClient_SetAppRoleAssignedTo_DoesNotAddExistingAssignment(t *testin
 
 	client := m.AzureClient()
 	err := client.SetAppRoleAssignedTo(
-		azuretestsupport.AzureClientKey(),
+		azuretestsupport.AzureKeyBytes(),
 		azuretestsupport.ServicePrincipalId,
 		existingAssignments)
 	assert.NoError(t, err)
@@ -645,7 +645,7 @@ func TestAzureClient_SetAppRoleAssignedTo_DoesNotDeleteMemberInPolicy(t *testing
 
 	client := m.AzureClient()
 	err := client.SetAppRoleAssignedTo(
-		azuretestsupport.AzureClientKey(),
+		azuretestsupport.AzureKeyBytes(),
 		azuretestsupport.ServicePrincipalId,
 		assignmentsFromPolicy)
 
@@ -663,7 +663,7 @@ func TestAzureClient_SetAppRoleAssignedTo_DoesNotDeleteDifferentRole(t *testing.
 
 	client := m.AzureClient()
 	err := client.SetAppRoleAssignedTo(
-		azuretestsupport.AzureClientKey(),
+		azuretestsupport.AzureKeyBytes(),
 		azuretestsupport.ServicePrincipalId,
 		assignmentsFromPolicy)
 
@@ -689,7 +689,7 @@ func TestAzureClient_SetAppRoleAssignedTo_DoesNotDeleteDifferentResource(t *test
 
 	client := m.AzureClient()
 	err := client.SetAppRoleAssignedTo(
-		azuretestsupport.AzureClientKey(),
+		azuretestsupport.AzureKeyBytes(),
 		azuretestsupport.ServicePrincipalId,
 		assignmentsFromPolicy)
 
@@ -708,7 +708,7 @@ func TestAzureClient_SetAppRoleAssignedTo_DeleteAllRoleAssignments(t *testing.T)
 
 	client := m.AzureClient()
 	err := client.SetAppRoleAssignedTo(
-		azuretestsupport.AzureClientKey(),
+		azuretestsupport.AzureKeyBytes(),
 		azuretestsupport.ServicePrincipalId,
 		assignmentsFromPolicy)
 
@@ -729,7 +729,7 @@ func TestAzureClient_SetAppRoleAssignedTo_DeleteOneOfMultipleMemberAssignments(t
 
 	client := m.AzureClient()
 	err := client.SetAppRoleAssignedTo(
-		azuretestsupport.AzureClientKey(),
+		azuretestsupport.AzureKeyBytes(),
 		azuretestsupport.ServicePrincipalId,
 		assignmentsFromPolicy)
 
@@ -752,7 +752,7 @@ func TestAzureClient_SetAppRoleAssignedTo_AddDeleteRoleAssignment(t *testing.T) 
 
 	client := m.AzureClient()
 	err := client.SetAppRoleAssignedTo(
-		azuretestsupport.AzureClientKey(),
+		azuretestsupport.AzureKeyBytes(),
 		azuretestsupport.ServicePrincipalId,
 		assignmentsFromPolicy)
 	assert.NoError(t, err)

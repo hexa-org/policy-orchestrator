@@ -4,9 +4,9 @@ import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/armmodel"
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport/apim_testsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport/armtestsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport/apim_testsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport/armtestsupport"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -21,7 +21,7 @@ func TestDiscoverApplications_Success(t *testing.T) {
 	azureClient := azuretestsupport.NewMockAzureClient()
 	provider := apim_testsupport.NewAzureApimProvider(apimSvc, azureClient)
 
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}
 
 	azureClient.ExpectGetAzureApplications()
@@ -47,7 +47,7 @@ func TestDiscoverApplications_NoApimServices(t *testing.T) {
 	azureClient := azuretestsupport.NewMockAzureClient()
 	provider := apim_testsupport.NewAzureApimProvider(apimSvc, azureClient)
 
-	key := azuretestsupport.AzureClientKey()
+	key := azuretestsupport.AzureKeyBytes()
 	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}
 
 	azureClient.ExpectGetAzureApplications()

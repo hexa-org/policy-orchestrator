@@ -3,9 +3,9 @@ package apim_testsupport
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/apimanagement/armapimanagement"
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/azuretestsupport/armtestsupport"
+	azarmapim "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/apimanagement/armapimanagement"
+	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport/armtestsupport"
 	"net/http"
 )
 
@@ -25,10 +25,10 @@ func (m *AzureApimHttpClient) ExpectListService() {
 	name := armtestsupport.ApimServiceName
 	resType := "Microsoft.ApiManagement/service"
 	gatewayUrl := armtestsupport.ApimServiceGatewayUrl
-	props := armapimanagement.ServiceProperties{GatewayURL: &gatewayUrl}
-	resp := armapimanagement.ServiceClientListResponse{
-		ServiceListResult: armapimanagement.ServiceListResult{
-			Value: []*armapimanagement.ServiceResource{{
+	props := azarmapim.ServiceProperties{GatewayURL: &gatewayUrl}
+	resp := azarmapim.ServiceClientListResponse{
+		ServiceListResult: azarmapim.ServiceListResult{
+			Value: []*azarmapim.ServiceResource{{
 				Properties: &props,
 				ID:         &id,
 				Name:       &name,
@@ -49,8 +49,8 @@ func (m *AzureApimHttpClient) expectGetApiClient() {
 		armtestsupport.ApimServiceName,
 		armtestsupport.ApimAppId)
 
-	output := armapimanagement.APIClientGetResponse{
-		APIContract: armapimanagement.APIContract{},
+	output := azarmapim.APIClientGetResponse{
+		APIContract: azarmapim.APIContract{},
 		ETag:        nil,
 	}
 	resp, _ := json.Marshal(output)
