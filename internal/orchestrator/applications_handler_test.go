@@ -8,18 +8,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestrator/test"
 	"net"
 	"net/http"
 	"testing"
+
+	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestrator/test"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/hexa-org/policy-orchestrator/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/hawksupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/websupport"
-	"github.com/stretchr/testify/assert"
 )
 
 type applicationsHandlerData struct {
@@ -35,8 +37,14 @@ func (data *applicationsHandlerData) SetUp() {
 	_, _ = data.db.Exec(`
 delete from applications;
 delete from integrations;
+
 insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'aName', 'noop', 'aKey');
 insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff210', '50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'anObjectId', 'aName', 'aDescription', 'aService');
+insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff211', '50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'anotherObjectId', 'anotherName', 'anotherDescription', 'anotherService');
+
+insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e9', 'yetAnotherName', 'zone_cloud', 'aKey');
+insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff212', '50e00619-9f15-4e85-a7e9-f26d87ea12e9', 'yetAnotherObjectId', 'yetAnotherName1', 'yetAnotherDescription', 'Kubernetes');
+insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff213', '50e00619-9f15-4e85-a7e9-f26d87ea12e9', 'yetAnotherObjectId2', 'yetAnotherName2', 'yetAnotherDescription2', 'Container Kubernetes');
 `)
 	data.applicationTestId = "6409776a-367a-483a-a194-5ccf9c4ff210"
 
@@ -68,7 +76,7 @@ func TestListApps(t *testing.T) {
 
 		var apps orchestrator.Applications
 		_ = json.NewDecoder(resp.Body).Decode(&apps)
-		assert.Equal(t, 1, len(apps.Applications))
+		assert.Equal(t, 4, len(apps.Applications))
 
 		application := apps.Applications[0]
 		assert.Equal(t, "anObjectId", application.ObjectId)
@@ -76,6 +84,29 @@ func TestListApps(t *testing.T) {
 		assert.Equal(t, "noop", application.ProviderName)
 		assert.Equal(t, "aDescription", application.Description)
 		assert.Equal(t, "aService", application.Service)
+	})
+}
+
+func TestListApps_withSort(t *testing.T) {
+	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
+		url := fmt.Sprintf("http://%s/applications", data.server.Addr)
+		resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", data.key, url)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		var apps orchestrator.Applications
+		_ = json.NewDecoder(resp.Body).Decode(&apps)
+		assert.Equal(t, 4, len(apps.Applications))
+
+		expApps := []orchestrator.Application{
+			{ProviderName: "noop", Service: "aService"},
+			{ProviderName: "noop", Service: "anotherService"},
+			{ProviderName: "zone_cloud", Service: "Container Kubernetes"},
+			{ProviderName: "zone_cloud", Service: "Kubernetes"}}
+
+		for a, actApp := range apps.Applications {
+			assert.Equal(t, expApps[a].ProviderName, actApp.ProviderName)
+			assert.Equal(t, expApps[a].Service, actApp.Service)
+		}
 	})
 }
 
