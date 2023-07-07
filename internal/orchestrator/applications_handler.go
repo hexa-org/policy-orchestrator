@@ -2,9 +2,12 @@ package orchestrator
 
 import (
 	"encoding/json"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 	"log"
 	"net/http"
+	"sort"
+	"strings"
+
+	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -81,6 +84,20 @@ func (handler ApplicationsHandler) List(w http.ResponseWriter, _ *http.Request) 
 	for _, rec := range records {
 		list.Applications = append(list.Applications, Application{ID: rec.ID, IntegrationId: rec.IntegrationId, ObjectId: rec.ObjectId, Name: rec.Name, Description: rec.Description, ProviderName: integrationNamesById[rec.IntegrationId], Service: rec.Service})
 	}
+
+	// sort by "Provider" so that all app resources from a platform are grouped together.
+	// sort ProviderName as the first (asc) order and Service as the second (asc) order.
+	sort.Slice(list.Applications, func(i, j int) bool {
+		providerComp := strings.Compare(list.Applications[i].ProviderName, list.Applications[j].ProviderName)
+		serviceComp := strings.Compare(list.Applications[i].Service, list.Applications[j].Service)
+		switch providerComp {
+		case 0:
+			return serviceComp <= 0
+		default:
+			return providerComp < 0
+		}
+	})
+
 	data, _ := json.Marshal(list)
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
