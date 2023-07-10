@@ -22,6 +22,7 @@ func NewArmResourcesClient(internal *armresources.Client) ArmResourcesClient {
 }
 
 func newArmResourcesClient(subscriptionID string, credential azcore.TokenCredential, options *arm.ClientOptions) (ArmResourcesClient, error) {
+	// TODO - probably dont need error handling
 	factory, err := armresources.NewClientFactory(subscriptionID, credential, options)
 	if err != nil {
 		log.Error("Error arm resources.NewClientFactory.", err)

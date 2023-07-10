@@ -58,18 +58,42 @@ func MakeActionMembers() map[string]ActionMembers {
 func MakeTestPolicies(actionMembers map[string]ActionMembers) []policysupport.PolicyInfo {
 	policies := make([]policysupport.PolicyInfo, 0)
 	for action, members := range actionMembers {
-		policies = append(policies, MakeTestPolicy(action, members))
+		policies = append(policies, MakeTestPolicy(PolicyObjectResourceId, action, members))
 	}
 	return policies
 }
 
-func MakeTestPolicy(action string, actionMembers ActionMembers) policysupport.PolicyInfo {
+// MakeRoleSubjectTestPolicies - makes policies with passed in param
+// actionMembers = { "GET/humanresources/us": ["role1", "role2"] }
+func MakeRoleSubjectTestPolicies(actionMembers map[string][]string) []policysupport.PolicyInfo {
+	policies := make([]policysupport.PolicyInfo, 0)
+	for action, members := range actionMembers {
+		parts := strings.Split(action, "/")
+		actionUri := "http:" + parts[0]
+		resId := strings.Join(parts[1:], "/")
+		policies = append(policies, MakeRoleSubjectTestPolicy(resId, actionUri, members))
+	}
+	return policies
+}
+
+func MakeRoleSubjectTestPolicy(resourceId string, action string, roles []string) policysupport.PolicyInfo {
+	return policysupport.PolicyInfo{
+		Meta:    policysupport.MetaInfo{Version: "0.5"},
+		Actions: []policysupport.ActionInfo{{action}},
+		Subject: policysupport.SubjectInfo{Members: roles},
+		Object: policysupport.ObjectInfo{
+			ResourceID: resourceId,
+		},
+	}
+}
+
+func MakeTestPolicy(resourceId string, action string, actionMembers ActionMembers) policysupport.PolicyInfo {
 	return policysupport.PolicyInfo{
 		Meta:    policysupport.MetaInfo{Version: "0.5"},
 		Actions: []policysupport.ActionInfo{{action}},
 		Subject: policysupport.SubjectInfo{Members: MakePolicyTestUsers(actionMembers)},
 		Object: policysupport.ObjectInfo{
-			ResourceID: PolicyObjectResourceId,
+			ResourceID: resourceId,
 		},
 	}
 }

@@ -1,9 +1,10 @@
-package microsoftazure
+package azarm
 
 import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim/apimnv"
 	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 	log "golang.org/x/exp/slog"
 	"net/http"
@@ -11,21 +12,32 @@ import (
 )
 
 type AzureApimProvider struct {
-	armApimSvcOverride  azapim.ArmApimSvc
-	azureClientOverride azad.AzureClient
+	armApimSvcOverride        azapim.ArmApimSvc
+	azureClientOverride       azad.AzureClient
+	apimNamedValueSvcOverride apimnv.ApimNamedValueSvc
+	hasOverrides              bool
 }
 
 type AzureApimProviderOpt func(provider *AzureApimProvider)
 
-func WithArmApimSvcOverride(armApimSvcOverride azapim.ArmApimSvc) func(provider *AzureApimProvider) {
+func WithArmApimSvcOverride(armApimSvcOverride azapim.ArmApimSvc) AzureApimProviderOpt {
 	return func(provider *AzureApimProvider) {
 		provider.armApimSvcOverride = armApimSvcOverride
+		provider.hasOverrides = true
 	}
 }
 
-func WithAzureClientOverride(azureClientOverride azad.AzureClient) func(provider *AzureApimProvider) {
+func WithApimNamedValueSvcOverride(apimNamedValueSvcOverride apimnv.ApimNamedValueSvc) AzureApimProviderOpt {
+	return func(provider *AzureApimProvider) {
+		provider.apimNamedValueSvcOverride = apimNamedValueSvcOverride
+		provider.hasOverrides = true
+	}
+}
+
+func WithAzureClientOverride(azureClientOverride azad.AzureClient) AzureApimProviderOpt {
 	return func(provider *AzureApimProvider) {
 		provider.azureClientOverride = azureClientOverride
+		provider.hasOverrides = true
 	}
 }
 
@@ -77,14 +89,31 @@ func (a *AzureApimProvider) SetPolicyInfo(integrationInfo orchestrator.Integrati
 	return service.SetPolicyInfo(applicationInfo, policyInfos)
 }
 
-func (a *AzureApimProvider) getApimProviderService(key []byte) (*azapim.ApimProviderService, error) {
-	armApimSvc, err := a.getApimSvc(key)
-	if err != nil {
-		return nil, err
+func (a *AzureApimProvider) getApimProviderService(key []byte) (*ApimProviderService, error) {
+	var armApimSvc azapim.ArmApimSvc
+	var apimNamedValueSvc apimnv.ApimNamedValueSvc
+	var azureClient azad.AzureClient
+
+	if a.hasOverrides {
+		armApimSvc = a.armApimSvcOverride
+		apimNamedValueSvc = a.apimNamedValueSvcOverride
+		azureClient = a.azureClientOverride
+	} else {
+		factory, err := azapim.NewSvcFactory(key, nil)
+		if err != nil {
+			log.Error("ApimProvider.getApimService", "NewSvcFactory", "error=", err)
+			return nil, err
+		}
+
+		armApimSvc, _ = factory.NewApimSvc()
+		apimNamedValueSvc = factory.NewApimNamedValueSvc()
+		azureClient = azad.NewAzureClient(nil)
 	}
-	return azapim.NewApimProviderService(armApimSvc, a.getAzureClient()), nil
+
+	return NewApimProviderService(armApimSvc, azureClient, apimNamedValueSvc), nil
 }
 
+/*
 func (a *AzureApimProvider) getApimSvc(key []byte) (azapim.ArmApimSvc, error) {
 	if a.armApimSvcOverride != nil {
 		return a.armApimSvcOverride, nil
@@ -112,3 +141,5 @@ func (a *AzureApimProvider) getAzureClient() azad.AzureClient {
 
 	return azad.NewAzureClient(nil)
 }
+
+*/

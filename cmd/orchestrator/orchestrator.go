@@ -6,7 +6,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/googlecloud"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/openpolicyagent"
 	log "golang.org/x/exp/slog"
 	"net"
@@ -52,7 +52,7 @@ func App(key string, addr string, hostPort string, dbUrl string) (*http.Server, 
 	store := hawksupport.NewCredentialStore(key)
 	providers := make(map[string]orchestrator.Provider)
 	providers["google_cloud"] = &googlecloud.GoogleProvider{}
-	providers["azure"] = microsoftazure.NewAzureApimProvider()
+	providers["azure"] = azarm.NewAzureApimProvider()
 	//providers["azure_apim"] = microsoftazure.NewAzureApimProvider()
 	providers["amazon"] = &amazonwebservices.AmazonProvider{}
 	providers["open_policy_agent"] = &openpolicyagent.OpaProvider{}

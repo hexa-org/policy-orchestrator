@@ -7,20 +7,20 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type mockApimServiceClient struct {
+type MockApimServiceClient struct {
 	mock.Mock
 }
 
-func NewMockApimServiceClient() *mockApimServiceClient {
-	return &mockApimServiceClient{}
+func NewMockApimServiceClient() *MockApimServiceClient {
+	return &MockApimServiceClient{}
 }
 
-func (m *mockApimServiceClient) NewListPager(options *azarmapim.ServiceClientListOptions) *runtime.Pager[azarmapim.ServiceClientListResponse] {
+func (m *MockApimServiceClient) NewListPager(options *azarmapim.ServiceClientListOptions) *runtime.Pager[azarmapim.ServiceClientListResponse] {
 	returnArgs := m.Called(options)
 	return returnArgs.Get(0).(*runtime.Pager[azarmapim.ServiceClientListResponse])
 }
 
-func (m *mockApimServiceClient) ExpectNewListPager(pages ...azarmapim.ServiceClientListResponse) {
+func (m *MockApimServiceClient) ExpectNewListPager(pages ...azarmapim.ServiceClientListResponse) {
 	numPages := len(pages)
 	pagerBuilder := armtestsupport.NewFakeCountBasedPagerBuilder[azarmapim.ServiceClientListResponse](numPages)
 

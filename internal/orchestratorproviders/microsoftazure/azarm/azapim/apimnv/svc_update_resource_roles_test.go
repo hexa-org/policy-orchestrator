@@ -1,4 +1,4 @@
-package azapim_test
+package apimnv_test
 
 import (
 	"bytes"
@@ -8,9 +8,9 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	azarmapim "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/apimanagement/armapimanagement"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/armmodel"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim/apimnv"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/providerscommon"
+	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport/apim_testsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport/armtestsupport"
 	"github.com/stretchr/testify/assert"
 	"io"
@@ -19,7 +19,7 @@ import (
 )
 
 func TestUpdateResourceRole_ValidationErrors(t *testing.T) {
-	svc, _ := azapim.NewArmApimSvc("", nil, nil)
+	svc := apimnv.NewApimNamedValueSvc("", nil, nil)
 	serviceInfo := armmodel.ApimServiceInfo{
 		ArmResource: armmodel.ArmResource{ResourceGroup: "", Name: "service"},
 	}
@@ -34,8 +34,8 @@ func TestUpdateResourceRole_ValidationErrors(t *testing.T) {
 }
 
 func TestUpdateResourceRole_Error(t *testing.T) {
-	nvClient := armtestsupport.NewMockNamedValuesClient()
-	svc := makeArmApiSvc(nvClient)
+	nvClient := apim_testsupport.NewMockNamedValuesClient()
+	svc := makeApimNamedValueSvc(nvClient)
 	serviceInfo := makeServiceInfo()
 
 	existingNV := providerscommon.NewResourceActionRoles("/humanresources", http.MethodGet, []string{""})
@@ -49,8 +49,8 @@ func TestUpdateResourceRole_Error(t *testing.T) {
 }
 
 func TestUpdateResourceRole_Success(t *testing.T) {
-	nvClient := armtestsupport.NewMockNamedValuesClient()
-	svc := makeArmApiSvc(nvClient)
+	nvClient := apim_testsupport.NewMockNamedValuesClient()
+	svc := makeApimNamedValueSvc(nvClient)
 
 	serviceInfo := makeServiceInfo()
 
@@ -109,9 +109,9 @@ func makePoller(expResp azarmapim.NamedValueClientUpdateResponse) *runtime.Polle
 	return poller
 }
 
-func makeArmApiSvc(nvClient apimnv.NamedValuesClient) azapim.ArmApimSvc {
-	opt := azapim.WithNamedValuesClient(nvClient)
-	svc, _ := azapim.NewArmApimSvc("", nil, nil, opt)
+func makeApimNamedValueSvc(nvClient apimnv.NamedValuesClient) apimnv.ApimNamedValueSvc {
+	opt := apimnv.WithNamedValuesClient(nvClient)
+	svc := apimnv.NewApimNamedValueSvc("", nil, nil, opt)
 	return svc
 }
 

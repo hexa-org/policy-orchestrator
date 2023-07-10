@@ -38,6 +38,15 @@ func (p *armListPageMapper[T, R]) Get() ([]R, error) {
 	return p.get(false)
 }
 
+func DoListAndMap[T any, R any](p *runtime.Pager[T], m func(page T) []R, caller string) ([]R, error) {
+	pageMapper := NewArmListPageMapper(p, m, caller)
+	resRoles, err := pageMapper.Get()
+	if err != nil || len(resRoles) == 0 {
+		return []R{}, err
+	}
+	return resRoles, nil
+}
+
 func (p *armListPageMapper[T, R]) get(firstOnly bool) ([]R, error) {
 	output := make([]R, 0)
 	pager := p.internal

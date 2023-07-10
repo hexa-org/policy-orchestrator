@@ -2,6 +2,7 @@ package azuretestsupport
 
 import (
 	"encoding/json"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azurecommon"
 )
 
@@ -18,6 +19,11 @@ func AzureKey() azurecommon.AzureKey {
 		Tenant:       AzureTenantId,
 		Subscription: AzureSubscription,
 	}
+}
+
+func AzureTokenCredential(httpClient azurecommon.HTTPClient) azcore.TokenCredential {
+	creds, _ := azurecommon.ClientSecretCredentials(AzureKey(), httpClient)
+	return creds
 }
 
 func AzureKeyBytes() []byte {

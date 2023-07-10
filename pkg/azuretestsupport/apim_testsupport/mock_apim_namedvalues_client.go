@@ -1,4 +1,4 @@
-package armtestsupport
+package apim_testsupport
 
 import (
 	"context"
