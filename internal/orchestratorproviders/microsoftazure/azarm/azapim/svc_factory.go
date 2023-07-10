@@ -1,10 +1,10 @@
-package microsoftazure
+package azapim
 
 import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/armclientsupport"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim/apimnv"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azresource"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azurecommon"
 	log "golang.org/x/exp/slog"
@@ -12,7 +12,8 @@ import (
 
 type SvcFactory interface {
 	NewArmResourceSvc() (azresource.ArmResourceSvc, error)
-	NewApimSvc() (azapim.ArmApimSvc, error)
+	NewApimSvc() (ArmApimSvc, error)
+	NewApimNamedValueSvc() apimnv.ApimNamedValueSvc
 }
 
 type svcFactory struct {
@@ -45,6 +46,10 @@ func (sf *svcFactory) NewArmResourceSvc() (azresource.ArmResourceSvc, error) {
 	return azresource.NewArmResourceSvc(sf.azureKey.Subscription, sf.credentials, sf.clientOpts)
 }
 
-func (sf *svcFactory) NewApimSvc() (azapim.ArmApimSvc, error) {
-	return azapim.NewArmApimSvc(sf.azureKey.Subscription, sf.credentials, sf.clientOpts)
+func (sf *svcFactory) NewApimSvc() (ArmApimSvc, error) {
+	return NewArmApimSvc(sf.azureKey.Subscription, sf.credentials, sf.clientOpts)
+}
+
+func (sf *svcFactory) NewApimNamedValueSvc() apimnv.ApimNamedValueSvc {
+	return apimnv.NewApimNamedValueSvc(sf.azureKey.Subscription, sf.credentials, sf.clientOpts)
 }

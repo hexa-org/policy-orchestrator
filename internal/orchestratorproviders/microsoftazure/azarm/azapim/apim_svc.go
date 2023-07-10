@@ -1,44 +1,25 @@
 package azapim
 
 import (
-	"context"
-	"encoding/json"
-	"errors"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	azarmapim "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/apimanagement/armapimanagement"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/armclientsupport"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/armmodel"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim/apimapi"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim/apimnv"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim/apimservice"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/providerscommon"
-	"time"
-
-	log "golang.org/x/exp/slog"
 )
 
 type ArmApimSvc interface {
 	GetApimServiceInfo(serviceUrl string) (armmodel.ApimServiceInfo, error)
-	GetResourceRoles(s armmodel.ApimServiceInfo) ([]providerscommon.ResourceActionRoles, error)
-	UpdateResourceRole(s armmodel.ApimServiceInfo, nv providerscommon.ResourceActionRoles) error
-	//getApimApiInfo(armResource armmodel.ArmResource, serviceUrl string) (*ApimServiceInfo, error)
 }
 
 type armApimSvc struct {
 	apimApiClient     apimapi.ArmApimApiClient
 	apimServiceClient apimservice.Client
-	namedValuesClient apimnv.NamedValuesClient
 }
 
 type ArmApimSvcOption func(s *armApimSvc)
-
-func WithNamedValuesClient(nvClient apimnv.NamedValuesClient) ArmApimSvcOption {
-	return func(s *armApimSvc) {
-		s.namedValuesClient = nvClient
-	}
-}
 
 func WithApimServiceClient(apimServiceClient apimservice.Client) ArmApimSvcOption {
 	return func(s *armApimSvc) {
@@ -49,12 +30,10 @@ func WithApimServiceClient(apimServiceClient apimservice.Client) ArmApimSvcOptio
 func NewArmApimSvc(subscriptionID string, credential azcore.TokenCredential, options *arm.ClientOptions, opts ...ArmApimSvcOption) (ArmApimSvc, error) {
 	apimApiClient := apimapi.NewApimApiClient(subscriptionID, credential, options)
 	serviceClient := apimservice.NewClient(subscriptionID, credential, options)
-	namedValuesClient := apimnv.NewNamedValuesClient(subscriptionID, credential, options)
 
 	svc := &armApimSvc{
 		apimApiClient:     apimApiClient,
-		apimServiceClient: serviceClient,
-		namedValuesClient: namedValuesClient}
+		apimServiceClient: serviceClient}
 
 	for _, opt := range opts {
 		opt(svc)
@@ -71,11 +50,42 @@ func (svc *armApimSvc) GetApimServiceInfo(serviceUrl string) (armmodel.ApimServi
 	pager := svc.apimServiceClient.NewListPager(nil)
 	mapper := apimServiceInfoMapper(serviceUrl)
 
-	services, err := doListAndMap(pager, mapper, "GetApimServiceInfo")
+	services, err := armclientsupport.DoListAndMap(pager, mapper, "GetApimServiceInfo")
 	if err != nil || len(services) == 0 {
 		return armmodel.ApimServiceInfo{}, err
 	}
 	return services[0], nil
+}
+
+// apimServiceInfoMapper - maps azarmapim.ServiceClientListResponse to armmodel.ApimServiceInfo
+// filters by serviceUrl
+// returns empty slice if no apim services found, or if no services match the serviceUrl
+func apimServiceInfoMapper(serviceUrl string) func(page azarmapim.ServiceClientListResponse) []armmodel.ApimServiceInfo {
+	return func(page azarmapim.ServiceClientListResponse) []armmodel.ApimServiceInfo {
+		if len(page.Value) == 0 {
+			return []armmodel.ApimServiceInfo{}
+		}
+
+		s := page.Value[0]
+		if *s.Properties.GatewayURL == serviceUrl {
+			return []armmodel.ApimServiceInfo{
+				armmodel.NewApimServiceInfo(*s.ID, *s.Type, *s.Name, *s.Name, *s.Properties.GatewayURL),
+			}
+		}
+		return []armmodel.ApimServiceInfo{}
+	}
+}
+
+/*
+// UpdateResourceRole GetResourceRoles
+	// GetResourceRoles(s armmodel.ApimServiceInfo) ([]providerscommon.ResourceActionRoles, error)
+	// UpdateResourceRole(s armmodel.ApimServiceInfo, nv providerscommon.ResourceActionRoles) error
+	//getApimApiInfo(armResource armmodel.ArmResource, serviceUrl string) (*ApimServiceInfo, error)
+
+func WithNamedValuesClient(nvClient apimnv.NamedValuesClient) ArmApimSvcOption {
+	return func(s *armApimSvc) {
+		s.namedValuesClient = nvClient
+	}
 }
 
 func (svc *armApimSvc) GetResourceRoles(s armmodel.ApimServiceInfo) ([]providerscommon.ResourceActionRoles, error) {
@@ -86,7 +96,23 @@ func (svc *armApimSvc) GetResourceRoles(s armmodel.ApimServiceInfo) ([]providers
 
 	pager := svc.namedValuesClient.NewListByServicePager(s.ArmResource.ResourceGroup, s.ArmResource.Name, nil)
 	mapper := apimResourceRolesMapper()
-	return doListAndMap(pager, mapper, "GetResourceRoles")
+	return armclientsupport.DoListAndMap(pager, mapper, "GetResourceRoles")
+}
+
+func apimResourceRolesMapper() func(page azarmapim.NamedValueClientListByServiceResponse) []providerscommon.ResourceActionRoles {
+	return func(page azarmapim.NamedValueClientListByServiceResponse) []providerscommon.ResourceActionRoles {
+		resRoles := make([]providerscommon.ResourceActionRoles, 0)
+		for _, nv := range page.Value {
+			roles, err := nvValueToArray(*nv.Properties.Value)
+			if err != nil {
+				log.Info("ignoring apim.NamedValue non-array value", "ValueStr", *nv.Properties.Value, "Err", err)
+			}
+			one := providerscommon.NewResourceActionRolesFromProviderValue(*nv.Name, roles)
+			resRoles = append(resRoles, one)
+		}
+
+		return resRoles
+	}
 }
 
 func (svc *armApimSvc) UpdateResourceRole(s armmodel.ApimServiceInfo, nv providerscommon.ResourceActionRoles) error {
@@ -114,41 +140,6 @@ func (svc *armApimSvc) beginUpdateFunc(ctx context.Context, resourceGroup string
 	return updater
 }
 
-// apimServiceInfoMapper - maps azarmapim.ServiceClientListResponse to armmodel.ApimServiceInfo
-// filters by serviceUrl
-// returns empty slice if no apim services found, or if no services match the serviceUrl
-func apimServiceInfoMapper(serviceUrl string) func(page azarmapim.ServiceClientListResponse) []armmodel.ApimServiceInfo {
-	return func(page azarmapim.ServiceClientListResponse) []armmodel.ApimServiceInfo {
-		if len(page.Value) == 0 {
-			return []armmodel.ApimServiceInfo{}
-		}
-
-		s := page.Value[0]
-		if *s.Properties.GatewayURL == serviceUrl {
-			return []armmodel.ApimServiceInfo{
-				armmodel.NewApimServiceInfo(*s.ID, *s.Type, *s.Name, *s.Name, *s.Properties.GatewayURL),
-			}
-		}
-		return []armmodel.ApimServiceInfo{}
-	}
-}
-
-func apimResourceRolesMapper() func(page azarmapim.NamedValueClientListByServiceResponse) []providerscommon.ResourceActionRoles {
-	return func(page azarmapim.NamedValueClientListByServiceResponse) []providerscommon.ResourceActionRoles {
-		resRoles := make([]providerscommon.ResourceActionRoles, 0)
-		for _, nv := range page.Value {
-			roles, err := nvValueToArray(*nv.Properties.Value)
-			if err != nil {
-				log.Info("ignoring apim.NamedValue non-array value", "ValueStr", *nv.Properties.Value, "Err", err)
-			}
-			one := providerscommon.NewResourceActionRolesFromProviderValue(*nv.Name, roles)
-			resRoles = append(resRoles, one)
-		}
-
-		return resRoles
-	}
-}
-
 func doListAndMap[T any, R any](p *runtime.Pager[T], m func(page T) []R, caller string) ([]R, error) {
 	pageMapper := armclientsupport.NewArmListPageMapper(p, m, caller)
 	resRoles, err := pageMapper.Get()
@@ -163,3 +154,5 @@ func nvValueToArray(nvValue string) ([]string, error) {
 	err := json.Unmarshal([]byte(nvValue), &arr)
 	return arr, err
 }
+
+*/

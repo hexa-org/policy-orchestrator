@@ -1,9 +1,12 @@
-package microsoftazure_test
+package azarm_test
 
 import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/armmodel"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim/apimnv"
 	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport/apim_testsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport/armtestsupport"
@@ -12,20 +15,30 @@ import (
 )
 
 func TestNewAzureApimProvider(t *testing.T) {
-	provider := microsoftazure.NewAzureApimProvider()
+	provider := azarm.NewAzureApimProvider()
 	assert.NotNil(t, provider)
+}
+
+func newAzureApimProvider(apimProviderService azapim.ArmApimSvc, azureClient azad.AzureClient, apimNvSvc apimnv.ApimNamedValueSvc) *azarm.AzureApimProvider {
+	provider := azarm.NewAzureApimProvider(
+		azarm.WithArmApimSvcOverride(apimProviderService),
+		azarm.WithAzureClientOverride(azureClient),
+		azarm.WithApimNamedValueSvcOverride(apimNvSvc))
+	return provider
 }
 
 func TestDiscoverApplications_Success(t *testing.T) {
 	apimSvc := apim_testsupport.NewMockArmApimSvc()
 	azureClient := azuretestsupport.NewMockAzureClient()
-	provider := apim_testsupport.NewAzureApimProvider(apimSvc, azureClient)
+	apimNvSvc := apim_testsupport.NewMockApimNamedValueSvc()
+	provider := newAzureApimProvider(apimSvc, azureClient, apimNvSvc)
 
 	key := azuretestsupport.AzureKeyBytes()
 	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}
 
 	azureClient.ExpectGetAzureApplications()
-	apimSvc.ExpectGetApimServiceInfo(armtestsupport.ApimServiceGatewayUrl)
+	serviceInfo := apim_testsupport.ApimServiceInfo(armtestsupport.ApimServiceGatewayUrl)
+	apimSvc.ExpectGetApimServiceInfo(serviceInfo)
 
 	applications, err := provider.DiscoverApplications(info)
 	assert.NoError(t, err)
@@ -45,7 +58,8 @@ func TestDiscoverApplications_Success(t *testing.T) {
 func TestDiscoverApplications_NoApimServices(t *testing.T) {
 	apimSvc := apim_testsupport.NewMockArmApimSvc()
 	azureClient := azuretestsupport.NewMockAzureClient()
-	provider := apim_testsupport.NewAzureApimProvider(apimSvc, azureClient)
+	apimNvSvc := apim_testsupport.NewMockApimNamedValueSvc()
+	provider := newAzureApimProvider(apimSvc, azureClient, apimNvSvc)
 
 	key := azuretestsupport.AzureKeyBytes()
 	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}

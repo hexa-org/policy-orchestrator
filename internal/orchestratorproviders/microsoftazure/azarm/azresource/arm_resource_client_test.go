@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim"
 	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport/armtestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
@@ -75,7 +75,7 @@ func (m *armResourceClient) expectListResources(expStatus int, expBody []byte) {
 func TestGetApiManagementResources(t *testing.T) {
 	key := azuretestsupport.AzureKeyBytes()
 	client := newMockArnResourceClient()
-	factory, err := microsoftazure.NewSvcFactory(key, client.mockClient)
+	factory, err := azapim.NewSvcFactory(key, client.mockClient)
 
 	assert.NoError(t, err)
 

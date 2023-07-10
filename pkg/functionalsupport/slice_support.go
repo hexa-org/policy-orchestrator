@@ -38,8 +38,6 @@ func DiffUnique(arr1, arr2 []string) (diff1 []string, intersection []string, dif
 		}
 	}
 
-	// diff2 = elements from arr2, that don't exist in arr1
-
 	for ro, foundIn2 := range map1 {
 		if foundIn2 {
 			intersection = append(intersection, ro)
@@ -50,6 +48,7 @@ func DiffUnique(arr1, arr2 []string) (diff1 []string, intersection []string, dif
 
 	// diff1 - elements from arr1 that don't exist in arr2
 	// intersection - elements that exist in both
+	// diff2 = elements from arr2, that don't exist in arr1
 	return diff1, intersection, diff2
 }
 
