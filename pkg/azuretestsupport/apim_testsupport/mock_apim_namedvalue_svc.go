@@ -1,11 +1,10 @@
 package apim_testsupport
 
 import (
-	"fmt"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/armmodel"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/providerscommon"
+	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/mock"
-	"strings"
 )
 
 type MockApimNamedValueSvc struct {
@@ -27,16 +26,7 @@ func (m *MockApimNamedValueSvc) UpdateResourceRole(s armmodel.ApimServiceInfo, n
 }
 
 func (m *MockApimNamedValueSvc) ExpectGetResourceRoles(serviceInfo armmodel.ApimServiceInfo, retActionRoles map[string][]string) {
-	expReturnResourceRoles := make([]providerscommon.ResourceActionRoles, 0)
-
-	for actionAndRes, roles := range retActionRoles {
-		parts := strings.Split(actionAndRes, "/")
-		resActionKey := fmt.Sprintf("resrol-http%s-%s", strings.ToLower(parts[0]), strings.Join(parts[1:], "-"))
-		resRole := providerscommon.NewResourceActionRolesFromProviderValue(resActionKey, roles)
-		expReturnResourceRoles = append(expReturnResourceRoles, resRole)
-	}
-	//resActionKey := "resrol-httpget-humanresources-us"
-	//resRole := providerscommon.NewResourceActionRolesFromProviderValue(resActionKey, []string{"some-role"})
+	expReturnResourceRoles := policytestsupport.MakeRarList(retActionRoles)
 	m.On("GetResourceRoles", serviceInfo).
 		Return(expReturnResourceRoles, nil)
 }

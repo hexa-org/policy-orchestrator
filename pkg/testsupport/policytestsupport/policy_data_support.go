@@ -7,6 +7,8 @@ import (
 )
 
 const PolicyObjectResourceId = "some-resource-id"
+const ResourceHrUs = "/humanresources/us"
+const ResourceProfile = "/profile"
 const ActionGetProfile = "GET/profile"
 const ActionGetHrUs = "GET/humanresources/us"
 
@@ -70,7 +72,7 @@ func MakeRoleSubjectTestPolicies(actionMembers map[string][]string) []policysupp
 	for action, members := range actionMembers {
 		parts := strings.Split(action, "/")
 		actionUri := "http:" + parts[0]
-		resId := strings.Join(parts[1:], "/")
+		resId := "/" + strings.Join(parts[1:], "/")
 		policies = append(policies, MakeRoleSubjectTestPolicy(resId, actionUri, members))
 	}
 	return policies

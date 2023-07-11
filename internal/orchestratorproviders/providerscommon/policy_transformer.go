@@ -23,7 +23,7 @@ func BuildPolicies(resourceActionRolesList []ResourceActionRoles) []policysuppor
 
 // ResourcePolicyMap - makes a map of resource -> PolicyInfo
 // If multiple PolicyInfo elements exist for a given resource, these are merged
-// This ensures downstream functions dont have to deal with multiple policies for same resource.
+// This ensures downstream functions do not have to deal with multiple policies for same resource.
 // Also filters out any empty strings or duplicates in members or actions
 func ResourcePolicyMap(origPolicies []policysupport.PolicyInfo) map[string]policysupport.PolicyInfo {
 	resPolicyMap := make(map[string]policysupport.PolicyInfo)
