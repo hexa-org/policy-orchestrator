@@ -41,7 +41,7 @@ the following prerequisites:
 >
 > - `dev setup --target=db`
 
-Create a test database in PostgreSQL:
+### Create a test database in PostgreSQL:
 
 ```bash
 createuser orchestrator
@@ -50,7 +50,7 @@ psql --command="alter user orchestrator with password 'orchestrator'"
 psql --command="grant all privileges on database orchestrator_test to orchestrator"
 ```
 
-Run the DB migrations:
+### Run the DB migrations:
 
 ```bash
 migrate -verbose -path ./databases/orchestrator -database "postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable" up
