@@ -37,7 +37,7 @@ func CalcResourceActionRolesForUpdate(existing []ResourceActionRoles, policyInfo
 			continue
 		}
 
-		updatedRar := NewResourceActionRoles(polResource, polAction, rolesToUpdate)
+		updatedRar := NewResourceActionUriRoles(polResource, polAction, rolesToUpdate)
 		rarUpdateList = append(rarUpdateList, updatedRar)
 	}
 

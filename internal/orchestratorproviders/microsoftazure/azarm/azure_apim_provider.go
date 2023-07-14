@@ -112,34 +112,3 @@ func (a *AzureApimProvider) getApimProviderService(key []byte) (*ApimProviderSer
 
 	return NewApimProviderService(armApimSvc, azureClient, apimNamedValueSvc), nil
 }
-
-/*
-func (a *AzureApimProvider) getApimSvc(key []byte) (azapim.ArmApimSvc, error) {
-	if a.armApimSvcOverride != nil {
-		return a.armApimSvcOverride, nil
-	}
-
-	factory, err := NewSvcFactory(key, nil)
-	if err != nil {
-		log.Error("ApimProvider.getApimService", "NewSvcFactory", "error=", err)
-		return nil, err
-	}
-
-	apimSvc, err := factory.NewApimSvc()
-
-	if err != nil {
-		log.Error("ApimProvider.getApimService", "NewArmApimSvc", "err=", err)
-		return nil, err
-	}
-	return apimSvc, nil
-}
-
-func (a *AzureApimProvider) getAzureClient() azad.AzureClient {
-	if a.azureClientOverride != nil {
-		return a.azureClientOverride
-	}
-
-	return azad.NewAzureClient(nil)
-}
-
-*/

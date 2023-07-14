@@ -38,7 +38,7 @@ func TestUpdateResourceRole_Error(t *testing.T) {
 	svc := makeApimNamedValueSvc(nvClient)
 	serviceInfo := makeServiceInfo()
 
-	existingNV := providerscommon.NewResourceActionRoles("/humanresources", http.MethodGet, []string{""})
+	existingNV := providerscommon.NewResourceActionUriRoles("/humanresources", http.MethodGet, []string{""})
 	updateReqParams := makeNVClientUpdateParam(existingNV)
 	var poller *runtime.Poller[azarmapim.NamedValueClientUpdateResponse]
 	nvClient.On("BeginUpdate", context.Background(), serviceInfo.ResourceGroup, serviceInfo.Name, existingNV.Name(), "*", updateReqParams, nil).
@@ -54,9 +54,9 @@ func TestUpdateResourceRole_Success(t *testing.T) {
 
 	serviceInfo := makeServiceInfo()
 
-	existingNV := providerscommon.NewResourceActionRoles("/humanresources", http.MethodGet, []string{""})
+	existingNV := providerscommon.NewResourceActionUriRoles("/humanresources", http.MethodGet, []string{""})
 
-	updatedNV := providerscommon.NewResourceActionRoles("/humanresources", http.MethodGet, []string{"GetHRRole"})
+	updatedNV := providerscommon.NewResourceActionUriRoles("/humanresources", http.MethodGet, []string{"GetHRRole"})
 	expResp := makeNVClientResp(updatedNV)
 	poller := makePoller(expResp)
 
