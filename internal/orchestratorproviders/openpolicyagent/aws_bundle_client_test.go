@@ -3,7 +3,7 @@ package openpolicyagent_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscommon"
 	"math/rand"
 	"net/http"
 	"path/filepath"
@@ -30,7 +30,7 @@ func TestNewAWSBundleClient(t *testing.T) {
 		"bucket",
 		"bundle.tar.gz",
 		key,
-		amazonwebservices.AWSClientOptions{})
+		awscommon.AWSClientOptions{})
 
 	assert.NotNil(t, client)
 	assert.NoError(t, err)
@@ -61,7 +61,7 @@ func TestNewAWSBundleClientError_MissingRequired(t *testing.T) {
 				tt.bucket,
 				tt.object,
 				key,
-				amazonwebservices.AWSClientOptions{})
+				awscommon.AWSClientOptions{})
 
 			assert.Nil(t, client)
 			assert.EqualError(t, err, "required config: bucket_name, object_name")
@@ -72,7 +72,7 @@ func TestNewAWSBundleClientError_MissingRequired(t *testing.T) {
 func TestNewAWSBundleClientError_InvalidCredentialsJson(t *testing.T) {
 	key := []byte(`{"badkey"}`)
 
-	client, err := openpolicyagent.NewAWSBundleClient("bucket", "object", key, amazonwebservices.AWSClientOptions{})
+	client, err := openpolicyagent.NewAWSBundleClient("bucket", "object", key, awscommon.AWSClientOptions{})
 	assert.Nil(t, client)
 	assert.Error(t, err)
 }
@@ -100,7 +100,7 @@ func TestAWSBundleClient_GetDataFromBundle(t *testing.T) {
 	expUrl := fmt.Sprintf("https://s3.%s.amazonaws.com/%s/%s?x-id=GetObject", region, bucketName, objectName)
 	mockClient.ResponseBody[expUrl] = buffer.Bytes()
 
-	opt := amazonwebservices.AWSClientOptions{HTTPClient: mockClient, DisableRetry: true}
+	opt := awscommon.AWSClientOptions{HTTPClient: mockClient, DisableRetry: true}
 	client, err := openpolicyagent.NewAWSBundleClient(bucketName, objectName, key, opt)
 	assert.NotNil(t, client)
 	assert.NoError(t, err)
@@ -124,7 +124,7 @@ func TestAWSBundleClient_GetDataFromBundleError(t *testing.T) {
 }
 `)
 
-	client, err := openpolicyagent.NewAWSBundleClient(bucketName, objectName, key, amazonwebservices.AWSClientOptions{DisableRetry: true})
+	client, err := openpolicyagent.NewAWSBundleClient(bucketName, objectName, key, awscommon.AWSClientOptions{DisableRetry: true})
 	assert.NoError(t, err)
 	assert.NotNil(t, client)
 
@@ -157,7 +157,7 @@ func TestAWSBundleClient_PostBundle(t *testing.T) {
 	mockClient.StatusCode = http.StatusCreated
 	mockClient.ResponseBody[expUrl] = []byte("{}")
 
-	client, err := openpolicyagent.NewAWSBundleClient(bucketName, objectName, key, amazonwebservices.AWSClientOptions{HTTPClient: mockClient, DisableRetry: true})
+	client, err := openpolicyagent.NewAWSBundleClient(bucketName, objectName, key, awscommon.AWSClientOptions{HTTPClient: mockClient, DisableRetry: true})
 	assert.NotNil(t, client)
 	assert.NoError(t, err)
 
@@ -177,7 +177,7 @@ func TestAWSBundleClient_PostBundleError(t *testing.T) {
 }
 `)
 
-	client, err := openpolicyagent.NewAWSBundleClient(bucketName, objectName, key, amazonwebservices.AWSClientOptions{DisableRetry: true})
+	client, err := openpolicyagent.NewAWSBundleClient(bucketName, objectName, key, awscommon.AWSClientOptions{DisableRetry: true})
 	assert.NoError(t, err)
 	assert.NotNil(t, client)
 

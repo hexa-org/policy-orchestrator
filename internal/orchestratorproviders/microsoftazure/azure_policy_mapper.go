@@ -7,28 +7,28 @@ import (
 )
 
 type AzurePolicyMapper struct {
-	objectId                   string
-	roleIdToAppRole            map[string]azad.AzureAppRole
-	roleIdToAppRoleAssignments map[string][]azad.AzureAppRoleAssignment
-	azureUserEmail             map[string]string
+	objectId             string
+	roleIdToAppRole      map[string]azad.AzureAppRole
+	existingRoleIdToAras map[string][]azad.AzureAppRoleAssignment
+	azureUserEmail       map[string]string
 }
 
-func NewAzurePolicyMapper(sps azad.AzureServicePrincipals, appRoleAssignments []azad.AzureAppRoleAssignment, azureUserEmail map[string]string) *AzurePolicyMapper {
+func NewAzurePolicyMapper(sps azad.AzureServicePrincipals, existingAssignments []azad.AzureAppRoleAssignment, azureUserEmail map[string]string) *AzurePolicyMapper {
 	if len(sps.List) == 0 {
 		return &AzurePolicyMapper{}
 	}
 
 	return &AzurePolicyMapper{
-		objectId:                   sps.List[0].Name,
-		roleIdToAppRole:            mapAppRoles(sps.List[0].AppRoles),
-		roleIdToAppRoleAssignments: mapAppRoleAssignments(appRoleAssignments),
-		azureUserEmail:             azureUserEmail}
+		objectId:             sps.List[0].Name,
+		roleIdToAppRole:      mapAppRoles(sps.List[0].AppRoles),
+		existingRoleIdToAras: mapAppRoleAssignments(existingAssignments),
+		azureUserEmail:       azureUserEmail}
 }
 
 func (azm *AzurePolicyMapper) ToIDQL() []policysupport.PolicyInfo {
 	policies := make([]policysupport.PolicyInfo, 0)
 	for appRoleId, appRole := range azm.roleIdToAppRole {
-		pol := azm.appRoleAssignmentToIDQL(azm.roleIdToAppRoleAssignments[appRoleId], appRole.Value)
+		pol := azm.appRoleAssignmentToIDQL(azm.existingRoleIdToAras[appRoleId], appRole.Value)
 		policies = append(policies, pol)
 	}
 	return policies

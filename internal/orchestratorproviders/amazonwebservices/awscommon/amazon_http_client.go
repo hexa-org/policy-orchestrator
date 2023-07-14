@@ -1,4 +1,4 @@
-package amazonwebservices
+package awscommon
 
 import (
 	"bytes"
