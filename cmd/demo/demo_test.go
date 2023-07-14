@@ -103,14 +103,16 @@ func TestDemoFlow(t *testing.T) {
 	/// test orchestration
 
 	_, _ = db.Exec(deleteAll)
-	fromKey := []byte(`{ "bundle_url":"http://localhost:8889/bundles/bundle.tar.gz" }`)
+	fromBundleUrl := "http://localhost:8889/bundles/bundle.tar.gz"
+	fromKey := []byte(fmt.Sprintf(`{ "bundle_url": "%s"}`, fromBundleUrl))
 	createAnIntegration(fromKey)
 
-	toKey := []byte(`{ "bundle_url":"http://localhost:8890/bundles/bundle.tar.gz" }`)
+	toBundleUrl := "http://localhost:8890/bundles/bundle.tar.gz"
+	toKey := []byte(fmt.Sprintf(`{ "bundle_url": "%s"}`, toBundleUrl))
 	createAnIntegration(toKey)
 
-	apps := listApplications()
-	orchestratePolicy(apps.Applications[0].ID, apps.Applications[1].ID)
+	fromAppId, toAppId := appIdsToOrchestrate(fromBundleUrl, toBundleUrl)
+	orchestratePolicy(fromAppId, toAppId)
 
 	time.Sleep(time.Duration(3) * time.Second) // waiting for opa to refresh the bundle
 
@@ -120,6 +122,26 @@ func TestDemoFlow(t *testing.T) {
 	_, _ = http.Get("http://localhost:8889/reset")
 }
 
+func appIdsToOrchestrate(fromBundleUrl, toBundleUrl string) (fromAppId, toAppId string) {
+
+	fromResourceId := base64.StdEncoding.EncodeToString([]byte(fromBundleUrl))
+	toResourceId := base64.StdEncoding.EncodeToString([]byte(toBundleUrl))
+
+	apps := listApplications()
+
+	for _, oneApp := range apps.Applications {
+		log.Println("oneApp.ID=", oneApp.ID, "ObjectID=", oneApp.ObjectId)
+		switch oneApp.ObjectId {
+		case fromResourceId:
+			fromAppId = oneApp.ID
+		case toResourceId:
+			toAppId = oneApp.ID
+		default:
+			log.Println("TestDemoFlow Ignore app")
+		}
+	}
+	return
+}
 func assertContains(t *testing.T, url string, contains string) {
 	resp, _ := http.Get(url)
 	body, _ := io.ReadAll(resp.Body)
@@ -197,7 +219,8 @@ type Applications struct {
 }
 
 type Application struct {
-	ID string `json:"id"`
+	ID       string `json:"id"`
+	ObjectId string `json:"object_id"`
 }
 
 type Policies struct {

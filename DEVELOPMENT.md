@@ -66,6 +66,7 @@ migrate -verbose -path ./databases/orchestrator -database "postgres://orchestrat
 Before making your contributions, ensure the test suite passes:
 
 ```bash
+go clean -testcache
 go test  ./.../
 ```
 

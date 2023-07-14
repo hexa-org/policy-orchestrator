@@ -41,7 +41,9 @@ func (a *BasicApp) download(writer http.ResponseWriter, _ *http.Request) {
 	_, file, _, _ := runtime.Caller(0)
 	bundles := filepath.Join(file, "../resources/bundles")
 	tar, _ := compressionsupport.TarFromPath(fmt.Sprintf("%s/%s", bundles, a.latest(bundles)))
+	writer.Header().Set("Content-Type", "application/gzip")
 	_ = compressionsupport.Gzip(writer, tar)
+	writer.Header()
 }
 
 func (a *BasicApp) latest(dir string) string {
