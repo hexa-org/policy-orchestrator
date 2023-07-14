@@ -1,7 +1,7 @@
 *.idea
 .DS_Store
-.opa
 .env*
+**/.opa/**
 .postgres
 .bundle*
 .codeql

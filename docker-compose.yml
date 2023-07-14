@@ -71,9 +71,10 @@ services:
     container_name: opa-server
     ports:
       - "8887:8887"
-    command: run --server --addr :8887 -c /home/config/config.yaml
+    command: run --server --addr :8887 --log-level debug -c /home/config/config.yaml
     environment:
       HEXA_DEMO_CONFIG_URL: "https://hexa-demo-config:8889"
       HEXA_DEMO_CA_CERT: "/home/config/ca-cert.pem"
     volumes:
       - "./deployments/opa-server/config:/home/config:ro"
+      - "./deployments/opa-server/.opa:/.opa"
