@@ -2,8 +2,9 @@ package amazonwebservices
 
 import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscognito"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscommon"
 	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
-	"log"
 	"net/http"
 	"strings"
 
@@ -11,7 +12,7 @@ import (
 )
 
 type AmazonProvider struct {
-	AwsClientOpts AWSClientOptions
+	AwsClientOpts awscommon.AWSClientOptions
 }
 
 func (a *AmazonProvider) Name() string {
@@ -23,31 +24,38 @@ func (a *AmazonProvider) DiscoverApplications(info orchestrator.IntegrationInfo)
 		return []orchestrator.ApplicationInfo{}, nil
 	}
 
-	client, err := NewCognitoClient(info.Key, a.AwsClientOpts)
+	client, err := awscognito.NewCognitoClient(info.Key, a.AwsClientOpts)
 	if err != nil {
 		return nil, err
 	}
-	return client.listUserPools()
+	return client.ListUserPools()
 }
 
 func (a *AmazonProvider) GetPolicyInfo(info orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
-	client, err := NewCognitoClient(info.Key, a.AwsClientOpts)
+	client, err := awscognito.NewCognitoClient(info.Key, a.AwsClientOpts)
 	if err != nil {
 		return nil, err
 	}
 
-	groups, err := client.getGroups(applicationInfo.ObjectID)
+	groups, err := client.GetGroups(applicationInfo.ObjectID)
 	if err != nil {
 		return nil, err
 	}
 
 	var policies []policysupport.PolicyInfo
 	for groupName := range groups {
-		pol, err := client.convertGroupToPolicy(applicationInfo, groupName)
+		members, err := client.GetMembersAssignedTo(applicationInfo, groupName)
 		if err != nil {
 			return nil, err
 		}
-		policies = append(policies, pol)
+		policies = append(policies, policysupport.PolicyInfo{
+			Meta:    policysupport.MetaInfo{Version: "0.5"},
+			Actions: []policysupport.ActionInfo{{groupName}},
+			Subject: policysupport.SubjectInfo{Members: members},
+			Object: policysupport.ObjectInfo{
+				ResourceID: applicationInfo.Name,
+			},
+		})
 	}
 
 	return policies, nil
@@ -64,12 +72,12 @@ func (a *AmazonProvider) SetPolicyInfo(info orchestrator.IntegrationInfo, applic
 		return http.StatusInternalServerError, err
 	}
 
-	client, err := NewCognitoClient(info.Key, a.AwsClientOpts)
+	client, err := awscognito.NewCognitoClient(info.Key, a.AwsClientOpts)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
 
-	allGroups, err := client.getGroups(applicationInfo.ObjectID)
+	allGroups, err := client.GetGroups(applicationInfo.ObjectID)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
@@ -80,33 +88,8 @@ func (a *AmazonProvider) SetPolicyInfo(info orchestrator.IntegrationInfo, applic
 			continue
 		}
 
-		existingUserEmailMap, err := client.listUsersInGroup(groupName, applicationInfo.ObjectID)
+		err = client.SetGroupsAssignedTo(groupName, pol.Subject.Members, applicationInfo)
 		if err != nil {
-			return http.StatusInternalServerError, err
-		}
-
-		policyUserEmailMap := make(map[string]string)
-		for _, mem := range pol.Subject.Members {
-			memEmail := strings.Split(mem, ":")[1]
-			userName, err := client.getPrincipalIdFromEmail(applicationInfo, memEmail)
-			if err != nil {
-				log.Println("Error getPrincipalIdFromEmail with email=", memEmail, " Error=", err)
-				continue
-			}
-			policyUserEmailMap[userName] = memEmail
-		}
-
-		toRemove := findElementsNotExistsIn(existingUserEmailMap, policyUserEmailMap)
-		err = client.removeUsersFromGroup(applicationInfo, groupName, toRemove)
-		if err != nil {
-			log.Println("Error removing users from group", groupName, "Error=", err)
-			return http.StatusInternalServerError, err
-		}
-
-		toAdd := findElementsNotExistsIn(policyUserEmailMap, existingUserEmailMap)
-		err = client.addUsersToGroup(applicationInfo, groupName, toAdd)
-		if err != nil {
-			log.Println("Error adding user to group", groupName, "Error=", err)
 			return http.StatusInternalServerError, err
 		}
 	}

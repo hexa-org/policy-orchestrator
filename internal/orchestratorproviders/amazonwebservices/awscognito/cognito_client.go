@@ -1,4 +1,4 @@
-package amazonwebservices
+package awscognito
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscommon"
 	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
 	"log"
 	"strings"
@@ -18,7 +18,7 @@ type CognitoClient struct {
 	client *cognitoidentityprovider.Client
 }
 
-func NewCognitoClient(key []byte, opt AWSClientOptions) (*CognitoClient, error) {
+func NewCognitoClient(key []byte, opt awscommon.AWSClientOptions) (*CognitoClient, error) {
 	client, err := newCognitoClient(key, opt)
 	if err != nil {
 		return nil, err
@@ -26,8 +26,8 @@ func NewCognitoClient(key []byte, opt AWSClientOptions) (*CognitoClient, error) 
 	return &CognitoClient{client: client}, nil
 }
 
-func newCognitoClient(key []byte, opts AWSClientOptions) (*cognitoidentityprovider.Client, error) {
-	cfg, err := GetAwsClientConfig(key, opts)
+func newCognitoClient(key []byte, opts awscommon.AWSClientOptions) (*cognitoidentityprovider.Client, error) {
+	cfg, err := awscommon.GetAwsClientConfig(key, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func newCognitoClient(key []byte, opts AWSClientOptions) (*cognitoidentityprovid
 	return cognitoidentityprovider.NewFromConfig(cfg), nil
 }
 
-func (c *CognitoClient) listUserPools() (apps []orchestrator.ApplicationInfo, err error) {
+func (c *CognitoClient) ListUserPools() (apps []orchestrator.ApplicationInfo, err error) {
 	poolsInput := cognitoidentityprovider.ListUserPoolsInput{MaxResults: 20}
 	pools, listErr := c.client.ListUserPools(context.Background(), &poolsInput)
 	if listErr != nil {
@@ -62,7 +62,7 @@ func (c *CognitoClient) listUserPools() (apps []orchestrator.ApplicationInfo, er
 	return apps, err
 }
 
-func (c *CognitoClient) getGroups(userPoolId string) (map[string]string, error) {
+func (c *CognitoClient) GetGroups(userPoolId string) (map[string]string, error) {
 	groupsInput := cognitoidentityprovider.ListGroupsInput{
 		UserPoolId: aws.String(userPoolId),
 	}
@@ -77,6 +77,54 @@ func (c *CognitoClient) getGroups(userPoolId string) (map[string]string, error) 
 	}
 
 	return groups, nil
+}
+
+func (c *CognitoClient) GetMembersAssignedTo(appInfo orchestrator.ApplicationInfo, groupName string) ([]string, error) {
+	tmpUserEmailMap, err := c.listUsersInGroup(groupName, appInfo.ObjectID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	members := make([]string, 0)
+	for _, email := range tmpUserEmailMap {
+		members = append(members, fmt.Sprintf("user:%s", email))
+	}
+	return members, nil
+}
+
+func (c *CognitoClient) SetGroupsAssignedTo(groupName string, members []string, applicationInfo orchestrator.ApplicationInfo) error {
+	existingUserEmailMap, err := c.listUsersInGroup(groupName, applicationInfo.ObjectID)
+	if err != nil {
+		return err
+	}
+
+	policyUserEmailMap := make(map[string]string)
+	for _, mem := range members {
+		memEmail := strings.Split(mem, ":")[1]
+		userName, err := c.getPrincipalIdFromEmail(applicationInfo, memEmail)
+		if err != nil {
+			log.Println("Error getPrincipalIdFromEmail with email=", memEmail, " Error=", err)
+			continue
+		}
+		policyUserEmailMap[userName] = memEmail
+	}
+
+	toRemove := findElementsNotExistsIn(existingUserEmailMap, policyUserEmailMap)
+	err = c.removeUsersFromGroup(applicationInfo, groupName, toRemove)
+	if err != nil {
+		log.Println("Error removing users from group", groupName, "Error=", err)
+		return err
+	}
+
+	toAdd := findElementsNotExistsIn(policyUserEmailMap, existingUserEmailMap)
+	err = c.addUsersToGroup(applicationInfo, groupName, toAdd)
+	if err != nil {
+		log.Println("Error adding user to group", groupName, "Error=", err)
+		return err
+	}
+
+	return nil
 }
 
 func (c *CognitoClient) listUsersInGroup(groupName, userPoolId string) (map[string]string, error) {
@@ -134,28 +182,6 @@ func (c *CognitoClient) getPrincipalIdFromEmail(appInfo orchestrator.Application
 	}
 
 	return *users.Users[0].Username, nil
-}
-
-func (c *CognitoClient) convertGroupToPolicy(appInfo orchestrator.ApplicationInfo, groupName string) (policysupport.PolicyInfo, error) {
-	tmpUserEmailMap, err := c.listUsersInGroup(groupName, appInfo.ObjectID)
-
-	if err != nil {
-		return policysupport.PolicyInfo{}, err
-	}
-
-	members := make([]string, 0)
-	for _, email := range tmpUserEmailMap {
-		members = append(members, fmt.Sprintf("user:%s", email))
-	}
-
-	return policysupport.PolicyInfo{
-		Meta:    policysupport.MetaInfo{Version: "0.5"},
-		Actions: []policysupport.ActionInfo{{groupName}},
-		Subject: policysupport.SubjectInfo{Members: members},
-		Object: policysupport.ObjectInfo{
-			ResourceID: appInfo.Name,
-		},
-	}, nil
 }
 
 func (c *CognitoClient) addUsersToGroup(appInfo orchestrator.ApplicationInfo, groupName string, toAdd []string) error {

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscommon"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -21,12 +21,12 @@ type AWSBundleClient struct {
 	httpClient *s3.Client
 }
 
-func NewAWSBundleClient(bucketName, objectName string, key []byte, opts amazonwebservices.AWSClientOptions) (*AWSBundleClient, error) {
+func NewAWSBundleClient(bucketName, objectName string, key []byte, opts awscommon.AWSClientOptions) (*AWSBundleClient, error) {
 	if len(bucketName) == 0 || len(objectName) == 0 {
 		return nil, fmt.Errorf("required config: bucket_name, object_name")
 	}
 
-	cfg, err := amazonwebservices.GetAwsClientConfig(key, opts)
+	cfg, err := awscommon.GetAwsClientConfig(key, opts)
 	if err != nil {
 		return nil, err
 	}

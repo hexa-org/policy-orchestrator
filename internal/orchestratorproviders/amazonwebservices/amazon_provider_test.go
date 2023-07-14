@@ -3,6 +3,7 @@ package amazonwebservices_test
 import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscommon"
 	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/cognitotestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
@@ -14,7 +15,7 @@ import (
 
 func TestAmazonProvider_DiscoverApplications(t *testing.T) {
 	info := cognitotestsupport.IntegrationInfo()
-	p := amazonwebservices.AmazonProvider{AwsClientOpts: amazonwebservices.AWSClientOptions{DisableRetry: true}}
+	p := amazonwebservices.AmazonProvider{AwsClientOpts: awscommon.AWSClientOptions{DisableRetry: true}}
 	_, err := p.DiscoverApplications(info)
 	assert.Error(t, err, "operation error Cognito Identity Provider: ListUserPools, expected endpoint resolver to not be nil")
 }
@@ -32,7 +33,7 @@ func TestAmazonProvider_ListUserPools_ErrorCallingListUserPoolsApi(t *testing.T)
 	mockClient.MockListUserPoolsWithHttpStatus(http.StatusBadRequest)
 
 	p := amazonwebservices.AmazonProvider{
-		AwsClientOpts: amazonwebservices.AWSClientOptions{
+		AwsClientOpts: awscommon.AWSClientOptions{
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
@@ -51,7 +52,7 @@ func TestAmazonProvider_ListUserPools_ErrorCallingListResourceServicesApi(t *tes
 	mockClient.MockListResourceServersWithHttpStatus(http.StatusBadRequest)
 
 	p := amazonwebservices.AmazonProvider{
-		AwsClientOpts: amazonwebservices.AWSClientOptions{
+		AwsClientOpts: awscommon.AWSClientOptions{
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
@@ -69,7 +70,7 @@ func TestAmazonProvider_ListUserPools_Success(t *testing.T) {
 	mockClient.MockListUserPools()
 	mockClient.MockListResourceServers()
 	p := amazonwebservices.AmazonProvider{
-		AwsClientOpts: amazonwebservices.AWSClientOptions{
+		AwsClientOpts: awscommon.AWSClientOptions{
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
@@ -105,7 +106,7 @@ func TestAmazonProvider_GetPolicyInfo(t *testing.T) {
 	mockClient.MockAdminGetUser(policytestsupport.UserIdGetHrUs, policytestsupport.UserEmailGetHrUs)
 
 	p := amazonwebservices.AmazonProvider{
-		AwsClientOpts: amazonwebservices.AWSClientOptions{
+		AwsClientOpts: awscommon.AWSClientOptions{
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
@@ -130,7 +131,7 @@ func TestAmazonProvider_GetPolicyInfo_withListGroupsError(t *testing.T) {
 
 	mockClient.MockListGroupsWithHttpStatus(http.StatusBadRequest, policytestsupport.ActionGetProfile, policytestsupport.ActionGetHrUs)
 	p := amazonwebservices.AmazonProvider{
-		AwsClientOpts: amazonwebservices.AWSClientOptions{
+		AwsClientOpts: awscommon.AWSClientOptions{
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
@@ -188,7 +189,7 @@ func TestSetPolicyInfo_ListGroupsError(t *testing.T) {
 	mockClient := cognitotestsupport.NewMockCognitoHTTPClient()
 	mockClient.MockListGroupsWithHttpStatus(http.StatusBadRequest)
 	p := amazonwebservices.AmazonProvider{
-		AwsClientOpts: amazonwebservices.AWSClientOptions{
+		AwsClientOpts: awscommon.AWSClientOptions{
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
@@ -206,7 +207,7 @@ func TestSetPolicyInfo_NoPoliciesInput(t *testing.T) {
 	mockClient.MockListGroups(expGroups...)
 
 	p := amazonwebservices.AmazonProvider{
-		AwsClientOpts: amazonwebservices.AWSClientOptions{
+		AwsClientOpts: awscommon.AWSClientOptions{
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
@@ -226,7 +227,7 @@ func TestSetPolicyInfo_ListUsersInGroupError(t *testing.T) {
 	actionMemberMap := policytestsupport.MakeActionMembers()
 
 	p := amazonwebservices.AmazonProvider{
-		AwsClientOpts: amazonwebservices.AWSClientOptions{
+		AwsClientOpts: awscommon.AWSClientOptions{
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
@@ -265,7 +266,7 @@ func TestSetPolicyInfo_IgnoresNotFoundPrincipal(t *testing.T) {
 	}
 
 	p := amazonwebservices.AmazonProvider{
-		AwsClientOpts: amazonwebservices.AWSClientOptions{
+		AwsClientOpts: awscommon.AWSClientOptions{
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
@@ -291,7 +292,7 @@ func TestSetPolicyInfo_AddUserToGroupError(t *testing.T) {
 	mockClient.MockAdminAddUserToGroupWithHttpStatus(http.StatusBadRequest)
 
 	p := amazonwebservices.AmazonProvider{
-		AwsClientOpts: amazonwebservices.AWSClientOptions{
+		AwsClientOpts: awscommon.AWSClientOptions{
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
@@ -328,7 +329,7 @@ func TestSetPolicyInfo_RemoveUserFromGroupError(t *testing.T) {
 	mockClient.MockAdminRemoveUserFromGroupWithHttpStatus(http.StatusBadRequest)
 
 	p := amazonwebservices.AmazonProvider{
-		AwsClientOpts: amazonwebservices.AWSClientOptions{
+		AwsClientOpts: awscommon.AWSClientOptions{
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
@@ -366,7 +367,7 @@ func TestSetPolicyInfo_RemoveAllExistingAssignments(t *testing.T) {
 	}
 
 	p := amazonwebservices.AmazonProvider{
-		AwsClientOpts: amazonwebservices.AWSClientOptions{
+		AwsClientOpts: awscommon.AWSClientOptions{
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
@@ -396,7 +397,7 @@ func TestSetPolicyInfo_NoExistingAssignments_AddAll(t *testing.T) {
 	}
 
 	p := amazonwebservices.AmazonProvider{
-		AwsClientOpts: amazonwebservices.AWSClientOptions{
+		AwsClientOpts: awscommon.AWSClientOptions{
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
@@ -423,7 +424,7 @@ func TestSetPolicyInfo_NoneAddedOrRemoved(t *testing.T) {
 	}
 
 	p := amazonwebservices.AmazonProvider{
-		AwsClientOpts: amazonwebservices.AWSClientOptions{
+		AwsClientOpts: awscommon.AWSClientOptions{
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
