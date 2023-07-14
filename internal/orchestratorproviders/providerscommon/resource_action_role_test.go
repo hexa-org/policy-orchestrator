@@ -15,7 +15,7 @@ func TestMakeRarKeyForPolicy(t *testing.T) {
 }
 
 func TestNameValue(t *testing.T) {
-	resRole := providerscommon.NewResourceActionRoles("/humanresources/us", actionUri, []string{"some-role"})
+	resRole := providerscommon.NewResourceActionUriRoles("/humanresources/us", actionUri, []string{"some-role"})
 	assert.Equal(t, "resrol-httpget-humanresources-us", resRole.Name())
 	assert.Equal(t, `["some-role"]`, resRole.Value())
 }

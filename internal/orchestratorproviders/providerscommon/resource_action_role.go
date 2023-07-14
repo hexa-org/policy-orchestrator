@@ -17,19 +17,28 @@ type ResourceActionRoles struct {
 	Roles    []string
 }
 
-func NewResourceActionRoles(resource, actionUri string, roles []string) ResourceActionRoles {
-	res, _ := strings.CutPrefix(resource, "/")
-	httpMethod := getHttpMethod(actionUri, ActionUriPrefix)
-	if httpMethod == "" {
-		log.Warn("NewResourceActionRoles could not resolve httpMethod", "action", actionUri, "resource", resource)
+func NewResourceActionRoles(resource, httpMethod string, roles []string) ResourceActionRoles {
+	if getHttpMethod(httpMethod, "") == "" {
+		log.Warn("NewResourceActionRoles could not resolve httpMethod", "httpMethod", httpMethod, "resource", resource)
 		return ResourceActionRoles{}
 	}
 
+	res, _ := strings.CutPrefix(resource, "/")
 	return ResourceActionRoles{
 		Action:   httpMethod,
 		Resource: "/" + res,
 		Roles:    roles,
 	}
+}
+
+func NewResourceActionUriRoles(resource, actionUri string, roles []string) ResourceActionRoles {
+	httpMethod := getHttpMethod(actionUri, ActionUriPrefix)
+	if httpMethod == "" {
+		log.Warn("NewResourceActionUriRoles could not resolve httpMethod", "action", actionUri, "resource", resource)
+		return ResourceActionRoles{}
+	}
+
+	return NewResourceActionRoles(resource, httpMethod, roles)
 }
 
 // NewResourceActionRolesFromProviderValue

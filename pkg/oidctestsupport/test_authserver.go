@@ -108,21 +108,6 @@ func (as *FakeAuthServer) handleToken(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (as *FakeAuthServer) handleJWKS(rw http.ResponseWriter, _ *http.Request) {
-	/*
-		jwk := jose.JSONWebKey{
-			Key:       as.signingKey.key.Public(),
-			KeyID:     as.signingKey.id,
-			Algorithm: "RS256",
-			Use:       "sig",
-		}
-		var keys []jose.JSONWebKey
-		keys = append(keys, jwk)
-
-		jwks := jose.JSONWebKeySet{
-			Keys: keys,
-		}
-		err := json.NewEncoder(rw).Encode(jwks)
-	*/
 	rw.Header().Set("Content-Type", "application/json")
 	_, err := rw.Write(as.Jwks())
 

@@ -56,15 +56,21 @@ func TestCalcResourceActionRolesForUpdate_RemoveOneAddOne_MulResources(t *testin
 		expResActions[0]: expRoles,
 		expResActions[1]: expRoles,
 	}
+	expResourceToRarMap := map[string]providerscommon.ResourceActionRoles{
+		expRes[0]: providerscommon.NewResourceActionRoles(expRes[0], "GET", expRoles),
+		expRes[1]: providerscommon.NewResourceActionRoles(expRes[0], "GET", expRoles),
+	}
 
 	inputPolicies := policytestsupport.MakeRoleSubjectTestPolicies(tmpMap)
 
 	actRars := providerscommon.CalcResourceActionRolesForUpdate(existingRars, inputPolicies)
-	assert.Equal(t, 2, len(actRars))
-	for a, aRar := range actRars {
-		assert.Equal(t, "GET", aRar.Action)
-		assert.Equal(t, expRes[a], aRar.Resource)
-		assert.Equal(t, expRoles, aRar.Roles)
+	assert.Equal(t, len(expResourceToRarMap), len(actRars))
+
+	for _, aRar := range actRars {
+		expRar, found := expResourceToRarMap[aRar.Resource]
+		assert.True(t, found)
+		assert.Equal(t, expRar.Action, aRar.Action)
+		assert.Equal(t, expRar.Roles, aRar.Roles)
 	}
 }
 
