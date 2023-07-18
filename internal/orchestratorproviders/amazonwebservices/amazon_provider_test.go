@@ -1,6 +1,7 @@
 package amazonwebservices_test
 
 import (
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscommon"
@@ -49,7 +50,7 @@ func TestAmazonProvider_ListUserPools_ErrorCallingListUserPoolsApi(t *testing.T)
 func TestAmazonProvider_ListUserPools_ErrorCallingListResourceServicesApi(t *testing.T) {
 	mockClient := cognitotestsupport.NewMockCognitoHTTPClient()
 	mockClient.MockListUserPools()
-	mockClient.MockListResourceServersWithHttpStatus(http.StatusBadRequest)
+	mockClient.MockListResourceServersWithHttpStatus(http.StatusBadRequest, cognitoidentityprovider.ListResourceServersOutput{})
 
 	p := amazonwebservices.AmazonProvider{
 		AwsClientOpts: awscommon.AWSClientOptions{
@@ -68,7 +69,7 @@ func TestAmazonProvider_ListUserPools_ErrorCallingListResourceServicesApi(t *tes
 func TestAmazonProvider_ListUserPools_Success(t *testing.T) {
 	mockClient := cognitotestsupport.NewMockCognitoHTTPClient()
 	mockClient.MockListUserPools()
-	mockClient.MockListResourceServers()
+	mockClient.MockListResourceServers(cognitotestsupport.WithResourceServer())
 	p := amazonwebservices.AmazonProvider{
 		AwsClientOpts: awscommon.AWSClientOptions{
 			HTTPClient:   mockClient,
