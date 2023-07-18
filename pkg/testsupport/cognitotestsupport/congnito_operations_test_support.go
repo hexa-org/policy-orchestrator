@@ -49,12 +49,13 @@ func (m *MockCognitoHTTPClient) MockListUserPoolsWithHttpStatus(httpStatus int) 
 	m.AddRequest(http.MethodPost, CognitoApiUrl, "ListUserPools", httpStatus, ListUserPoolsResponse())
 }
 
-func (m *MockCognitoHTTPClient) MockListResourceServers() {
-	m.MockListResourceServersWithHttpStatus(http.StatusOK)
+func (m *MockCognitoHTTPClient) MockListResourceServers(withResp cognitoidentityprovider.ListResourceServersOutput) {
+	m.MockListResourceServersWithHttpStatus(http.StatusOK, withResp)
 }
 
-func (m *MockCognitoHTTPClient) MockListResourceServersWithHttpStatus(httpStatus int) {
-	m.AddRequest(http.MethodPost, CognitoApiUrl, "ListResourceServers", httpStatus, ListResourceServersResponse())
+func (m *MockCognitoHTTPClient) MockListResourceServersWithHttpStatus(httpStatus int, withResp cognitoidentityprovider.ListResourceServersOutput) {
+	resp, _ := json.Marshal(withResp)
+	m.AddRequest(http.MethodPost, CognitoApiUrl, "ListResourceServers", httpStatus, resp)
 }
 
 func (m *MockCognitoHTTPClient) MockListGroups(groupNames ...string) {
@@ -182,16 +183,32 @@ func ListUserPoolsResponse() []byte {
 	return expBytes
 }
 
-func ListResourceServersResponse() []byte {
-	rsOutput := cognitoidentityprovider.ListResourceServersOutput{
+func WithResourceServer() cognitoidentityprovider.ListResourceServersOutput {
+	return WithResourceServerOptions(TestUserPoolId, TestResourceServerName, TestResourceServerIdentifier)
+}
+
+func WithResourceServerOptions(userPoolId, name, identifier string) cognitoidentityprovider.ListResourceServersOutput {
+	usePoolId := TestUserPoolId
+	useName := TestResourceServerName
+	useIdentifier := TestResourceServerIdentifier
+
+	if userPoolId != "" {
+		usePoolId = userPoolId
+	}
+	if name != "" {
+		useName = name
+	}
+	if identifier != "" {
+		useIdentifier = identifier
+	}
+
+	return cognitoidentityprovider.ListResourceServersOutput{
 		ResourceServers: []types.ResourceServerType{
 			{
-				Identifier: aws.String(TestResourceServerIdentifier),
-				Name:       aws.String(TestResourceServerName),
-				UserPoolId: aws.String(TestUserPoolId),
+				Identifier: &useIdentifier,
+				Name:       &useName,
+				UserPoolId: &usePoolId,
 			},
 		},
 	}
-	expBytes, _ := json.Marshal(rsOutput)
-	return expBytes
 }

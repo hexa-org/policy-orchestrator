@@ -7,6 +7,7 @@
 .codeql
 .freshcloud
 
+**/*_real_test*
 Brewfile.lock.json
 
 !.envrc
