@@ -56,8 +56,8 @@ func TestListUserPools_Success(t *testing.T) {
 	assert.Len(t, pools, 1)
 	assert.Equal(t, cognitotestsupport.TestUserPoolId, pools[0].ObjectID)
 	assert.Equal(t, cognitotestsupport.TestResourceServerName, pools[0].Name)
-	assert.Equal(t, cognitotestsupport.TestResourceServerIdentifier, pools[0].Description)
-	assert.Equal(t, "Cognito", pools[0].Service)
+	assert.Equal(t, cognitotestsupport.TestResourceServerIdentifier, pools[0].Service)
+	assert.Equal(t, "Cognito", pools[0].Description)
 	assert.True(t, mockHttpClient.VerifyCalled())
 
 }

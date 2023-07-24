@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awsapigw"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/googlecloud"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/openpolicyagent"
@@ -54,7 +54,8 @@ func App(key string, addr string, hostPort string, dbUrl string) (*http.Server, 
 	providers["google_cloud"] = &googlecloud.GoogleProvider{}
 	providers["azure"] = azarm.NewAzureApimProvider()
 	//providers["azure_apim"] = microsoftazure.NewAzureApimProvider()
-	providers["amazon"] = &amazonwebservices.AmazonProvider{}
+	//providers["amazon"] = &amazonwebservices.AmazonProvider{}
+	providers["amazon"] = &awsapigw.AwsApiGatewayProvider{}
 	providers["open_policy_agent"] = &openpolicyagent.OpaProvider{}
 	handlers, scheduler := orchestrator.LoadHandlers(db, store, hostPort, providers)
 	return websupport.Create(addr, handlers, websupport.Options{

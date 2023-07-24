@@ -38,7 +38,12 @@ func IntegrationInfo() orchestrator.IntegrationInfo {
 }
 
 func AppInfo() orchestrator.ApplicationInfo {
-	return orchestrator.ApplicationInfo{ObjectID: TestUserPoolId, Name: TestResourceServerName}
+	return orchestrator.ApplicationInfo{
+		ObjectID:    TestUserPoolId,
+		Name:        TestResourceServerName,
+		Description: "Cognito",
+		Service:     TestResourceServerIdentifier,
+	}
 }
 
 func (m *MockCognitoHTTPClient) MockListUserPools() {

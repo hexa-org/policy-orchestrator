@@ -1,0 +1,96 @@
+package awsapigw
+
+import (
+	"github.com/go-playground/validator/v10"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscognito"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscommon"
+	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	log "golang.org/x/exp/slog"
+	"net/http"
+	"strings"
+)
+
+type AwsApiGatewayProvider struct {
+	cognitoClientOverride awscognito.CognitoClient
+	hasOverrides          bool
+}
+
+type AwsApiGatewayProviderOpt func(provider *AwsApiGatewayProvider)
+
+func WithCognitoClientOverride(cognitoClientOverride awscognito.CognitoClient) AwsApiGatewayProviderOpt {
+	return func(provider *AwsApiGatewayProvider) {
+		provider.cognitoClientOverride = cognitoClientOverride
+		provider.hasOverrides = true
+	}
+}
+
+func NewAwsApiGatewayProvider(opts ...AwsApiGatewayProviderOpt) *AwsApiGatewayProvider {
+	provider := &AwsApiGatewayProvider{}
+	for _, opt := range opts {
+		opt(provider)
+	}
+	return provider
+}
+
+func (a *AwsApiGatewayProvider) Name() string {
+	return "amazon"
+}
+
+func (a *AwsApiGatewayProvider) DiscoverApplications(integrationInfo orchestrator.IntegrationInfo) (apps []orchestrator.ApplicationInfo, err error) {
+	log.Info("AwsApiGatewayProvider.DiscoverApplications", "info.Name", integrationInfo.Name, "a.Name", a.Name())
+	if !strings.EqualFold(integrationInfo.Name, a.Name()) {
+		return []orchestrator.ApplicationInfo{}, err
+	}
+	service, err := a.getProviderService(integrationInfo.Key)
+	if err != nil {
+		log.Error("AwsApiGatewayProvider.DiscoverApplications", "getProviderService err", err)
+		return []orchestrator.ApplicationInfo{}, err
+	}
+
+	return service.DiscoverApplications(integrationInfo)
+}
+
+func (a *AwsApiGatewayProvider) GetPolicyInfo(info orchestrator.IntegrationInfo, appInfo orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
+	service, err := a.getProviderService(info.Key)
+	if err != nil {
+		log.Error("AwsApiGatewayProvider.GetPolicyInfo", "getProviderService err", err)
+		return []policysupport.PolicyInfo{}, err
+	}
+	return service.GetPolicyInfo(appInfo)
+}
+
+func (a *AwsApiGatewayProvider) SetPolicyInfo(info orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) (status int, foundErr error) {
+	validate := validator.New()
+	err := validate.Struct(applicationInfo)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	err = validate.Var(policyInfos, "omitempty,dive")
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	service, err := a.getProviderService(info.Key)
+	if err != nil {
+		log.Error("AwsApiGatewayProvider.SetPolicyInfo", "getProviderService err", err)
+		return http.StatusBadGateway, nil
+	}
+
+	return service.SetPolicyInfo(applicationInfo, policyInfos)
+}
+
+func (a *AwsApiGatewayProvider) getProviderService(key []byte) (*AwsApiGatewayProviderService, error) {
+	var aCognitoClient awscognito.CognitoClient
+	if a.hasOverrides {
+		aCognitoClient = a.cognitoClientOverride
+	} else {
+		var err error
+		aCognitoClient, err = awscognito.NewCognitoClient(key, awscommon.AWSClientOptions{})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return NewAwsApiGatewayProviderService(aCognitoClient), nil
+}
