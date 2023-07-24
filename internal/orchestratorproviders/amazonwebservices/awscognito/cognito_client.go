@@ -55,13 +55,12 @@ func (c *cognitoClient) ListUserPools() (apps []orchestrator.ApplicationInfo, er
 
 		for _, rs := range rsOutput.ResourceServers {
 			apps = append(apps, orchestrator.ApplicationInfo{
-				ObjectID:    aws.ToString(rs.UserPoolId),
-				Name:        aws.ToString(rs.Name),
-				Description: aws.ToString(rs.Identifier),
-				Service:     "Cognito",
+				ObjectID:    *rs.UserPoolId,
+				Name:        *rs.Name,
+				Description: "Cognito",
+				Service:     *rs.Identifier,
 			})
 		}
-
 	}
 	return apps, err
 }

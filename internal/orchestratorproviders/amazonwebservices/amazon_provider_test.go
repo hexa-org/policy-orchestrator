@@ -81,8 +81,8 @@ func TestAmazonProvider_ListUserPools_Success(t *testing.T) {
 	assert.Len(t, apps, 1)
 	assert.Equal(t, cognitotestsupport.TestUserPoolId, apps[0].ObjectID)
 	assert.Equal(t, cognitotestsupport.TestResourceServerName, apps[0].Name)
-	assert.Equal(t, cognitotestsupport.TestResourceServerIdentifier, apps[0].Description)
-	assert.Equal(t, "Cognito", apps[0].Service)
+	assert.Equal(t, cognitotestsupport.TestResourceServerIdentifier, apps[0].Service)
+	assert.Equal(t, "Cognito", apps[0].Description)
 	assert.True(t, mockClient.VerifyCalled())
 }
 
