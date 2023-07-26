@@ -6,45 +6,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
-	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/awstestsupport"
 	"net/http"
 )
 
-const TestAwsRegion = "aRegion"
-const TestAwsAccessKeyId = "anAccessKeyID"
-const TestAwsSecretAccessKey = "aSecretAccessKey"
-
-const TestUserPoolId = "some-user-pool-id"
-const TestUserPoolName = "some-user-pool-name"
-const TestResourceServerIdentifier = "https://some-resource-server"
-const TestResourceServerName = "some-resource-server-name"
-
-var CognitoApiUrl = fmt.Sprintf("https://cognito-idp.%s.amazonaws.com/", TestAwsRegion)
-
-func AwsCredentialsForTest() []byte {
-	str := fmt.Sprintf(`
-{
-  "accessKeyID": "%s",
-  "secretAccessKey": "%s",
-  "region": "%s"
-}
-`, TestAwsAccessKeyId, TestAwsSecretAccessKey, TestAwsRegion)
-
-	return []byte(str)
-}
-
-func IntegrationInfo() orchestrator.IntegrationInfo {
-	return orchestrator.IntegrationInfo{Name: "amazon", Key: AwsCredentialsForTest()}
-}
-
-func AppInfo() orchestrator.ApplicationInfo {
-	return orchestrator.ApplicationInfo{
-		ObjectID:    TestUserPoolId,
-		Name:        TestResourceServerName,
-		Description: "Cognito",
-		Service:     TestResourceServerIdentifier,
-	}
-}
+var CognitoApiUrl = fmt.Sprintf("https://cognito-idp.%s.amazonaws.com/", awstestsupport.TestAwsRegion)
 
 func (m *MockCognitoHTTPClient) MockListUserPools() {
 	m.MockListUserPoolsWithHttpStatus(http.StatusOK)
@@ -113,7 +79,7 @@ func ListGroupsResponse(groupNames ...string) []byte {
 	for _, name := range groupNames {
 		groups = append(groups, types.GroupType{
 			GroupName:   aws.String(name),
-			UserPoolId:  aws.String(TestUserPoolId),
+			UserPoolId:  aws.String(awstestsupport.TestUserPoolId),
 			Description: aws.String("some description")})
 	}
 	output := cognitoidentityprovider.ListGroupsOutput{Groups: groups}
@@ -178,8 +144,8 @@ func ListUserPoolsResponse() []byte {
 		NextToken: nil,
 		UserPools: []types.UserPoolDescriptionType{
 			{
-				Id:   aws.String(TestUserPoolId),
-				Name: aws.String(TestUserPoolName),
+				Id:   aws.String(awstestsupport.TestUserPoolId),
+				Name: aws.String(awstestsupport.TestUserPoolName),
 			},
 		},
 	}
@@ -189,13 +155,13 @@ func ListUserPoolsResponse() []byte {
 }
 
 func WithResourceServer() cognitoidentityprovider.ListResourceServersOutput {
-	return WithResourceServerOptions(TestUserPoolId, TestResourceServerName, TestResourceServerIdentifier)
+	return WithResourceServerOptions(awstestsupport.TestUserPoolId, awstestsupport.TestResourceServerName, awstestsupport.TestResourceServerIdentifier)
 }
 
 func WithResourceServerOptions(userPoolId, name, identifier string) cognitoidentityprovider.ListResourceServersOutput {
-	usePoolId := TestUserPoolId
-	useName := TestResourceServerName
-	useIdentifier := TestResourceServerIdentifier
+	usePoolId := awstestsupport.TestUserPoolId
+	useName := awstestsupport.TestResourceServerName
+	useIdentifier := awstestsupport.TestResourceServerIdentifier
 
 	if userPoolId != "" {
 		usePoolId = userPoolId

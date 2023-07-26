@@ -6,6 +6,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscommon"
 	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/awstestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/cognitotestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"net/http"
@@ -15,7 +16,7 @@ import (
 )
 
 func TestAmazonProvider_DiscoverApplications(t *testing.T) {
-	info := cognitotestsupport.IntegrationInfo()
+	info := awstestsupport.IntegrationInfo()
 	p := amazonwebservices.AmazonProvider{AwsClientOpts: awscommon.AWSClientOptions{DisableRetry: true}}
 	_, err := p.DiscoverApplications(info)
 	assert.Error(t, err, "operation error Cognito Identity Provider: ListUserPools, expected endpoint resolver to not be nil")
@@ -38,7 +39,7 @@ func TestAmazonProvider_ListUserPools_ErrorCallingListUserPoolsApi(t *testing.T)
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
-	info := cognitotestsupport.IntegrationInfo()
+	info := awstestsupport.IntegrationInfo()
 	apps, err := p.DiscoverApplications(info)
 	assert.Error(t, err)
 	assert.ErrorContains(t, err, "error StatusCode: 400")
@@ -57,7 +58,7 @@ func TestAmazonProvider_ListUserPools_ErrorCallingListResourceServicesApi(t *tes
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
-	info := cognitotestsupport.IntegrationInfo()
+	info := awstestsupport.IntegrationInfo()
 	apps, err := p.DiscoverApplications(info)
 	assert.Error(t, err)
 	assert.ErrorContains(t, err, "error StatusCode: 400")
@@ -75,13 +76,13 @@ func TestAmazonProvider_ListUserPools_Success(t *testing.T) {
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
-	info := cognitotestsupport.IntegrationInfo()
+	info := awstestsupport.IntegrationInfo()
 	apps, err := p.DiscoverApplications(info)
 	assert.NoError(t, err)
 	assert.Len(t, apps, 1)
-	assert.Equal(t, cognitotestsupport.TestUserPoolId, apps[0].ObjectID)
-	assert.Equal(t, cognitotestsupport.TestResourceServerName, apps[0].Name)
-	assert.Equal(t, cognitotestsupport.TestResourceServerIdentifier, apps[0].Service)
+	assert.Equal(t, awstestsupport.TestUserPoolId, apps[0].ObjectID)
+	assert.Equal(t, awstestsupport.TestResourceServerName, apps[0].Name)
+	assert.Equal(t, awstestsupport.TestResourceServerIdentifier, apps[0].Service)
 	assert.Equal(t, "Cognito", apps[0].Description)
 	assert.True(t, mockClient.VerifyCalled())
 }
@@ -89,7 +90,7 @@ func TestAmazonProvider_ListUserPools_Success(t *testing.T) {
 func TestAmazonProvider_GetPolicyInfo_CognitoClientError(t *testing.T) {
 	p := amazonwebservices.AmazonProvider{}
 	info := orchestrator.IntegrationInfo{Name: "amazon", Key: []byte("!!!")}
-	appInfo := cognitotestsupport.AppInfo()
+	appInfo := awstestsupport.AppInfo()
 	policyInfo, err := p.GetPolicyInfo(info, appInfo)
 	assert.Error(t, err)
 	assert.ErrorContains(t, err, "invalid character")
@@ -111,8 +112,8 @@ func TestAmazonProvider_GetPolicyInfo(t *testing.T) {
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
-	info := cognitotestsupport.IntegrationInfo()
-	appInfo := cognitotestsupport.AppInfo()
+	info := awstestsupport.IntegrationInfo()
+	appInfo := awstestsupport.AppInfo()
 	actualPolicies, err := p.GetPolicyInfo(info, appInfo)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, actualPolicies)
@@ -121,7 +122,7 @@ func TestAmazonProvider_GetPolicyInfo(t *testing.T) {
 		policytestsupport.ActionGetHrUs:    {policytestsupport.UserEmailGetHrUs},
 	}
 
-	expPolicies := policytestsupport.MakePolicies(expActionMembers, cognitotestsupport.TestResourceServerName)
+	expPolicies := policytestsupport.MakePolicies(expActionMembers, awstestsupport.TestResourceServerName)
 	assert.Equal(t, len(expPolicies), len(actualPolicies))
 	assert.True(t, policytestsupport.ContainsPolicies(t, expPolicies, actualPolicies))
 	assert.True(t, mockClient.VerifyCalled())
@@ -136,8 +137,8 @@ func TestAmazonProvider_GetPolicyInfo_withListGroupsError(t *testing.T) {
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
-	info := cognitotestsupport.IntegrationInfo()
-	appInfo := cognitotestsupport.AppInfo()
+	info := awstestsupport.IntegrationInfo()
+	appInfo := awstestsupport.AppInfo()
 	_, err := p.GetPolicyInfo(info, appInfo)
 	assert.Error(t, err)
 	assert.ErrorContains(t, err, "error StatusCode: 400")
@@ -178,9 +179,9 @@ func TestSetPolicy_withInvalidArguments(t *testing.T) {
 
 func TestSetPolicyInfo_CognitoClientError(t *testing.T) {
 	p := amazonwebservices.AmazonProvider{}
-	info := cognitotestsupport.IntegrationInfo()
+	info := awstestsupport.IntegrationInfo()
 	info.Key = []byte("!!!!")
-	appInfo := cognitotestsupport.AppInfo()
+	appInfo := awstestsupport.AppInfo()
 	_, err := p.SetPolicyInfo(info, appInfo, []policysupport.PolicyInfo{})
 	assert.Error(t, err)
 	assert.ErrorContains(t, err, "invalid character '!'")
@@ -194,8 +195,8 @@ func TestSetPolicyInfo_ListGroupsError(t *testing.T) {
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
-	info := cognitotestsupport.IntegrationInfo()
-	appInfo := cognitotestsupport.AppInfo()
+	info := awstestsupport.IntegrationInfo()
+	appInfo := awstestsupport.AppInfo()
 	_, err := p.SetPolicyInfo(info, appInfo, []policysupport.PolicyInfo{})
 	assert.Error(t, err)
 	assert.ErrorContains(t, err, "ListGroups")
@@ -212,8 +213,8 @@ func TestSetPolicyInfo_NoPoliciesInput(t *testing.T) {
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
-	info := cognitotestsupport.IntegrationInfo()
-	appInfo := cognitotestsupport.AppInfo()
+	info := awstestsupport.IntegrationInfo()
+	appInfo := awstestsupport.AppInfo()
 	status, err := p.SetPolicyInfo(info, appInfo, []policysupport.PolicyInfo{})
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, status)
@@ -232,8 +233,8 @@ func TestSetPolicyInfo_ListUsersInGroupError(t *testing.T) {
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
-	info := cognitotestsupport.IntegrationInfo()
-	appInfo := cognitotestsupport.AppInfo()
+	info := awstestsupport.IntegrationInfo()
+	appInfo := awstestsupport.AppInfo()
 
 	expPolicies := policytestsupport.MakeTestPolicies(actionMemberMap)
 	_, err := p.SetPolicyInfo(info, appInfo, expPolicies)
@@ -271,8 +272,8 @@ func TestSetPolicyInfo_IgnoresNotFoundPrincipal(t *testing.T) {
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
-	info := cognitotestsupport.IntegrationInfo()
-	appInfo := cognitotestsupport.AppInfo()
+	info := awstestsupport.IntegrationInfo()
+	appInfo := awstestsupport.AppInfo()
 	expPolicies := policytestsupport.MakeTestPolicies(actionMemberMap)
 	_, err := p.SetPolicyInfo(info, appInfo, expPolicies)
 	assert.NoError(t, err)
@@ -297,8 +298,8 @@ func TestSetPolicyInfo_AddUserToGroupError(t *testing.T) {
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
-	info := cognitotestsupport.IntegrationInfo()
-	appInfo := cognitotestsupport.AppInfo()
+	info := awstestsupport.IntegrationInfo()
+	appInfo := awstestsupport.AppInfo()
 	expPolicies := policytestsupport.MakeTestPolicies(actionMemberMap)
 	stat, err := p.SetPolicyInfo(info, appInfo, expPolicies)
 	assert.Equal(t, http.StatusInternalServerError, stat)
@@ -334,8 +335,8 @@ func TestSetPolicyInfo_RemoveUserFromGroupError(t *testing.T) {
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
-	info := cognitotestsupport.IntegrationInfo()
-	appInfo := cognitotestsupport.AppInfo()
+	info := awstestsupport.IntegrationInfo()
+	appInfo := awstestsupport.AppInfo()
 	expPolicies := policytestsupport.MakeTestPolicies(actionMemberMap)
 	stat, err := p.SetPolicyInfo(info, appInfo, expPolicies)
 	assert.Equal(t, http.StatusInternalServerError, stat)
@@ -372,8 +373,8 @@ func TestSetPolicyInfo_RemoveAllExistingAssignments(t *testing.T) {
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
-	info := cognitotestsupport.IntegrationInfo()
-	appInfo := cognitotestsupport.AppInfo()
+	info := awstestsupport.IntegrationInfo()
+	appInfo := awstestsupport.AppInfo()
 	expPolicies := policytestsupport.MakeTestPolicies(actionMemberMap)
 	_, err := p.SetPolicyInfo(info, appInfo, expPolicies)
 	assert.NoError(t, err)
@@ -402,8 +403,8 @@ func TestSetPolicyInfo_NoExistingAssignments_AddAll(t *testing.T) {
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
-	info := cognitotestsupport.IntegrationInfo()
-	appInfo := cognitotestsupport.AppInfo()
+	info := awstestsupport.IntegrationInfo()
+	appInfo := awstestsupport.AppInfo()
 	expPolicies := policytestsupport.MakeTestPolicies(actionMemberMap)
 	_, err := p.SetPolicyInfo(info, appInfo, expPolicies)
 	assert.NoError(t, err)
@@ -429,8 +430,8 @@ func TestSetPolicyInfo_NoneAddedOrRemoved(t *testing.T) {
 			HTTPClient:   mockClient,
 			DisableRetry: true}}
 
-	info := cognitotestsupport.IntegrationInfo()
-	appInfo := cognitotestsupport.AppInfo()
+	info := awstestsupport.IntegrationInfo()
+	appInfo := awstestsupport.AppInfo()
 	expPolicies := policytestsupport.MakeTestPolicies(actionMemberMap)
 	_, err := p.SetPolicyInfo(info, appInfo, expPolicies)
 	assert.NoError(t, err)

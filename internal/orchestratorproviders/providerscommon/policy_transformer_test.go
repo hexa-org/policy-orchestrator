@@ -3,9 +3,41 @@ package providerscommon_test
 import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/providerscommon"
 	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
+
+func TestBuildPolicies_EmptyNil(t *testing.T) {
+	policies := providerscommon.BuildPolicies(nil)
+	assert.NotNil(t, policies)
+	assert.Empty(t, policies)
+
+	policies = providerscommon.BuildPolicies([]providerscommon.ResourceActionRoles{})
+	assert.NotNil(t, policies)
+	assert.Empty(t, policies)
+}
+
+func TestBuildPolicies(t *testing.T) {
+	existingActionRoles := map[string][]string{
+		policytestsupport.ActionGetProfile: {"2-some-profile-role", "1-some-profile-role"},
+		policytestsupport.ActionGetHrUs:    {"2-some-hr-role", "1-some-hr-role"},
+	}
+	resourceRoles := policytestsupport.MakeRarList(existingActionRoles)
+	policies := providerscommon.BuildPolicies(resourceRoles)
+	assert.NotNil(t, policies)
+	assert.Len(t, policies, 2)
+
+	actPol := policies[0]
+	assert.Equal(t, policytestsupport.ResourceHrUs, actPol.Object.ResourceID)
+	assert.Equal(t, "http:GET", actPol.Actions[0].ActionUri)
+	assert.Equal(t, []string{"1-some-hr-role", "2-some-hr-role"}, actPol.Subject.Members)
+
+	actPol = policies[1]
+	assert.Equal(t, policytestsupport.ResourceProfile, actPol.Object.ResourceID)
+	assert.Equal(t, "http:GET", actPol.Actions[0].ActionUri)
+	assert.Equal(t, []string{"1-some-profile-role", "2-some-profile-role"}, actPol.Subject.Members)
+}
 
 func TestCompactActions_NilEmpty(t *testing.T) {
 	tests := []struct {
@@ -134,17 +166,17 @@ func TestCompactMembers_OneNil(t *testing.T) {
 	assert.Equal(t, []string{"1one", "2two", "3three", "4four"}, compacted)
 }
 
-func TestResourcePolicyMap_ReturnsEmpty(t *testing.T) {
-	actMap := providerscommon.ResourcePolicyMap([]policysupport.PolicyInfo{})
-	assert.NotNil(t, actMap)
-	assert.Empty(t, actMap)
+func TestFlattenPolicy_ReturnsEmpty(t *testing.T) {
+	actPolicies := providerscommon.FlattenPolicy([]policysupport.PolicyInfo{})
+	assert.NotNil(t, actPolicies)
+	assert.Empty(t, actPolicies)
 
-	actMap = providerscommon.ResourcePolicyMap(nil)
-	assert.NotNil(t, actMap)
-	assert.Empty(t, actMap)
+	actPolicies = providerscommon.FlattenPolicy(nil)
+	assert.NotNil(t, actPolicies)
+	assert.Empty(t, actPolicies)
 }
 
-func TestResourcePolicyMap_DupResourceDupMembers(t *testing.T) {
+func TestFlattenPolicy_DupResourceDupMembers(t *testing.T) {
 	pol1 := policysupport.PolicyInfo{
 		Meta: policysupport.MetaInfo{Version: "0.5"},
 		Actions: []policysupport.ActionInfo{
@@ -162,23 +194,94 @@ func TestResourcePolicyMap_DupResourceDupMembers(t *testing.T) {
 	}
 
 	orig := []policysupport.PolicyInfo{pol1, pol2}
-	actMap := providerscommon.ResourcePolicyMap(orig)
-	assert.NotNil(t, actMap)
-	assert.Equal(t, 1, len(actMap))
+	actPolicies := providerscommon.FlattenPolicy(orig)
+	assert.NotNil(t, actPolicies)
+	assert.Equal(t, 4, len(actPolicies))
 
 	expResource := "resource1"
-	expActionUris := []policysupport.ActionInfo{{ActionUri: "1act"}, {ActionUri: "2act"}, {ActionUri: "3act"}, {ActionUri: "4act"}}
+	expActions := []string{"1act", "2act", "3act", "4act"}
 	expMembers := []string{"1mem", "2mem"}
 
-	actPol, found := actMap[expResource]
-	assert.True(t, found)
-	assert.NotNil(t, actPol)
-	assert.Equal(t, expResource, actPol.Object.ResourceID)
-	assert.Equal(t, expActionUris, actPol.Actions)
-	assert.Equal(t, expMembers, actPol.Subject.Members)
+	for i, actPol := range actPolicies {
+		assert.Equal(t, expResource, actPol.Object.ResourceID)
+		assert.Equal(t, expActions[i], actPol.Actions[0].ActionUri)
+		assert.Equal(t, expMembers, actPol.Subject.Members)
+	}
 }
 
-func TestResourcePolicyMap_MergeSameResource(t *testing.T) {
+func TestFlattenPolicy_NoResource(t *testing.T) {
+	pol1 := policysupport.PolicyInfo{
+		Meta:    policysupport.MetaInfo{Version: "0.5"},
+		Actions: []policysupport.ActionInfo{{ActionUri: "1act"}, {ActionUri: "2act"}},
+		Subject: policysupport.SubjectInfo{Members: []string{"1mem", "", "2mem"}},
+	}
+	pol2 := policysupport.PolicyInfo{
+		Meta:    policysupport.MetaInfo{Version: "0.5"},
+		Actions: []policysupport.ActionInfo{{ActionUri: "1act"}},
+		Subject: policysupport.SubjectInfo{Members: []string{"1mem", "2mem"}},
+		Object:  policysupport.ObjectInfo{ResourceID: "resource1"},
+	}
+
+	tests := []struct {
+		name          string
+		inputPolicies []policysupport.PolicyInfo
+		expLen        int
+	}{
+		{
+			name:          "Single policy without resource",
+			inputPolicies: []policysupport.PolicyInfo{pol1},
+		},
+		{
+			name:          "Two policies one with, one without resource",
+			inputPolicies: []policysupport.PolicyInfo{pol1, pol2},
+			expLen:        1,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			orig := tt.inputPolicies
+			actPolicies := providerscommon.FlattenPolicy(orig)
+			assert.NotNil(t, actPolicies)
+			assert.Len(t, actPolicies, tt.expLen)
+		})
+	}
+
+}
+
+func TestFlattenPolicy_NoActions(t *testing.T) {
+	pol1 := policysupport.PolicyInfo{
+		Meta:    policysupport.MetaInfo{Version: "0.5"},
+		Subject: policysupport.SubjectInfo{Members: []string{"1mem", "", "2mem"}},
+		Object:  policysupport.ObjectInfo{ResourceID: "resource1"},
+	}
+	orig := []policysupport.PolicyInfo{pol1}
+	actPolicies := providerscommon.FlattenPolicy(orig)
+	assert.NotNil(t, actPolicies)
+	assert.Equal(t, []policysupport.PolicyInfo{}, actPolicies)
+}
+
+func TestFlattenPolicy_NoMembers(t *testing.T) {
+	pol1 := policysupport.PolicyInfo{
+		Meta:    policysupport.MetaInfo{Version: "0.5"},
+		Actions: []policysupport.ActionInfo{{ActionUri: "1act"}, {ActionUri: "2act"}},
+		Object:  policysupport.ObjectInfo{ResourceID: "resource1"},
+	}
+	orig := []policysupport.PolicyInfo{pol1}
+	actPolicies := providerscommon.FlattenPolicy(orig)
+	assert.NotNil(t, actPolicies)
+	assert.Equal(t, 2, len(actPolicies))
+
+	expActions := []string{"1act", "2act"}
+	for i, actPol := range actPolicies {
+		assert.Equal(t, "resource1", actPol.Object.ResourceID)
+		assert.Equal(t, expActions[i], actPol.Actions[0].ActionUri)
+		assert.NotNil(t, actPol.Subject.Members)
+		assert.Equal(t, []string{}, actPol.Subject.Members)
+	}
+}
+
+func TestFlattenPolicy_MergeSameResourceAction(t *testing.T) {
 	pol1a := policysupport.PolicyInfo{
 		Meta: policysupport.MetaInfo{Version: "0.5"},
 		Actions: []policysupport.ActionInfo{
@@ -190,7 +293,7 @@ func TestResourcePolicyMap_MergeSameResource(t *testing.T) {
 	pol1b := policysupport.PolicyInfo{
 		Meta: policysupport.MetaInfo{Version: "0.5"},
 		Actions: []policysupport.ActionInfo{
-			{ActionUri: "3act"}, {ActionUri: "4act"}},
+			{ActionUri: "1act"}, {ActionUri: "2act"}},
 		Subject: policysupport.SubjectInfo{Members: []string{"3mem", "4mem"}},
 		Object:  policysupport.ObjectInfo{ResourceID: "resource1"},
 	}
@@ -204,28 +307,30 @@ func TestResourcePolicyMap_MergeSameResource(t *testing.T) {
 	}
 
 	orig := []policysupport.PolicyInfo{pol1a, pol2, pol1b}
-	actMap := providerscommon.ResourcePolicyMap(orig)
-	assert.NotNil(t, actMap)
-	assert.Equal(t, 2, len(actMap))
+	actPolicies := providerscommon.FlattenPolicy(orig)
+
+	assert.NotNil(t, actPolicies)
+	assert.Equal(t, 4, len(actPolicies))
 
 	expResource := "resource1"
-	expActionUris := []policysupport.ActionInfo{{ActionUri: "1act"}, {ActionUri: "2act"}, {ActionUri: "3act"}, {ActionUri: "4act"}}
 	expMembers := []string{"1mem", "2mem", "3mem", "4mem"}
-	actPol, found := actMap[expResource]
-	assert.True(t, found)
-	assert.NotNil(t, actPol)
-	assert.Equal(t, expResource, actPol.Object.ResourceID)
-	assert.Equal(t, expActionUris, actPol.Actions)
-	assert.Equal(t, expMembers, actPol.Subject.Members)
+	expActions := []string{"1act", "2act"}
+	for i := 0; i < len(expActions); i++ {
+		actPol := actPolicies[i]
+		assert.NotNil(t, actPol)
+		assert.Equal(t, expResource, actPol.Object.ResourceID)
+		assert.Equal(t, expActions[i], actPol.Actions[0].ActionUri)
+		assert.Equal(t, expMembers, actPol.Subject.Members)
+	}
 
 	expResource = "resource2"
-	expActionUris = []policysupport.ActionInfo{{ActionUri: "3act"}, {ActionUri: "4act"}}
 	expMembers = []string{"1mem", "2mem"}
-	actPol, found = actMap[expResource]
-	assert.True(t, found)
-	assert.NotNil(t, actPol)
-	assert.Equal(t, expResource, actPol.Object.ResourceID)
-	assert.Equal(t, expActionUris, actPol.Actions)
-	assert.Equal(t, expMembers, actPol.Subject.Members)
-
+	expActions = []string{"3act", "4act"}
+	for i := 0; i < len(expActions); i++ {
+		actPol := actPolicies[i+2]
+		assert.NotNil(t, actPol)
+		assert.Equal(t, expResource, actPol.Object.ResourceID)
+		assert.Equal(t, expActions[i], actPol.Actions[0].ActionUri)
+		assert.Equal(t, expMembers, actPol.Subject.Members)
+	}
 }

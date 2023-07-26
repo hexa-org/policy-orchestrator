@@ -2,17 +2,21 @@ package awsapigw
 
 import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awsapigw/dynamodbpolicy"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscognito"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/providerscommon"
 	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	log "golang.org/x/exp/slog"
 	"net/http"
 )
 
 type AwsApiGatewayProviderService struct {
 	cognitoClient awscognito.CognitoClient
+	policySvc     dynamodbpolicy.PolicyStoreSvc
 }
 
-func NewAwsApiGatewayProviderService(cognitoClient awscognito.CognitoClient) *AwsApiGatewayProviderService {
-	return &AwsApiGatewayProviderService{cognitoClient: cognitoClient}
+func NewAwsApiGatewayProviderService(cognitoClient awscognito.CognitoClient, policySvc dynamodbpolicy.PolicyStoreSvc) *AwsApiGatewayProviderService {
+	return &AwsApiGatewayProviderService{cognitoClient: cognitoClient, policySvc: policySvc}
 }
 
 func (s *AwsApiGatewayProviderService) DiscoverApplications(_ orchestrator.IntegrationInfo) ([]orchestrator.ApplicationInfo, error) {
@@ -20,6 +24,15 @@ func (s *AwsApiGatewayProviderService) DiscoverApplications(_ orchestrator.Integ
 }
 
 func (s *AwsApiGatewayProviderService) GetPolicyInfo(appInfo orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
+	rarList, err := s.policySvc.GetResourceRoles()
+	if err != nil {
+		log.Error("AwsApiGatewayProviderService.GetPolicyInfo", "error calling GetResourceRoles App.Name", appInfo.Name, "identifierUrl[0]", appInfo.Service, "err=", err)
+		return []policysupport.PolicyInfo{}, err
+	}
+	return providerscommon.BuildPolicies(rarList), nil
+}
+
+func (s *AwsApiGatewayProviderService) getPolicyInfoOld(appInfo orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
 	groups, err := s.cognitoClient.GetGroups(appInfo.ObjectID)
 	if err != nil {
 		return nil, err

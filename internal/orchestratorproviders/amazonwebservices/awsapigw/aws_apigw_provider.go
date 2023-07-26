@@ -3,6 +3,7 @@ package awsapigw
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awsapigw/dynamodbpolicy"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscognito"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscommon"
 	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
@@ -12,8 +13,9 @@ import (
 )
 
 type AwsApiGatewayProvider struct {
-	cognitoClientOverride awscognito.CognitoClient
-	hasOverrides          bool
+	cognitoClientOverride  awscognito.CognitoClient
+	policyStoreSvcOverride dynamodbpolicy.PolicyStoreSvc
+	hasOverrides           bool
 }
 
 type AwsApiGatewayProviderOpt func(provider *AwsApiGatewayProvider)
@@ -25,6 +27,12 @@ func WithCognitoClientOverride(cognitoClientOverride awscognito.CognitoClient) A
 	}
 }
 
+func WithPolicyStoreSvcOverride(policyStoreSvcOverride dynamodbpolicy.PolicyStoreSvc) AwsApiGatewayProviderOpt {
+	return func(provider *AwsApiGatewayProvider) {
+		provider.policyStoreSvcOverride = policyStoreSvcOverride
+		provider.hasOverrides = true
+	}
+}
 func NewAwsApiGatewayProvider(opts ...AwsApiGatewayProviderOpt) *AwsApiGatewayProvider {
 	provider := &AwsApiGatewayProvider{}
 	for _, opt := range opts {
@@ -81,16 +89,25 @@ func (a *AwsApiGatewayProvider) SetPolicyInfo(info orchestrator.IntegrationInfo,
 }
 
 func (a *AwsApiGatewayProvider) getProviderService(key []byte) (*AwsApiGatewayProviderService, error) {
-	var aCognitoClient awscognito.CognitoClient
+	var cognitoClient awscognito.CognitoClient
+	var policyStoreSvc dynamodbpolicy.PolicyStoreSvc
+	var err error
+
 	if a.hasOverrides {
-		aCognitoClient = a.cognitoClientOverride
+		cognitoClient = a.cognitoClientOverride
+		policyStoreSvc = a.policyStoreSvcOverride
 	} else {
-		var err error
-		aCognitoClient, err = awscognito.NewCognitoClient(key, awscommon.AWSClientOptions{})
+		cognitoClient, err = awscognito.NewCognitoClient(key, awscommon.AWSClientOptions{})
 		if err != nil {
 			return nil, err
 		}
+		dynamodbClient, err := dynamodbpolicy.NewDynamodbClient(key, awscommon.AWSClientOptions{})
+		if err != nil {
+			return nil, err
+		}
+
+		policyStoreSvc = dynamodbpolicy.NewPolicyStoreSvc(dynamodbClient)
 	}
 
-	return NewAwsApiGatewayProviderService(aCognitoClient), nil
+	return NewAwsApiGatewayProviderService(cognitoClient, policyStoreSvc), nil
 }
