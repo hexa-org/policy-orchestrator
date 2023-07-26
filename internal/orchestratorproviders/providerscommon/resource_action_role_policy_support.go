@@ -13,7 +13,7 @@ import (
 func CalcResourceActionRolesForUpdate(existing []ResourceActionRoles, policyInfos []policysupport.PolicyInfo) []ResourceActionRoles {
 
 	existingRarMap := mapResourceActionRoles(existing)
-	newPolicies := ResourcePolicyMap(policyInfos)
+	newPolicies := FlattenPolicy(policyInfos)
 
 	if len(existingRarMap) == 0 || len(newPolicies) == 0 {
 		return []ResourceActionRoles{}
@@ -21,7 +21,8 @@ func CalcResourceActionRolesForUpdate(existing []ResourceActionRoles, policyInfo
 
 	rarUpdateList := make([]ResourceActionRoles, 0)
 
-	for polResource, pol := range newPolicies {
+	for _, pol := range newPolicies {
+		polResource := pol.Object.ResourceID
 		polAction := pol.Actions[0].ActionUri
 		polRoles := pol.Subject.Members
 

@@ -4,6 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscognito"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscommon"
+	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/awstestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/cognitotestsupport"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -54,16 +55,16 @@ func TestListUserPools_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, pools)
 	assert.Len(t, pools, 1)
-	assert.Equal(t, cognitotestsupport.TestUserPoolId, pools[0].ObjectID)
-	assert.Equal(t, cognitotestsupport.TestResourceServerName, pools[0].Name)
-	assert.Equal(t, cognitotestsupport.TestResourceServerIdentifier, pools[0].Service)
+	assert.Equal(t, awstestsupport.TestUserPoolId, pools[0].ObjectID)
+	assert.Equal(t, awstestsupport.TestResourceServerName, pools[0].Name)
+	assert.Equal(t, awstestsupport.TestResourceServerIdentifier, pools[0].Service)
 	assert.Equal(t, "Cognito", pools[0].Description)
 	assert.True(t, mockHttpClient.VerifyCalled())
 
 }
 
 func cognitoClient(mockHttpClient *cognitotestsupport.MockCognitoHTTPClient) awscognito.CognitoClient {
-	info := cognitotestsupport.IntegrationInfo()
+	info := awstestsupport.IntegrationInfo()
 	client, _ := awscognito.NewCognitoClient(info.Key, awscommon.AWSClientOptions{
 		HTTPClient:   mockHttpClient,
 		DisableRetry: true})
