@@ -5,10 +5,12 @@ import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awsapigw"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/providerscommon"
+	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/awstestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"net/http"
 	"testing"
 )
 
@@ -109,6 +111,164 @@ func TestGetPolicyInfo(t *testing.T) {
 	}
 }
 
+func TestSetPolicyInfo_GetResourcesError(t *testing.T) {
+	policyStoreSvc := &mockPolicyStoreSvc{}
+	policyStoreSvc.expectGetResourceRoles(nil, errors.New("some-error"))
+	service := awsapigw.NewAwsApiGatewayProviderService(nil, policyStoreSvc)
+	appInfo := orchestrator.ApplicationInfo{}
+	status, err := service.SetPolicyInfo(appInfo, []policysupport.PolicyInfo{})
+	assert.ErrorContains(t, err, "some-error")
+	assert.Equal(t, http.StatusBadGateway, status)
+}
+
+func TestSetPolicyInfo_UpdateError(t *testing.T) {
+	policyStoreSvc := &mockPolicyStoreSvc{}
+	existingActionRoles := map[string][]string{
+		policytestsupport.ActionGetHrUs:    {"some-hr-role"},
+		policytestsupport.ActionGetProfile: {"some-profile-role"},
+	}
+	expReturnResourceRoles := policytestsupport.MakeRarList(existingActionRoles)
+	policyStoreSvc.expectGetResourceRoles(expReturnResourceRoles, nil)
+
+	newActionRoles := map[string][]string{
+		policytestsupport.ActionGetHrUs:    {"some-hr-role-new"},
+		policytestsupport.ActionGetProfile: {"some-profile-role-new"},
+	}
+	newResourceRoles := policytestsupport.MakeRarList(newActionRoles)
+	policyStoreSvc.expectUpdateResourceRoles(newResourceRoles[0], errors.New("some-error"))
+
+	policies := policytestsupport.MakeRoleSubjectTestPolicies(newActionRoles)
+
+	service := awsapigw.NewAwsApiGatewayProviderService(nil, policyStoreSvc)
+	appInfo := orchestrator.ApplicationInfo{}
+	status, err := service.SetPolicyInfo(appInfo, policies)
+	assert.ErrorContains(t, err, "some-error")
+	assert.Equal(t, http.StatusBadGateway, status)
+}
+
+func TestSetPolicyInfo_MultiplePolicies(t *testing.T) {
+	policyStoreSvc := &mockPolicyStoreSvc{}
+	existingActionRoles := map[string][]string{
+		policytestsupport.ActionGetHrUs:    {"some-hr-role"},
+		policytestsupport.ActionGetProfile: {"some-profile-role"},
+	}
+	expReturnResourceRoles := policytestsupport.MakeRarList(existingActionRoles)
+	policyStoreSvc.expectGetResourceRoles(expReturnResourceRoles, nil)
+
+	newActionRoles := map[string][]string{
+		policytestsupport.ActionGetHrUs:    {"some-hr-role-new"},
+		policytestsupport.ActionGetProfile: {"some-profile-role-new"},
+	}
+	newResourceRoles := policytestsupport.MakeRarList(newActionRoles)
+	policyStoreSvc.expectUpdateResourceRoles(newResourceRoles[0], nil)
+	policyStoreSvc.expectUpdateResourceRoles(newResourceRoles[1], nil)
+
+	policies := policytestsupport.MakeRoleSubjectTestPolicies(newActionRoles)
+
+	service := awsapigw.NewAwsApiGatewayProviderService(nil, policyStoreSvc)
+	appInfo := orchestrator.ApplicationInfo{}
+	status, err := service.SetPolicyInfo(appInfo, policies)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, status)
+}
+
+func TestSetPolicyInfo_UpdateInputPolicyOnly(t *testing.T) {
+	policyStoreSvc := &mockPolicyStoreSvc{}
+	existingActionRoles := map[string][]string{
+		policytestsupport.ActionGetHrUs:    {"some-hr-role"},
+		policytestsupport.ActionGetProfile: {"some-profile-role"},
+	}
+	expReturnResourceRoles := policytestsupport.MakeRarList(existingActionRoles)
+	policyStoreSvc.expectGetResourceRoles(expReturnResourceRoles, nil)
+
+	newActionRoles := map[string][]string{
+		policytestsupport.ActionGetProfile: {"some-profile-role-new"},
+	}
+	newResourceRoles := policytestsupport.MakeRarList(newActionRoles)
+	policyStoreSvc.expectUpdateResourceRoles(newResourceRoles[0], nil)
+
+	policies := policytestsupport.MakeRoleSubjectTestPolicies(newActionRoles)
+
+	service := awsapigw.NewAwsApiGatewayProviderService(nil, policyStoreSvc)
+	appInfo := orchestrator.ApplicationInfo{}
+	status, err := service.SetPolicyInfo(appInfo, policies)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, status)
+}
+
+func TestSetPolicyInfo_RemoveAllMembers(t *testing.T) {
+	policyStoreSvc := &mockPolicyStoreSvc{}
+	existingActionRoles := map[string][]string{
+		policytestsupport.ActionGetHrUs:    {"some-hr-role"},
+		policytestsupport.ActionGetProfile: {"some-profile-role"},
+	}
+	expReturnResourceRoles := policytestsupport.MakeRarList(existingActionRoles)
+	policyStoreSvc.expectGetResourceRoles(expReturnResourceRoles, nil)
+
+	newActionRoles := map[string][]string{
+		policytestsupport.ActionGetHrUs:    {},
+		policytestsupport.ActionGetProfile: {},
+	}
+	newResourceRoles := policytestsupport.MakeRarList(newActionRoles)
+	policyStoreSvc.expectUpdateResourceRoles(newResourceRoles[0], nil)
+	policyStoreSvc.expectUpdateResourceRoles(newResourceRoles[1], nil)
+
+	policies := policytestsupport.MakeRoleSubjectTestPolicies(newActionRoles)
+
+	service := awsapigw.NewAwsApiGatewayProviderService(nil, policyStoreSvc)
+	appInfo := orchestrator.ApplicationInfo{}
+	status, err := service.SetPolicyInfo(appInfo, policies)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, status)
+}
+
+func TestSetPolicyInfo_NoChange(t *testing.T) {
+	policyStoreSvc := &mockPolicyStoreSvc{}
+	existingActionRoles := map[string][]string{
+		policytestsupport.ActionGetHrUs:    {"some-hr-role"},
+		policytestsupport.ActionGetProfile: {"some-profile-role"},
+	}
+	expReturnResourceRoles := policytestsupport.MakeRarList(existingActionRoles)
+	policyStoreSvc.expectGetResourceRoles(expReturnResourceRoles, nil)
+
+	newActionRoles := map[string][]string{
+		policytestsupport.ActionGetHrUs:    {"some-hr-role"},
+		policytestsupport.ActionGetProfile: {"some-profile-role"},
+	}
+	policies := policytestsupport.MakeRoleSubjectTestPolicies(newActionRoles)
+
+	service := awsapigw.NewAwsApiGatewayProviderService(nil, policyStoreSvc)
+	appInfo := orchestrator.ApplicationInfo{}
+	status, err := service.SetPolicyInfo(appInfo, policies)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, status)
+}
+
+func TestSetPolicyInfo_AddsNewMembersAll(t *testing.T) {
+	policyStoreSvc := &mockPolicyStoreSvc{}
+	existingActionRoles := map[string][]string{
+		policytestsupport.ActionGetHrUs:    {},
+		policytestsupport.ActionGetProfile: {},
+	}
+	expReturnResourceRoles := policytestsupport.MakeRarList(existingActionRoles)
+	policyStoreSvc.expectGetResourceRoles(expReturnResourceRoles, nil)
+
+	newActionRoles := map[string][]string{
+		policytestsupport.ActionGetHrUs:    {"some-hr-role"},
+		policytestsupport.ActionGetProfile: {"some-profile-role"},
+	}
+	newResourceRoles := policytestsupport.MakeRarList(newActionRoles)
+	policyStoreSvc.expectUpdateResourceRoles(newResourceRoles[0], nil)
+	policyStoreSvc.expectUpdateResourceRoles(newResourceRoles[1], nil)
+	policies := policytestsupport.MakeRoleSubjectTestPolicies(newActionRoles)
+
+	service := awsapigw.NewAwsApiGatewayProviderService(nil, policyStoreSvc)
+	appInfo := orchestrator.ApplicationInfo{}
+	status, err := service.SetPolicyInfo(appInfo, policies)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, status)
+}
+
 type mockPolicyStoreSvc struct {
 	mock.Mock
 }
@@ -124,9 +284,13 @@ func (m *mockPolicyStoreSvc) GetResourceRoles() ([]providerscommon.ResourceActio
 
 func (m *mockPolicyStoreSvc) UpdateResourceRole(rar providerscommon.ResourceActionRoles) error {
 	args := m.Called(rar)
-	return args.Error(1)
+	return args.Error(0)
 }
 
 func (m *mockPolicyStoreSvc) expectGetResourceRoles(andReturn []providerscommon.ResourceActionRoles, orError error) {
 	m.On("GetResourceRoles").Return(andReturn, orError)
+}
+
+func (m *mockPolicyStoreSvc) expectUpdateResourceRoles(withResRole providerscommon.ResourceActionRoles, orError error) {
+	m.On("UpdateResourceRole", withResRole).Return(orError)
 }

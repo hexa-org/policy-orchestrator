@@ -7,6 +7,7 @@ import (
 	ddb "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awsapigw/dynamodbpolicy"
+	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/providerscommon"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -90,6 +91,32 @@ func TestGetResourceRoles_WithResourceRoles(t *testing.T) {
 	}
 }
 
+func TestPolicyStoreSvc_UpdateResourceRole_UpdateInputError(t *testing.T) {
+	rar := providerscommon.NewResourceActionRoles("  ", "GET", []string{})
+	svc := dynamodbpolicy.NewPolicyStoreSvc(nil)
+	err := svc.UpdateResourceRole(rar)
+	assert.ErrorContains(t, err, "empty resource")
+}
+
+func TestPolicyStoreSvc_UpdateResourceRole_DynamodbUpdateItemError(t *testing.T) {
+	client := newMockDynamodbClient()
+	rar := policytestsupport.MakeRar(policytestsupport.ActionGetHrUs, []string{"some-hr-role"})
+	input, _ := dynamodbpolicy.UpdateItemInput(rar)
+	client.expectUpdateItem(input, errors.New("some-error"))
+	svc := dynamodbpolicy.NewPolicyStoreSvc(client)
+	err := svc.UpdateResourceRole(rar)
+	assert.ErrorContains(t, err, "some-error")
+}
+
+func TestPolicyStoreSvc_UpdateResourceRole_Success(t *testing.T) {
+	client := newMockDynamodbClient()
+	rar := policytestsupport.MakeRar(policytestsupport.ActionGetHrUs, []string{"some-hr-role"})
+	client.expectUpdateItem(dynamodbpolicy.UpdateItemInput(rar))
+	svc := dynamodbpolicy.NewPolicyStoreSvc(client)
+	err := svc.UpdateResourceRole(rar)
+	assert.NoError(t, err)
+}
+
 type mockDynamodbClient struct {
 	mock.Mock
 }
@@ -111,6 +138,12 @@ func (m *mockDynamodbClient) UpdateItem(ctx context.Context, params *ddb.UpdateI
 func (m *mockDynamodbClient) expectScan(output *ddb.ScanOutput, err error) {
 	input := &ddb.ScanInput{TableName: &dynamodbpolicy.AwsPolicyStoreTableName}
 	m.On("Scan", context.TODO(), input, mock.AnythingOfType("[]func(*dynamodb.Options)")).
+		Return(output, err)
+}
+
+func (m *mockDynamodbClient) expectUpdateItem(params *ddb.UpdateItemInput, err error) {
+	output := &ddb.UpdateItemOutput{}
+	m.On("UpdateItem", context.TODO(), params, mock.AnythingOfType("[]func(*dynamodb.Options)")).
 		Return(output, err)
 }
 

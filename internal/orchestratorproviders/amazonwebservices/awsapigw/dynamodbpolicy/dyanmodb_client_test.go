@@ -2,12 +2,16 @@ package dynamodbpolicy_test
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	ddb "github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awsapigw/dynamodbpolicy"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscommon"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/awstestsupport"
 	"github.com/stretchr/testify/assert"
+	"net/http"
 	"testing"
+	"time"
 )
 
 var ddbTableName = "some-ddb-table"
@@ -25,7 +29,7 @@ func TestNewDynamodbClient_Success(t *testing.T) {
 }
 
 func TestScan(t *testing.T) {
-	client, _ := dynamodbpolicy.NewDynamodbClient(awstestsupport.AwsCredentialsForTest(), awscommon.AWSClientOptions{DisableRetry: true})
+	client := newDynamoDbClient()
 	input := &ddb.ScanInput{TableName: &ddbTableName}
 	out, err := client.Scan(context.TODO(), input)
 	assert.ErrorContains(t, err, "StatusCode: 400")
@@ -33,9 +37,19 @@ func TestScan(t *testing.T) {
 }
 
 func TestUpdateItem(t *testing.T) {
-	client, _ := dynamodbpolicy.NewDynamodbClient(awstestsupport.AwsCredentialsForTest(), awscommon.AWSClientOptions{DisableRetry: true})
-	input := &ddb.UpdateItemInput{TableName: &ddbTableName}
+	principalId, _ := attributevalue.Marshal("somePrincipal")
+	resource, _ := attributevalue.Marshal("someResource")
+	keyAttrVal := map[string]types.AttributeValue{"PrincipalId": principalId, "Resource": resource}
+	input := &ddb.UpdateItemInput{TableName: &ddbTableName, Key: keyAttrVal}
+
+	client := newDynamoDbClient()
 	out, err := client.UpdateItem(context.TODO(), input)
-	assert.Error(t, err)
+	assert.ErrorContains(t, err, "StatusCode: 400")
 	assert.Nil(t, out)
+}
+
+func newDynamoDbClient() dynamodbpolicy.DynamodbClient {
+	httpClient := &http.Client{Timeout: time.Second}
+	client, _ := dynamodbpolicy.NewDynamodbClient(awstestsupport.AwsCredentialsForTest(), awscommon.AWSClientOptions{DisableRetry: true, HTTPClient: httpClient})
+	return client
 }

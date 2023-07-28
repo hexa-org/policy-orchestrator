@@ -32,32 +32,24 @@ func (s *AwsApiGatewayProviderService) GetPolicyInfo(appInfo orchestrator.Applic
 	return providerscommon.BuildPolicies(rarList), nil
 }
 
-func (s *AwsApiGatewayProviderService) getPolicyInfoOld(appInfo orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
-	groups, err := s.cognitoClient.GetGroups(appInfo.ObjectID)
+func (s *AwsApiGatewayProviderService) SetPolicyInfo(appInfo orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) (int, error) {
+	rarList, err := s.policySvc.GetResourceRoles()
 	if err != nil {
-		return nil, err
+		log.Error("AwsApiGatewayProviderService.SetPolicyInfo", "error calling GetResourceRoles App.Name", appInfo.Name, "identifierUrl[0]", appInfo.Service, "err=", err)
+		return http.StatusBadGateway, err
 	}
 
-	var policies []policysupport.PolicyInfo
-	for groupName := range groups {
-		members, err := s.cognitoClient.GetMembersAssignedTo(appInfo, groupName)
+	rarUpdateList := providerscommon.CalcResourceActionRolesForUpdate(rarList, policyInfos)
+	for _, rar := range rarUpdateList {
+		err = s.policySvc.UpdateResourceRole(rar)
 		if err != nil {
-			return nil, err
+			return http.StatusBadGateway, err
 		}
-		policies = append(policies, policysupport.PolicyInfo{
-			Meta:    policysupport.MetaInfo{Version: "0.5"},
-			Actions: []policysupport.ActionInfo{{groupName}},
-			Subject: policysupport.SubjectInfo{Members: members},
-			Object: policysupport.ObjectInfo{
-				ResourceID: appInfo.Name,
-			},
-		})
 	}
-
-	return policies, nil
+	return http.StatusCreated, nil
 }
 
-func (s *AwsApiGatewayProviderService) SetPolicyInfo(appInfo orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) (int, error) {
+func (s *AwsApiGatewayProviderService) setPolicyInfoOld(appInfo orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) (int, error) {
 	allGroups, err := s.cognitoClient.GetGroups(appInfo.ObjectID)
 	if err != nil {
 		return http.StatusInternalServerError, err

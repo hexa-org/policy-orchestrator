@@ -49,6 +49,14 @@ func (service ApplicationsService) Apply(jsonRequest Orchestration) error {
 		return getFroErr
 	}
 
+	if isBetweenAmazonAndAzure(toProvider, fromProvider) {
+		status, setErr := toProvider.SetPolicyInfo(toIntegration, toApplication, fromPolicies)
+		if setErr != nil || status != http.StatusCreated {
+			return setErr
+		}
+		return nil
+	}
+
 	toPolicies, getToErr := toProvider.GetPolicyInfo(toIntegration, toApplication)
 	if getToErr != nil {
 		return getToErr
@@ -138,6 +146,20 @@ func onlyWorksWithGoogleAndAzure(toProvider Provider, fromProvider Provider) boo
 		return true
 	}
 	if toProvider.Name() == "azure" && fromProvider.Name() == "google_cloud" {
+		return true
+	}
+	// TODO - Check this with Gerry
+	if isBetweenAmazonAndAzure(toProvider, fromProvider) {
+		return true
+	}
+	return false
+}
+
+func isBetweenAmazonAndAzure(toProvider Provider, fromProvider Provider) bool {
+	if toProvider.Name() == "amazon" && fromProvider.Name() == "azure" {
+		return true
+	}
+	if toProvider.Name() == "azure" && fromProvider.Name() == "amazon" {
 		return true
 	}
 	return false

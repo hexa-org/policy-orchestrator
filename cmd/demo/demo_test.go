@@ -130,7 +130,6 @@ func appIdsToOrchestrate(fromBundleUrl, toBundleUrl string) (fromAppId, toAppId 
 	apps := listApplications()
 
 	for _, oneApp := range apps.Applications {
-		log.Println("oneApp.ID=", oneApp.ID, "ObjectID=", oneApp.ObjectId)
 		switch oneApp.ObjectId {
 		case fromResourceId:
 			fromAppId = oneApp.ID
