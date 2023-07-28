@@ -23,12 +23,8 @@ func NewResourceActionRoles(resource, httpMethod string, roles []string) Resourc
 		return ResourceActionRoles{}
 	}
 
-	res, _ := strings.CutPrefix(resource, "/")
-	return ResourceActionRoles{
-		Action:   httpMethod,
-		Resource: "/" + res,
-		Roles:    roles,
-	}
+	//res, _ := strings.CutPrefix(resource, "/")
+	return newResourceActionRoles(resource, httpMethod, roles)
 }
 
 func NewResourceActionUriRoles(resource, actionUri string, roles []string) ResourceActionRoles {
@@ -38,7 +34,8 @@ func NewResourceActionUriRoles(resource, actionUri string, roles []string) Resou
 		return ResourceActionRoles{}
 	}
 
-	return NewResourceActionRoles(resource, httpMethod, roles)
+	//res, _ := strings.CutPrefix(resource, "/")
+	return newResourceActionRoles(resource, httpMethod, roles)
 }
 
 // NewResourceActionRolesFromProviderValue
@@ -61,10 +58,23 @@ func NewResourceActionRolesFromProviderValue(resActionKey string, roles []string
 	}
 
 	resource := strings.Join(parts[2:], "/")
+	return newResourceActionRoles(resource, httpMethod, roles)
+}
+
+func newResourceActionRoles(resource, action string, roles []string) ResourceActionRoles {
+	// TODO - Check if resource itself is "/"
+	if strings.TrimSpace(resource) == "" || strings.TrimSpace(action) == "" {
+		log.Warn("newResourceActionRoles empty resource or action", "resource", resource, "action", action)
+		return ResourceActionRoles{}
+	}
+
+	res := strings.TrimSpace(resource)
+	res, _ = strings.CutPrefix(res, "/")
+
 	return ResourceActionRoles{
-		Action:   httpMethod,
-		Resource: "/" + resource,
-		Roles:    roles,
+		Action:   action,
+		Resource: "/" + strings.TrimSpace(res),
+		Roles:    SanitizeMembers(roles),
 	}
 }
 
@@ -85,6 +95,17 @@ func (nv ResourceActionRoles) Value() string {
 // convert policy actionUri to rarKey e.g. "resrol-httpget-humanresources-us"
 func MakeRarKeyForPolicy(actionUri, resource string) string {
 	return makeRarKey(actionUri, resource, ActionUriPrefix)
+}
+
+func SanitizeMembers(members []string) []string {
+	sanitizedMembers := make([]string, 0)
+	for _, mem := range members {
+		if strings.TrimSpace(mem) == "" {
+			continue
+		}
+		sanitizedMembers = append(sanitizedMembers, strings.TrimSpace(mem))
+	}
+	return sanitizedMembers
 }
 
 func makeRarKey(action, resource, actionPrefix string) string {

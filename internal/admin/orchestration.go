@@ -31,14 +31,15 @@ func (p orchestrationHandler) New(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	/// todo - remove once working across providers
-	available := make([]Application, 0)
+	// TODO - Check this with Gerry
+	/*available := make([]Application, 0)
 	for _, app := range foundApplications {
 		if app.ProviderName == "google_cloud" || app.ProviderName == "open_policy_agent" || app.ProviderName == "azure" {
 			available = append(available, app)
 		}
-	}
+	}*/
 
-	model := websupport.Model{Map: map[string]interface{}{"resource": "orchestration", "applications": available}}
+	model := websupport.Model{Map: map[string]interface{}{"resource": "orchestration", "applications": foundApplications}}
 	_ = websupport.ModelAndView(w, &resources, "orchestration_new", model)
 }
 

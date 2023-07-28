@@ -43,7 +43,7 @@ func NewApimNamedValueSvc(subscriptionID string, credential azcore.TokenCredenti
 }
 
 func (svc *apimNamedValueSvc) GetResourceRoles(s armmodel.ApimServiceInfo) ([]providerscommon.ResourceActionRoles, error) {
-	log.Info("GetResourceRoles", "service", s)
+	log.Info("ApimNamedValueSvc.GetResourceRoles", "service", s)
 	if s.ResourceGroup == "" || s.Name == "" {
 		return []providerscommon.ResourceActionRoles{}, nil
 	}
@@ -54,7 +54,7 @@ func (svc *apimNamedValueSvc) GetResourceRoles(s armmodel.ApimServiceInfo) ([]pr
 }
 
 func (svc *apimNamedValueSvc) UpdateResourceRole(s armmodel.ApimServiceInfo, nv providerscommon.ResourceActionRoles) error {
-	log.Info("UpdateResourceRole", "service", s)
+	log.Info("ApimNamedValueSvc.UpdateResourceRole", "service", s)
 	if s.ResourceGroup == "" || s.Name == "" {
 		return errors.New("UpdateResourceRole resourceGroup or service Name is null")
 	}
@@ -84,7 +84,7 @@ func apimResourceRolesMapper() func(page azarmapim.NamedValueClientListByService
 		for _, nv := range page.Value {
 			roles, err := nvValueToArray(*nv.Properties.Value)
 			if err != nil {
-				log.Info("ignoring apim.NamedValue non-array value", "ValueStr", *nv.Properties.Value, "Err", err)
+				log.Info("ApimNamedValueSvc.apimResourceRolesMapper ignoring apim.NamedValue non-array value", "ValueStr", *nv.Properties.Value, "Err", err)
 			}
 			one := providerscommon.NewResourceActionRolesFromProviderValue(*nv.Name, roles)
 			resRoles = append(resRoles, one)

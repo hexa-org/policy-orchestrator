@@ -53,7 +53,14 @@ func (p *policyStoreSvc) GetResourceRoles() ([]providerscommon.ResourceActionRol
 }
 
 func (p *policyStoreSvc) UpdateResourceRole(rar providerscommon.ResourceActionRoles) error {
-	return p.UpdateResourceRole(rar)
+	input, err := UpdateItemInput(rar)
+	if err != nil {
+		return err
+	}
+
+	// TODO - process output
+	_, err = p.client.UpdateItem(context.TODO(), input)
+	return err
 }
 
 type resourcePolicyItem struct {
