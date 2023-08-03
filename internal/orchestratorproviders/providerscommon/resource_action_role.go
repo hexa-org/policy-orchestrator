@@ -23,7 +23,6 @@ func NewResourceActionRoles(resource, httpMethod string, roles []string) Resourc
 		return ResourceActionRoles{}
 	}
 
-	//res, _ := strings.CutPrefix(resource, "/")
 	return newResourceActionRoles(resource, httpMethod, roles)
 }
 
@@ -34,7 +33,6 @@ func NewResourceActionUriRoles(resource, actionUri string, roles []string) Resou
 		return ResourceActionRoles{}
 	}
 
-	//res, _ := strings.CutPrefix(resource, "/")
 	return newResourceActionRoles(resource, httpMethod, roles)
 }
 
@@ -109,6 +107,12 @@ func SanitizeMembers(members []string) []string {
 }
 
 func makeRarKey(action, resource, actionPrefix string) string {
+	// TODO - Check if resource itself is "/"
+	if strings.TrimSpace(resource) == "" || strings.TrimSpace(action) == "" {
+		log.Warn("makeRarKey empty resource or action", "resource", resource, "action", action)
+		return ""
+	}
+	
 	resNoPrefix, _ := strings.CutPrefix(resource, "/")
 	httpMethod := getHttpMethod(action, actionPrefix)
 	if httpMethod == "" {
