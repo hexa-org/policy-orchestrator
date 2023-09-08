@@ -5,7 +5,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awsapigw"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/providerscommon"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/awstestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/assert"
@@ -116,7 +116,7 @@ func TestSetPolicyInfo_GetResourcesError(t *testing.T) {
 	policyStoreSvc.expectGetResourceRoles(nil, errors.New("some-error"))
 	service := awsapigw.NewAwsApiGatewayProviderService(nil, policyStoreSvc)
 	appInfo := orchestrator.ApplicationInfo{}
-	status, err := service.SetPolicyInfo(appInfo, []policysupport.PolicyInfo{})
+	status, err := service.SetPolicyInfo(appInfo, []hexapolicy.PolicyInfo{})
 	assert.ErrorContains(t, err, "some-error")
 	assert.Equal(t, http.StatusBadGateway, status)
 }

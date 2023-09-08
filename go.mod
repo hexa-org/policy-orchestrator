@@ -9,7 +9,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.2.2
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/apimanagement/armapimanagement v1.1.1
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.1.1
-	github.com/alecthomas/assert/v2 v2.0.3
+	github.com/alecthomas/assert/v2 v2.3.0
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/aws/aws-sdk-go-v2 v1.19.0
 	github.com/aws/aws-sdk-go-v2/config v1.14.0
@@ -29,7 +29,7 @@ require (
 	github.com/gorilla/sessions v1.2.1
 	github.com/hiyosi/hawk v1.0.1
 	github.com/lib/pq v1.10.7
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	google.golang.org/api v0.112.0
 	google.golang.org/genproto v0.0.0-20230303212802-e74f57abe488
@@ -41,7 +41,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.2.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v0.9.0 // indirect
-	github.com/alecthomas/repr v0.1.0 // indirect
+	github.com/alecthomas/repr v0.2.0 // indirect
 	github.com/antlr/antlr4/runtime/Go/antlr v1.4.10 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.11.0 // indirect
@@ -68,6 +68,7 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.7.0 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
+	github.com/hexa-org/policy-mapper/hexaIdql v0.0.0-20230907182010-e4027b79cc40 // indirect
 	github.com/hexops/gotextdiff v1.0.3 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/kr/text v0.2.0 // indirect

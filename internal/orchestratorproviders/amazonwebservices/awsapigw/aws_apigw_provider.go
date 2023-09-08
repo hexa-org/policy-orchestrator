@@ -6,7 +6,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awsapigw/dynamodbpolicy"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscognito"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscommon"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	log "golang.org/x/exp/slog"
 	"net/http"
 	"strings"
@@ -59,16 +59,16 @@ func (a *AwsApiGatewayProvider) DiscoverApplications(integrationInfo orchestrato
 	return service.DiscoverApplications(integrationInfo)
 }
 
-func (a *AwsApiGatewayProvider) GetPolicyInfo(info orchestrator.IntegrationInfo, appInfo orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
+func (a *AwsApiGatewayProvider) GetPolicyInfo(info orchestrator.IntegrationInfo, appInfo orchestrator.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
 	service, err := a.getProviderService(info.Key)
 	if err != nil {
 		log.Error("AwsApiGatewayProvider.GetPolicyInfo", "getProviderService err", err)
-		return []policysupport.PolicyInfo{}, err
+		return []hexapolicy.PolicyInfo{}, err
 	}
 	return service.GetPolicyInfo(appInfo)
 }
 
-func (a *AwsApiGatewayProvider) SetPolicyInfo(info orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) (status int, foundErr error) {
+func (a *AwsApiGatewayProvider) SetPolicyInfo(info orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (status int, foundErr error) {
 	validate := validator.New()
 	err := validate.Struct(applicationInfo)
 	if err != nil {

@@ -10,8 +10,8 @@ import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscommon"
 
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 
 	"io/ioutil"
 	"log"
@@ -85,7 +85,7 @@ type Object struct {
 	ResourceID string `json:"resource_id"`
 }
 
-func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, appInfo orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
+func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, appInfo orchestrator.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
 	key := integration.Key
 	client, err := o.ConfigureClient(key)
 	if err != nil {
@@ -106,19 +106,19 @@ func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, ap
 		return nil, unmarshalErr
 	}
 
-	var hexaPolicies []policysupport.PolicyInfo
+	var hexaPolicies []hexapolicy.PolicyInfo
 	for _, p := range policies.Policies {
-		var actions []policysupport.ActionInfo
+		var actions []hexapolicy.ActionInfo
 		for _, a := range p.Actions {
-			actions = append(actions, policysupport.ActionInfo{ActionUri: a.ActionUri})
+			actions = append(actions, hexapolicy.ActionInfo{ActionUri: a.ActionUri})
 		}
-		hexaPolicies = append(hexaPolicies, policysupport.PolicyInfo{
-			Meta:    policysupport.MetaInfo{Version: p.Meta.Version},
+		hexaPolicies = append(hexaPolicies, hexapolicy.PolicyInfo{
+			Meta:    hexapolicy.MetaInfo{Version: p.Meta.Version},
 			Actions: actions,
-			Subject: policysupport.SubjectInfo{
+			Subject: hexapolicy.SubjectInfo{
 				Members: p.Subject.Members,
 			},
-			Object: policysupport.ObjectInfo{
+			Object: hexapolicy.ObjectInfo{
 				ResourceID: appInfo.ObjectID, // todo - for now, ensures the correct resource identifier
 			},
 		})
@@ -126,7 +126,7 @@ func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, ap
 	return hexaPolicies, nil
 }
 
-func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, appInfo orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) (int, error) {
+func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, appInfo orchestrator.ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (int, error) {
 	validate := validator.New() // todo - move this up?
 	errApp := validate.Struct(appInfo)
 	if errApp != nil {

@@ -1,8 +1,8 @@
 package providerscommon
 
 import (
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/functionalsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"golang.org/x/exp/slices"
 	log "golang.org/x/exp/slog"
 	"sort"
@@ -11,17 +11,17 @@ import (
 
 const ActionUriPrefix = "http:"
 
-func BuildPolicies(resourceActionRolesList []ResourceActionRoles) []policysupport.PolicyInfo {
-	policies := make([]policysupport.PolicyInfo, 0)
+func BuildPolicies(resourceActionRolesList []ResourceActionRoles) []hexapolicy.PolicyInfo {
+	policies := make([]hexapolicy.PolicyInfo, 0)
 	for _, one := range resourceActionRolesList {
 		httpMethod := one.Action
 		roles := one.Roles
 		slices.Sort(roles)
-		policies = append(policies, policysupport.PolicyInfo{
-			Meta:    policysupport.MetaInfo{Version: "0.5"},
-			Actions: []policysupport.ActionInfo{{ActionUriPrefix + httpMethod}},
-			Subject: policysupport.SubjectInfo{Members: roles},
-			Object:  policysupport.ObjectInfo{ResourceID: one.Resource},
+		policies = append(policies, hexapolicy.PolicyInfo{
+			Meta:    hexapolicy.MetaInfo{Version: "0.5"},
+			Actions: []hexapolicy.ActionInfo{{ActionUriPrefix + httpMethod}},
+			Subject: hexapolicy.SubjectInfo{Members: roles},
+			Object:  hexapolicy.ObjectInfo{ResourceID: one.Resource},
 		})
 	}
 
@@ -29,9 +29,9 @@ func BuildPolicies(resourceActionRolesList []ResourceActionRoles) []policysuppor
 	return policies
 }
 
-func FlattenPolicy(origPolicies []policysupport.PolicyInfo) []policysupport.PolicyInfo {
+func FlattenPolicy(origPolicies []hexapolicy.PolicyInfo) []hexapolicy.PolicyInfo {
 
-	resActionPolicyMap := make(map[string]policysupport.PolicyInfo)
+	resActionPolicyMap := make(map[string]hexapolicy.PolicyInfo)
 	for _, pol := range origPolicies {
 		resource := pol.Object.ResourceID
 		if resource == "" {
@@ -50,18 +50,18 @@ func FlattenPolicy(origPolicies []policysupport.PolicyInfo) []policysupport.Poli
 				existingMembers = matchingPolicy.Subject.Members
 			}
 			newMembers := CompactMembers(existingMembers, pol.Subject.Members)
-			newPol := policysupport.PolicyInfo{
-				Meta:    policysupport.MetaInfo{Version: "0.5"},
-				Actions: []policysupport.ActionInfo{{ActionUri: act.ActionUri}},
-				Subject: policysupport.SubjectInfo{Members: newMembers},
-				Object:  policysupport.ObjectInfo{ResourceID: resource},
+			newPol := hexapolicy.PolicyInfo{
+				Meta:    hexapolicy.MetaInfo{Version: "0.5"},
+				Actions: []hexapolicy.ActionInfo{{ActionUri: act.ActionUri}},
+				Subject: hexapolicy.SubjectInfo{Members: newMembers},
+				Object:  hexapolicy.ObjectInfo{ResourceID: resource},
 			}
 
 			resActionPolicyMap[lookupKey] = newPol
 		}
 	}
 
-	flat := make([]policysupport.PolicyInfo, 0)
+	flat := make([]hexapolicy.PolicyInfo, 0)
 	for _, pol := range resActionPolicyMap {
 		flat = append(flat, pol)
 	}
@@ -70,7 +70,7 @@ func FlattenPolicy(origPolicies []policysupport.PolicyInfo) []policysupport.Poli
 	return flat
 }
 
-func CompactActions(existing, new []policysupport.ActionInfo) []policysupport.ActionInfo {
+func CompactActions(existing, new []hexapolicy.ActionInfo) []hexapolicy.ActionInfo {
 	actionUris := make([]string, 0)
 	for _, act := range existing {
 		actionUris = append(actionUris, act.ActionUri)
@@ -80,9 +80,9 @@ func CompactActions(existing, new []policysupport.ActionInfo) []policysupport.Ac
 	}
 	actionUris = functionalsupport.SortCompact(actionUris)
 
-	actionInfos := make([]policysupport.ActionInfo, 0)
+	actionInfos := make([]hexapolicy.ActionInfo, 0)
 	for _, uri := range actionUris {
-		actionInfos = append(actionInfos, policysupport.ActionInfo{
+		actionInfos = append(actionInfos, hexapolicy.ActionInfo{
 			ActionUri: uri,
 		})
 	}
@@ -96,7 +96,7 @@ func CompactMembers(existing, new []string) []string {
 	return functionalsupport.SortCompact(compacted)
 }
 
-func sortPolicies(policies []policysupport.PolicyInfo) {
+func sortPolicies(policies []hexapolicy.PolicyInfo) {
 	sort.SliceStable(policies, func(i, j int) bool {
 		resComp := strings.Compare(policies[i].Object.ResourceID, policies[j].Object.ResourceID)
 		actComp := strings.Compare(policies[i].Actions[0].ActionUri, policies[j].Actions[0].ActionUri)
@@ -115,12 +115,12 @@ func sortPolicies(policies []policysupport.PolicyInfo) {
 // If multiple PolicyInfo elements exist for a given resource, these are merged
 // This ensures downstream functions do not have to deal with multiple policies for same resource.
 // Also filters out any empty strings or duplicates in members or actions
-func ResourcePolicyMap(origPolicies []policysupport.PolicyInfo) map[string]policysupport.PolicyInfo {
-	resPolicyMap := make(map[string]policysupport.PolicyInfo)
+func ResourcePolicyMap(origPolicies []hexapolicy.PolicyInfo) map[string]hexapolicy.PolicyInfo {
+	resPolicyMap := make(map[string]hexapolicy.PolicyInfo)
 	for _, pol := range origPolicies {
 		resource := pol.Object.ResourceID
 
-		var existingActions []policysupport.ActionInfo
+		var existingActions []hexapolicy.ActionInfo
 		var existingMembers []string
 		if existing, exists := resPolicyMap[resource]; exists {
 			existingActions = existing.Actions
@@ -130,11 +130,11 @@ func ResourcePolicyMap(origPolicies []policysupport.PolicyInfo) map[string]polic
 		mergedActions := CompactActions(existingActions, pol.Actions)
 		newMembers := CompactMembers(existingMembers, pol.Subject.Members)
 
-		newPol := policysupport.PolicyInfo{
-			Meta:    policysupport.MetaInfo{Version: "0.5"},
+		newPol := hexapolicy.PolicyInfo{
+			Meta:    hexapolicy.MetaInfo{Version: "0.5"},
 			Actions: mergedActions,
-			Subject: policysupport.SubjectInfo{Members: newMembers},
-			Object:  policysupport.ObjectInfo{ResourceID: resource},
+			Subject: hexapolicy.SubjectInfo{Members: newMembers},
+			Object:  hexapolicy.ObjectInfo{ResourceID: resource},
 		}
 
 		resPolicyMap[resource] = newPol

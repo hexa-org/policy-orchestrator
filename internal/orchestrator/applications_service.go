@@ -2,7 +2,7 @@ package orchestrator
 
 import (
 	"errors"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"net/http"
 	"strings"
 )
@@ -87,7 +87,7 @@ func (service ApplicationsService) Apply(jsonRequest Orchestration) error {
 	return nil
 }
 
-func (service ApplicationsService) RetainResource(fromPolicies, toPolicies []policysupport.PolicyInfo) ([]policysupport.PolicyInfo, error) {
+func (service ApplicationsService) RetainResource(fromPolicies, toPolicies []hexapolicy.PolicyInfo) ([]hexapolicy.PolicyInfo, error) {
 	var firstResourceId string
 
 	resourceIds := make([]string, 0)
@@ -100,11 +100,11 @@ func (service ApplicationsService) RetainResource(fromPolicies, toPolicies []pol
 
 	for _, foundResourceId := range resourceIds {
 		if firstResourceId != foundResourceId {
-			return []policysupport.PolicyInfo{}, errors.New("sorry, found more than one resource id within policies")
+			return []hexapolicy.PolicyInfo{}, errors.New("sorry, found more than one resource id within policies")
 		}
 	}
 
-	modified := make([]policysupport.PolicyInfo, 0)
+	modified := make([]hexapolicy.PolicyInfo, 0)
 	for _, policy := range fromPolicies {
 		policy.Object.ResourceID = firstResourceId
 		modified = append(modified, policy)
@@ -112,19 +112,19 @@ func (service ApplicationsService) RetainResource(fromPolicies, toPolicies []pol
 	return modified, nil
 }
 
-func (service ApplicationsService) RetainAction(fromPolicies, toPolicies []policysupport.PolicyInfo) ([]policysupport.PolicyInfo, error) {
+func (service ApplicationsService) RetainAction(fromPolicies, toPolicies []hexapolicy.PolicyInfo) ([]hexapolicy.PolicyInfo, error) {
 	firstActionUri := toPolicies[0].Actions[0].ActionUri // todo update to handle all action uris from toProvider
 
-	modified := make([]policysupport.PolicyInfo, 0)
+	modified := make([]hexapolicy.PolicyInfo, 0)
 	for _, policy := range fromPolicies {
-		policy.Actions = make([]policysupport.ActionInfo, 1)
+		policy.Actions = make([]hexapolicy.ActionInfo, 1)
 		policy.Actions[0].ActionUri = firstActionUri
 		modified = append(modified, policy)
 	}
 	return modified, nil
 }
 
-func verifyAllMembersAreUsers(policies []policysupport.PolicyInfo) bool {
+func verifyAllMembersAreUsers(policies []hexapolicy.PolicyInfo) bool {
 	var areMembersUsers bool
 	for _, policy := range policies {
 		for _, member := range policy.Subject.Members {

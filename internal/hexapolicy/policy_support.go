@@ -1,4 +1,4 @@
-package policysupport
+package hexapolicy
 
 // todo - longer name used here to simplify a refactoring
 

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator/test"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"testing"
 	"time"
 
@@ -123,10 +123,10 @@ func (f fakeProvider) DiscoverApplications(info orchestrator.IntegrationInfo) ([
 	return f.discoveredApplications, nil
 }
 
-func (f fakeProvider) GetPolicyInfo(info orchestrator.IntegrationInfo, info2 orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
+func (f fakeProvider) GetPolicyInfo(info orchestrator.IntegrationInfo, info2 orchestrator.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
 	panic("implement me")
 }
 
-func (f fakeProvider) SetPolicyInfo(info orchestrator.IntegrationInfo, info2 orchestrator.ApplicationInfo, infos []policysupport.PolicyInfo) (status int, foundErr error) {
+func (f fakeProvider) SetPolicyInfo(info orchestrator.IntegrationInfo, info2 orchestrator.ApplicationInfo, infos []hexapolicy.PolicyInfo) (status int, foundErr error) {
 	panic("implement me")
 }

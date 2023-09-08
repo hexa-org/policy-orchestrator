@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/googlecloud"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 	"github.com/stretchr/testify/assert"
 )
@@ -145,8 +145,8 @@ func TestGoogleClient_GetBackendPolicies_withBadJson(t *testing.T) {
 }
 
 func TestGoogleClient_SetAppEnginePolicies(t *testing.T) {
-	policy := policysupport.PolicyInfo{
-		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"roles/iap.httpsResourceAccessor"}}, Subject: policysupport.SubjectInfo{Members: []string{"aUser"}}, Object: policysupport.ObjectInfo{
+	policy := hexapolicy.PolicyInfo{
+		Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"roles/iap.httpsResourceAccessor"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"aUser"}}, Object: hexapolicy.ObjectInfo{
 			ResourceID: "anObjectId",
 		},
 	}
@@ -172,8 +172,8 @@ func TestGoogleClient_SetAppEnginePolicies(t *testing.T) {
 }
 
 func TestGoogleClient_SetBackendPolicies(t *testing.T) {
-	policy := policysupport.PolicyInfo{
-		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"gcp:roles/iap.httpsResourceAccessor"}}, Subject: policysupport.SubjectInfo{Members: []string{"aUser"}}, Object: policysupport.ObjectInfo{
+	policy := hexapolicy.PolicyInfo{
+		Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"gcp:roles/iap.httpsResourceAccessor"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"aUser"}}, Object: hexapolicy.ObjectInfo{
 			ResourceID: "anObjectId",
 		},
 	}
@@ -197,8 +197,8 @@ func TestGoogleClient_SetBackendPolicies(t *testing.T) {
 }
 
 func TestGoogleClient_SetBackendPolicies_withRequestError(t *testing.T) {
-	policy := policysupport.PolicyInfo{
-		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"gcp:roles/iap.httpsResourceAccessor"}}, Subject: policysupport.SubjectInfo{Members: []string{"aUser"}}, Object: policysupport.ObjectInfo{
+	policy := hexapolicy.PolicyInfo{
+		Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"gcp:roles/iap.httpsResourceAccessor"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"aUser"}}, Object: hexapolicy.ObjectInfo{
 			ResourceID: "anObjectId",
 		},
 	}

@@ -5,7 +5,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscommon"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/awstestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/cognitotestsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
@@ -151,11 +151,11 @@ func TestSetPolicy_withInvalidArguments(t *testing.T) {
 	status, err := p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "azure", Key: key},
 		orchestrator.ApplicationInfo{Name: "anAppName", Description: "anAppId"},
-		[]policysupport.PolicyInfo{{
-			Meta:    policysupport.MetaInfo{Version: "0"},
-			Actions: []policysupport.ActionInfo{{"azure:anAppRoleId"}},
-			Subject: policysupport.SubjectInfo{Members: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
-			Object: policysupport.ObjectInfo{
+		[]hexapolicy.PolicyInfo{{
+			Meta:    hexapolicy.MetaInfo{Version: "0"},
+			Actions: []hexapolicy.ActionInfo{{"azure:anAppRoleId"}},
+			Subject: hexapolicy.SubjectInfo{Members: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
+			Object: hexapolicy.ObjectInfo{
 				ResourceID: "anObjectId",
 			},
 		}})
@@ -166,11 +166,11 @@ func TestSetPolicy_withInvalidArguments(t *testing.T) {
 	status, err = p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "azure", Key: key},
 		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"},
-		[]policysupport.PolicyInfo{{
-			Meta:    policysupport.MetaInfo{Version: "0"},
-			Actions: []policysupport.ActionInfo{{"azure:anAppRoleId"}},
-			Subject: policysupport.SubjectInfo{Members: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
-			Object:  policysupport.ObjectInfo{},
+		[]hexapolicy.PolicyInfo{{
+			Meta:    hexapolicy.MetaInfo{Version: "0"},
+			Actions: []hexapolicy.ActionInfo{{"azure:anAppRoleId"}},
+			Subject: hexapolicy.SubjectInfo{Members: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
+			Object:  hexapolicy.ObjectInfo{},
 		}})
 
 	assert.Equal(t, http.StatusInternalServerError, status)
@@ -182,7 +182,7 @@ func TestSetPolicyInfo_CognitoClientError(t *testing.T) {
 	info := awstestsupport.IntegrationInfo()
 	info.Key = []byte("!!!!")
 	appInfo := awstestsupport.AppInfo()
-	_, err := p.SetPolicyInfo(info, appInfo, []policysupport.PolicyInfo{})
+	_, err := p.SetPolicyInfo(info, appInfo, []hexapolicy.PolicyInfo{})
 	assert.Error(t, err)
 	assert.ErrorContains(t, err, "invalid character '!'")
 }
@@ -197,7 +197,7 @@ func TestSetPolicyInfo_ListGroupsError(t *testing.T) {
 
 	info := awstestsupport.IntegrationInfo()
 	appInfo := awstestsupport.AppInfo()
-	_, err := p.SetPolicyInfo(info, appInfo, []policysupport.PolicyInfo{})
+	_, err := p.SetPolicyInfo(info, appInfo, []hexapolicy.PolicyInfo{})
 	assert.Error(t, err)
 	assert.ErrorContains(t, err, "ListGroups")
 	assert.ErrorContains(t, err, "error StatusCode: 400")
@@ -215,7 +215,7 @@ func TestSetPolicyInfo_NoPoliciesInput(t *testing.T) {
 
 	info := awstestsupport.IntegrationInfo()
 	appInfo := awstestsupport.AppInfo()
-	status, err := p.SetPolicyInfo(info, appInfo, []policysupport.PolicyInfo{})
+	status, err := p.SetPolicyInfo(info, appInfo, []hexapolicy.PolicyInfo{})
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, status)
 }

@@ -4,7 +4,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"sort"
 )
@@ -79,7 +79,7 @@ func AssignmentsForDelete(assignments []azad.AzureAppRoleAssignment) []azad.Azur
 	return newAssignments
 }
 
-func MakePolicies(assignments []azad.AzureAppRoleAssignment) []policysupport.PolicyInfo {
+func MakePolicies(assignments []azad.AzureAppRoleAssignment) []hexapolicy.PolicyInfo {
 	policyMapper := microsoftazure.NewAzurePolicyMapper(AzureServicePrincipals(),
 		assignments,
 		policytestsupport.MakePrincipalEmailMap())

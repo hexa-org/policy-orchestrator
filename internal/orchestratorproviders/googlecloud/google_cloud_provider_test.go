@@ -5,7 +5,7 @@ import (
 
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/googlecloud"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport"
 	"github.com/stretchr/testify/assert"
 )
@@ -20,7 +20,7 @@ func TestGoogleProvider_BadClientKey(t *testing.T) {
 	_, getErr := p.GetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "anObjectId"})
 	assert.Error(t, getErr)
 
-	status, setErr := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{})
+	status, setErr := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []hexapolicy.PolicyInfo{})
 	assert.Equal(t, 500, status)
 	assert.Error(t, setErr)
 }
@@ -102,8 +102,8 @@ func TestGoogleProvider_GetPolicy(t *testing.T) {
 }
 
 func TestGoogleProvider_SetPolicy(t *testing.T) {
-	policy := policysupport.PolicyInfo{
-		Meta: policysupport.MetaInfo{Version: "aVersion"}, Actions: []policysupport.ActionInfo{{"anAction"}}, Subject: policysupport.SubjectInfo{Members: []string{"aUser"}}, Object: policysupport.ObjectInfo{
+	policy := hexapolicy.PolicyInfo{
+		Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"anAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"aUser"}}, Object: hexapolicy.ObjectInfo{
 			ResourceID: "anObjectId",
 		},
 	}
@@ -111,14 +111,14 @@ func TestGoogleProvider_SetPolicy(t *testing.T) {
 
 	p := googlecloud.GoogleProvider{HttpClientOverride: m}
 	info := orchestrator.IntegrationInfo{Name: "google_cloud", Key: []byte("aKey")}
-	status, err := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{policy})
+	status, err := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []hexapolicy.PolicyInfo{policy})
 	assert.Equal(t, 201, status)
 	assert.NoError(t, err)
 }
 
 func TestGoogleProvider_SetPolicy_withInvalidArguments(t *testing.T) {
-	missingMeta := policysupport.PolicyInfo{
-		Actions: []policysupport.ActionInfo{{"anAction"}}, Subject: policysupport.SubjectInfo{Members: []string{"aUser"}}, Object: policysupport.ObjectInfo{
+	missingMeta := hexapolicy.PolicyInfo{
+		Actions: []hexapolicy.ActionInfo{{"anAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"aUser"}}, Object: hexapolicy.ObjectInfo{
 			ResourceID: "anObjectId",
 		},
 	}
@@ -127,11 +127,11 @@ func TestGoogleProvider_SetPolicy_withInvalidArguments(t *testing.T) {
 	p := googlecloud.GoogleProvider{HttpClientOverride: m}
 	info := orchestrator.IntegrationInfo{Name: "not google_cloud", Key: []byte("aKey")}
 
-	status, err := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{}, []policysupport.PolicyInfo{missingMeta})
+	status, err := p.SetPolicyInfo(info, orchestrator.ApplicationInfo{}, []hexapolicy.PolicyInfo{missingMeta})
 	assert.Equal(t, 500, status)
 	assert.Error(t, err)
 
-	status, err = p.SetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []policysupport.PolicyInfo{missingMeta})
+	status, err = p.SetPolicyInfo(info, orchestrator.ApplicationInfo{ObjectID: "anObjectId"}, []hexapolicy.PolicyInfo{missingMeta})
 	assert.Equal(t, 500, status)
 	assert.Error(t, err)
 }
