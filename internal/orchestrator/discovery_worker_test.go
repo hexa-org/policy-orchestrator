@@ -2,9 +2,9 @@ package orchestrator_test
 
 import (
 	"errors"
+	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator/test"
-	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"testing"
 	"time"
 

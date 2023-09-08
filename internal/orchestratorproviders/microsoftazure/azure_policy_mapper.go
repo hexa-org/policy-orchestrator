@@ -2,8 +2,8 @@ package microsoftazure
 
 import (
 	"fmt"
+	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
-	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 )
 
 type AzurePolicyMapper struct {

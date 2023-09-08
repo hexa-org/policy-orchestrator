@@ -1,5 +1,6 @@
 package filtersupport
 
+/*
 import (
 	"errors"
 
@@ -148,12 +149,12 @@ func parseFilterSub(expression string, parentAttr string) (*Expression, error) {
 						// This code checks for text after ] ... in future attr[type eq value].subattr may be permissible
 						if charPos+1 < len(expression) && expRunes[charPos+1] != ' ' {
 							return nil, errors.New("invalid IDQL filter: expecting space after ']' in value path expression")
-							/*
-								charPos++
-								for charPos < len(expression) && expRunes[charPos] != ' ' {
-									charPos++
-								}
-							*/
+
+								//charPos++
+								//for charPos < len(expression) && expRunes[charPos] != ' ' {
+								//	charPos++
+								//}
+
 						}
 						// reset for the next phrase
 						vPathStartIndex = -1
@@ -402,3 +403,5 @@ func createExpression(attribute string, cond string, value string) (AttributeExp
 	}
 	return attrFilter, nil
 }
+
+*/

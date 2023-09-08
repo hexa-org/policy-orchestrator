@@ -1,8 +1,8 @@
 package providerscommon
 
 import (
+	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/pkg/functionalsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"golang.org/x/exp/slices"
 	log "golang.org/x/exp/slog"
 	"sort"
