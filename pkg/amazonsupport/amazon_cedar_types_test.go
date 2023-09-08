@@ -1,1 +1,0 @@
-package amazonsupport_test
