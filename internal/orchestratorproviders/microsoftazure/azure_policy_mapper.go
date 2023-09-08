@@ -3,7 +3,7 @@ package microsoftazure
 import (
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 )
 
 type AzurePolicyMapper struct {
@@ -25,8 +25,8 @@ func NewAzurePolicyMapper(sps azad.AzureServicePrincipals, existingAssignments [
 		azureUserEmail:       azureUserEmail}
 }
 
-func (azm *AzurePolicyMapper) ToIDQL() []policysupport.PolicyInfo {
-	policies := make([]policysupport.PolicyInfo, 0)
+func (azm *AzurePolicyMapper) ToIDQL() []hexapolicy.PolicyInfo {
+	policies := make([]hexapolicy.PolicyInfo, 0)
 	for appRoleId, appRole := range azm.roleIdToAppRole {
 		pol := azm.appRoleAssignmentToIDQL(azm.existingRoleIdToAras[appRoleId], appRole.Value)
 		policies = append(policies, pol)
@@ -35,7 +35,7 @@ func (azm *AzurePolicyMapper) ToIDQL() []policysupport.PolicyInfo {
 
 }
 
-func (azm *AzurePolicyMapper) appRoleAssignmentToIDQL(assignments []azad.AzureAppRoleAssignment, action string) policysupport.PolicyInfo {
+func (azm *AzurePolicyMapper) appRoleAssignmentToIDQL(assignments []azad.AzureAppRoleAssignment, action string) hexapolicy.PolicyInfo {
 
 	members := make([]string, 0)
 	for _, oneAssignment := range assignments {
@@ -46,11 +46,11 @@ func (azm *AzurePolicyMapper) appRoleAssignmentToIDQL(assignments []azad.AzureAp
 
 	}
 
-	return policysupport.PolicyInfo{
-		Meta:    policysupport.MetaInfo{Version: "0.5"},
-		Actions: []policysupport.ActionInfo{{action}},
-		Subject: policysupport.SubjectInfo{Members: members},
-		Object:  policysupport.ObjectInfo{ResourceID: azm.objectId},
+	return hexapolicy.PolicyInfo{
+		Meta:    hexapolicy.MetaInfo{Version: "0.5"},
+		Actions: []hexapolicy.ActionInfo{{action}},
+		Subject: hexapolicy.SubjectInfo{Members: members},
+		Object:  hexapolicy.ObjectInfo{ResourceID: azm.objectId},
 	}
 }
 

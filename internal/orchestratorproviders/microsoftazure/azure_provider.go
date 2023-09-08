@@ -5,7 +5,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/pkg/workflowsupport"
 	"log"
 	"net/http"
@@ -47,11 +47,11 @@ func (a *AzureProvider) DiscoverApplications(info orchestrator.IntegrationInfo) 
 	return apps, err
 }
 
-func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
+func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
 	key := integrationInfo.Key
 	servicePrincipals, _ := a.client.GetServicePrincipals(key, applicationInfo.Description) // todo - description is named poorly
 	if len(servicePrincipals.List) == 0 {
-		return []policysupport.PolicyInfo{}, nil
+		return []hexapolicy.PolicyInfo{}, nil
 	}
 	assignments, _ := a.client.GetAppRoleAssignedTo(key, servicePrincipals.List[0].ID)
 
@@ -75,7 +75,7 @@ func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 	return policyMapper.ToIDQL(), nil
 }
 
-func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) (int, error) {
+func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (int, error) {
 	validate := validator.New() // todo - move this up?
 	errApp := validate.Struct(applicationInfo)
 	if errApp != nil {

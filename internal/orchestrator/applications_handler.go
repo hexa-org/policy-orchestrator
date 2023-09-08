@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -177,21 +177,21 @@ func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	var policyInfos []policysupport.PolicyInfo
+	var policyInfos []hexapolicy.PolicyInfo
 	for _, policy := range policies.Policies {
-		var actionInfos []policysupport.ActionInfo
+		var actionInfos []hexapolicy.ActionInfo
 		for _, a := range policy.Actions {
-			actionInfos = append(actionInfos, policysupport.ActionInfo{ActionUri: a.ActionUri})
+			actionInfos = append(actionInfos, hexapolicy.ActionInfo{ActionUri: a.ActionUri})
 		}
-		info := policysupport.PolicyInfo{
-			Meta: policysupport.MetaInfo{
+		info := hexapolicy.PolicyInfo{
+			Meta: hexapolicy.MetaInfo{
 				Version: policy.Meta.Version,
 			},
 			Actions: actionInfos,
-			Subject: policysupport.SubjectInfo{
+			Subject: hexapolicy.SubjectInfo{
 				Members: policy.Subject.Members,
 			},
-			Object: policysupport.ObjectInfo{
+			Object: hexapolicy.ObjectInfo{
 				ResourceID: policy.Object.ResourceID,
 			},
 		}

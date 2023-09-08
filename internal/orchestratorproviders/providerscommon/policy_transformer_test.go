@@ -2,7 +2,7 @@ package providerscommon_test
 
 import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/providerscommon"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -42,13 +42,13 @@ func TestBuildPolicies(t *testing.T) {
 func TestCompactActions_NilEmpty(t *testing.T) {
 	tests := []struct {
 		name     string
-		existing []policysupport.ActionInfo
-		newOnes  []policysupport.ActionInfo
+		existing []hexapolicy.ActionInfo
+		newOnes  []hexapolicy.ActionInfo
 	}{
 		{name: "nils", existing: nil, newOnes: nil},
-		{name: "empties", existing: []policysupport.ActionInfo{}, newOnes: []policysupport.ActionInfo{}},
-		{name: "existing nil", existing: nil, newOnes: []policysupport.ActionInfo{}},
-		{name: "newOnes nil", existing: []policysupport.ActionInfo{}, newOnes: nil},
+		{name: "empties", existing: []hexapolicy.ActionInfo{}, newOnes: []hexapolicy.ActionInfo{}},
+		{name: "existing nil", existing: nil, newOnes: []hexapolicy.ActionInfo{}},
+		{name: "newOnes nil", existing: []hexapolicy.ActionInfo{}, newOnes: nil},
 	}
 
 	for _, tt := range tests {
@@ -61,7 +61,7 @@ func TestCompactActions_NilEmpty(t *testing.T) {
 }
 
 func TestCompactActions_AllWhitespace(t *testing.T) {
-	arr1 := []policysupport.ActionInfo{
+	arr1 := []hexapolicy.ActionInfo{
 		{ActionUri: ""}, {ActionUri: "   "}, {ActionUri: " "},
 	}
 	compacted := providerscommon.CompactActions(arr1, arr1)
@@ -70,49 +70,49 @@ func TestCompactActions_AllWhitespace(t *testing.T) {
 }
 
 func TestCompactActions_DuplicatesAndWhitespace(t *testing.T) {
-	arr1 := []policysupport.ActionInfo{
+	arr1 := []hexapolicy.ActionInfo{
 		{ActionUri: ""}, {ActionUri: "1one"}, {ActionUri: " "}, {ActionUri: "2two"}, {ActionUri: "3three"},
 	}
-	arr2 := []policysupport.ActionInfo{
+	arr2 := []hexapolicy.ActionInfo{
 		{ActionUri: ""}, {ActionUri: "1one"}, {ActionUri: " "}, {ActionUri: "2two"}, {ActionUri: "3three"},
 	}
 
 	compacted := providerscommon.CompactActions(arr1, arr2)
 	assert.NotNil(t, compacted)
-	assert.Equal(t, []policysupport.ActionInfo{
+	assert.Equal(t, []hexapolicy.ActionInfo{
 		{ActionUri: "1one"}, {ActionUri: "2two"}, {ActionUri: "3three"},
 	}, compacted)
 }
 
 func TestCompactActions_UniqueAndWhitespace(t *testing.T) {
-	arr1 := []policysupport.ActionInfo{
+	arr1 := []hexapolicy.ActionInfo{
 		{ActionUri: ""}, {ActionUri: "1one"}, {ActionUri: " "}, {ActionUri: "2two"}, {ActionUri: "3three"},
 	}
-	arr2 := []policysupport.ActionInfo{
+	arr2 := []hexapolicy.ActionInfo{
 		{ActionUri: ""}, {ActionUri: "4four"}, {ActionUri: " "}, {ActionUri: "5five"},
 	}
 
 	compacted := providerscommon.CompactActions(arr1, arr2)
 	assert.NotNil(t, compacted)
-	assert.Equal(t, []policysupport.ActionInfo{
+	assert.Equal(t, []hexapolicy.ActionInfo{
 		{ActionUri: "1one"}, {ActionUri: "2two"}, {ActionUri: "3three"}, {ActionUri: "4four"}, {ActionUri: "5five"},
 	}, compacted)
 }
 
 func TestCompactActions_OneEmptyNil(t *testing.T) {
-	arr := []policysupport.ActionInfo{
+	arr := []hexapolicy.ActionInfo{
 		{ActionUri: ""}, {ActionUri: "1one"}, {ActionUri: " "}, {ActionUri: "2two"}, {ActionUri: "3three"},
 	}
 
 	compacted := providerscommon.CompactActions(arr, nil)
 	assert.NotNil(t, compacted)
-	assert.Equal(t, []policysupport.ActionInfo{
+	assert.Equal(t, []hexapolicy.ActionInfo{
 		{ActionUri: "1one"}, {ActionUri: "2two"}, {ActionUri: "3three"},
 	}, compacted)
 
 	compacted = providerscommon.CompactActions(nil, arr)
 	assert.NotNil(t, compacted)
-	assert.Equal(t, []policysupport.ActionInfo{
+	assert.Equal(t, []hexapolicy.ActionInfo{
 		{ActionUri: "1one"}, {ActionUri: "2two"}, {ActionUri: "3three"},
 	}, compacted)
 }
@@ -167,7 +167,7 @@ func TestCompactMembers_OneNil(t *testing.T) {
 }
 
 func TestFlattenPolicy_ReturnsEmpty(t *testing.T) {
-	actPolicies := providerscommon.FlattenPolicy([]policysupport.PolicyInfo{})
+	actPolicies := providerscommon.FlattenPolicy([]hexapolicy.PolicyInfo{})
 	assert.NotNil(t, actPolicies)
 	assert.Empty(t, actPolicies)
 
@@ -177,23 +177,23 @@ func TestFlattenPolicy_ReturnsEmpty(t *testing.T) {
 }
 
 func TestFlattenPolicy_DupResourceDupMembers(t *testing.T) {
-	pol1 := policysupport.PolicyInfo{
-		Meta: policysupport.MetaInfo{Version: "0.5"},
-		Actions: []policysupport.ActionInfo{
+	pol1 := hexapolicy.PolicyInfo{
+		Meta: hexapolicy.MetaInfo{Version: "0.5"},
+		Actions: []hexapolicy.ActionInfo{
 			{ActionUri: ""}, {ActionUri: "1act"}, {ActionUri: " "}, {ActionUri: "2act"}},
-		Subject: policysupport.SubjectInfo{Members: []string{"1mem", "", "2mem"}},
-		Object:  policysupport.ObjectInfo{ResourceID: "resource1"},
+		Subject: hexapolicy.SubjectInfo{Members: []string{"1mem", "", "2mem"}},
+		Object:  hexapolicy.ObjectInfo{ResourceID: "resource1"},
 	}
 
-	pol2 := policysupport.PolicyInfo{
-		Meta: policysupport.MetaInfo{Version: "0.5"},
-		Actions: []policysupport.ActionInfo{
+	pol2 := hexapolicy.PolicyInfo{
+		Meta: hexapolicy.MetaInfo{Version: "0.5"},
+		Actions: []hexapolicy.ActionInfo{
 			{ActionUri: ""}, {ActionUri: "3act"}, {ActionUri: " "}, {ActionUri: "4act"}},
-		Subject: policysupport.SubjectInfo{Members: []string{"1mem", "", "2mem"}},
-		Object:  policysupport.ObjectInfo{ResourceID: "resource1"},
+		Subject: hexapolicy.SubjectInfo{Members: []string{"1mem", "", "2mem"}},
+		Object:  hexapolicy.ObjectInfo{ResourceID: "resource1"},
 	}
 
-	orig := []policysupport.PolicyInfo{pol1, pol2}
+	orig := []hexapolicy.PolicyInfo{pol1, pol2}
 	actPolicies := providerscommon.FlattenPolicy(orig)
 	assert.NotNil(t, actPolicies)
 	assert.Equal(t, 4, len(actPolicies))
@@ -210,30 +210,30 @@ func TestFlattenPolicy_DupResourceDupMembers(t *testing.T) {
 }
 
 func TestFlattenPolicy_NoResource(t *testing.T) {
-	pol1 := policysupport.PolicyInfo{
-		Meta:    policysupport.MetaInfo{Version: "0.5"},
-		Actions: []policysupport.ActionInfo{{ActionUri: "1act"}, {ActionUri: "2act"}},
-		Subject: policysupport.SubjectInfo{Members: []string{"1mem", "", "2mem"}},
+	pol1 := hexapolicy.PolicyInfo{
+		Meta:    hexapolicy.MetaInfo{Version: "0.5"},
+		Actions: []hexapolicy.ActionInfo{{ActionUri: "1act"}, {ActionUri: "2act"}},
+		Subject: hexapolicy.SubjectInfo{Members: []string{"1mem", "", "2mem"}},
 	}
-	pol2 := policysupport.PolicyInfo{
-		Meta:    policysupport.MetaInfo{Version: "0.5"},
-		Actions: []policysupport.ActionInfo{{ActionUri: "1act"}},
-		Subject: policysupport.SubjectInfo{Members: []string{"1mem", "2mem"}},
-		Object:  policysupport.ObjectInfo{ResourceID: "resource1"},
+	pol2 := hexapolicy.PolicyInfo{
+		Meta:    hexapolicy.MetaInfo{Version: "0.5"},
+		Actions: []hexapolicy.ActionInfo{{ActionUri: "1act"}},
+		Subject: hexapolicy.SubjectInfo{Members: []string{"1mem", "2mem"}},
+		Object:  hexapolicy.ObjectInfo{ResourceID: "resource1"},
 	}
 
 	tests := []struct {
 		name          string
-		inputPolicies []policysupport.PolicyInfo
+		inputPolicies []hexapolicy.PolicyInfo
 		expLen        int
 	}{
 		{
 			name:          "Single policy without resource",
-			inputPolicies: []policysupport.PolicyInfo{pol1},
+			inputPolicies: []hexapolicy.PolicyInfo{pol1},
 		},
 		{
 			name:          "Two policies one with, one without resource",
-			inputPolicies: []policysupport.PolicyInfo{pol1, pol2},
+			inputPolicies: []hexapolicy.PolicyInfo{pol1, pol2},
 			expLen:        1,
 		},
 	}
@@ -250,24 +250,24 @@ func TestFlattenPolicy_NoResource(t *testing.T) {
 }
 
 func TestFlattenPolicy_NoActions(t *testing.T) {
-	pol1 := policysupport.PolicyInfo{
-		Meta:    policysupport.MetaInfo{Version: "0.5"},
-		Subject: policysupport.SubjectInfo{Members: []string{"1mem", "", "2mem"}},
-		Object:  policysupport.ObjectInfo{ResourceID: "resource1"},
+	pol1 := hexapolicy.PolicyInfo{
+		Meta:    hexapolicy.MetaInfo{Version: "0.5"},
+		Subject: hexapolicy.SubjectInfo{Members: []string{"1mem", "", "2mem"}},
+		Object:  hexapolicy.ObjectInfo{ResourceID: "resource1"},
 	}
-	orig := []policysupport.PolicyInfo{pol1}
+	orig := []hexapolicy.PolicyInfo{pol1}
 	actPolicies := providerscommon.FlattenPolicy(orig)
 	assert.NotNil(t, actPolicies)
-	assert.Equal(t, []policysupport.PolicyInfo{}, actPolicies)
+	assert.Equal(t, []hexapolicy.PolicyInfo{}, actPolicies)
 }
 
 func TestFlattenPolicy_NoMembers(t *testing.T) {
-	pol1 := policysupport.PolicyInfo{
-		Meta:    policysupport.MetaInfo{Version: "0.5"},
-		Actions: []policysupport.ActionInfo{{ActionUri: "1act"}, {ActionUri: "2act"}},
-		Object:  policysupport.ObjectInfo{ResourceID: "resource1"},
+	pol1 := hexapolicy.PolicyInfo{
+		Meta:    hexapolicy.MetaInfo{Version: "0.5"},
+		Actions: []hexapolicy.ActionInfo{{ActionUri: "1act"}, {ActionUri: "2act"}},
+		Object:  hexapolicy.ObjectInfo{ResourceID: "resource1"},
 	}
-	orig := []policysupport.PolicyInfo{pol1}
+	orig := []hexapolicy.PolicyInfo{pol1}
 	actPolicies := providerscommon.FlattenPolicy(orig)
 	assert.NotNil(t, actPolicies)
 	assert.Equal(t, 2, len(actPolicies))
@@ -282,31 +282,31 @@ func TestFlattenPolicy_NoMembers(t *testing.T) {
 }
 
 func TestFlattenPolicy_MergeSameResourceAction(t *testing.T) {
-	pol1a := policysupport.PolicyInfo{
-		Meta: policysupport.MetaInfo{Version: "0.5"},
-		Actions: []policysupport.ActionInfo{
+	pol1a := hexapolicy.PolicyInfo{
+		Meta: hexapolicy.MetaInfo{Version: "0.5"},
+		Actions: []hexapolicy.ActionInfo{
 			{ActionUri: "1act"}, {ActionUri: "2act"}},
-		Subject: policysupport.SubjectInfo{Members: []string{"1mem", "2mem"}},
-		Object:  policysupport.ObjectInfo{ResourceID: "resource1"},
+		Subject: hexapolicy.SubjectInfo{Members: []string{"1mem", "2mem"}},
+		Object:  hexapolicy.ObjectInfo{ResourceID: "resource1"},
 	}
 
-	pol1b := policysupport.PolicyInfo{
-		Meta: policysupport.MetaInfo{Version: "0.5"},
-		Actions: []policysupport.ActionInfo{
+	pol1b := hexapolicy.PolicyInfo{
+		Meta: hexapolicy.MetaInfo{Version: "0.5"},
+		Actions: []hexapolicy.ActionInfo{
 			{ActionUri: "1act"}, {ActionUri: "2act"}},
-		Subject: policysupport.SubjectInfo{Members: []string{"3mem", "4mem"}},
-		Object:  policysupport.ObjectInfo{ResourceID: "resource1"},
+		Subject: hexapolicy.SubjectInfo{Members: []string{"3mem", "4mem"}},
+		Object:  hexapolicy.ObjectInfo{ResourceID: "resource1"},
 	}
 
-	pol2 := policysupport.PolicyInfo{
-		Meta: policysupport.MetaInfo{Version: "0.5"},
-		Actions: []policysupport.ActionInfo{
+	pol2 := hexapolicy.PolicyInfo{
+		Meta: hexapolicy.MetaInfo{Version: "0.5"},
+		Actions: []hexapolicy.ActionInfo{
 			{ActionUri: "3act"}, {ActionUri: "4act"}},
-		Subject: policysupport.SubjectInfo{Members: []string{"1mem", "2mem"}},
-		Object:  policysupport.ObjectInfo{ResourceID: "resource2"},
+		Subject: hexapolicy.SubjectInfo{Members: []string{"1mem", "2mem"}},
+		Object:  hexapolicy.ObjectInfo{ResourceID: "resource2"},
 	}
 
-	orig := []policysupport.PolicyInfo{pol1a, pol2, pol1b}
+	orig := []hexapolicy.PolicyInfo{pol1a, pol2, pol1b}
 	actPolicies := providerscommon.FlattenPolicy(orig)
 
 	assert.NotNil(t, actPolicies)

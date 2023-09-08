@@ -2,24 +2,24 @@ package policytestsupport
 
 import (
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"sort"
 	"testing"
 )
 
-func ContainsPolicies(t *testing.T, expPolicies []policysupport.PolicyInfo, actPolicies []policysupport.PolicyInfo) bool {
+func ContainsPolicies(t *testing.T, expPolicies []hexapolicy.PolicyInfo, actPolicies []hexapolicy.PolicyInfo) bool {
 	for _, act := range actPolicies {
 		if HasPolicy(expPolicies, act) {
 			return true
 		}
 	}
 
-	return assert.Fail(t, fmt.Sprintf("Policies do not match expected: \n expected: %s\n actual: %s", expPolicies, actPolicies))
+	return assert.Fail(t, fmt.Sprintf("Policies do not match expected: \n expected: %v\n actual: %v", expPolicies, actPolicies))
 }
 
-func HasPolicy(expPolicies []policysupport.PolicyInfo, act policysupport.PolicyInfo) bool {
+func HasPolicy(expPolicies []hexapolicy.PolicyInfo, act hexapolicy.PolicyInfo) bool {
 	for _, exp := range expPolicies {
 		if MatchPolicy(exp, act) {
 			return true
@@ -28,7 +28,7 @@ func HasPolicy(expPolicies []policysupport.PolicyInfo, act policysupport.PolicyI
 	return false
 }
 
-func MatchPolicy(exp policysupport.PolicyInfo, act policysupport.PolicyInfo) bool {
+func MatchPolicy(exp hexapolicy.PolicyInfo, act hexapolicy.PolicyInfo) bool {
 	if exp.Object.ResourceID != act.Object.ResourceID {
 		return false
 	}
@@ -44,8 +44,8 @@ func MatchPolicy(exp policysupport.PolicyInfo, act policysupport.PolicyInfo) boo
 	return reflect.DeepEqual(expMembers, actMembers)
 }
 
-func MakePolicies(actionMembers map[string][]string, resourceId string) []policysupport.PolicyInfo {
-	policies := make([]policysupport.PolicyInfo, 0)
+func MakePolicies(actionMembers map[string][]string, resourceId string) []hexapolicy.PolicyInfo {
+	policies := make([]hexapolicy.PolicyInfo, 0)
 
 	for action, membersNoPrefix := range actionMembers {
 		members := make([]string, 0)
@@ -53,11 +53,11 @@ func MakePolicies(actionMembers map[string][]string, resourceId string) []policy
 			members = append(members, "user:"+mem)
 		}
 
-		pol := policysupport.PolicyInfo{
-			Meta:    policysupport.MetaInfo{Version: "0.5"},
-			Actions: []policysupport.ActionInfo{{action}},
-			Subject: policysupport.SubjectInfo{Members: members},
-			Object: policysupport.ObjectInfo{
+		pol := hexapolicy.PolicyInfo{
+			Meta:    hexapolicy.MetaInfo{Version: "0.5"},
+			Actions: []hexapolicy.ActionInfo{{action}},
+			Subject: hexapolicy.SubjectInfo{Members: members},
+			Object: hexapolicy.ObjectInfo{
 				ResourceID: resourceId,
 			},
 		}
@@ -68,8 +68,8 @@ func MakePolicies(actionMembers map[string][]string, resourceId string) []policy
 	return policies
 }
 
-func sortAction(orig []policysupport.ActionInfo) []policysupport.ActionInfo {
-	sorted := make([]policysupport.ActionInfo, 0)
+func sortAction(orig []hexapolicy.ActionInfo) []hexapolicy.ActionInfo {
+	sorted := make([]hexapolicy.ActionInfo, 0)
 	sorted = append(sorted, orig...)
 	sort.Slice(sorted, func(i, j int) bool {
 		return sorted[i].ActionUri <= sorted[j].ActionUri
@@ -77,13 +77,13 @@ func sortAction(orig []policysupport.ActionInfo) []policysupport.ActionInfo {
 	return sorted
 }
 
-func sortMembers(subInfo policysupport.SubjectInfo) policysupport.SubjectInfo {
+func sortMembers(subInfo hexapolicy.SubjectInfo) hexapolicy.SubjectInfo {
 	sorted := make([]string, 0)
 	for _, one := range subInfo.Members {
 		sorted = append(sorted, one)
 	}
 	sort.Strings(sorted)
-	return policysupport.SubjectInfo{
+	return hexapolicy.SubjectInfo{
 		Members: sorted,
 	}
 }

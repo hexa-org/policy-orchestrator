@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 )
 
 type NoopProvider struct {
@@ -29,17 +29,18 @@ func (n *NoopProvider) DiscoverApplications(info orchestrator.IntegrationInfo) (
 	return apps, n.Err
 }
 
-func (n *NoopProvider) GetPolicyInfo(_ orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
-	return []policysupport.PolicyInfo{
-		{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"anAction"}}, policysupport.SubjectInfo{Members: []string{"user:aUser"}}, policysupport.ObjectInfo{
+func (n *NoopProvider) GetPolicyInfo(_ orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
+
+	return []hexapolicy.PolicyInfo{
+		{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"anAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"user:aUser"}}, Object: hexapolicy.ObjectInfo{
 			ResourceID: "anId",
 		}},
-		{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"anotherAction"}}, policysupport.SubjectInfo{Members: []string{"user:anotherUser"}}, policysupport.ObjectInfo{
+		{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"anotherAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"user:anotherUser"}}, Object: hexapolicy.ObjectInfo{
 			ResourceID: "anId",
 		}},
 	}, n.Err
 }
 
-func (n *NoopProvider) SetPolicyInfo(_ orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo, _ []policysupport.PolicyInfo) (int, error) {
+func (n *NoopProvider) SetPolicyInfo(_ orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo, _ []hexapolicy.PolicyInfo) (int, error) {
 	return http.StatusCreated, n.Err
 }

@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/functionalsupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/googlesupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
@@ -124,7 +123,7 @@ type bindingInfo struct {
 	Condition *condition `json:"condition,omitempty"`
 }
 
-func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]policysupport.PolicyInfo, error) {
+func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]hexapolicy.PolicyInfo, error) {
 	var url string
 	if strings.HasPrefix(name, "apps") { // todo - revisit and improve the decision here
 		url = fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/appengine-%s/services/default:getIamPolicy", c.ProjectId, objectId)
@@ -135,14 +134,14 @@ func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]policysupport.
 	post, err := c.HttpClient.Post(url, "application/json", bytes.NewReader([]byte{}))
 	if err != nil {
 		log.Println("Unable to find google cloud policy.")
-		return []policysupport.PolicyInfo{}, err
+		return []hexapolicy.PolicyInfo{}, err
 	}
 	log.Printf("Google cloud response %s.\n", post.Status)
 
 	var binds bindings
 	if err = json.NewDecoder(post.Body).Decode(&binds); err != nil {
 		log.Println("Unable to decode google cloud policy.")
-		return []policysupport.PolicyInfo{}, err
+		return []hexapolicy.PolicyInfo{}, err
 	}
 
 	/// todo - below is work in progress
@@ -166,22 +165,22 @@ func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]policysupport.
 	})
 
 	// todo - use mapper policy support here...
-	hexaPolicies := functionalsupport.Map(policies, func(policy hexapolicy.PolicyInfo) policysupport.PolicyInfo {
-		return policysupport.PolicyInfo{
-			Meta: policysupport.MetaInfo{Version: policy.Meta.Version},
-			Actions: functionalsupport.Map(policy.Actions, func(action hexapolicy.ActionInfo) policysupport.ActionInfo {
-				return policysupport.ActionInfo{
+	hexaPolicies := functionalsupport.Map(policies, func(policy hexapolicy.PolicyInfo) hexapolicy.PolicyInfo {
+		return hexapolicy.PolicyInfo{
+			Meta: hexapolicy.MetaInfo{Version: policy.Meta.Version},
+			Actions: functionalsupport.Map(policy.Actions, func(action hexapolicy.ActionInfo) hexapolicy.ActionInfo {
+				return hexapolicy.ActionInfo{
 					ActionUri: action.ActionUri,
 				}
 			}),
-			Subject: policysupport.SubjectInfo{Members: policy.Subject.Members},
-			Object:  policysupport.ObjectInfo{ResourceID: policy.Object.ResourceID},
+			Subject: hexapolicy.SubjectInfo{Members: policy.Subject.Members},
+			Object:  hexapolicy.ObjectInfo{ResourceID: policy.Object.ResourceID},
 		}
 	})
 	return hexaPolicies, err
 }
 
-func (c *GoogleClient) SetBackendPolicy(name, objectId string, p policysupport.PolicyInfo) error { // todo - objectId may no longer be needed, at least for google
+func (c *GoogleClient) SetBackendPolicy(name, objectId string, p hexapolicy.PolicyInfo) error { // todo - objectId may no longer be needed, at least for google
 	var url string
 	if strings.HasPrefix(name, "apps") { // todo - revisit and improve the decision here
 		url = fmt.Sprintf("https://iap.googleapis.com/v1/projects/%s/iap_web/appengine-%s/services/default:setIamPolicy", c.ProjectId, objectId)

@@ -11,8 +11,8 @@ import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/openpolicyagent"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/openpolicyagent/test"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 
 	"io/ioutil"
 	"math/rand"
@@ -298,8 +298,8 @@ func TestSetPolicyInfo(t *testing.T) {
 	status, err := p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
 		orchestrator.ApplicationInfo{ObjectID: "anotherResourceId"},
-		[]policysupport.PolicyInfo{
-			{Meta: policysupport.MetaInfo{Version: "0.5"}, Actions: []policysupport.ActionInfo{{"http:GET"}}, Subject: policysupport.SubjectInfo{Members: []string{"allusers"}}, Object: policysupport.ObjectInfo{
+		[]hexapolicy.PolicyInfo{
+			{Meta: hexapolicy.MetaInfo{Version: "0.5"}, Actions: []hexapolicy.ActionInfo{{"http:GET"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"allusers"}}, Object: hexapolicy.ObjectInfo{
 				ResourceID: "aResourceId",
 			}},
 		},
@@ -330,7 +330,7 @@ func TestSetPolicyInfo_withInvalidArguments(t *testing.T) {
 	status, err := p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
 		orchestrator.ApplicationInfo{},
-		[]policysupport.PolicyInfo{},
+		[]hexapolicy.PolicyInfo{},
 	)
 
 	assert.Equal(t, 500, status)
@@ -339,11 +339,11 @@ func TestSetPolicyInfo_withInvalidArguments(t *testing.T) {
 	status, err = p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
 		orchestrator.ApplicationInfo{ObjectID: "aResourceId"},
-		[]policysupport.PolicyInfo{
+		[]hexapolicy.PolicyInfo{
 			{
-				Actions: []policysupport.ActionInfo{{"http:GET"}}, Subject: policysupport.SubjectInfo{Members: []string{"allusers"}}, Object: policysupport.ObjectInfo{
-					ResourceID: "aResourceId",
-				}},
+				Actions: []hexapolicy.ActionInfo{{"http:GET"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"allusers"}}, Object: hexapolicy.ObjectInfo{
+				ResourceID: "aResourceId",
+			}},
 		},
 	)
 
@@ -357,7 +357,7 @@ func TestSetPolicyInfo_withInvalidArguments(t *testing.T) {
 	status, err = p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
 		orchestrator.ApplicationInfo{ObjectID: "anObjectID"},
-		[]policysupport.PolicyInfo{},
+		[]hexapolicy.PolicyInfo{},
 	)
 
 	assert.Equal(t, 500, status)
@@ -391,8 +391,8 @@ func TestSetPolicyInfo_WithHTTPSBundleServer(t *testing.T) {
 	status, err := p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
 		orchestrator.ApplicationInfo{ObjectID: "aResourceId"},
-		[]policysupport.PolicyInfo{
-			{Meta: policysupport.MetaInfo{Version: "0.5"}, Actions: []policysupport.ActionInfo{{"http:GET"}}, Subject: policysupport.SubjectInfo{Members: []string{"allusers"}}, Object: policysupport.ObjectInfo{
+		[]hexapolicy.PolicyInfo{
+			{Meta: hexapolicy.MetaInfo{Version: "0.5"}, Actions: []hexapolicy.ActionInfo{{"http:GET"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"allusers"}}, Object: hexapolicy.ObjectInfo{
 				ResourceID: "aResourceId",
 			}},
 		},

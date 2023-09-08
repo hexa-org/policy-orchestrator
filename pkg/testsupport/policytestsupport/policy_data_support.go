@@ -2,7 +2,7 @@ package policytestsupport
 
 import (
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"strings"
 )
 
@@ -57,8 +57,8 @@ func MakeActionMembers() map[string]ActionMembers {
 	}
 }
 
-func MakeTestPolicies(actionMembers map[string]ActionMembers) []policysupport.PolicyInfo {
-	policies := make([]policysupport.PolicyInfo, 0)
+func MakeTestPolicies(actionMembers map[string]ActionMembers) []hexapolicy.PolicyInfo {
+	policies := make([]hexapolicy.PolicyInfo, 0)
 	for action, members := range actionMembers {
 		policies = append(policies, MakeTestPolicy(PolicyObjectResourceId, action, members))
 	}
@@ -67,8 +67,8 @@ func MakeTestPolicies(actionMembers map[string]ActionMembers) []policysupport.Po
 
 // MakeRoleSubjectTestPolicies - makes policies with passed in param
 // actionMembers = { "GET/humanresources/us": ["role1", "role2"] }
-func MakeRoleSubjectTestPolicies(actionMembers map[string][]string) []policysupport.PolicyInfo {
-	policies := make([]policysupport.PolicyInfo, 0)
+func MakeRoleSubjectTestPolicies(actionMembers map[string][]string) []hexapolicy.PolicyInfo {
+	policies := make([]hexapolicy.PolicyInfo, 0)
 	for action, members := range actionMembers {
 		parts := strings.Split(action, "/")
 		actionUri := "http:" + parts[0]
@@ -78,23 +78,23 @@ func MakeRoleSubjectTestPolicies(actionMembers map[string][]string) []policysupp
 	return policies
 }
 
-func MakeRoleSubjectTestPolicy(resourceId string, action string, roles []string) policysupport.PolicyInfo {
-	return policysupport.PolicyInfo{
-		Meta:    policysupport.MetaInfo{Version: "0.5"},
-		Actions: []policysupport.ActionInfo{{action}},
-		Subject: policysupport.SubjectInfo{Members: roles},
-		Object: policysupport.ObjectInfo{
+func MakeRoleSubjectTestPolicy(resourceId string, action string, roles []string) hexapolicy.PolicyInfo {
+	return hexapolicy.PolicyInfo{
+		Meta:    hexapolicy.MetaInfo{Version: "0.5"},
+		Actions: []hexapolicy.ActionInfo{{action}},
+		Subject: hexapolicy.SubjectInfo{Members: roles},
+		Object: hexapolicy.ObjectInfo{
 			ResourceID: resourceId,
 		},
 	}
 }
 
-func MakeTestPolicy(resourceId string, action string, actionMembers ActionMembers) policysupport.PolicyInfo {
-	return policysupport.PolicyInfo{
-		Meta:    policysupport.MetaInfo{Version: "0.5"},
-		Actions: []policysupport.ActionInfo{{action}},
-		Subject: policysupport.SubjectInfo{Members: MakePolicyTestUsers(actionMembers)},
-		Object: policysupport.ObjectInfo{
+func MakeTestPolicy(resourceId string, action string, actionMembers ActionMembers) hexapolicy.PolicyInfo {
+	return hexapolicy.PolicyInfo{
+		Meta:    hexapolicy.MetaInfo{Version: "0.5"},
+		Actions: []hexapolicy.ActionInfo{{action}},
+		Subject: hexapolicy.SubjectInfo{Members: MakePolicyTestUsers(actionMembers)},
+		Object: hexapolicy.ObjectInfo{
 			ResourceID: resourceId,
 		},
 	}

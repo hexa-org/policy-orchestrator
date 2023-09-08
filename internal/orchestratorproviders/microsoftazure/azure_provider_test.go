@@ -4,8 +4,8 @@ import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -155,11 +155,11 @@ func TestSetPolicy_withInvalidArguments(t *testing.T) {
 	status, err := azureProvider.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "azure", Key: key},
 		orchestrator.ApplicationInfo{Name: "anAppName", Description: "anAppId"},
-		[]policysupport.PolicyInfo{{
-			Meta:    policysupport.MetaInfo{Version: "0"},
-			Actions: []policysupport.ActionInfo{{"azure:anAppRoleId"}},
-			Subject: policysupport.SubjectInfo{Members: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
-			Object: policysupport.ObjectInfo{
+		[]hexapolicy.PolicyInfo{{
+			Meta:    hexapolicy.MetaInfo{Version: "0"},
+			Actions: []hexapolicy.ActionInfo{{"azure:anAppRoleId"}},
+			Subject: hexapolicy.SubjectInfo{Members: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
+			Object: hexapolicy.ObjectInfo{
 				ResourceID: "anObjectId",
 			},
 		}})
@@ -170,11 +170,11 @@ func TestSetPolicy_withInvalidArguments(t *testing.T) {
 	status, err = azureProvider.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "azure", Key: key},
 		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"},
-		[]policysupport.PolicyInfo{{
-			Meta:    policysupport.MetaInfo{Version: "0"},
-			Actions: []policysupport.ActionInfo{{"azure:anAppRoleId"}},
-			Subject: policysupport.SubjectInfo{Members: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
-			Object:  policysupport.ObjectInfo{},
+		[]hexapolicy.PolicyInfo{{
+			Meta:    hexapolicy.MetaInfo{Version: "0"},
+			Actions: []hexapolicy.ActionInfo{{"azure:anAppRoleId"}},
+			Subject: hexapolicy.SubjectInfo{Members: []string{"aPrincipalId:aPrincipalDisplayName", "yetAnotherPrincipalId:yetAnotherPrincipalDisplayName", "andAnotherPrincipalId:andAnotherPrincipalDisplayName"}},
+			Object:  hexapolicy.ObjectInfo{},
 		}})
 
 	assert.Equal(t, http.StatusInternalServerError, status)
@@ -195,12 +195,12 @@ func TestSetPolicy_IgnoresAllPrincipalIdsNotFound(t *testing.T) {
 	status, err := p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "azure", Key: key},
 		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
-		[]policysupport.PolicyInfo{{
-			Meta:    policysupport.MetaInfo{Version: "0"},
-			Actions: []policysupport.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
-			Subject: policysupport.SubjectInfo{Members: []string{"user:" + policytestsupport.UserEmailGetHrUs,
+		[]hexapolicy.PolicyInfo{{
+			Meta:    hexapolicy.MetaInfo{Version: "0"},
+			Actions: []hexapolicy.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
+			Subject: hexapolicy.SubjectInfo{Members: []string{"user:" + policytestsupport.UserEmailGetHrUs,
 				"user:" + policytestsupport.UserEmailGetProfile}},
-			Object: policysupport.ObjectInfo{
+			Object: hexapolicy.ObjectInfo{
 				ResourceID: policytestsupport.PolicyObjectResourceId,
 			},
 		}})
@@ -225,12 +225,12 @@ func TestSetPolicy_IgnoresAnyNotFoundPrincipalId(t *testing.T) {
 	status, err := p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "azure", Key: key},
 		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
-		[]policysupport.PolicyInfo{{
-			Meta:    policysupport.MetaInfo{Version: "0"},
-			Actions: []policysupport.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
-			Subject: policysupport.SubjectInfo{Members: []string{"user:" + policytestsupport.UserEmailGetHrUs,
+		[]hexapolicy.PolicyInfo{{
+			Meta:    hexapolicy.MetaInfo{Version: "0"},
+			Actions: []hexapolicy.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
+			Subject: hexapolicy.SubjectInfo{Members: []string{"user:" + policytestsupport.UserEmailGetHrUs,
 				"user:" + policytestsupport.UserEmailGetProfile}},
-			Object: policysupport.ObjectInfo{
+			Object: hexapolicy.ObjectInfo{
 				ResourceID: policytestsupport.PolicyObjectResourceId,
 			},
 		}})
@@ -251,14 +251,14 @@ func TestSetPolicy_AddAssignment_IgnoresInvalidAction(t *testing.T) {
 	status, err := p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "azure", Key: key},
 		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
-		[]policysupport.PolicyInfo{{
-			Meta:    policysupport.MetaInfo{Version: "0"},
-			Actions: []policysupport.ActionInfo{{"azure:GET/not_defined"}},
-			Subject: policysupport.SubjectInfo{
+		[]hexapolicy.PolicyInfo{{
+			Meta:    hexapolicy.MetaInfo{Version: "0"},
+			Actions: []hexapolicy.ActionInfo{{"azure:GET/not_defined"}},
+			Subject: hexapolicy.SubjectInfo{
 				Members: []string{
 					"user:" + policytestsupport.UserEmailGetHrUs,
 					"user:" + policytestsupport.UserEmailGetProfile}},
-			Object: policysupport.ObjectInfo{
+			Object: hexapolicy.ObjectInfo{
 				ResourceID: policytestsupport.PolicyObjectResourceId,
 			},
 		}})
@@ -281,11 +281,11 @@ func TestSetPolicy(t *testing.T) {
 	status, err := p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "azure", Key: key},
 		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
-		[]policysupport.PolicyInfo{{
-			Meta:    policysupport.MetaInfo{Version: "0"},
-			Actions: []policysupport.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
-			Subject: policysupport.SubjectInfo{Members: []string{"user:" + policytestsupport.UserEmailGetHrUs}},
-			Object: policysupport.ObjectInfo{
+		[]hexapolicy.PolicyInfo{{
+			Meta:    hexapolicy.MetaInfo{Version: "0"},
+			Actions: []hexapolicy.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
+			Subject: hexapolicy.SubjectInfo{Members: []string{"user:" + policytestsupport.UserEmailGetHrUs}},
+			Object: hexapolicy.ObjectInfo{
 				ResourceID: policytestsupport.PolicyObjectResourceId,
 			},
 		}})
@@ -308,11 +308,11 @@ func TestSetPolicy_RemovedAllMembers_FromOnePolicy(t *testing.T) {
 	status, err := p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "azure", Key: key},
 		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
-		[]policysupport.PolicyInfo{{
-			Meta:    policysupport.MetaInfo{Version: "0"},
-			Actions: []policysupport.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
-			Subject: policysupport.SubjectInfo{Members: []string{}},
-			Object: policysupport.ObjectInfo{
+		[]hexapolicy.PolicyInfo{{
+			Meta:    hexapolicy.MetaInfo{Version: "0"},
+			Actions: []hexapolicy.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
+			Subject: hexapolicy.SubjectInfo{Members: []string{}},
+			Object: hexapolicy.ObjectInfo{
 				ResourceID: policytestsupport.PolicyObjectResourceId,
 			},
 		}})
@@ -337,20 +337,20 @@ func TestSetPolicy_RemovedAllMembers_FromAllPolicies(t *testing.T) {
 	status, err := p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "azure", Key: key},
 		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
-		[]policysupport.PolicyInfo{
+		[]hexapolicy.PolicyInfo{
 			{
-				Meta:    policysupport.MetaInfo{Version: "0"},
-				Actions: []policysupport.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
-				Subject: policysupport.SubjectInfo{Members: []string{}},
-				Object: policysupport.ObjectInfo{
+				Meta:    hexapolicy.MetaInfo{Version: "0"},
+				Actions: []hexapolicy.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
+				Subject: hexapolicy.SubjectInfo{Members: []string{}},
+				Object: hexapolicy.ObjectInfo{
 					ResourceID: policytestsupport.PolicyObjectResourceId,
 				},
 			},
 			{
-				Meta:    policysupport.MetaInfo{Version: "0"},
-				Actions: []policysupport.ActionInfo{{"azure:" + policytestsupport.ActionGetProfile}},
-				Subject: policysupport.SubjectInfo{Members: []string{}},
-				Object: policysupport.ObjectInfo{
+				Meta:    hexapolicy.MetaInfo{Version: "0"},
+				Actions: []hexapolicy.ActionInfo{{"azure:" + policytestsupport.ActionGetProfile}},
+				Subject: hexapolicy.SubjectInfo{Members: []string{}},
+				Object: hexapolicy.ObjectInfo{
 					ResourceID: policytestsupport.PolicyObjectResourceId,
 				},
 			},
@@ -377,20 +377,20 @@ func TestSetPolicy_MultipleAppRolePolicies(t *testing.T) {
 	status, err := p.SetPolicyInfo(
 		orchestrator.IntegrationInfo{Name: "azure", Key: key},
 		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
-		[]policysupport.PolicyInfo{
+		[]hexapolicy.PolicyInfo{
 			{
-				Meta:    policysupport.MetaInfo{Version: "0"},
-				Actions: []policysupport.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
-				Subject: policysupport.SubjectInfo{Members: []string{"user:" + policytestsupport.UserEmailGetHrUs}},
-				Object: policysupport.ObjectInfo{
+				Meta:    hexapolicy.MetaInfo{Version: "0"},
+				Actions: []hexapolicy.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
+				Subject: hexapolicy.SubjectInfo{Members: []string{"user:" + policytestsupport.UserEmailGetHrUs}},
+				Object: hexapolicy.ObjectInfo{
 					ResourceID: policytestsupport.PolicyObjectResourceId,
 				},
 			},
 			{
-				Meta:    policysupport.MetaInfo{Version: "0"},
-				Actions: []policysupport.ActionInfo{{"azure:" + policytestsupport.ActionGetProfile}},
-				Subject: policysupport.SubjectInfo{Members: []string{"user:" + policytestsupport.UserEmailGetProfile}},
-				Object: policysupport.ObjectInfo{
+				Meta:    hexapolicy.MetaInfo{Version: "0"},
+				Actions: []hexapolicy.ActionInfo{{"azure:" + policytestsupport.ActionGetProfile}},
+				Subject: hexapolicy.SubjectInfo{Members: []string{"user:" + policytestsupport.UserEmailGetProfile}},
+				Object: hexapolicy.ObjectInfo{
 					ResourceID: policytestsupport.PolicyObjectResourceId,
 				},
 			},

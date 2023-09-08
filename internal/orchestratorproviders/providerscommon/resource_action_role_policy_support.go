@@ -1,8 +1,8 @@
 package providerscommon
 
 import (
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
 	"github.com/hexa-org/policy-orchestrator/pkg/functionalsupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	log "golang.org/x/exp/slog"
 )
 
@@ -10,7 +10,7 @@ import (
 // Builds ResourceActionRoles that need to be updated only for those policies that match an existing resource action.
 // If existing is empty, returns empty slice
 // If policyInfos is empty, returns empty slice
-func CalcResourceActionRolesForUpdate(existing []ResourceActionRoles, policyInfos []policysupport.PolicyInfo) []ResourceActionRoles {
+func CalcResourceActionRolesForUpdate(existing []ResourceActionRoles, policyInfos []hexapolicy.PolicyInfo) []ResourceActionRoles {
 
 	existingRarMap := mapResourceActionRoles(existing)
 	newPolicies := FlattenPolicy(policyInfos)

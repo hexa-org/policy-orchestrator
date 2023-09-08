@@ -2,7 +2,7 @@ package providerscommon_test
 
 import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/providerscommon"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/slices"
@@ -15,7 +15,7 @@ func TestCalcResourceActionRolesForUpdate_NoUpdates(t *testing.T) {
 
 	act = providerscommon.CalcResourceActionRolesForUpdate(
 		[]providerscommon.ResourceActionRoles{},
-		[]policysupport.PolicyInfo{})
+		[]hexapolicy.PolicyInfo{})
 	assert.Empty(t, act)
 
 	expRoles := []string{"some-role-to-add"}

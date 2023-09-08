@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"google.golang.org/api/option"
 	"google.golang.org/api/transport/http"
 )
@@ -49,7 +49,7 @@ func (g *GoogleProvider) DiscoverApplications(info orchestrator.IntegrationInfo)
 	return apps, err
 }
 
-func (g *GoogleProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, app orchestrator.ApplicationInfo) (infos []policysupport.PolicyInfo, err error) {
+func (g *GoogleProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, app orchestrator.ApplicationInfo) (infos []hexapolicy.PolicyInfo, err error) {
 	key := integration.Key
 	foundCredentials := g.credentials(key)
 	client, createClientErr := g.getHttpClient(key)
@@ -61,7 +61,7 @@ func (g *GoogleProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo,
 	return googleClient.GetBackendPolicy(app.Name, app.ObjectID)
 }
 
-func (g *GoogleProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, app orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) (int, error) {
+func (g *GoogleProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, app orchestrator.ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (int, error) {
 	validate := validator.New() // todo - move this up?
 	errApp := validate.Struct(app)
 	if errApp != nil {

@@ -9,7 +9,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azarm/azapim/apimnv"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/providerscommon"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	log "golang.org/x/exp/slog"
 	"net/http"
 )
@@ -64,16 +64,16 @@ func (s *ApimProviderService) DiscoverApplications(info orchestrator.Integration
 	return apps, nil
 }
 
-func (s *ApimProviderService) GetPolicyInfo(appInfo orchestrator.ApplicationInfo) ([]policysupport.PolicyInfo, error) {
+func (s *ApimProviderService) GetPolicyInfo(appInfo orchestrator.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
 	serviceInfoAndRars, err := s.getResourceRolesForApi(appInfo)
 	if err != nil {
 		log.Error("ApimProviderService.GetPolicyInfo", "error calling getResourceRolesForApi App.Name", appInfo.Name, "identifierUrl[0]", appInfo.Service, "err=", err)
-		return []policysupport.PolicyInfo{}, err
+		return []hexapolicy.PolicyInfo{}, err
 	}
 	return providerscommon.BuildPolicies(serviceInfoAndRars.rarList), nil
 }
 
-func (s *ApimProviderService) SetPolicyInfo(appInfo orchestrator.ApplicationInfo, policyInfos []policysupport.PolicyInfo) (int, error) {
+func (s *ApimProviderService) SetPolicyInfo(appInfo orchestrator.ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (int, error) {
 	serviceInfoAndRars, err := s.getResourceRolesForApi(appInfo)
 	if err != nil {
 		log.Error("ApimProviderService.SetPolicyInfo", "error calling getResourceRolesForApi App.Name", appInfo.Name, "identifierUrl[0]", appInfo.Service, "err=", err)

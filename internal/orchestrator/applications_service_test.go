@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator/test"
-	"github.com/hexa-org/policy-orchestrator/internal/policysupport"
+	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"log"
 	"testing"
 
@@ -92,20 +92,20 @@ func TestApplicationsService_RetainResource(t *testing.T) {
 		integrationsGateway := orchestrator.IntegrationsDataGateway{DB: data.db}
 		applicationsService := orchestrator.ApplicationsService{ApplicationsGateway: applicationsGateway, IntegrationsGateway: integrationsGateway, Providers: data.providers}
 
-		from := []policysupport.PolicyInfo{
-			{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"fromAnAction"}}, policysupport.SubjectInfo{Members: []string{"fromAUser"}}, policysupport.ObjectInfo{
+		from := []hexapolicy.PolicyInfo{
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"fromAnAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"fromAUser"}}, Object: hexapolicy.ObjectInfo{
 				ResourceID: "fromAnId",
 			}},
-			{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"fromAnotherAction"}}, policysupport.SubjectInfo{Members: []string{"fromAnotherUser"}}, policysupport.ObjectInfo{
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"fromAnotherAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"fromAnotherUser"}}, Object: hexapolicy.ObjectInfo{
 				ResourceID: "fromAnId",
 			}},
 		}
 
-		to := []policysupport.PolicyInfo{
-			{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"toAnAction"}}, policysupport.SubjectInfo{Members: []string{"toAUser"}}, policysupport.ObjectInfo{
+		to := []hexapolicy.PolicyInfo{
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"toAnAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"toAUser"}}, Object: hexapolicy.ObjectInfo{
 				ResourceID: "toAnId",
 			}},
-			{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"toAnotherAction"}}, policysupport.SubjectInfo{Members: []string{"toAnotherUser"}}, policysupport.ObjectInfo{
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"toAnotherAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"toAnotherUser"}}, Object: hexapolicy.ObjectInfo{
 				ResourceID: "toAnId",
 			}},
 		}
@@ -117,11 +117,11 @@ func TestApplicationsService_RetainResource(t *testing.T) {
 		assert.Equal(t, "toAnId", modified[1].Object.ResourceID)
 		assert.Equal(t, "fromAnotherUser", modified[1].Subject.Members[0])
 
-		toWithDifferentResources := []policysupport.PolicyInfo{
-			{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"anotherAction"}}, policysupport.SubjectInfo{Members: []string{"anotherUser"}}, policysupport.ObjectInfo{
+		toWithDifferentResources := []hexapolicy.PolicyInfo{
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"anotherAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"anotherUser"}}, Object: hexapolicy.ObjectInfo{
 				ResourceID: "anotherId",
 			}},
-			{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"anotherAction"}}, policysupport.SubjectInfo{Members: []string{"anotherUser"}}, policysupport.ObjectInfo{
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"anotherAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"anotherUser"}}, Object: hexapolicy.ObjectInfo{
 				ResourceID: "andAnotherId",
 			}},
 		}
@@ -136,20 +136,20 @@ func TestApplicationsService_RetainAction(t *testing.T) {
 		integrationsGateway := orchestrator.IntegrationsDataGateway{DB: data.db}
 		applicationsService := orchestrator.ApplicationsService{ApplicationsGateway: applicationsGateway, IntegrationsGateway: integrationsGateway, Providers: data.providers}
 
-		from := []policysupport.PolicyInfo{
-			{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"fromAnAction"}}, policysupport.SubjectInfo{Members: []string{"fromAUser"}}, policysupport.ObjectInfo{
+		from := []hexapolicy.PolicyInfo{
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"fromAnAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"fromAUser"}}, Object: hexapolicy.ObjectInfo{
 				ResourceID: "fromAnId",
 			}},
-			{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"fromAnotherAction"}}, policysupport.SubjectInfo{Members: []string{"fromAnotherUser"}}, policysupport.ObjectInfo{
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"fromAnotherAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"fromAnotherUser"}}, Object: hexapolicy.ObjectInfo{
 				ResourceID: "fromAnId",
 			}},
 		}
 
-		to := []policysupport.PolicyInfo{
-			{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"toAnAction"}}, policysupport.SubjectInfo{Members: []string{"toAUser"}}, policysupport.ObjectInfo{
+		to := []hexapolicy.PolicyInfo{
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"toAnAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"toAUser"}}, Object: hexapolicy.ObjectInfo{
 				ResourceID: "toAnId",
 			}},
-			{policysupport.MetaInfo{Version: "aVersion"}, []policysupport.ActionInfo{{"toAnotherAction"}}, policysupport.SubjectInfo{Members: []string{"toAnotherUser"}}, policysupport.ObjectInfo{
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"toAnotherAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"toAnotherUser"}}, Object: hexapolicy.ObjectInfo{
 				ResourceID: "toAnId",
 			}},
 		}
