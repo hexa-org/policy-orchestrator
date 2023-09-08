@@ -3,7 +3,7 @@ package policytestsupport
 import (
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/providerscommon"
-	"golang.org/x/exp/slices"
+	"sort"
 	"strings"
 )
 
@@ -15,7 +15,9 @@ func MakeRarList(retActionRoles map[string][]string) []providerscommon.ResourceA
 		rarList = append(rarList, resRole)
 	}
 
-	slices.SortStableFunc(rarList, func(a, b providerscommon.ResourceActionRoles) bool {
+	sort.SliceStable(rarList, func(i, j int) bool {
+		a := rarList[i]
+		b := rarList[j]
 		resComp := strings.Compare(a.Resource, b.Resource)
 		actComp := strings.Compare(a.Action, b.Action)
 		switch resComp {
@@ -25,6 +27,17 @@ func MakeRarList(retActionRoles map[string][]string) []providerscommon.ResourceA
 			return resComp < 0
 		}
 	})
+
+	/*slices.SortStableFunc(rarList, func(a, b providerscommon.ResourceActionRoles) bool {
+		resComp := strings.Compare(a.Resource, b.Resource)
+		actComp := strings.Compare(a.Action, b.Action)
+		switch resComp {
+		case 0:
+			return actComp <= 0
+		default:
+			return resComp < 0
+		}
+	})*/
 	return rarList
 }
 
