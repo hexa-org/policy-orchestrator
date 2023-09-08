@@ -1,5 +1,6 @@
 package hexapolicy
 
+/*
 import (
 	"fmt"
 	"strings"
@@ -32,15 +33,14 @@ type NameMapper interface {
 }
 
 type ConditionMapper interface {
-	/*
-		MapConditionToProvider takes an IDQL Condition expression and converts it to a string
-		usable the target provider. For example from RFC7644, Section-3.4.2.2 to Google Common Expression Language
-	*/
+
+	//MapConditionToProvider takes an IDQL Condition expression and converts it to a string
+	//usable the target provider. For example from RFC7644, Section-3.4.2.2 to Google Common Expression Language
+
 	MapConditionToProvider(condition ConditionInfo) interface{}
 
-	/*
-		MapProviderToCondition take a string expression from a platform policy and converts it to RFC7644: Section-3.4.2.2.
-	*/
+	//MapProviderToCondition take a string expression from a platform policy and converts it to RFC7644: Section-3.4.2.2.
+
 	MapProviderToCondition(expression string) (ConditionInfo, error)
 }
 
@@ -140,3 +140,4 @@ func walk(e filtersupport.Expression, isChild bool) string {
 		return v.String()
 	}
 }
+*/

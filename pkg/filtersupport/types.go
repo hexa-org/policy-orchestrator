@@ -1,5 +1,6 @@
 package filtersupport
 
+/*
 import (
 	"fmt"
 	"regexp"
@@ -113,3 +114,4 @@ func (ValuePathExpression) exprNode() {}
 func (e ValuePathExpression) String() string {
 	return fmt.Sprintf("%s[%s]", e.Attribute, e.VPathFilter.String())
 }
+*/

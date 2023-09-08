@@ -1,5 +1,6 @@
 package amazonsupport_test
 
+/*
 import (
 	"fmt"
 	"os"
@@ -141,3 +142,4 @@ func TestMultiCond(t *testing.T) {
 	fmt.Println(condString)
 
 }
+*/

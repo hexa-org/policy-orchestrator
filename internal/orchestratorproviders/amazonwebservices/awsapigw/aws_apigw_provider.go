@@ -2,11 +2,11 @@ package awsapigw
 
 import (
 	"github.com/go-playground/validator/v10"
+	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awsapigw/dynamodbpolicy"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscognito"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscommon"
-	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	log "golang.org/x/exp/slog"
 	"net/http"
 	"strings"

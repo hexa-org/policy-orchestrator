@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/hexa-org/policy-mapper/mapper/formats/gcpBind"
 	"io"
 	"log"
 	"net/http"
 	"strings"
 
+	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/functionalsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/googlesupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"google.golang.org/api/iam/v1"
 )
 
@@ -157,7 +157,9 @@ func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]hexapolicy.Pol
 	})
 
 	policies := functionalsupport.Map(iamBindings, func(iamBinding iam.Binding) hexapolicy.PolicyInfo {
-		p, mappingErr := googlesupport.New(map[string]string{}).MapBindingToPolicy(objectId, iamBinding)
+		p, mappingErr := gcpBind.New(map[string]string{}).MapBindingToPolicy(objectId, iamBinding)
+
+		//p, mappingErr := googlesupport.New(map[string]string{}).MapBindingToPolicy(objectId, iamBinding)
 		if mappingErr != nil {
 			return hexapolicy.PolicyInfo{}
 		}

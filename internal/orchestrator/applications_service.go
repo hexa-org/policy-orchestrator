@@ -2,7 +2,7 @@ package orchestrator
 
 import (
 	"errors"
-	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
 	"net/http"
 	"strings"
 )

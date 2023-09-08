@@ -9,9 +9,9 @@ import (
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/amazonwebservices/awscommon"
 
+	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 
 	"io/ioutil"
 	"log"

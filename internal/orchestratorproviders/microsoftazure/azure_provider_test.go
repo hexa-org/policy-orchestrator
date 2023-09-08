@@ -1,11 +1,11 @@
 package microsoftazure_test
 
 import (
+	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/microsoftazure/azad"
 	"github.com/hexa-org/policy-orchestrator/pkg/azuretestsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

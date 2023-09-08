@@ -1,23 +1,24 @@
 package amazonsupport
 
+/*
 import (
 	"errors"
 	"fmt"
+	"github.com/hexa-org/policy-mapper/mapper/conditionLangs/gcpcel"
 	"os"
 	"strings"
 
 	"github.com/alecthomas/participle/v2"
-	"github.com/hexa-org/policy-orchestrator/pkg/googlesupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
 )
 
 type CedarPolicyMapper struct {
-	ConditionMapper googlesupport.GoogleConditionMapper
+	ConditionMapper gcpcel.GoogleConditionMapper
 	Parser          *participle.Parser[CedarPolicies]
 }
 
 func New(nameMap map[string]string) *CedarPolicyMapper {
-	return &CedarPolicyMapper{ConditionMapper: googlesupport.GoogleConditionMapper{NameMapper: hexapolicy.NewNameMapper(nameMap)},
+	return &CedarPolicyMapper{ConditionMapper: gcpcel.GoogleConditionMapper{NameMapper: hexapolicy.NewNameMapper(nameMap)},
 		Parser: participle.MustBuild[CedarPolicies](participle.CaseInsensitive("permit", "forbid", "unless", "when"))}
 }
 
@@ -30,10 +31,9 @@ func (c *CedarPolicyMapper) Name() string {
 	return "cedar"
 }
 
-/*
-MapPolicyToCedar takes an IDQL Policy and maps it to 1 or more Cedar policies. The need for more than one arises because
-IDQL supports multiple subjects where Cedar is limited to 1 Principal and 1 Resource.
-*/
+
+//MapPolicyToCedar takes an IDQL Policy and maps it to 1 or more Cedar policies. The need for more than one arises because
+//IDQL supports multiple subjects where Cedar is limited to 1 Principal and 1 Resource.
 func (c *CedarPolicyMapper) MapPolicyToCedar(idqlPol hexapolicy.PolicyInfo) ([]*CedarPolicy, error) {
 	cpolicies := make([]*CedarPolicy, 0)
 
@@ -402,3 +402,5 @@ func (c *CedarPolicyMapper) ParseAndMapCedarToHexa(cedarBytes []byte) (*hexapoli
 
 	return c.MapCedarPoliciesToIdql(cedarPols)
 }
+
+*/

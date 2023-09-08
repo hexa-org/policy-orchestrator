@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 	"google.golang.org/api/option"
 	"google.golang.org/api/transport/http"
 )

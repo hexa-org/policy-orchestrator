@@ -8,11 +8,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/openpolicyagent"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestratorproviders/openpolicyagent/test"
 	"github.com/hexa-org/policy-orchestrator/pkg/compressionsupport"
-	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 
 	"io/ioutil"
 	"math/rand"
@@ -342,8 +342,8 @@ func TestSetPolicyInfo_withInvalidArguments(t *testing.T) {
 		[]hexapolicy.PolicyInfo{
 			{
 				Actions: []hexapolicy.ActionInfo{{"http:GET"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"allusers"}}, Object: hexapolicy.ObjectInfo{
-				ResourceID: "aResourceId",
-			}},
+					ResourceID: "aResourceId",
+				}},
 		},
 	)
 

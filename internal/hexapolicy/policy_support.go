@@ -1,5 +1,6 @@
 package hexapolicy
 
+/*
 // todo - longer name used here to simplify a refactoring
 
 type PolicyInfo struct {
@@ -24,3 +25,5 @@ type SubjectInfo struct {
 type ObjectInfo struct {
 	ResourceID string `validate:"required"`
 }
+
+*/

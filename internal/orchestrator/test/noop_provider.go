@@ -3,8 +3,8 @@ package orchestrator_test
 import (
 	"net/http"
 
+	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
 )
 
 type NoopProvider struct {

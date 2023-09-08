@@ -1,5 +1,6 @@
 package hexapolicy
 
+/*
 const (
 	SAnyUser   string = "any"
 	SAnyAuth   string = "anyAuthenticated"
@@ -46,3 +47,6 @@ type SubjectInfo struct {
 type ObjectInfo struct {
 	ResourceID string `json:"resource_id" validate:"required"`
 }
+
+
+*/

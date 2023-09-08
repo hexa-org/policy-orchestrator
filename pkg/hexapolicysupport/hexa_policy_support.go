@@ -1,10 +1,11 @@
 package hexapolicysupport
 
+/*
 import (
 	"encoding/json"
 	"os"
 
-	"github.com/hexa-org/policy-orchestrator/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
 )
 
 // ParsePolicyFile parses a file containing IDQL policy data in JSON form. The top level attribute is "policies" which
@@ -46,3 +47,4 @@ func WritePolicies(path string, policies []hexapolicy.PolicyInfo) error {
 	}
 	return os.WriteFile(path, polBytes, 0644)
 }
+*/
