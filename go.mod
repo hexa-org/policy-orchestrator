@@ -25,7 +25,6 @@ require (
 	github.com/google/uuid v1.3.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/sessions v1.2.1
-	//github.com/hexa-org/policy-mapper/hexaIdql v0.0.0-20230907182010-e4027b79cc40
 	github.com/hiyosi/hawk v1.0.1
 	github.com/lib/pq v1.10.7
 	github.com/stretchr/testify v1.8.4
