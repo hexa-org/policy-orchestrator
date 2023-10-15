@@ -50,6 +50,6 @@ jobs:
           sudo mv opa /usr/bin/opa
       - name: test
         run: |
-          go test -tags integration -coverprofile coverage.out  ./.../
+          go test -tags integration -coverprofile coverage.out  ./demo/.../
       - name: Upload coverage to Codecov
         run: bash <(curl -s https://codecov.io/bash)
