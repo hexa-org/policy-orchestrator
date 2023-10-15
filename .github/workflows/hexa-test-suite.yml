@@ -42,7 +42,7 @@ jobs:
           sudo mv migrate.linux-amd64 /usr/bin/migrate
       - name: migrate
         run: |
-          migrate -verbose -path ./databases/orchestrator -database postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable up
+          migrate -verbose -path ./demo/databases/orchestrator -database postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable up
       - name: opa
         run: |
           curl -L -o opa https://github.com/open-policy-agent/opa/releases/download/v0.38.1/opa_linux_amd64
