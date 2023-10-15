@@ -1,0 +1,105 @@
+{{- template "base" .}}
+{{- define "main"}}
+    <div class="card">
+        {{- $m := index .Map "message"}}
+        {{- $provider := index .Map "provider"}}
+        <h1>Install Provider</h1>
+        <form name="integration" action="/integrations" method="post" enctype="multipart/form-data">
+            <input type="hidden" value="{{$provider}}" name="provider"/>
+            <h2 class="gcp-title">Open Policy Agent (OPA)</h2>
+            <fieldset class="flex">
+                <p>
+                    Add Open Policy Agent support by uploading your hexa-open-policy-agent integration configuration
+                    file.
+                </p>
+                <label class="file">Choose a integration configuration file<input id="key-file" name="key" type="file"/>
+                </label>
+                <p id="key-file-name"></p>
+            </fieldset>
+
+            <input type="submit" value="Install Cloud Provider" class="button"/>
+            {{- if $m}}
+                <div class="message">Something went wrong. {{$m}}</div>
+            {{- end }}
+        </form>
+    </div>
+    <div class="card">
+        <h2>Example integration file</h2>
+        <h3>hexa-open-policy-agent.json</h3>
+        <pre style="padding-left: 1rem"><code>{
+    "project_id": "Hexa Industries",
+    "bundle_url": "http://localhost:8889/bundles/bundle.tar.gz"
+}</code></pre>
+        <h3>hexa-open-policy-agent-https.json</h3>
+        <pre style="padding-left: 1rem"><code>{
+    "project_id": "Hexa Industries",
+    "bundle_url": "https://localhost:8889/bundles/bundle.tar.gz",
+    "ca_cert": "-----BEGIN CERTIFICATE-----\r\nMIIFaTCCA1GgAwIBAgICB\r\nCzAJBgNVBAgTAkNPMRAwDg...Eg\r\n-----END CERTIFICATE-----"
+}</code></pre>
+        <h3>hexa-opa-google-cloud-storage.json</h3>
+        <p> The key must have the <a class="link" href="https://cloud.google.com/storage/docs/access-control/iam-roles">Storage
+                Object Admin role</a>.</p>
+        <pre style="padding-left: 1rem"><code>{
+    "project_id": "Hexa Industries GCP",
+    "gcp": {
+        "bucket_name": "BUCKET_NAME",
+        "object_name": "bundle.tar.gz",
+        "key": {
+            "type": "service_account",
+            "project_id": "google-cloud-project-id",
+            "private_key_id": "",
+            "private_key": "-----BEGIN PRIVATE KEY-----\n-----END PRIVATE KEY-----\n",
+            "client_email": "google-cloud-project-id@google-cloud-project-id.iam.gserviceaccount.com",
+            "client_id": "000000000000000000000",
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+            "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/google-cloud-project-id%google-cloud-project-id.iam.gserviceaccount.com"
+        }
+    }
+}</code></pre>
+        <h3>hexa-opa-amazon-s3-storage.json</h3>
+        <p>The key must allow
+            <a class="link" href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html">s3:PutObject</a>
+            and
+            <a class="link" href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html">s3.GetObject</a>
+            actions.
+        </p>
+        <pre style="padding-left: 1rem"><code>{
+  "project_id": "Hexa Industries AWS S3",
+  "aws": {
+    "bucket_name": "aws-s3-bucket-name",
+    "object_name": "bundle.tar.gz",
+    "key": {
+      "region": "aws-region",
+      "accessKeyID": "00000000000000000000",
+      "secretAccessKey": "99999999999999999999999"
+    }
+  }
+}</code></pre>
+        <h3>hexa-opa-github.json</h3>
+        <p>The
+            <a class="link"
+               href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-personal-access-token-classic">
+                Github Personal Access token (classic).</a>
+            Must allow read:packages, write:packages
+        </p>
+        <pre style="padding-left: 1rem"><code>{
+  "project_id": "Hexa Industries OPA Github",
+  "github": {
+    "account": "github-org-or-account",
+    "repo": "github-repo",
+    "bundlePath": "bundle.tar.gz",
+    "key": {
+      "accessToken": "github_personal_access_token_classic"
+    }
+  }
+}</code></pre>
+    </div>
+{{- end}}
+
+<script>
+    document.getElementById("key-file").addEventListener("change", (e) => {
+        document.getElementById("key-file-name").innerHTML = e.target.files[0].name
+    })
+</script>

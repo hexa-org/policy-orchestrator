@@ -1,0 +1,14 @@
+services:
+  - name: github
+    url: https://raw.githubusercontent.com/${GITHUB_ACCOUNT}/${GITHUB_REPO}/${GITHUB_BRANCH}
+    credentials:
+      bearer:
+        token: ${GITHUB_ACCESS_TOKEN}
+
+bundles:
+  authz:
+    service: github
+    resource: bundle.tar.gz
+    polling:
+      min_delay_seconds: 10
+      max_delay_seconds: 30

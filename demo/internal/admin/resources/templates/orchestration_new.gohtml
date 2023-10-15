@@ -1,0 +1,87 @@
+{{- template "base" .}}
+{{- define "main"}}
+    <div class="card">
+        <h1>Policy Orchestration</h1>
+        {{- $m := index .Map "message"}}
+        {{- if $m}}
+            <div class="message">Something went wrong. {{$m}}</div>
+        {{- end }}
+        <form name="orchestration" action="/orchestration" method="post">
+            <table>
+                <thead>
+                <tr>
+                    <th>Apply from</th>
+                    <th>Apply to</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                <tr>
+                    <td>
+                        <label>
+                            <select name="from" id="from" class="custom-select">
+                                {{- range index .Map "applications"}}
+                                    <option value="{{.ID}}">
+                                        {{if eq .ProviderName "google_cloud"}}[Google Cloud Platform]{{end}}
+                                        {{if eq .ProviderName "amazon"}}[Amazon Web Services]{{end}}
+                                        {{if eq .ProviderName "azure"}}[Azure Cloud Platform]{{end}}
+                                        {{if eq .ProviderName "open_policy_agent"}}[Open Policy Agent]{{end}}
+                                        {{.Name}}</option>
+                                {{- end}}
+                            </select>
+                        </label>
+                    </td>
+
+                    <td>
+                        <label>
+                            <select name="to" id="to" class="custom-select">
+                                {{- range index .Map "applications"}}
+                                    <option value="{{.ID}}">
+                                        {{if eq .ProviderName "google_cloud"}}[Google Cloud Platform]{{end}}
+                                        {{if eq .ProviderName "amazon"}}[Amazon Web Services]{{end}}
+                                        {{if eq .ProviderName "azure"}}[Azure Cloud Platform]{{end}}
+                                        {{if eq .ProviderName "open_policy_agent"}}[Open Policy Agent]{{end}}
+                                        {{.Name}}</option>
+                                {{- end}}
+                            </select>
+                        </label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        IDQL Policy JSON
+                        <pre><code data-application-from-policy-json></code></pre>
+                    </td>
+                    <td>
+                        IDQL Policy JSON
+                        <pre><code data-application-to-policy-json></code></pre>
+                    </td>
+                </tr>
+            </table>
+
+            <input type="submit" value="Apply Policy" class="button"/>
+        </form>
+    </div>
+{{- end}}
+
+<script>
+    const setPolicy = (id, selector) => {
+        document.querySelector(`[${selector}]`).innerText = ""
+        if (id === "") {
+            return
+        }
+        fetch(`/applications/${id}/policies`)
+            .then(response => response.text())
+            .then(text => document.querySelector(`[${selector}]`).innerText = text)
+    }
+    setPolicy(document.getElementById("from").value, "data-application-from-policy-json")
+    setPolicy(document.getElementById("to").value, "data-application-to-policy-json")
+
+    document.getElementById("from").addEventListener("change", (e) => {
+        setPolicy(e.target.value, "data-application-from-policy-json")
+    })
+    document.getElementById("to").addEventListener("change", (e) => {
+        setPolicy(e.target.value, "data-application-to-policy-json")
+    })
+</script>
