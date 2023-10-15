@@ -1,0 +1,176 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: hexa-admin-pv
+  labels:
+    type: local
+  namespace: hexa-admin
+spec:
+  storageClassName: standard
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hexa-admin-pvc
+  namespace: hexa-admin
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hexa-admin-orchestrator
+  name: hexa-admin-orchestrator
+  namespace: hexa-admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hexa-admin-orchestrator
+  template:
+    metadata:
+      labels:
+        app: hexa-admin-orchestrator
+    spec:
+      containers:
+        - image: ${IMAGE}
+          name: hexa-admin
+          imagePullPolicy: Always
+          command:
+            - orchestrator
+          env:
+            - name: ORCHESTRATOR_HOSTPORT
+              value: hexa-admin-orchestrator.hexa-admin.svc.cluster.local:8885
+            - name: ORCHESTRATOR_KEY
+              value: 0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb
+            - name: POSTGRESQL_URL
+              value: postgres://orchestrator:orchestrator@hexa-admin-db-postgresql.hexa-admin.svc.cluster.local:5432/orchestrator_development?sslmode=disable
+            - name: PORT
+              value: "8885"
+          ports:
+            - containerPort: 8885
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: hexa-admin-orchestrator
+  name: hexa-admin-orchestrator
+  namespace: hexa-admin
+spec:
+  type: NodePort
+  ports:
+    - port: 8885
+      targetPort: 8885
+  selector:
+    app: hexa-admin-orchestrator
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hexa-admin
+  name: hexa-admin
+  namespace: hexa-admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hexa-admin
+  template:
+    metadata:
+      labels:
+        app: hexa-admin
+    spec:
+      containers:
+        - image: ${IMAGE}
+          name: hexa-admin
+          imagePullPolicy: Always
+          command:
+            - admin
+          env:
+            - name: ORCHESTRATOR_URL
+              value: "http://hexa-admin-orchestrator.hexa-admin.svc.cluster.local:8885"
+            - name: ORCHESTRATOR_KEY
+              value: 0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb
+            - name: PORT
+              value: "8884"
+          ports:
+            - containerPort: 8884
+---
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  labels:
+    app: hexa-admin
+  name: hexa-admin
+  namespace: hexa-admin
+spec:
+  iap:
+    enabled: true
+    oauthclientCredentials:
+      secretName: hexa-admin-secret
+  healthCheck:
+    checkIntervalSec: 15
+    port: 8884
+    type: HTTP
+    requestPath: /health
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: hexa-admin
+  name: hexa-admin
+  namespace: hexa-admin
+  annotations:
+    beta.cloud.google.com/backend-config: '{"default": "hexa-admin"}'
+spec:
+  ports:
+    - port: 8884
+      protocol: TCP
+      targetPort: 8884
+  selector:
+    app: hexa-admin
+  type: NodePort
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: hexa-admin-certificate
+  namespace: hexa-admin
+  labels:
+    app: hexa-admin
+spec:
+  domains:
+    - hexa-admin.${DOMAIN}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hexa-admin
+  namespace: hexa-admin
+  labels:
+    app: hexa-admin
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: hexa-admin-static-ip
+    networking.gke.io/managed-certificates: "hexa-admin-certificate"
+    kubernetes.io/ingress.class: "gce"
+spec:
+  defaultBackend:
+    service:
+      name: hexa-admin
+      port:
+        number: 8884
