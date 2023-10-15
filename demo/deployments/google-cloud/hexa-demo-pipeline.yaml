@@ -1,0 +1,116 @@
+resource_types:
+  - name: kpack-image
+    type: registry-image
+    source:
+      repository: gcr.io/cf-build-service-public/concourse-kpack-resource
+      tag: "1.0"
+
+resources:
+  - name: hexa-demo-image
+    type: registry-image
+    source:
+      repository: registry.${REGISTRY_DOMAIN}/kpack/hexa-demo
+
+  - name: hexa-demo-source-code
+    type: git
+    source:
+      uri: https://github.com/hexa-org/policy-orchestrator
+      branch: main
+
+  - name: hexa-demo-build-service
+    type: kpack-image
+    source:
+      image: hexa-demo-image
+      namespace: hexa-demo
+      gke:
+        json_key: ((service-account-key))
+        kubeconfig: ((kubeconfig))
+
+  - name: kubernetes-task-image
+    type: registry-image
+    source:
+      repository: registry.${REGISTRY_DOMAIN}/concourse-images/cluster-mgmt
+      tag: latest
+
+jobs:
+  - name: vulnerability-scan
+    plan:
+      - task: sleep
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: ubuntu
+              tag: bionic
+          run:
+            path: /bin/sleep
+            args: [ 5s ]
+      - in_parallel:
+          - get: hexa-demo-source-code
+          - get: hexa-demo-build-service
+            trigger: true
+            passed: [ build-hexa-demo-image ]
+          - get: hexa-demo-image
+      - task: trivy-fs
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: aquasec/trivy
+          inputs:
+            - name: hexa-demo-image
+          caches:
+            - path: trivy-cache
+          run:
+            path: sh
+            args:
+              - -cex
+              - |
+                trivy --cache-dir trivy-cache fs --severity HIGH,CRITICAL --vuln-type library,os --ignore-unfixed --exit-code 0 hexa-demo-image/rootfs
+  - name: build-hexa-demo-image
+    plan:
+      - get: hexa-demo-source-code
+        trigger: true
+      - put: hexa-demo-build-service
+        params:
+          commitish: hexa-demo-source-code/.git/ref
+
+  - name: deploy-hexa-demo
+    plan:
+      - get: hexa-demo-source-code
+      - get: hexa-demo-build-service
+        passed:
+          - vulnerability-scan
+        trigger: true
+      - get: kubernetes-task-image
+      - task: deploy-kubernetes
+        image: kubernetes-task-image
+        config:
+          platform: linux
+          inputs:
+            - name: hexa-demo-source-code
+          params:
+            KUBECONFIG: ((kubeconfig))
+            DOMAIN: ((domain))
+            K8S_CLUSTER_NAME: ((cluster_name))
+            K8S_SERVICE_ACCOUNT_JSON: ((service_account_json))
+          run:
+            path: sh
+            args:
+              - -sc
+              - |
+                echo "${DOLLAR}KUBECONFIG" > config.yml
+                export KUBECONFIG=config.yml
+                export IMAGE=$(kubectl get image hexa-demo-image -n hexa-demo -o jsonpath="{.status.latestImage}")
+                envsubst < ./hexa-demo-source-code/deployments/google-cloud/hexa-demo.yaml > google-cloud-hexa-demo.yaml
+                unset KUBECONFIG
+                export cred_file=$(mktemp)
+                trap "rm ${cred_file}" EXIT
+                echo "${DOLLAR}{K8S_SERVICE_ACCOUNT_JSON}" > ${DOLLAR}{cred_file}
+                chmod 600 ${DOLLAR}{cred_file}
+                gcloud auth login --cred-file "${DOLLAR}{cred_file}" --quiet
+                gcloud container clusters get-credentials ${DOLLAR}{K8S_CLUSTER_NAME} --zone ${GCP_ZONE} --project ${GCP_PROJECT_ID}
+                kubectl create namespace hexa-demo
+                kubectl apply -f google-cloud-hexa-demo.yaml

@@ -1,0 +1,43 @@
+{{- template "base" .}}
+{{- define "main"}}
+    <div class="card">
+        {{- $m := index .Map "message"}}
+        {{- $provider := index .Map "provider"}}
+        <h1>Install Azure Provider</h1>
+        <form name="integration" action="/integrations" method="post" enctype="multipart/form-data">
+            <input type="hidden" value="{{$provider}}" name="provider"/>
+            <h2 class="gcp-title">Azure Cloud Platform</h2>
+            <fieldset class="flex">
+                <p>
+                    Add a Azure App Registration by uploading a json file similar to the example below.
+                </p>
+                <label class="file">
+                    Choose a private key file
+                    <input id="key-file" type="file" name="key"/>
+                </label>
+                <p id="key-file-name"></p>
+            </fieldset>
+
+            <input type="submit" value="Install Cloud Provider" class="button"/>
+            {{- if $m}}
+                <div class="message">Something went wrong. {{$m}}</div>
+            {{- end }}
+        </form>
+    </div>
+    <div class="card">
+        <h2>Example integration file</h2>
+        <h3>hexa-azure-app-registration.json</h3>
+        <pre style="padding-left: 1rem"><code>{
+  "appId": "azure-app-id",
+  "secret": "azure-app-registration-secret",
+  "tenant": "azure-tenant"
+}</code>
+</pre>
+    </div>
+{{- end}}
+
+<script>
+    document.getElementById("key-file").addEventListener("change", (e) => {
+        document.getElementById("key-file-name").innerHTML = e.target.files[0].name
+    })
+</script>

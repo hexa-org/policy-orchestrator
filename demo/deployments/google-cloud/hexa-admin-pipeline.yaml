@@ -1,0 +1,118 @@
+resource_types:
+  - name: kpack-image
+    type: registry-image
+    source:
+      repository: gcr.io/cf-build-service-public/concourse-kpack-resource
+      tag: "1.0"
+
+resources:
+  - name: hexa-admin-image
+    type: registry-image
+    source:
+      repository: registry.${REGISTRY_DOMAIN}/kpack/hexa-admin
+
+  - name: hexa-admin-source-code
+    type: git
+    source:
+      uri: https://github.com/hexa-org/policy-orchestrator
+      branch: main
+
+  - name: hexa-admin-build-service
+    type: kpack-image
+    source:
+      image: hexa-admin-image
+      namespace: hexa-admin
+      gke:
+        json_key: ((service-account-key))
+        kubeconfig: ((kubeconfig))
+
+  - name: kubernetes-task-image
+    type: registry-image
+    source:
+      repository: registry.${REGISTRY_DOMAIN}/concourse-images/cluster-mgmt
+      tag: latest
+
+jobs:
+  - name: vulnerability-scan
+    plan:
+      - task: sleep
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: ubuntu
+              tag: bionic
+          run:
+            path: /bin/sleep
+            args: [ 5s ]
+      - in_parallel:
+          - get: hexa-admin-source-code
+          - get: hexa-admin-build-service
+            trigger: true
+            passed: [ build-hexa-admin-image ]
+          - get: hexa-admin-image
+      - task: trivy-fs
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: aquasec/trivy
+          inputs:
+            - name: hexa-admin-image
+          caches:
+            - path: trivy-cache
+          run:
+            path: sh
+            args:
+              - -cex
+              - |
+                trivy --cache-dir trivy-cache fs --severity HIGH,CRITICAL --vuln-type library,os --ignore-unfixed --exit-code 0 hexa-admin-image/rootfs
+  - name: build-hexa-admin-image
+    plan:
+      - get: hexa-admin-source-code
+        trigger: true
+      - put: hexa-admin-build-service
+        params:
+          commitish: hexa-admin-source-code/.git/ref
+
+  - name: deploy-hexa-admin
+    plan:
+      - get: hexa-admin-source-code
+      - get: hexa-admin-build-service
+        passed:
+          - vulnerability-scan
+        trigger: true
+      - get: kubernetes-task-image
+      - task: deploy-kubernetes
+        image: kubernetes-task-image
+        config:
+          platform: linux
+          inputs:
+            - name: hexa-admin-source-code
+          params:
+            KUBECONFIG: ((kubeconfig))
+            DOMAIN: ((domain))
+            GCP_PROJECT_ID: ((gcp_project_id))
+            GCP_ZONE: ((gcp_zone))
+            GCP_CLUSTER_NAME: ((gcp_cluster_name))
+            GCP_SERVICE_ACCOUNT_JSON: ((service_account_json))
+          run:
+            path: sh
+            args:
+              - -sc
+              - |
+                echo "${DOLLAR}KUBECONFIG" > config.yml
+                export KUBECONFIG=config.yml
+                export IMAGE=$(kubectl get image hexa-admin-image -n hexa-admin -o jsonpath="{.status.latestImage}")
+                envsubst < ./hexa-admin-source-code/deployments/google-cloud/hexa-admin.yaml > google-cloud-hexa-admin.yaml
+                unset KUBECONFIG
+                export cred_file=$(mktemp)
+                trap "rm ${cred_file}" EXIT
+                echo "${DOLLAR}{GCP_SERVICE_ACCOUNT_JSON}" > ${DOLLAR}{cred_file}
+                chmod 600 ${DOLLAR}{cred_file}
+                gcloud auth login --cred-file "${DOLLAR}{cred_file}" --quiet
+                gcloud container clusters get-credentials ${DOLLAR}{GCP_CLUSTER_NAME} --zone ${DOLLAR}{GCP_ZONE} --project ${DOLLAR}{GCP_PROJECT_ID}
+                kubectl create namespace hexa-admin
+                kubectl apply -f google-cloud-hexa-admin.yaml
