@@ -1,5 +1,0 @@
-demo_cfg: go run ${REPO}/cmd/democonfig/democonfig.go
-demo_opa: opa run --server --addr :8887 -c ${REPO}/deployments/opa-server/config/config.yaml
-demo_web: go run ${REPO}/cmd/demo/demo.go
-hexa_adm: go run ${REPO}/cmd/admin/admin.go
-hexa_orc: go run ${REPO}/cmd/orchestrator/orchestrator.go
