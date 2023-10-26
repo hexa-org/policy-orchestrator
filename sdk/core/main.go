@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/v2/core/policyprovider"
+	"github.com/hexa-org/policy-orchestrator/sdk/core/policyprovider"
 )
 
 func main() {
