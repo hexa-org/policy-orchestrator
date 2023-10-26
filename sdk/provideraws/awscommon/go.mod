@@ -1,4 +1,4 @@
-module github.com/hexa-org/policy-orchestrator/v2/provideraws/awscommon
+module github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon
 
 go 1.20
 

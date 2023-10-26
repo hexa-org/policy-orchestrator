@@ -26,7 +26,7 @@ func GetAwsClientConfig(key []byte, httpClient AWSHttpClient) (aws.Config, error
 	var awsCredentials credentialsInfo
 	err := json.NewDecoder(bytes.NewReader(key)).Decode(&awsCredentials)
 	if err != nil {
-		logger.Error("GetAwsClientConfig msg", "error decode awsCredentials key", "error", err)
+		logger.Error("GetAwsClientConfig msg", "failed to decode awsCredentials. Error", err)
 		return aws.Config{}, err
 	}
 
@@ -41,10 +41,6 @@ func GetAwsClientConfig(key []byte, httpClient AWSHttpClient) (aws.Config, error
 		awsOptions = append(awsOptions, config.WithHTTPClient(httpClient))
 		awsOptions = append(awsOptions, config.WithRetryer(func() aws.Retryer { return aws.NopRetryer{} }))
 	}
-
-	//if opt.DisableRetry {
-	//	awsOptions = append(awsOptions, config.WithRetryer(func() aws.Retryer { return aws.NopRetryer{} }))
-	//}
 
 	return config.LoadDefaultConfig(context.Background(), awsOptions...)
 }
