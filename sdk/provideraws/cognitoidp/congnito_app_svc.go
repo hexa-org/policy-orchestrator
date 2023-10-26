@@ -1,29 +1,30 @@
 package cognitoidp
 
 import (
-	"github.com/hexa-org/policy-orchestrator/v2/core/idp"
+	"github.com/hexa-org/policy-orchestrator/sdk/core/idp"
+	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/app/cognitoidp/internal/client"
 	logger "golang.org/x/exp/slog"
 )
 
 type appInfoSvc struct {
-	client CognitoClient
+	cognito client.CognitoClient
 }
 
 type Opt func(svc *appInfoSvc)
 
-func WithCognitoClientOverride(client CognitoClient) Opt {
+func WithCognitoClientOverride(client client.CognitoClient) Opt {
 	return func(svc *appInfoSvc) {
-		svc.client = client
+		svc.cognito = client
 	}
 }
 func NewAppInfoSvc(key []byte, opts ...Opt) (idp.AppInfoSvc, error) {
 	if len(opts) == 0 {
-		client, err := NewCognitoClient(key, nil)
+		cognito, err := client.NewCognitoClient(key, nil)
 		if err != nil {
 			logger.Error("NewAppInfoSvc", "error building CognitoClient", "error", err.Error())
 			return nil, err
 		}
-		return &appInfoSvc{client: client}, nil
+		return &appInfoSvc{cognito: cognito}, nil
 	}
 
 	svc := &appInfoSvc{}
@@ -38,17 +39,17 @@ func (as *appInfoSvc) GetApplications() ([]idp.AppInfo, error) {
 }
 
 func (as *appInfoSvc) getResourceServers() ([]idp.AppInfo, error) {
-	pools, err := as.client.listUserPools()
+	pools, err := as.cognito.ListUserPools()
 	if err != nil {
-		logger.Error("getResourceServers", "error calling listUserPools aws cognito api", "error", err.Error())
+		logger.Error("getResourceServers", "error calling listUserPools aws cognito api", err.Error())
 		return nil, err
 	}
 
 	apps := make([]idp.AppInfo, 0)
 	for _, p := range pools.UserPools {
-		rsOutput, err := as.client.listResourceServers(*p.Id)
+		rsOutput, err := as.cognito.ListResourceServers(*p.Id)
 		if err != nil {
-			logger.Error("getResourceServers", "error calling listResourceServers aws cognito api", "UserPoolId", *p.Id, "error", err.Error())
+			logger.Error("getResourceServers", "error calling listResourceServers aws cognito api. UserPoolId", *p.Id, "error", err.Error())
 			return nil, err
 		}
 
