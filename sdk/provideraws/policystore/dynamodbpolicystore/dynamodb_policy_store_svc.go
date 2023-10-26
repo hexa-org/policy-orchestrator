@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	ddb "github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/hexa-org/policy-orchestrator/v2/core/idp"
-	"github.com/hexa-org/policy-orchestrator/v2/core/policyprovider"
-	"github.com/hexa-org/policy-orchestrator/v2/core/policystore"
-	"github.com/hexa-org/policy-orchestrator/v2/provideraws/awscommon"
+	"github.com/hexa-org/policy-orchestrator/sdk/core/idp"
+	"github.com/hexa-org/policy-orchestrator/sdk/core/policyprovider"
+	"github.com/hexa-org/policy-orchestrator/sdk/core/policystore"
 	log "golang.org/x/exp/slog"
 )
 
@@ -35,7 +34,8 @@ func (it resourcePolicyItem) ResourceActionRole() policyprovider.ResourceActionR
 }
 
 func RunMe() {
-	svc, err := NewPolicyStoreSvc(new(resourcePolicyItem), []byte("key"))
+	tableName := "AwsPolicyStoreTableName"
+	svc, err := NewPolicyStoreSvc(new(resourcePolicyItem), []byte("key"), tableName)
 	app := new(idp.AppInfo)
 	_, err = svc.GetPolicies(*app)
 	if err != nil {
@@ -46,8 +46,9 @@ func RunMe() {
 // Example end
 
 type PolicyStoreSvc[T ItemInfo] struct {
-	client   DynamodbClient
-	itemType T
+	client    DynamodbClient
+	itemType  T
+	tableName string
 }
 
 type Opt[T ItemInfo] func(svc *PolicyStoreSvc[T])
@@ -58,16 +59,16 @@ func WithDynamodbClientOverride[T ItemInfo](client DynamodbClient) Opt[T] {
 	}
 }
 
-func NewPolicyStoreSvc[T ItemInfo](itemType T, key []byte, opts ...Opt[T]) (policystore.PolicyStoreSvc, error) {
+func NewPolicyStoreSvc[T ItemInfo](itemType T, key []byte, tableName string, opts ...Opt[T]) (policystore.PolicyBackendSvc, error) {
+	svc := &PolicyStoreSvc[T]{itemType: itemType, tableName: tableName}
 	if len(opts) == 0 {
 		client, err := NewDynamodbClient(key, nil)
 		if err != nil {
 			return nil, err
 		}
-		return &PolicyStoreSvc[T]{client: client, itemType: itemType}, nil
+		svc.client = client
 	}
 
-	svc := &PolicyStoreSvc[T]{itemType: itemType}
 	for _, o := range opts {
 		o(svc)
 	}
@@ -75,8 +76,7 @@ func NewPolicyStoreSvc[T ItemInfo](itemType T, key []byte, opts ...Opt[T]) (poli
 }
 
 func (s *PolicyStoreSvc[T]) GetPolicies(_ idp.AppInfo) ([]policyprovider.ResourceActionRoles, error) {
-	tableName := "AwsPolicyStoreTableName"
-	input := &ddb.ScanInput{TableName: &tableName}
+	input := &ddb.ScanInput{TableName: &s.tableName}
 	output, err := s.client.Scan(context.TODO(), input)
 
 	if err != nil {
@@ -94,6 +94,10 @@ func (s *PolicyStoreSvc[T]) GetPolicies(_ idp.AppInfo) ([]policyprovider.Resourc
 	return nil, nil
 }
 
+func (s *PolicyStoreSvc[T]) SetPolicy(_ policyprovider.ResourceActionRoles) error {
+	return nil
+}
+
 func toResourceActionRoleList[T ItemInfo](items []T) []policyprovider.ResourceActionRoles {
 	rarList := make([]policyprovider.ResourceActionRoles, 0)
 	for _, item := range items {
@@ -101,39 +105,3 @@ func toResourceActionRoleList[T ItemInfo](items []T) []policyprovider.ResourceAc
 	}
 	return rarList
 }
-
-func (s *PolicyStoreSvc[T]) SetPolicy(_ policyprovider.ResourceActionRoles) error {
-	return nil
-}
-
-// DynamodbClient -
-// BEGIN - copied from dynamodb_client.go
-type DynamodbClient interface {
-	Scan(ctx context.Context, params *ddb.ScanInput, optFns ...func(*ddb.Options)) (*ddb.ScanOutput, error)
-	UpdateItem(ctx context.Context, params *ddb.UpdateItemInput, optFns ...func(*ddb.Options)) (*ddb.UpdateItemOutput, error)
-}
-
-type dynamodbClient struct {
-	internal *ddb.Client
-}
-
-// NewDynamodbClient - builds DynamodbClient with provide credentials and optional httpClient
-// pass an httpClient to use for tests
-func NewDynamodbClient(key []byte, httpClient awscommon.AWSHttpClient) (DynamodbClient, error) {
-	cfg, err := awscommon.GetAwsClientConfig(key, httpClient)
-	if err != nil {
-		return nil, err
-	}
-
-	return &dynamodbClient{internal: ddb.NewFromConfig(cfg)}, nil
-}
-
-func (c *dynamodbClient) Scan(ctx context.Context, params *ddb.ScanInput, optFns ...func(*ddb.Options)) (*ddb.ScanOutput, error) {
-	return c.internal.Scan(ctx, params, optFns...)
-}
-
-func (c *dynamodbClient) UpdateItem(ctx context.Context, params *ddb.UpdateItemInput, optFns ...func(*ddb.Options)) (*ddb.UpdateItemOutput, error) {
-	return c.internal.UpdateItem(ctx, params, optFns...)
-}
-
-// END copied from dynamodb_client.go
