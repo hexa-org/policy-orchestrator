@@ -2,7 +2,7 @@ package cognitoidp
 
 import (
 	"github.com/hexa-org/policy-orchestrator/sdk/core/idp"
-	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/app/cognitoidp/internal/client"
+	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/cognitoidp/internal/client"
 	logger "golang.org/x/exp/slog"
 )
 

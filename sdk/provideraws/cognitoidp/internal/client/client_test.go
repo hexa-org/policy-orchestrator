@@ -2,8 +2,8 @@ package client
 
 import (
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/app/cognitoidp/internal/testhelper"
 	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon"
+	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/cognitoidp/internal/testhelper"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
