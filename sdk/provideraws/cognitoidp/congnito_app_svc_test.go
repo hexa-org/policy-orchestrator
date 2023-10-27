@@ -3,8 +3,8 @@ package cognitoidp_test
 import (
 	"errors"
 	"github.com/hexa-org/policy-orchestrator/sdk/core/idp"
-	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/app/cognitoidp"
-	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/app/cognitoidp/internal/testhelper"
+	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/cognitoidp"
+	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/cognitoidp/internal/testhelper"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
