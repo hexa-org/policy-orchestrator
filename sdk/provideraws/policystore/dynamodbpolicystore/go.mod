@@ -12,8 +12,8 @@ require (
 )
 
 require (
-	github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.3
-	github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.3
+	github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.4
+	github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.4
 )
 
 require (
