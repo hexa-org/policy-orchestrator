@@ -2,20 +2,18 @@ module github.com/hexa-org/policy-orchestrator/sdk/provideraws/policystore/dynam
 
 go 1.20
 
-// Temporary replace till we commit
-// SAURABH replace github.com/hexa-org/policy-orchestrator/sdk/core => ./../../../core
-
-// SAURABH replace github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon => ../../../provideraws/awscommon
-
 require (
 	github.com/aws/aws-sdk-go-v2 v1.21.2
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.10.42
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.22.2
 	github.com/aws/smithy-go v1.15.0
-	// SAURABH github.com/hexa-org/policy-orchestrator/sdk/core v0.0.0-00010101000000-000000000000
-	// SAURABH github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
+)
+
+require (
+	github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.3
+	github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.3
 )
 
 require (
@@ -34,8 +32,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.23.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/hexa-org/policy-mapper/hexaIdql v0.6.0-alpha.3 // indirect
-	github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.1 // indirect
-	github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.1 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
