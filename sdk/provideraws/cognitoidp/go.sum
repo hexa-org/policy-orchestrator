@@ -40,10 +40,14 @@ github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.1 h1:5YZ6brteY7bJI
 github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.1/go.mod h1:rK63pk8W/+VJnj08hmgo9kVXd8gpNRqo7z1h/Ecrtw0=
 github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.3 h1:pNgtRCWDyfGI0//jnYTS02JmBgrxHXq8UZb26C4c4bo=
 github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.3/go.mod h1:rK63pk8W/+VJnj08hmgo9kVXd8gpNRqo7z1h/Ecrtw0=
+github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.4 h1:qJgFhYN2nOok8GUPgFSES/22fFiHokRMG85kp+gNzKQ=
+github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.4/go.mod h1:rK63pk8W/+VJnj08hmgo9kVXd8gpNRqo7z1h/Ecrtw0=
 github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.1 h1:GAPtFjWT8pJTE3VdsdVlQ+UiHwNytYUWD4cP4BqJflg=
 github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.1/go.mod h1:/X5vEXgKOddu3KBNP2pT8lgBsVksoRa32xaQIkLs6ZU=
 github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.3 h1:DfXO6xtT3NqvsykM45ioC+BqB7r0vprGUtoUsLfMqmA=
 github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.3/go.mod h1:/X5vEXgKOddu3KBNP2pT8lgBsVksoRa32xaQIkLs6ZU=
+github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.4 h1:spnBO+jAJgbLgZd1FeFqdDhPawZTFNtfFwdP9QoTC5U=
+github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.4/go.mod h1:/X5vEXgKOddu3KBNP2pT8lgBsVksoRa32xaQIkLs6ZU=
 github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1/go.mod h1:L3OGu8Wl2/fWfCI6z80xFu9LTZmf1ZRjMHUOPmWr69U=
 github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
