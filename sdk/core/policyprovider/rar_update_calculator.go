@@ -16,6 +16,8 @@ func newUpdateCalculator(existingRars []rar.ResourceActionRoles, newRarMap map[s
 }
 
 func (c updateCalculator) calculate() []rar.ResourceActionRoles {
+	log.Info("updateCalculator.calculate", "msg", "BEGIN")
+
 	// finds new - existing
 	// if no changes, do not add to update list
 	// if new is empty, use new members
@@ -27,9 +29,12 @@ func (c updateCalculator) calculate() []rar.ResourceActionRoles {
 
 	updateList := make([]rar.ResourceActionRoles, 0)
 	for _, existing := range c.existingRars {
-		lookupKey := existing.Actions()[0] + existing.Resource() // TODO handle array actions
-		newRar, found := c.newRarMap[lookupKey]
 
+		lookupKey := existing.Actions()[0] + existing.Resource() // TODO handle array actions
+		log.Info("updateCalculator.calculate", "msg", "LOOP existing lookupKey", lookupKey)
+
+		newRar, found := c.newRarMap[lookupKey]
+		log.Info("updateCalculator.calculate", "msg", "LOOP newRar", newRar, "found", found)
 		// We DON'T support orchestrating policy fragments
 		if !found {
 			log.Warn("updateCalculator.calculate", "msg", "requested policies do not contain existing policy",
@@ -42,6 +47,7 @@ func (c updateCalculator) calculate() []rar.ResourceActionRoles {
 
 		newMembersLen := len(newRar.Members())
 		existingMembersLen := len(existing.Members())
+		log.Info("updateCalculator.calculate", "newMembersLen", newMembersLen, "existingMembersLen", existingMembersLen)
 
 		if newMembersLen == existingMembersLen {
 			// If both empty OR both same
@@ -56,6 +62,7 @@ func (c updateCalculator) calculate() []rar.ResourceActionRoles {
 
 		// if new members empty OR if existing members are empty, OR if both are non-empty but differ
 		// we should just be able to use the new
+		log.Info("updateCalculator.calculate", "msg", "add to update list")
 		updateList = append(updateList, newRar)
 	}
 

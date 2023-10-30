@@ -38,6 +38,8 @@ func (s *providerService[R]) GetPolicyInfo(appInfo idp.AppInfo) ([]hexapolicy.Po
 	return buildPolicies(rarList), nil
 }
 func (s *providerService[R]) SetPolicyInfo(appInfo idp.AppInfo, policies []hexapolicy.PolicyInfo) error {
+	log.Info("policyprovider.ProviderService", "appInfo", appInfo)
+	log.Info("policyprovider.ProviderService", "policies", policies)
 	existingRarList, err := s.policyStoreSvc.GetPolicies(appInfo)
 	if err != nil {
 		log.Error("ProviderService.SetPolicyInfo",
@@ -46,12 +48,16 @@ func (s *providerService[R]) SetPolicyInfo(appInfo idp.AppInfo, policies []hexap
 			"err=", err)
 		return err
 	}
+
+	log.Info("policyprovider.ProviderService", "existingRarList", existingRarList)
+
 	if len(existingRarList) == 0 {
 		log.Info("ProviderService.SetPolicyInfo", "no existing policies, returning", "appInfo.Name()", appInfo.Name())
 		return nil
 	}
 
 	newPoliciesRarMap, err := mapIdqlToRar(policies...)
+	log.Info("policyprovider.ProviderService", "newPoliciesRarMap", newPoliciesRarMap)
 	if err != nil {
 		log.Error("ProviderService.SetPolicyInfo",
 			"failed to map IDQL to rar", appInfo.Name(),
@@ -68,6 +74,7 @@ func (s *providerService[R]) SetPolicyInfo(appInfo idp.AppInfo, policies []hexap
 	updateList := updateCalc.calculate()
 
 	for _, aRar := range updateList {
+		log.Info("ProviderService.SetPolicyInfo", "msg", "call policyStoreSvc.SetPolicy", "aRar", aRar)
 		updateErr := s.policyStoreSvc.SetPolicy(aRar)
 		if updateErr != nil {
 			log.Error("ProviderService.SetPolicyInfo", "msg", "failed to update policy in backend store",
