@@ -31,7 +31,7 @@ func TestCalculate_AddMembers(t *testing.T) {
 	newMembers2 := addMembersToExisting(existingMembers2, testhelper.RoleUnassigned2, testhelper.RoleUnassigned1)
 
 	// 4 rars with new members (all same)
-	newRarMap := testhelper.MakeRarMapMultiple([]string{expResource1, expResource2}, [][]string{expMethods1, expMethods2}, [][]string{newMembers1, newMembers2}, true)
+	newRarMap := testhelper.MakeRarMapMultiple([]string{expResource1, expResource2}, [][]string{expMethods1, expMethods2}, [][]string{newMembers1, newMembers2})
 
 	calc := newUpdateCalculator(existingRars, newRarMap)
 	updateList := calc.calculate()
@@ -90,7 +90,7 @@ func TestCalculate_RemoveMembers(t *testing.T) {
 				[][]string{tt.existing1, tt.existing2})
 
 			// 4 rars with all members replaced
-			newRarMap := testhelper.MakeRarMapMultiple([]string{expResource1, expResource2}, [][]string{expMethods1, expMethods2}, [][]string{tt.newMembers1, tt.newMembers2}, true)
+			newRarMap := testhelper.MakeRarMapMultiple([]string{expResource1, expResource2}, [][]string{expMethods1, expMethods2}, [][]string{tt.newMembers1, tt.newMembers2})
 			calc := newUpdateCalculator(existingRars, newRarMap)
 			updateList := calc.calculate()
 			assert.Len(t, updateList, len(existingRars))
@@ -138,7 +138,7 @@ func TestCalculate_SkipOnNoChanges(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// 4 rars with new members (all same)
-			newRarMap := testhelper.MakeRarMapMultiple([]string{expResource1, expResource2}, [][]string{expMethods1, expMethods2}, [][]string{tt.newMembers1, tt.newMembers2}, true)
+			newRarMap := testhelper.MakeRarMapMultiple([]string{expResource1, expResource2}, [][]string{expMethods1, expMethods2}, [][]string{tt.newMembers1, tt.newMembers2})
 
 			calc := newUpdateCalculator(existingRars, newRarMap)
 			updateList := calc.calculate()

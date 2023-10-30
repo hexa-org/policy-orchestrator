@@ -7,7 +7,7 @@ import "github.com/hexa-org/policy-orchestrator/sdk/core/rar"
 // value = rar.ResourceActionRoles
 // e.g. { "http:GET/someresource": rar, "http:POST/someresource": rar }
 func MakeRarMap(resource string, httpMethods []string, members []string) map[string]rar.ResourceActionRoles {
-	return MakeRarMapMultiple([]string{resource}, [][]string{httpMethods}, [][]string{members}, false)
+	return MakeRarMapMultiple([]string{resource}, [][]string{httpMethods}, [][]string{members})
 }
 
 // MakeRarMapMultiple builds a map with as many element as total len of httpMethods
@@ -21,14 +21,11 @@ func MakeRarMap(resource string, httpMethods []string, members []string) map[str
 //    key3: rar(res2, PUT, nil
 // }
 
-func MakeRarMapMultiple(resources []string, httpMethods [][]string, members [][]string, skipActionPrefix bool) map[string]rar.ResourceActionRoles {
+func MakeRarMapMultiple(resources []string, httpMethods [][]string, members [][]string) map[string]rar.ResourceActionRoles {
 	rarMap := make(map[string]rar.ResourceActionRoles)
 	for i, aResource := range resources {
 		for _, aMethod := range httpMethods[i] {
-			lookupKey := MakeRarKey(aResource, aMethod)
-			if skipActionPrefix {
-				lookupKey = aMethod + aResource
-			}
+			lookupKey := makeRarKey(aResource, aMethod)
 			aRar, _ := rar.NewResourceActionRoles(aResource, []string{aMethod}, members[i])
 			rarMap[lookupKey] = aRar
 		}
@@ -47,6 +44,6 @@ func MakeRarListMultiple(resources []string, httpMethods [][]string, members [][
 	return rarList
 }
 
-func MakeRarKey(resource, method string) string {
-	return "http:" + method + resource
+func makeRarKey(resource, method string) string {
+	return method + resource
 }
