@@ -3,12 +3,13 @@ package testhelper
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	ddb "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hexa-org/policy-orchestrator/sdk/core/rar"
 	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/policystore/dynamodbpolicystore"
 	"github.com/stretchr/testify/mock"
-	log "golang.org/x/exp/slog"
+	"reflect"
 )
 
 type MockClient struct {
@@ -36,7 +37,6 @@ func (m *MockClient) ExpectScan(andRetError error, orRetItems ...rar.ResourceAct
 	var output *ddb.ScanOutput
 	if andRetError == nil {
 		output = CustomScanOutputWithAttributeNames(m.tableDefn, orRetItems...)
-		//output = CustomScanOutput(orRetItems...)
 	}
 
 	m.On("Scan", context.TODO(), input, mock.AnythingOfType("[]func(*dynamodb.Options)")).
@@ -47,26 +47,34 @@ func (m *MockClient) ExpectUpdateItem(withInput rar.ResourceActionRoles, andRetE
 	output := &ddb.UpdateItemOutput{}
 
 	theFunc := mock.MatchedBy(func(input *ddb.UpdateItemInput) bool {
-		resource := input.Key[m.tableDefn.ResourceAttrName].(*types.AttributeValueMemberS)
-		action := input.Key[m.tableDefn.ActionAttrName].(*types.AttributeValueMemberS)
-		members := input.ExpressionAttributeValues[":members"].(*types.AttributeValueMemberS)
+
 		expMembers, _ := json.Marshal(withInput.Members())
-		updateExpr := *input.UpdateExpression
-		memberExprAttrName := input.ExpressionAttributeNames["#members"]
-
-		ok := *input.TableName == TableName &&
-			resource.Value == withInput.Resource() &&
-			action.Value == withInput.Actions()[0] && // TODO handle array
-			members.Value == string(expMembers) &&
-			updateExpr == "SET #members = :members" &&
-			memberExprAttrName == m.tableDefn.MembersAttrName
-
-		if !ok {
-			log.Error("test", "unexpected UpdateItem tableName", TableName,
-				"Resource", resource.Value, "Action", action.Value, "Members", members.Value,
-				"UpdateExpression", updateExpr, "ExpressionAttributeNames", memberExprAttrName)
+		updateExpr := fmt.Sprintf("SET #%s = :%s", AttrNameMembers, AttrNameMembers)
+		keys := map[string]types.AttributeValue{
+			AttrNameExprResource: &types.AttributeValueMemberS{Value: AttrResourcePlaceholder},
+			AttrNameExprActions:  &types.AttributeValueMemberS{Value: AttrActionsPlaceholder},
+		}
+		exprNames := map[string]string{
+			AttrNameExprResource: AttrNameResource,
+			AttrNameExprActions:  AttrNameActions,
+			AttrNameExprMembers:  AttrNameMembers,
 		}
 
+		exprValues := map[string]types.AttributeValue{
+			AttrResourcePlaceholder: &types.AttributeValueMemberS{Value: withInput.Resource()},
+			AttrActionsPlaceholder:  &types.AttributeValueMemberS{Value: withInput.Actions()[0]},
+			AttrMembersPlaceholder:  &types.AttributeValueMemberS{Value: string(expMembers)},
+		}
+
+		expUpdateItemInput := &ddb.UpdateItemInput{
+			TableName:                 &TableName,
+			Key:                       keys,
+			ExpressionAttributeNames:  exprNames,
+			ExpressionAttributeValues: exprValues,
+			UpdateExpression:          &updateExpr,
+			ReturnValues:              types.ReturnValueAllNew,
+		}
+		ok := reflect.DeepEqual(input, expUpdateItemInput)
 		return ok
 	})
 
