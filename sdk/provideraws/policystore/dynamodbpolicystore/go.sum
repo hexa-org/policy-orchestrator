@@ -49,6 +49,8 @@ github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.5 h1:YGX6dQ7R4hqH5
 github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.5/go.mod h1:rK63pk8W/+VJnj08hmgo9kVXd8gpNRqo7z1h/Ecrtw0=
 github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.6 h1:3IuV79cST9BLWoh3S5e/QCfPISD4x89FnqnKdnM9YxQ=
 github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.6/go.mod h1:rK63pk8W/+VJnj08hmgo9kVXd8gpNRqo7z1h/Ecrtw0=
+github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.8 h1:rGqQOR5KjMl4+sBQxGzOwK5Qz63nbMjDBeuV2aeBWsk=
+github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.8/go.mod h1:rK63pk8W/+VJnj08hmgo9kVXd8gpNRqo7z1h/Ecrtw0=
 github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.1 h1:GAPtFjWT8pJTE3VdsdVlQ+UiHwNytYUWD4cP4BqJflg=
 github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.1/go.mod h1:/X5vEXgKOddu3KBNP2pT8lgBsVksoRa32xaQIkLs6ZU=
 github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.3 h1:DfXO6xtT3NqvsykM45ioC+BqB7r0vprGUtoUsLfMqmA=
@@ -59,6 +61,8 @@ github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.5
 github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.5/go.mod h1:/X5vEXgKOddu3KBNP2pT8lgBsVksoRa32xaQIkLs6ZU=
 github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.6 h1:93D1UUBiwQBBNK0ENdaWiU9MamG6z/dHREvba1BdNes=
 github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.6/go.mod h1:/X5vEXgKOddu3KBNP2pT8lgBsVksoRa32xaQIkLs6ZU=
+github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.8 h1:iEx5oLRkYKr9ST9RGyw8E2nZAxJvAx0EiJiMxZVkETc=
+github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.8/go.mod h1:/X5vEXgKOddu3KBNP2pT8lgBsVksoRa32xaQIkLs6ZU=
 github.com/jmespath/go-jmespath v0.4.0 h1:BEgLn5cpjn8UN1mAw4NjwDrS35OdebyEtFe+9YPoQUg=
 github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1 h1:shLQSRRSCCPj3f2gpwzGwWFoC7ycTf1rcQZHOlsJ6N8=
