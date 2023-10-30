@@ -21,6 +21,7 @@ var supportedHttpMethods = []string{http.MethodGet, http.MethodHead, http.Method
 // which will be used to convert the vendor specific policy to ResourceActionRoles
 type ResourceActionRolesMapper interface {
 	MapTo() (ResourceActionRoles, error)
+	MapToV2(item interface{}) (ResourceActionRoles, error)
 }
 
 // ResourceActionRoles - an internal representation of a policy
