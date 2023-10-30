@@ -20,6 +20,10 @@ func (it *resourcePolicyItem) MapTo() (rar.ResourceActionRoles, error) {
 	return rar.NewResourceActionRoles(it.Resource, []string{it.Action}, members)
 }
 
+func (it *resourcePolicyItem) MapToV2(item interface{}) (rar.ResourceActionRoles, error) {
+	panic("Implement me in runMe MapToV2")
+}
+
 func RunMe() {
 	tableName := "AwsPolicyStoreTableName"
 	dbInfo := TableInfo[*resourcePolicyItem]{
