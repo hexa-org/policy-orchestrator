@@ -187,10 +187,9 @@ func (t2 *InputBuilderV2) makeInput(aRar rar.ResourceActionRoles) error {
 }
 
 func (t2 *InputBuilderV2) addToKey(tableAttrName string, attrValue types.AttributeValue) {
-	valPlaceholder, _ := attributevalue.Marshal(":" + tableAttrName)
-	t2.keyAttrVal["#"+tableAttrName] = valPlaceholder //pkVal
-	t2.addToExprNameAndValue(tableAttrName, attrValue)
-
+	//valPlaceholder, _ := attributevalue.Marshal(":" + tableAttrName)
+	t2.keyAttrVal[tableAttrName] = attrValue //pkVal
+	//t2.addToExprNameAndValue(tableAttrName, attrValue)
 }
 
 func (t2 *InputBuilderV2) addToExprNameAndValue(tableAttrName string, attrValue types.AttributeValue) {
