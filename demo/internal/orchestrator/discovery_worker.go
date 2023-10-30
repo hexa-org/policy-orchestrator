@@ -12,17 +12,17 @@ type DiscoveryWorker struct {
 func (n *DiscoveryWorker) Run(work interface{}) error {
 	discoveredApps := make(map[string]struct{})
 	for _, p := range n.Providers {
-		log.Printf("Found discovery provider %s.", p.Name())
+		//log.Printf("Found discovery provider %s.", p.Name())
 
 		for _, record := range work.([]IntegrationRecord) {
-			log.Printf("Finding applications for integration provider %s.", p.Name())
+			//log.Printf("Finding applications for integration provider %s.", p.Name())
 			applications, _ := p.DiscoverApplications(IntegrationInfo{Name: record.Provider, Key: record.Key})
 
-			log.Printf("Found %d applications for integration provider %s.", len(applications), p.Name())
+			//log.Printf("Found %d applications for integration provider %s.", len(applications), p.Name())
 			for _, app := range applications {
 				id, err := n.Gateway.CreateIfAbsent(record.ID, app.ObjectID, app.Name, app.Description, app.Service) // idempotent work
 				if err != nil {
-					log.Printf("Failed to create application: %s", err)
+					//log.Printf("Failed to create application: %s", err)
 					continue
 				}
 				discoveredApps[id] = struct{}{}
