@@ -37,7 +37,7 @@ require (
 	github.com/hexa-org/policy-mapper/mapper/formats/gcpBind v0.6.0-alpha.3
 	github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.6
 	github.com/hexa-org/policy-orchestrator/sdk/provideraws/cognitoidp v0.6.0-alpha.6
-	github.com/hexa-org/policy-orchestrator/sdk/provideraws/policystore/dynamodbpolicystore v0.6.0-alpha.6
+	github.com/hexa-org/policy-orchestrator/sdk/provideraws/policystore/dynamodbpolicystore v0.6.0-alpha.7
 )
 
 require github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.6 // indirect
