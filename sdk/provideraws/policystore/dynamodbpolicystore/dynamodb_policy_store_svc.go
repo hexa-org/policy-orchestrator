@@ -86,7 +86,9 @@ func (s *PolicyStoreSvc[R]) getPoliciesSimple(output *ddb.ScanOutput, mapperFunc
 	return mapperFunc(items)
 }
 
-func (s *PolicyStoreSvc[R]) SetPolicy(rar rar.ResourceActionRoles) error {
+func (s *PolicyStoreSvc[R]) SetPolicy(aRar rar.ResourceActionRoles) error {
+	log.Info("PolicyStoreSvc.SetPolicy", "msg", "aRar", aRar)
+
 	/*tableDefinition := s.tableInfo.TableDefinition
 	inputBuilder := NewInputBuilder(s.tableInfo.TableName, map[string]string{
 		"Resource": tableDefinition.ResourceAttrName,
@@ -129,12 +131,14 @@ func (s *PolicyStoreSvc[R]) SetPolicy(rar rar.ResourceActionRoles) error {
 
 	builderV2 := NewInputBuilderV2(s.tableInfo.TableName, s.tableInfo.TableDefinitionV2)
 
-	input, err := builderV2.updateItemInputV2(rar)
+	input, err := builderV2.updateItemInputV2(aRar)
 	if err != nil {
+		log.Error("PolicyStoreSvc.SetPolicy", "msg", "failed to build updateItemInput", "error", err)
 		return err
 	}
 
 	// TODO - process output
+	log.Error("PolicyStoreSvc.SetPolicy", "msg", input)
 	_, err = s.client.UpdateItem(context.TODO(), input)
 	return err
 }

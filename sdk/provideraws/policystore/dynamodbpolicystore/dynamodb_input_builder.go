@@ -116,6 +116,7 @@ func (t2 *InputBuilderV2) UpdateItemInput(rar rar.ResourceActionRoles) (*dynamod
 // updateItemInputV2 - builds input without making any assumption on the attribute names or types
 // TODO - 1) add support for composite fields 2) array values
 func (t2 *InputBuilderV2) updateItemInputV2(aRar rar.ResourceActionRoles) (*dynamodb.UpdateItemInput, error) {
+	log.Info("InputBuilderV2.updateItemInputV2", "aRar", aRar)
 	err := t2.makeInput(aRar)
 	if err != nil {
 		log.Error("updateItemInputV2", "msg", "failed to build updateInputV2", "error", err)
@@ -137,15 +138,17 @@ func (t2 *InputBuilderV2) updateItemInputV2(aRar rar.ResourceActionRoles) (*dyna
 }
 
 func (t2 *InputBuilderV2) makeInput(aRar rar.ResourceActionRoles) error {
-	//keyAttrVal := map[string]types.AttributeValue{}
+	log.Info("InputBuilderV2.makeInput BEGIN")
 
 	tableAttributes := t2.tableDefinitionV2.Attributes
+	log.Info("InputBuilderV2.updateItemInputV2", "tableAttributes", tableAttributes)
+
 	attrMapInfo := make(map[string]attrDefinitionAndValue)
 	attrMapInfo["resource"] = attrDefinitionAndValue{val: []string{aRar.Resource()}, attrDefinition: tableAttributes.Resource}
 	attrMapInfo["actions"] = attrDefinitionAndValue{val: aRar.Actions(), attrDefinition: tableAttributes.Actions}
 
-	//membersVal, err := membersAttributeValue(aRar.Members())
 	membersStr, err := json.Marshal(aRar.Members())
+	log.Info("InputBuilderV2.updateItemInputV2", "membersStr", membersStr)
 	if err != nil {
 		log.Error("updateItemInput error marshall member array from", "members", aRar.Members(), "Err", err)
 		return err
@@ -153,8 +156,11 @@ func (t2 *InputBuilderV2) makeInput(aRar rar.ResourceActionRoles) error {
 
 	attrMapInfo["members"] = attrDefinitionAndValue{val: []string{string(membersStr)}, attrDefinition: tableAttributes.Members}
 
+	log.Info("InputBuilderV2.updateItemInputV2", "attrMapInfo", attrMapInfo)
+
 	// Add primary key, which is required
 	keyColName, pkVal, err := makeItemKey(t2.tableDefinitionV2.Metadata.Pk.Attribute, attrMapInfo)
+	log.Info("InputBuilderV2.updateItemInputV2", "keyColName", keyColName, "pkVal", pkVal, "error", err)
 	if err != nil {
 		return err
 	}
@@ -163,6 +169,7 @@ func (t2 *InputBuilderV2) makeInput(aRar rar.ResourceActionRoles) error {
 	// Add range key if defined.
 	if t2.tableDefinitionV2.Metadata.Sk != *new(MetadataKeyInfo) && t2.tableDefinitionV2.Metadata.Sk.Attribute != "" {
 		keyColName, pkVal, err = makeItemKey(t2.tableDefinitionV2.Metadata.Sk.Attribute, attrMapInfo)
+		log.Info("InputBuilderV2.updateItemInputV2", "sort key ColName", keyColName, "sortKeyVal", pkVal, "error", err)
 		if err != nil {
 			return err
 		}
@@ -170,6 +177,7 @@ func (t2 *InputBuilderV2) makeInput(aRar rar.ResourceActionRoles) error {
 	}
 
 	colName, val, err := makeItemKey("members", attrMapInfo)
+	log.Info("InputBuilderV2.updateItemInputV2", "members ColName", colName, "Val", val, "error", err)
 	if err != nil {
 		return err
 	}
