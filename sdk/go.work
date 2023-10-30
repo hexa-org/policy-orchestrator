@@ -5,5 +5,4 @@ use (
 	./provideraws/cognitoidp
 	./provideraws/awscommon
 	./provideraws/policystore/dynamodbpolicystore
-	./provideraws/provider/apigwprovider
 )
