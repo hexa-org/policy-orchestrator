@@ -177,6 +177,8 @@ github.com/hexa-org/policy-orchestrator/sdk/provideraws/policystore/dynamodbpoli
 github.com/hexa-org/policy-orchestrator/sdk/provideraws/policystore/dynamodbpolicystore v0.6.0-alpha.5/go.mod h1:aR9HIaSsiyJxOaVIhUlhwuhr4Zscc8NIbrgkMekgfSs=
 github.com/hexa-org/policy-orchestrator/sdk/provideraws/policystore/dynamodbpolicystore v0.6.0-alpha.6 h1:YkmnCR+dHjPLuB8iJZhF2c5MvdBGT1yaiTqUkXdN6A8=
 github.com/hexa-org/policy-orchestrator/sdk/provideraws/policystore/dynamodbpolicystore v0.6.0-alpha.6/go.mod h1:g7j0TCg5HqfW709O2CzBPG2kWBRDd7POblKjUcbl6xc=
+github.com/hexa-org/policy-orchestrator/sdk/provideraws/policystore/dynamodbpolicystore v0.6.0-alpha.7 h1:Eg1VXnV8LDmV1MasL1agx1IcdRB3bWcsp13jH5a2hzo=
+github.com/hexa-org/policy-orchestrator/sdk/provideraws/policystore/dynamodbpolicystore v0.6.0-alpha.7/go.mod h1:g7j0TCg5HqfW709O2CzBPG2kWBRDd7POblKjUcbl6xc=
 github.com/hiyosi/hawk v1.0.1 h1:GEas6goQiKcaqfY2CwbBrmeG9Nc7EueAg5DIt8fs8cY=
 github.com/hiyosi/hawk v1.0.1/go.mod h1:8L5D3lQ2sM7DCb659XLxhILgzoJa8aZlmOqLHOz3kVM=
 github.com/jmespath/go-jmespath v0.4.0 h1:BEgLn5cpjn8UN1mAw4NjwDrS35OdebyEtFe+9YPoQUg=
