@@ -2,7 +2,9 @@ package client_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	ddb "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/smithy-go"
@@ -10,6 +12,7 @@ import (
 	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/policystore/dynamodbpolicystore/internal/testhelper"
 	"github.com/stretchr/testify/assert"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -73,6 +76,16 @@ func TestUpdateItem(t *testing.T) {
 
 	_, err := c.UpdateItem(context.TODO(), input)
 	assert.NoError(t, err)
+}
+
+func TestJsonDecode(t *testing.T) {
+	str := `{ "Resource": "A-Resource", "Action": "An-Action", "Members": "some member", "Nested": { "Resource": "Child-Resource" }	}`
+	decoder := json.NewDecoder(strings.NewReader(str))
+	decoder.UseNumber()
+	var shape interface{}
+	err := decoder.Decode(&shape)
+	fmt.Println(err)
+	fmt.Println(shape)
 }
 
 func awsError(err error) (*smithy.OperationError, *awshttp.ResponseError) {
