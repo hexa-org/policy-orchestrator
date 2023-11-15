@@ -94,14 +94,14 @@ func (m *MockDynamodbHttpClient) ExpectUpdateItem(withReq rar.ResourceActionRole
 		expInput := updateItemInputType{
 			TableName: TableName,
 			Key: map[string]interface{}{
-				"ResourceX": ddbTypeString(withReq.Resource()),
-				"ActionX":   ddbTypeString(withReq.Actions()[0]), // TODO handle array
+				AttrNameResource: ddbTypeString(withReq.Resource()),
+				AttrNameActions:  ddbTypeString(withReq.Actions()[0]), // TODO handle array
 			},
-			UpdateExpression: "SET #members = :members",
+			UpdateExpression: fmt.Sprintf("SET %s = %s", AttrNameExprMembers, AttrMembersPlaceholder),
 			//ConditionExpression:       "",
-			ExpressionAttributeNames: map[string]string{"#members": "MembersX"},
+			ExpressionAttributeNames: map[string]string{AttrNameExprMembers: AttrNameMembers},
 			ExpressionAttributeValues: map[string]interface{}{
-				":members": ddbTypeString(string(membersStr)),
+				AttrMembersPlaceholder: ddbTypeString(string(membersStr)),
 			},
 			ReturnValues: "ALL_NEW",
 		}
@@ -150,10 +150,10 @@ func makeDynamodbResourcePolicyItems(rarList ...rar.ResourceActionRoles) scanOut
 	items := make([]map[string]interface{}, 0)
 	for _, rar := range rarList {
 		item := make(map[string]interface{})
-		item["ResourceX"] = ddbTypeString(rar.Resource())
-		item["ActionX"] = ddbTypeString(rar.Actions()[0]) // TODO handle array
+		item[AttrNameResource] = ddbTypeString(rar.Resource())
+		item[AttrNameActions] = ddbTypeString(rar.Actions()[0]) // TODO handle array
 		members := fmt.Sprintf("[\"%s\"]", rar.Members()[0])
-		item["MembersX"] = ddbTypeString(members)
+		item[AttrNameMembers] = ddbTypeString(members)
 		items = append(items, item)
 	}
 
