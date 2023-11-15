@@ -5,7 +5,6 @@ import (
 	ddb "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hexa-org/policy-orchestrator/sdk/core/rar"
-	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/policystore/dynamodbpolicystore"
 )
 
 const (
@@ -24,19 +23,19 @@ func CustomResourceActionRoles(res, action string, members []string) rar.Resourc
 }
 
 func ScanOutput() *ddb.ScanOutput {
-	rar := MakeResourceActionRoles()
-	return CustomScanOutput(rar)
+	aRar := MakeResourceActionRoles()
+	return customScanOutput(aRar)
 }
 
-func CustomScanOutput(rarList ...rar.ResourceActionRoles) *ddb.ScanOutput {
+func customScanOutput(rarList ...rar.ResourceActionRoles) *ddb.ScanOutput {
 	items := make([]map[string]types.AttributeValue, 0)
-	for _, rar := range rarList {
-		members, _ := json.Marshal(rar.Members())
+	for _, aRar := range rarList {
+		members, _ := json.Marshal(aRar.Members())
 
 		anItem := map[string]types.AttributeValue{
-			"ResourceX": &types.AttributeValueMemberS{Value: rar.Resource()},
-			"ActionX":   &types.AttributeValueMemberS{Value: rar.Actions()[0]}, // TODO - haldle array
-			"MembersX":  &types.AttributeValueMemberS{Value: string(members)},
+			AttrNameResource: &types.AttributeValueMemberS{Value: aRar.Resource()},
+			AttrNameActions:  &types.AttributeValueMemberS{Value: aRar.Actions()[0]}, // TODO - haldle array
+			AttrNameMembers:  &types.AttributeValueMemberS{Value: string(members)},
 		}
 
 		items = append(items, anItem)
@@ -45,15 +44,15 @@ func CustomScanOutput(rarList ...rar.ResourceActionRoles) *ddb.ScanOutput {
 	return output
 }
 
-func CustomScanOutputWithAttributeNames(tableDefinition dynamodbpolicystore.TableDefinition, rarList ...rar.ResourceActionRoles) *ddb.ScanOutput {
+func CustomScanOutputWithAttributeNames(rarList ...rar.ResourceActionRoles) *ddb.ScanOutput {
 	items := make([]map[string]types.AttributeValue, 0)
-	for _, rar := range rarList {
-		members, _ := json.Marshal(rar.Members())
+	for _, aRar := range rarList {
+		members, _ := json.Marshal(aRar.Members())
 
 		anItem := map[string]types.AttributeValue{
-			tableDefinition.ResourceAttrName: &types.AttributeValueMemberS{Value: rar.Resource()},
-			tableDefinition.ActionAttrName:   &types.AttributeValueMemberS{Value: rar.Actions()[0]}, // TODO - haldle array
-			tableDefinition.MembersAttrName:  &types.AttributeValueMemberS{Value: string(members)},
+			AttrNameResource: &types.AttributeValueMemberS{Value: aRar.Resource()},
+			AttrNameActions:  &types.AttributeValueMemberS{Value: aRar.Actions()[0]}, // TODO - haldle array
+			AttrNameMembers:  &types.AttributeValueMemberS{Value: string(members)},
 		}
 
 		items = append(items, anItem)

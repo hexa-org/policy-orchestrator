@@ -6,7 +6,6 @@ import (
 	"golang.org/x/exp/slices"
 	log "golang.org/x/exp/slog"
 	"net/http"
-	"sort"
 	"strings"
 )
 
@@ -19,9 +18,19 @@ var supportedHttpMethods = []string{http.MethodGet, http.MethodHead, http.Method
 // ResourceActionRolesMapper - Clients provide implementation based on their policy schema
 // The external vendor specific policy struct must implement this interface
 // which will be used to convert the vendor specific policy to ResourceActionRoles
+// Simple mapper with
+// - non composite keys and values
+// auto generated table definition
 type ResourceActionRolesMapper interface {
 	MapTo() (ResourceActionRoles, error)
-	MapToV2(item interface{}) (ResourceActionRoles, error)
+}
+
+type DynamicResourceActionRolesMapper struct {
+}
+
+func (d DynamicResourceActionRolesMapper) MapTo() (ResourceActionRoles, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 // ResourceActionRoles - an internal representation of a policy
@@ -87,33 +96,6 @@ func (rar ResourceActionRoles) Actions() []string {
 
 func (rar ResourceActionRoles) Members() []string {
 	return rar.roles
-}
-
-func ToResourceActionRoleList[R ResourceActionRolesMapper](items []R) ([]ResourceActionRoles, error) {
-	rarList := make([]ResourceActionRoles, 0)
-	for _, item := range items {
-		aRar, err := item.MapTo()
-		if err != nil {
-			log.Error("ToResourceActionRoleList", "failed to map item to ResourceActionRoles", err)
-			return nil, err
-		}
-		rarList = append(rarList, aRar)
-	}
-	sortResourceActionRoleList(rarList)
-	return rarList, nil
-}
-
-func sortResourceActionRoleList(rarList []ResourceActionRoles) {
-	sort.SliceStable(rarList, func(i, j int) bool {
-		resComp := strings.Compare(rarList[i].Resource(), rarList[j].Resource())
-		actComp := strings.Compare(rarList[i].Actions()[0], rarList[j].Actions()[0]) // TODO handle array
-		switch resComp {
-		case 0:
-			return actComp <= 0
-		default:
-			return resComp < 0
-		}
-	})
 }
 
 func (rar ResourceActionRoles) ToIDQL() hexapolicy.PolicyInfo {

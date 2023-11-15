@@ -7,20 +7,16 @@ import (
 	ddb "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hexa-org/policy-orchestrator/sdk/core/rar"
-	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/policystore/dynamodbpolicystore"
 	"github.com/stretchr/testify/mock"
 	"reflect"
 )
 
 type MockClient struct {
 	mock.Mock
-	// Resource, Action, Members attribute names in our dynamodb table
-	// e.g. some of our tests use ResourceX, ActionX, MembersX as the column names
-	tableDefn dynamodbpolicystore.TableDefinition
 }
 
-func NewMockClient(tableDefn dynamodbpolicystore.TableDefinition) *MockClient {
-	return &MockClient{tableDefn: tableDefn}
+func NewMockClient() *MockClient {
+	return &MockClient{}
 }
 
 func (m *MockClient) Scan(ctx context.Context, params *ddb.ScanInput, optFns ...func(*ddb.Options)) (*ddb.ScanOutput, error) {
@@ -36,7 +32,7 @@ func (m *MockClient) ExpectScan(andRetError error, orRetItems ...rar.ResourceAct
 	input := &ddb.ScanInput{TableName: &TableName}
 	var output *ddb.ScanOutput
 	if andRetError == nil {
-		output = CustomScanOutputWithAttributeNames(m.tableDefn, orRetItems...)
+		output = CustomScanOutputWithAttributeNames(orRetItems...)
 	}
 
 	m.On("Scan", context.TODO(), input, mock.AnythingOfType("[]func(*dynamodb.Options)")).
@@ -51,19 +47,19 @@ func (m *MockClient) ExpectUpdateItem(withInput rar.ResourceActionRoles, andRetE
 		expMembers, _ := json.Marshal(withInput.Members())
 		updateExpr := fmt.Sprintf("SET #%s = :%s", AttrNameMembers, AttrNameMembers)
 		keys := map[string]types.AttributeValue{
-			AttrNameExprResource: &types.AttributeValueMemberS{Value: AttrResourcePlaceholder},
-			AttrNameExprActions:  &types.AttributeValueMemberS{Value: AttrActionsPlaceholder},
+			AttrNameResource: &types.AttributeValueMemberS{Value: withInput.Resource()},
+			AttrNameActions:  &types.AttributeValueMemberS{Value: withInput.Actions()[0]},
 		}
 		exprNames := map[string]string{
-			AttrNameExprResource: AttrNameResource,
-			AttrNameExprActions:  AttrNameActions,
-			AttrNameExprMembers:  AttrNameMembers,
+			//AttrNameExprResource: AttrNameResource,
+			//AttrNameExprActions:  AttrNameActions,
+			AttrNameExprMembers: AttrNameMembers,
 		}
 
 		exprValues := map[string]types.AttributeValue{
-			AttrResourcePlaceholder: &types.AttributeValueMemberS{Value: withInput.Resource()},
-			AttrActionsPlaceholder:  &types.AttributeValueMemberS{Value: withInput.Actions()[0]},
-			AttrMembersPlaceholder:  &types.AttributeValueMemberS{Value: string(expMembers)},
+			//AttrResourcePlaceholder: &types.AttributeValueMemberS{Value: withInput.Resource()},
+			//AttrActionsPlaceholder:  &types.AttributeValueMemberS{Value: withInput.Actions()[0]},
+			AttrMembersPlaceholder: &types.AttributeValueMemberS{Value: string(expMembers)},
 		}
 
 		expUpdateItemInput := &ddb.UpdateItemInput{
