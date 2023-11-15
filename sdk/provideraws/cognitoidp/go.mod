@@ -2,7 +2,6 @@ module github.com/hexa-org/policy-orchestrator/sdk/provideraws/cognitoidp
 
 go 1.20
 
-
 require (
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.27.0
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
