@@ -37,7 +37,7 @@ func TestGetResourceRoles_UnmarshallError(t *testing.T) {
 	client := newMockDynamodbClient()
 	anItem := map[string]types.AttributeValue{
 		"ResourceX": &types.AttributeValueMemberS{Value: "something"},
-		"ActionX":   &types.AttributeValueMemberS{Value: "GET"},
+		"ActionsX":  &types.AttributeValueMemberS{Value: "GET"},
 		"MembersX":  &types.AttributeValueMemberS{Value: `["some-role"]`},
 	}
 

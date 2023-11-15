@@ -1,11 +1,8 @@
 package orchestrator
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/sdk/core/rar"
-	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/policystore/dynamodbpolicystore"
 	log "golang.org/x/exp/slog"
 	"net/http"
 	"strings"
@@ -15,47 +12,6 @@ type ApplicationsService struct {
 	ApplicationsGateway ApplicationsDataGateway
 	IntegrationsGateway IntegrationsDataGateway
 	Providers           map[string]Provider
-}
-
-type rarMapper struct {
-	// This assumes the primary key is Resource
-	// Sort key is Action
-	// {
-	//  "pk": {"attrName": "Resource", "attrValue": 1  }, // attrValue can only be a scalar string, or int
-	//  "sk": {"attrName": "Resource", "attrValue": 1  }, // attrValue can only be a scalar string, or int
-	//	"resource": {"attrName": "Policy.Nested.Resource", "attrValue": 1  }	// string or int
-	//  "actions": {"attrName": "Policy.Nested.Action", "attrValue": "example"  } // string or int or array of string or int
-	//  "members": {"attrName": "Policy.Nested.Members", "attrValue": "["mem1", "mem2]"  } // string or int or array of string or int
-	//}
-
-	// What if Resource, Action are not pk, sk?
-	// Scan should not care about the pk, sk
-	// Update item needs to pk, sk
-	//attributeAccessors map[string]dynamodbAttributeAccessors
-	tableDefinition dynamodbpolicystore.TableDefinition
-	shape           interface{}
-}
-
-func (rm rarMapper) MapTo() (rar.ResourceActionRoles, error) {
-	shape, ok := rm.shape.(map[string]interface{})
-	if !ok {
-		return rar.ResourceActionRoles{}, errors.New("failed to convert db item shape interface")
-	}
-	resource, ok := shape[rm.tableDefinition.ResourceAttrName].(string)
-	if !ok {
-		return rar.ResourceActionRoles{}, errors.New("failed to convert db item shape.resource to string")
-	}
-
-	actions, ok := shape[rm.tableDefinition.ActionAttrName].([]string)
-	if !ok {
-		return rar.ResourceActionRoles{}, errors.New("failed to convert db item shape.actions to []string")
-	}
-	members, ok := shape[rm.tableDefinition.MembersAttrName].([]string)
-	if !ok {
-		return rar.ResourceActionRoles{}, errors.New("failed to convert db item shape.members to []string")
-	}
-
-	return rar.NewResourceActionRoles(resource, actions, members)
 }
 
 func (service ApplicationsService) GatherRecords(identifier string) (ApplicationInfo, IntegrationInfo, Provider, error) {
@@ -74,31 +30,7 @@ func (service ApplicationsService) GatherRecords(identifier string) (Application
 	// SAURABH - temporary workaround until we implement an app onboarding flow
 	var aProvider Provider
 	if integrationRecord.Provider == "amazon" {
-		// One must be pk, but only one
-		// If sk defined, can have multiple.
-		// attributes can be of valType string, int, []string, []int
-		// "attributes" must have 3 keys i.e. "resource", "actions", "members"
-		itemJson := `
-			{
-				"metadata": {
-					"pk": { "attribute": "resource" },
-					"sk": { "attribute": ["actions", "another1", "another2"] }
-				},
-				"attributes": {
-					"resource": { "nameOrPath": "Policy/Nested/ResourceX", "valType": "string" },
-					"actions": { "nameOrPath": "Policy/Nested/ActionsX", "valType": "string[]" },
-					"members": { "nameOrPath": "Policy/Nested/Members", "valType": "int[]" }
-				}  
-			}`
-
-		//itemJson := `{ "Resource": "A-Resource", "Action": "An-Action", "Members": "some member", "Nested": { "Resource": "Child-Resource" }	}`
-		decoder := json.NewDecoder(strings.NewReader(itemJson))
-		decoder.UseNumber()
-		var shape interface{}
-		_ = decoder.Decode(&shape)
 		aProvider, _ = NewOrchestrationProvider(integration.Key, integration.Key)
-		// cannot import awsapigw due to import cycle
-		//		aProvider, err = awsapigw.NewAwsApiGatewayProviderV2(integration.Key, integration.Key)
 	} else {
 		aProvider = service.Providers[strings.ToLower(integrationRecord.Provider)]
 	}

@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/sdk/core/idp"
 	"github.com/hexa-org/policy-orchestrator/sdk/core/policyprovider"
@@ -12,25 +13,68 @@ import (
 	"net/http"
 )
 
+type attributeDefinition struct {
+	nameOrPath string
+	valType    string
+	pk         bool
+	sk         bool
+}
+
+type tableDefinition struct {
+	resource *attributeDefinition
+	actions  *attributeDefinition
+	members  *attributeDefinition
+}
+
+type TableDefinitionOpt func(t *tableDefinition)
+
+func WithResourceAttrDefinition(nameOrPath string, valType string, pk bool, sk bool) TableDefinitionOpt {
+	return func(t *tableDefinition) {
+		t.resource = &attributeDefinition{
+			nameOrPath: nameOrPath,
+			valType:    valType,
+			pk:         pk,
+			sk:         sk,
+		}
+	}
+}
+
+func WithActionsAttrDefinition(nameOrPath string, valType string, pk bool, sk bool) TableDefinitionOpt {
+	return func(t *tableDefinition) {
+		t.actions = &attributeDefinition{
+			nameOrPath: nameOrPath,
+			valType:    valType,
+			pk:         pk,
+			sk:         sk,
+		}
+	}
+}
+
+func WithMembersAttrDefinition(nameOrPath string, valType string) TableDefinitionOpt {
+	return func(t *tableDefinition) {
+		t.members = &attributeDefinition{
+			nameOrPath: nameOrPath,
+			valType:    valType,
+			pk:         false,
+			sk:         false,
+		}
+	}
+}
+
 type OrchestrationProvider struct {
 	service policyprovider.ProviderService
 }
 
 const awsPolicyStoreTableName = "ResourcePolicies"
 
-var tableDefinition = dynamodbpolicystore.TableDefinition{
-	ResourceAttrName: "ResourceX",
-	ActionAttrName:   "ActionX",
-	MembersAttrName:  "MembersX",
-}
-
 type resourcePolicyItem struct {
-	Resource string `json:"Resource"`
-	Action   string `json:"Action"`
-	Members  string `json:"Members"`
+	Resource string `json:"Resource" meta:"resource,pk"`
+	Action   string `json:"Action" meta:"actions,sk"`
+	Members  string `json:"Members" meta:"members"`
 }
 
 func (t resourcePolicyItem) MapTo() (rar.ResourceActionRoles, error) {
+	log.Info("resourcePolicyItem.MapTo", "msg", "Mapping", "rar", fmt.Sprintf("%v", t))
 	members := make([]string, 0)
 	err := json.Unmarshal([]byte(t.Members), &members)
 	if err != nil {
@@ -42,61 +86,6 @@ func (t resourcePolicyItem) MapTo() (rar.ResourceActionRoles, error) {
 	return rar.NewResourceActionRoles(t.Resource, []string{t.Action}, members)
 }
 
-type flexibleItem struct {
-}
-
-func (it flexibleItem) MapTo() (rar.ResourceActionRoles, error) {
-	/*res := it.Fields.(map[string]interface{})["ResourceX"].(string)
-	actions := it.Fields.(map[string]interface{})["ActionX"].(string)
-	memStr := it.Fields.(map[string]interface{})["MembersX"].(string)
-
-	members := make([]string, 0)
-	_ = json.Unmarshal([]byte(memStr), &members)
-	return rar.NewResourceActionRoles(res, []string{actions}, members)*/
-	panic("MapTo() is deprecated")
-}
-
-/*var tableDefinitionV2 = dynamodbpolicystore.TableDefinitionV2{
-	Metadata: struct {
-		Pk dynamodbpolicystore.MetadataKeyInfo `json:"pk"`
-		Sk dynamodbpolicystore.MetadataKeyInfo `json:"sk"`
-	}{
-		Pk: dynamodbpolicystore.MetadataKeyInfo{Attribute: "resource"},
-		Sk: dynamodbpolicystore.MetadataKeyInfo{Attribute: "actions"},
-	},
-	Attributes: struct {
-		Resource dynamodbpolicystore.AttributeDefinition `json:"resource"`
-		Actions  dynamodbpolicystore.AttributeDefinition `json:"actions"`
-		Members  dynamodbpolicystore.AttributeDefinition `json:"members"`
-	}{
-		Resource: dynamodbpolicystore.AttributeDefinition{
-			NameOrPath: "ResourceX",
-			ValType:    "string",
-		},
-		Actions: dynamodbpolicystore.AttributeDefinition{
-			NameOrPath: "ActionsX",
-			ValType:    "string",
-		},
-		Members: dynamodbpolicystore.AttributeDefinition{
-			NameOrPath: "MembersX",
-			ValType:    "string",
-		},
-	},
-}*/
-
-const tableDefinitionV2Json2 = `
-			{
-				"metadata": {
-					"pk": { "attribute": "resource" },
-					"sk": { "attribute": "actions" }
-				},
-				"attributes": {
-					"resource": { "nameOrPath": "Policy/Nested/ResourceX", "valType": "string" },
-					"actions": { "nameOrPath": "Policy/Nested/ActionsX", "valType": "string[]" },
-					"members": { "nameOrPath": "Policy/Nested/Members", "valType": "int[]" }
-				}  
-			}`
-
 const tableDefinitionV2Json = `
 			{
 				"metadata": {
@@ -104,45 +93,36 @@ const tableDefinitionV2Json = `
 					"sk": { "attribute": "actions" }
 				},
 				"attributes": {
-					"resource": { "nameOrPath": "Resource", "valType": "string" },
-					"actions": { "nameOrPath": "Action", "valType": "string" },
+					"resource": { "nameOrPath": "Resource", "valType": "string", "pk": true },
+					"actions": { "nameOrPath": "Action", "valType": "string", "sk": true },
 					"members": { "nameOrPath": "Members", "valType": "string" }
 				}  
 			}`
 
-func (it flexibleItem) MapToV2(scanOutputItem interface{}) (rar.ResourceActionRoles, error) {
-	log.Info("MapToV2", "scanOutputItem", scanOutputItem)
-	theMap := scanOutputItem.(map[string]interface{})
+func NewOrchestrationProviderWithDynamicTableInfo(idpCredentials []byte, policyStoreCredentials []byte, tableOpts ...TableDefinitionOpt) (*OrchestrationProvider, error) {
 
-	aRes := theMap["Resource"].(string)
-	anAct := theMap["Action"].(string)
-	aMemStr := theMap["Members"].(string)
-
-	members := make([]string, 0)
-	_ = json.Unmarshal([]byte(aMemStr), &members)
-	return rar.NewResourceActionRoles(aRes, []string{anAct}, members)
-}
-
-func NewOrchestrationProvider(idpCredentials []byte, policyStoreCredentials []byte) (*OrchestrationProvider, error) {
-	/*tableInfo := dynamodbpolicystore.TableInfo[resourcePolicyItem]{
-		TableName:       awsPolicyStoreTableName,
-		TableDefinition: tableDefinition,
-		ItemType:        resourcePolicyItem{},
-	}*/
-
-	var tableDefinitionV2 dynamodbpolicystore.TableDefinitionV2
-	err := json.Unmarshal([]byte(tableDefinitionV2Json), &tableDefinitionV2)
-	if err != nil {
-		log.Error("NewOrchestrationProvider", "msg", "failed to marshall tableDefinition json", "error", err)
-		return nil, err
+	log.Info("NewOrchestrationProviderWithDynamicTableInfo", "msg", "New")
+	tableDef := &tableDefinition{}
+	for _, aOpt := range tableOpts {
+		aOpt(tableDef)
 	}
 
-	tableInfo := dynamodbpolicystore.TableInfo[flexibleItem]{
-		TableName:          awsPolicyStoreTableName,
-		TableDefinition:    tableDefinition,
-		ItemType:           flexibleItem{},
-		ItemMappingDynamic: true,
-		TableDefinitionV2:  tableDefinitionV2,
+	attrDef := tableDef.resource
+	resDef := dynamodbpolicystore.NewAttributeDefinition(attrDef.nameOrPath, attrDef.valType, attrDef.pk, attrDef.sk)
+
+	attrDef = tableDef.actions
+	actionsDef := dynamodbpolicystore.NewAttributeDefinition(attrDef.nameOrPath, attrDef.valType, attrDef.pk, attrDef.sk)
+
+	attrDef = tableDef.members
+	membersDef := dynamodbpolicystore.NewAttributeDefinition(attrDef.nameOrPath, attrDef.valType, attrDef.pk, attrDef.sk)
+
+	tableInfo, err := dynamodbpolicystore.NewDynamicTableInfo(awsPolicyStoreTableName, resDef, actionsDef, membersDef)
+	policyStoreSvc, err := dynamodbpolicystore.NewPolicyStoreSvc(tableInfo, policyStoreCredentials)
+	if err != nil {
+		log.Error("NewOrchestrationProviderWithDynamicTableInfo",
+			"msg", "failed to create dynamodbpolicystore.PolicyStoreSvc",
+			"error", err)
+		return nil, err
 	}
 
 	appInfoSvc, err := cognitoidp.NewAppInfoSvc(idpCredentials)
@@ -153,10 +133,26 @@ func NewOrchestrationProvider(idpCredentials []byte, policyStoreCredentials []by
 		return nil, err
 	}
 
+	service := policyprovider.NewProviderService[resourcePolicyItem](appInfoSvc, policyStoreSvc)
+	provider := &OrchestrationProvider{
+		service: service,
+	}
+	return provider, nil
+}
+func NewOrchestrationProvider(idpCredentials []byte, policyStoreCredentials []byte) (*OrchestrationProvider, error) {
+	tableInfo, err := dynamodbpolicystore.NewSimpleTableInfo(awsPolicyStoreTableName, resourcePolicyItem{})
 	policyStoreSvc, err := dynamodbpolicystore.NewPolicyStoreSvc(tableInfo, policyStoreCredentials)
 	if err != nil {
-		log.Error("NewAwsApiGatewayProviderV2",
+		log.Error("NewOrchestrationProvider",
 			"msg", "failed to create dynamodbpolicystore.PolicyStoreSvc",
+			"error", err)
+		return nil, err
+	}
+
+	appInfoSvc, err := cognitoidp.NewAppInfoSvc(idpCredentials)
+	if err != nil {
+		log.Error("NewAwsApiGatewayProviderV2",
+			"msg", "failed to create cognitoidp.AppInfoSvc",
 			"error", err)
 		return nil, err
 	}

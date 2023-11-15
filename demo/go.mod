@@ -4,6 +4,11 @@ go 1.20
 
 // +heroku goVersion go1.20
 
+// SAURABH TEMP REPACE FOR LOCAL DEV
+//replace github.com/hexa-org/policy-orchestrator/sdk/core => ../sdk/core
+//replace github.com/hexa-org/policy-orchestrator/sdk/provideraws/cognitoidp => ../sdk/provideraws/cognitoidp
+//replace github.com/hexa-org/policy-orchestrator/sdk/provideraws/policystore/dynamodbpolicystore => ../sdk/provideraws/policystore/dynamodbpolicystore
+
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.4.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.2.2
@@ -76,6 +81,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/hexa-org/policy-mapper/mapper/conditionLangs/gcpcel v0.6.0-alpha.3 // indirect
+	//github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.8 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
