@@ -132,6 +132,7 @@ func (i integrationsHandler) knownIntegrationViews(provider string) string {
 	integrationViews := make(map[string]string)
 	integrationViews["google_cloud"] = "integrations_new_google_cloud"
 	integrationViews["azure"] = "integrations_new_azure"
+	integrationViews["avp"] = "integrations_new_avp"
 	integrationViews["amazon"] = "integrations_new_amazon"
 	integrationViews["open_policy_agent"] = "integrations_new_open_policy"
 	integrationView := integrationViews[strings.ToLower(provider)]
