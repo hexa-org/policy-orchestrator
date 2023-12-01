@@ -1,0 +1,41 @@
+{{- template "base" .}}
+{{- define "main"}}
+    <div class="card">
+        {{- $m := index .Map "message"}}
+        {{- $provider := index .Map "provider"}}
+        <h1>Install Cloud Provider</h1>
+        <form name="integration" action="/integrations" method="post" enctype="multipart/form-data">
+            <input type="hidden" value="{{$provider}}" name="provider"/>
+            <h2 class="gcp-title">Amazon Verified Permissions - Cedar</h2>
+            <fieldset class="flex">
+                <p>
+                    Add a AWS access keys by uploading your security credentials file.
+                </p>
+                <label class="file">Choose a security credentials file<input id="key-file" type="file" name="key"/>
+                </label>
+                <p id="key-file-name"></p>
+            </fieldset>
+
+            <input type="submit" value="Install AVP Provider" class="button"/>
+            {{- if $m}}
+                <div class="message">Something went wrong. {{$m}}</div>
+            {{- end }}
+        </form>
+    </div>
+    <div class="card">
+        <h2>Example integration file</h2>
+        <h3>hexa-amazon-web-services.json</h3>
+        <pre style="padding-left: 1rem"><code>{
+  "accessKeyID": "aws-access-key-id",
+  "secretAccessKey": "aws-secret-access-key",
+  "region": "aws-region"
+}</code>
+</pre>
+    </div>
+{{- end}}
+
+<script>
+    document.getElementById("key-file").addEventListener("change", (e) => {
+        document.getElementById("key-file-name").innerHTML = e.target.files[0].name
+    })
+</script>
