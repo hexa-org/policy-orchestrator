@@ -50,7 +50,7 @@ jobs:
           sudo mv opa /usr/bin/opa
       - name: test
         run: |
-          sh test_workspace.sh
+          ./test_workspace.sh
           #cd demo
           #go test -tags integration -coverprofile coverage.out  ./.../
       - name: Upload coverage to Codecov
