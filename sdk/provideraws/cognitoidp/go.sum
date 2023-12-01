@@ -32,8 +32,8 @@ github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ3
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/google/go-cmp v0.5.8 h1:e6P7q2lk1O+qJJb4BtCQXlK8vWEO8V1ZeuEdJNOqZyg=
 github.com/google/go-cmp v0.5.8/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
+github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
 github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.8 h1:rGqQOR5KjMl4+sBQxGzOwK5Qz63nbMjDBeuV2aeBWsk=
 github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.8/go.mod h1:rK63pk8W/+VJnj08hmgo9kVXd8gpNRqo7z1h/Ecrtw0=
 github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.8 h1:iEx5oLRkYKr9ST9RGyw8E2nZAxJvAx0EiJiMxZVkETc=
