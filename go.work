@@ -1,0 +1,18 @@
+go 1.20
+
+// THIS FILE IS ONLY USED FOR LOCAL DEVELOPMENT
+// THIS FILE IS ALSO USED IN THE github workflows
+// AND SHOULD ONLY EVER BE COMMITTED IF ADDING A NEW MODULE
+// DO NOT PUT ANY LOCAL DEPENDENCIES HERE
+// DO NOT PUT ANY REPLACE STATEMENTS HERE
+
+use (
+	./demo
+	./sdk/core
+	./sdk/provideraws/awscommon
+	./sdk/provideraws/cognitoidp
+	./sdk/provideraws/policystore/dynamodbpolicystore
+)
+
+// DO NOT ADD ANY THING ELSE IN THIS FILE
+// NO REPLACE STATEMENTS
