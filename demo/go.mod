@@ -45,7 +45,10 @@ require (
 	github.com/hexa-org/policy-orchestrator/sdk/provideraws/policystore/dynamodbpolicystore v0.6.0-alpha.8
 )
 
-require github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.8 // indirect
+require (
+	github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.8 // indirect
+	golang.org/x/sync v0.4.0 // indirect
+)
 
 require (
 	cloud.google.com/go/compute v1.23.0 // indirect
@@ -90,8 +93,8 @@ require (
 	github.com/stoewer/go-strcase v1.3.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	golang.org/x/crypto v0.13.0 // indirect
-	golang.org/x/net v0.15.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/net v0.16.0 // indirect
 	golang.org/x/oauth2 v0.12.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
