@@ -7,5 +7,6 @@ go mod graph | awk '{print $1}' | cut -d '@' -f 1 | sort | uniq | grep "policy-o
   suffix_removed=${x/#$prefix}
   use_mod=".$suffix_removed"
   echo $use_mod
-  go test "${use_mod}/.../"
+  go test -tags integration -coverprofile coverage.out "${use_mod}/.../"
+  #go test "${use_mod}/.../"
 done
