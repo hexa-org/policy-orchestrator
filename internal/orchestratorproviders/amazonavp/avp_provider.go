@@ -119,6 +119,7 @@ func (a *AmazonAvpProvider) GetPolicyInfo(info orchestrator.IntegrationInfo, app
 
 		case types.PolicyTypeTemplateLinked:
 			continue
+			// TODO: Pending bug fix in policy-mapper
 			/*
 				policyDefinition := avpPolicy.Definition
 				policyLinked := policyDefinition.(*types.PolicyDefinitionItemMemberTemplateLinked).Value
@@ -160,7 +161,52 @@ func (a *AmazonAvpProvider) GetPolicyInfo(info orchestrator.IntegrationInfo, app
 	return hexaPols, nil
 }
 
-func (a *AmazonAvpProvider) SetPolicyInfo(info orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (int, error) {
+func (a *AmazonAvpProvider) SetPolicyInfo(info orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, hexaPolicies []hexapolicy.PolicyInfo) (int, error) {
+	client, err := a.getAvpClient(info)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	// Get all existing policies to compare:
+	avpExistingPolicies, err := client.ListPolicies(applicationInfo)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
 
+	var avpMap map[string]types.PolicyItem
+	for _, policy := range avpExistingPolicies {
+		avpMap[*policy.PolicyId] = policy
+	}
+
+	for _, hexaPolicy := range hexaPolicies {
+		cedarPolicies, err := a.cedarMapper.MapPolicyToCedar(hexaPolicy)
+		if err != nil {
+			return http.StatusBadRequest, err
+		}
+
+		var cedarDefinition string
+		for i, cedarPolicy := range cedarPolicies {
+			if i != 0 {
+				cedarDefinition = cedarDefinition + "\n"
+			}
+			cedarDefinition = cedarDefinition + cedarPolicy.String()
+		}
+
+		updatePolicyDefinition := types.UpdateStaticPolicyDefinition{
+			Statement:   &cedarDefinition,
+			Description: &hexaPolicy.Meta.Description,
+		}
+
+		updateMemberStatic := types.UpdatePolicyDefinitionMemberStatic{Value: updatePolicyDefinition}
+
+		if hexaPolicy.Meta.SourceMeta != nil {
+			// Can assume this is an update
+			client.UpdatePolicy(&verifiedpermissions.UpdatePolicyInput{
+				Definition:    &updateMemberStatic,
+				PolicyId:      nil,
+				PolicyStoreId: nil,
+			})
+		}
+	}
+	// For each policy, check the Meta.SourceMeta structure to see if this is was a pre-existing policy
 	return http.StatusNotImplemented, nil
 }

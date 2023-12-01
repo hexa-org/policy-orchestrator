@@ -15,10 +15,14 @@ type AvpClient interface {
 	ListPolicies(app orchestrator.ApplicationInfo) ([]types.PolicyItem, error)
 	GetTemplatePolicy(id *string, app orchestrator.ApplicationInfo) (*verifiedpermissions.GetPolicyTemplateOutput, error)
 	GetPolicy(id *string, app orchestrator.ApplicationInfo) (*verifiedpermissions.GetPolicyOutput, error)
+	CreatePolicy(createPolicyInput *verifiedpermissions.CreatePolicyInput) (*verifiedpermissions.CreatePolicyOutput, error)
+	UpdatePolicy(updatePolicy *verifiedpermissions.UpdatePolicyInput) (*verifiedpermissions.UpdatePolicyOutput, error)
+	DeletePolicy(deletePolicyInput *verifiedpermissions.DeletePolicyInput) (*verifiedpermissions.DeletePolicyOutput, error)
 }
 
 type avpClient struct {
 	client *verifiedpermissions.Client
+	app    orchestrator.ApplicationInfo
 }
 
 func NewAvpClient(key []byte, opt awscommon.AWSClientOptions) (AvpClient, error) {
@@ -100,4 +104,16 @@ func (c *avpClient) GetPolicy(id *string, app orchestrator.ApplicationInfo) (*ve
 		PolicyId:      id,
 		PolicyStoreId: &app.ObjectID,
 	})
+}
+
+func (c *avpClient) CreatePolicy(createPolicyInput *verifiedpermissions.CreatePolicyInput) (*verifiedpermissions.CreatePolicyOutput, error) {
+	return c.client.CreatePolicy(context.TODO(), createPolicyInput)
+}
+
+func (c *avpClient) UpdatePolicy(updatePolicy *verifiedpermissions.UpdatePolicyInput) (*verifiedpermissions.UpdatePolicyOutput, error) {
+	return c.client.UpdatePolicy(context.TODO(), updatePolicy)
+}
+
+func (c *avpClient) DeletePolicy(deletePolicyInput *verifiedpermissions.DeletePolicyInput) (*verifiedpermissions.DeletePolicyOutput, error) {
+	return c.client.DeletePolicy(context.TODO(), deletePolicyInput)
 }
