@@ -3,6 +3,8 @@ package orchestrator
 import (
 	"errors"
 	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/providersV2/apps/aws/providercognito"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/providersV2/policy/aws/providerdynamodb"
 	log "golang.org/x/exp/slog"
 	"net/http"
 	"strings"
@@ -30,16 +32,23 @@ func (service ApplicationsService) GatherRecords(identifier string) (Application
 	// SAURABH - temporary workaround until we implement an app onboarding flow
 	var aProvider Provider
 	if integrationRecord.Provider == "amazon" {
-		aProvider, _ = NewOrchestrationProvider(integration.Key, integration.Key)
+		resAttrDef := providerdynamodb.NewAttributeDefinition("Resource", "string", true, false)
+		actionsAttrDef := providerdynamodb.NewAttributeDefinition("Action", "string", false, true)
+		membersDef := providerdynamodb.NewAttributeDefinition("Members", "string", false, false)
+		tableDef := providerdynamodb.NewTableDefinition(resAttrDef, actionsAttrDef, membersDef)
+		policyStore := providerdynamodb.NewDynamicItemStore(providerdynamodb.AwsPolicyStoreTableName, integration.Key, tableDef)
+
+		idp := providercognito.NewCognitoIdp(integration.Key)
+		aProvider, err = NewOrchestrationProvider(idp, policyStore)
+		if err != nil {
+			log.Error("GatherRecords", "msg", "error creating Provider", "provider", integrationRecord.Provider, "error", err)
+			return ApplicationInfo{}, IntegrationInfo{}, nil, err
+		}
 	} else {
 		aProvider = service.Providers[strings.ToLower(integrationRecord.Provider)]
 	}
 
-	if err != nil {
-		log.Error("GatherRecords", "msg", "error creating Provdider", "provider", integrationRecord.Provider, "error", err)
-		return ApplicationInfo{}, IntegrationInfo{}, nil, err
-	}
-	return application, integration, aProvider, err // todo - test for lower?
+	return application, integration, aProvider, nil // todo - test for lower?
 }
 
 func (service ApplicationsService) Apply(jsonRequest Orchestration) error {
