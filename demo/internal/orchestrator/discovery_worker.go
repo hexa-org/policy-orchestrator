@@ -13,10 +13,8 @@ type DiscoveryWorker struct {
 func NewDiscoveryWorker(providerBuilder *providerBuilder, gateway ApplicationsDataGateway) *DiscoveryWorker {
 	return &DiscoveryWorker{providerBuilder: providerBuilder, gateway: gateway}
 }
+
 func (n *DiscoveryWorker) Run(work interface{}) error {
-	return nil
-}
-func (n *DiscoveryWorker) RunMain(work interface{}) error {
 	discoveredApps := make(map[string]struct{})
 
 	//log.Printf("Found discovery provider %s.", p.Name())
