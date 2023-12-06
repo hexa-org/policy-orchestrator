@@ -1,7 +1,6 @@
-package providercognito
+package providersV2
 
 import (
-	"github.com/hexa-org/policy-orchestrator/demo/internal/providersV2/apps"
 	"github.com/hexa-org/policy-orchestrator/sdk/core/idp"
 	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/cognitoidp"
 )
@@ -11,7 +10,7 @@ type cognitoIdp struct {
 	key  []byte
 }
 
-func NewCognitoIdp(key []byte) apps.Idp {
+func NewCognitoIdp(key []byte) Idp {
 	return &cognitoIdp{key: key}
 }
 

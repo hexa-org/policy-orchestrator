@@ -9,4 +9,6 @@ type AppInfo interface {
 
 type AppInfoSvc interface {
 	GetApplications() ([]AppInfo, error)
+	// GetApplication - key can mean different things to different providers
+	GetApplication(key string) (AppInfo, error)
 }

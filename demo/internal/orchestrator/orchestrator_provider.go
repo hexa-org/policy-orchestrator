@@ -1,30 +1,89 @@
 package orchestrator
 
 import (
+	"fmt"
 	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/providersV2/apps"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/providersV2/policy"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/providersV2"
 	"github.com/hexa-org/policy-orchestrator/sdk/core/idp"
 	"github.com/hexa-org/policy-orchestrator/sdk/core/policyprovider"
-	"github.com/hexa-org/policy-orchestrator/sdk/core/rar"
 	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/cognitoidp"
-	log "golang.org/x/exp/slog"
+	logger "golang.org/x/exp/slog"
 	"net/http"
 )
 
+type providerBuilder struct {
+	legacyProviders map[string]Provider
+}
+
+//var legacyProviders = map[string]Provider{
+//	"google_cloud":      &googlecloud.GoogleProvider{},
+//	"open_policy_agent": &openpolicyagent.OpaProvider{},
+//}
+
+func NewProviderBuilder(legacyProviders map[string]Provider) *providerBuilder {
+	return &providerBuilder{legacyProviders: legacyProviders}
+}
+
+//legacyProviders["google_cloud"] = &googlecloud.GoogleProvider{}
+//providers["azure"] = azarm.NewAzureApimProvider()
+//providers["azure_apim"] = microsoftazure.NewAzureApimProvider()
+//providers["amazon"] = &amazonwebservices.AmazonProvider{}
+//providers["amazon"] = &awsapigw.AwsApiGatewayProvider{}
+//providers["open_policy_agent"] = &openpolicyagent.OpaProvider{}
+
+var idpMap = map[string]func(key []byte) providersV2.Idp{
+	"amazon": func(key []byte) providersV2.Idp {
+		return providersV2.NewCognitoIdp(key)
+	},
+	"azure": func(key []byte) providersV2.Idp {
+		return providersV2.NewApimAppProvider(key)
+	},
+}
+
+func (b *providerBuilder) GetAppsProvider(provider string, key []byte) (Provider, error) {
+	legacyProvider, found := b.legacyProviders[provider]
+	if found {
+		return legacyProvider, nil
+	}
+
+	appFunc, found := idpMap[provider]
+	if !found {
+		return nil, fmt.Errorf("failed to GetOrchestrationProvider. no such provider found %s", provider)
+	}
+	p, err := NewOrchestrationProvider(provider, appFunc(key), providersV2.NewEmptyPolicyStore())
+	return p, err
+}
+
+/*
+func (b *providerBuilder) GetOrchestrationProvider(provider string, appsKey []byte, policyStoreOpt policy.PolicyStore[any]) (Provider, error) {
+	legacyProvider, found := b.legacyProviders[provider]
+	if found {
+		return legacyProvider, nil
+	}
+
+	appFunc, found := idpMap[provider]
+	if !found {
+		return nil, fmt.Errorf("failed to GetOrchestrationProvider. no such provider found %s", provider)
+	}
+	p, err := NewOrchestrationProvider(appFunc(appsKey), policyStoreOpt)
+	return p, err
+}
+*/
+
 type OrchestrationProvider struct {
+	name        string
 	idp         string
 	policyStore string
 	service     policyprovider.ProviderService
 }
 
-func NewOrchestrationProvider[R rar.ResourceActionRolesMapper](aIdp apps.Idp, policyStoreOpt policy.PolicyStore[R]) (*OrchestrationProvider, error) {
+func NewOrchestrationProvider[R any](name string, aIdp providersV2.Idp, policyStoreOpt providersV2.PolicyStore[R]) (*OrchestrationProvider, error) {
 	// idpCredentials []byte, policyStoreCredentials []byte
 	//tableInfo, err := dynamodbpolicystore.NewSimpleTableInfo(awsPolicyStoreTableName, resourcePolicyItem{})
 	//policyStoreSvc, err := dynamodbpolicystore.NewPolicyStoreSvc(tableInfo, policyStoreOpt.key)
 	policyStoreSvc, err := policyStoreOpt.Provider()
 	if err != nil {
-		log.Error("NewOrchestrationProvider",
+		logger.Error("NewOrchestrationProvider",
 			"msg", "failed to create dynamodbpolicystore.PolicyStoreSvc",
 			"error", err)
 		return nil, err
@@ -33,7 +92,7 @@ func NewOrchestrationProvider[R rar.ResourceActionRolesMapper](aIdp apps.Idp, po
 	//appInfoSvc, err := cognitoidp.NewAppInfoSvc(idpOpt.key)
 	appInfoSvc, err := aIdp.Provider()
 	if err != nil {
-		log.Error("NewAwsApiGatewayProviderV2",
+		logger.Error("NewAwsApiGatewayProviderV2",
 			"msg", "failed to create cognitoidp.AppInfoSvc",
 			"error", err)
 		return nil, err
@@ -41,13 +100,14 @@ func NewOrchestrationProvider[R rar.ResourceActionRolesMapper](aIdp apps.Idp, po
 
 	service := policyprovider.NewProviderService[R](appInfoSvc, policyStoreSvc)
 	provider := &OrchestrationProvider{
+		name:    name,
 		service: service,
 	}
 	return provider, nil
 }
 
 func (a *OrchestrationProvider) Name() string {
-	return "amazon"
+	return a.name
 }
 
 func (a *OrchestrationProvider) DiscoverApplications(_ IntegrationInfo) ([]ApplicationInfo, error) {
@@ -58,6 +118,7 @@ func (a *OrchestrationProvider) DiscoverApplications(_ IntegrationInfo) ([]Appli
 
 	retApps := make([]ApplicationInfo, 0)
 	for _, oneApp := range discoveredApps {
+		logger.Debug("DiscoverApplications", "id", oneApp.Id(), "Name", oneApp.Name(), "Display", oneApp.DisplayName(), "Type", oneApp.Type())
 		retApps = append(retApps, toApplicationInfo(oneApp))
 	}
 
@@ -71,7 +132,7 @@ func (a *OrchestrationProvider) GetPolicyInfo(_ IntegrationInfo, applicationInfo
 }
 
 func (a *OrchestrationProvider) SetPolicyInfo(_ IntegrationInfo, applicationInfo ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (status int, foundErr error) {
-	log.Info("SetPolicyInfo", "msg", "BEGIN",
+	logger.Info("SetPolicyInfo", "msg", "BEGIN",
 		"applicationInfo.ObjectID", applicationInfo.ObjectID,
 		"Name", applicationInfo.Name,
 		"Description", applicationInfo.Description,
@@ -79,25 +140,34 @@ func (a *OrchestrationProvider) SetPolicyInfo(_ IntegrationInfo, applicationInfo
 
 	idpAppInfo := toIdpAppInfo(applicationInfo)
 	err := a.service.SetPolicyInfo(idpAppInfo, policyInfos)
-	log.Info("SetPolicyInfo", "msg", "Finished calling service.SetPolicyInfo")
+	logger.Info("SetPolicyInfo", "msg", "Finished calling service.SetPolicyInfo")
 
 	if err != nil {
-		log.Error("SetPolicyInfo", "msg", "error calling service.SetPolicyInfo", "error", err)
+		logger.Error("SetPolicyInfo", "msg", "error calling service.SetPolicyInfo", "error", err)
 		return http.StatusInternalServerError, err
 	}
 	return http.StatusCreated, nil
 }
 
+// toApplicationInfo - convert sdk ResourceServerAppInfo to
+// demo apps ApplicationInfo
 func toApplicationInfo(anApp idp.AppInfo) ApplicationInfo {
-	rsApp := (anApp).(cognitoidp.ResourceServerAppInfo)
+	/*rsApp := (anApp).(cognitoidp.ResourceServerAppInfo)
 	return ApplicationInfo{
 		ObjectID:    rsApp.Id(),
 		Name:        rsApp.Name(),
 		Description: rsApp.DisplayName(),
 		Service:     rsApp.Identifier(),
+	}*/
+	return ApplicationInfo{
+		ObjectID:    anApp.Id(),
+		Name:        anApp.Name(),
+		Description: anApp.DisplayName(),
+		Service:     anApp.Type(),
 	}
 }
 
+// toIdpAppInfo - convert demo apps ApplicationInfo to sdk ResourceServerAppInfo
 func toIdpAppInfo(applicationInfo ApplicationInfo) idp.AppInfo {
 	return cognitoidp.NewResourceServerAppInfo(applicationInfo.ObjectID, applicationInfo.Name, applicationInfo.Description, applicationInfo.Service)
 }

@@ -28,9 +28,10 @@ func TestWorkflow(t *testing.T) {
 	noopProvider := orchestrator_test.NoopProvider{}
 	providers := make(map[string]orchestrator.Provider)
 	providers["noop"] = &noopProvider
-	worker := orchestrator.DiscoveryWorker{Providers: providers, Gateway: appGateway}
+	pb := orchestrator.NewProviderBuilder(providers)
+	worker := orchestrator.NewDiscoveryWorker(pb, appGateway)
 	finder := orchestrator.NewDiscoveryWorkFinder(integrationsGateway)
-	list := []workflowsupport.Worker{&worker}
+	list := []workflowsupport.Worker{worker}
 	scheduler := workflowsupport.NewScheduler(&finder, list, 50)
 
 	scheduler.Start()
@@ -58,12 +59,10 @@ func TestRemoveDeletedApplications(t *testing.T) {
 			},
 		},
 	}
-	discoveryWorker := &orchestrator.DiscoveryWorker{
-		Providers: map[string]orchestrator.Provider{
-			"fake": provider,
-		},
-		Gateway: appDataGateway,
-	}
+
+	pb := orchestrator.NewProviderBuilder(map[string]orchestrator.Provider{"fake": provider})
+
+	discoveryWorker := orchestrator.NewDiscoveryWorker(pb, appDataGateway)
 	work := []orchestrator.IntegrationRecord{{Provider: "fake"}}
 
 	discoveryWorker.Run(work)

@@ -4,9 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/amazonwebservices/awsapigw"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/googlecloud"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azarm"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/openpolicyagent"
 	log "golang.org/x/exp/slog"
 	"net"
@@ -50,14 +48,20 @@ func (s ServerHealthCheck) Check() bool {
 func App(key string, addr string, hostPort string, dbUrl string) (*http.Server, *workflowsupport.WorkScheduler) {
 	db, _ := databasesupport.Open(dbUrl)
 	store := hawksupport.NewCredentialStore(key)
-	providers := make(map[string]orchestrator.Provider)
+	/*providers := make(map[string]orchestrator.Provider)
 	providers["google_cloud"] = &googlecloud.GoogleProvider{}
 	providers["azure"] = azarm.NewAzureApimProvider()
 	//providers["azure_apim"] = microsoftazure.NewAzureApimProvider()
 	//providers["amazon"] = &amazonwebservices.AmazonProvider{}
 	providers["amazon"] = &awsapigw.AwsApiGatewayProvider{}
-	providers["open_policy_agent"] = &openpolicyagent.OpaProvider{}
-	handlers, scheduler := orchestrator.LoadHandlers(db, store, hostPort, providers)
+	providers["open_policy_agent"] = &openpolicyagent.OpaProvider{}*/
+
+	var legacyProviders = map[string]orchestrator.Provider{
+		"google_cloud":      &googlecloud.GoogleProvider{},
+		"open_policy_agent": &openpolicyagent.OpaProvider{},
+	}
+
+	handlers, scheduler := orchestrator.LoadHandlers(db, store, hostPort, legacyProviders)
 	return websupport.Create(addr, handlers, websupport.Options{
 		HealthChecks: []healthsupport.HealthCheck{
 			ServerHealthCheck{},

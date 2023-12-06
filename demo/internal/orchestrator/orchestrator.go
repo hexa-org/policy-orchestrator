@@ -2,19 +2,19 @@ package orchestrator
 
 import (
 	"database/sql"
-
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/hawksupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/workflowsupport"
 	"github.com/hiyosi/hawk"
 )
 
-func LoadHandlers(database *sql.DB, store hawk.CredentialStore, hostPort string, providers map[string]Provider) (func(router *mux.Router), *workflowsupport.WorkScheduler) {
+func LoadHandlers(database *sql.DB, store hawk.CredentialStore, hostPort string, legacyProviders map[string]Provider) (func(router *mux.Router), *workflowsupport.WorkScheduler) {
+	pb := NewProviderBuilder(legacyProviders)
 	applicationsGateway := ApplicationsDataGateway{database}
 	integrationsGateway := IntegrationsDataGateway{database}
-	applicationsService := ApplicationsService{ApplicationsGateway: applicationsGateway, IntegrationsGateway: integrationsGateway, Providers: providers}
+	applicationsService := ApplicationsService{ApplicationsGateway: applicationsGateway, IntegrationsGateway: integrationsGateway, ProviderBuilder: pb}
 
-	worker := DiscoveryWorker{providers, applicationsGateway}
+	worker := DiscoveryWorker{pb, applicationsGateway}
 	finder := NewDiscoveryWorkFinder(integrationsGateway)
 
 	applicationsHandler := ApplicationsHandler{applicationsGateway, integrationsGateway, applicationsService}
