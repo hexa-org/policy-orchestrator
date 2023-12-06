@@ -12,6 +12,9 @@ use (
 	./sdk/provideraws/awscommon
 	./sdk/provideraws/cognitoidp
 	./sdk/provideraws/policystore/dynamodbpolicystore
+	sdk/providerazure/azurecommon
+	sdk/providerazure/azad
+	sdk/providerazure/azapim
 )
 
 // DO NOT ADD ANY THING ELSE IN THIS FILE

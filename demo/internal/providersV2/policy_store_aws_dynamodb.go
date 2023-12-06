@@ -1,12 +1,40 @@
-package providerdynamodb
+package providersV2
 
 import (
-	"github.com/hexa-org/policy-orchestrator/demo/internal/providersV2/policy"
+	"encoding/json"
+	"fmt"
 	"github.com/hexa-org/policy-orchestrator/sdk/core/policystore"
 	"github.com/hexa-org/policy-orchestrator/sdk/core/rar"
 	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/policystore/dynamodbpolicystore"
 	log "golang.org/x/exp/slog"
 )
+
+const AwsPolicyStoreTableName = "ResourcePolicies"
+
+// resourcePolicyItem - definition of item stored in dynamodb
+// meta tags are required
+// This item specifies
+// "Resource" column of type string, as the primary key
+// "Action" column of type string, as the sort key
+// "Members" column of type string, non-key
+type resourcePolicyItem struct {
+	Resource string `json:"Resource" meta:"resource,pk"`
+	Action   string `json:"Action" meta:"actions,sk"`
+	Members  string `json:"Members" meta:"members"`
+}
+
+func (t resourcePolicyItem) MapTo() (rar.ResourceActionRoles, error) {
+	log.Info("resourcePolicyItem.MapTo", "msg", "Mapping", "rar", fmt.Sprintf("%v", t))
+	members := make([]string, 0)
+	err := json.Unmarshal([]byte(t.Members), &members)
+	if err != nil {
+		log.Error("resourcePolicyItem.MapTo", "msg", "Failed to unmarshal members string",
+			"members", t.Members,
+			"Err", err)
+		return rar.ResourceActionRoles{}, err
+	}
+	return rar.NewResourceActionRoles(t.Resource, []string{t.Action}, members)
+}
 
 type simpleItemStore struct {
 	tableName  string
@@ -14,7 +42,7 @@ type simpleItemStore struct {
 	simpleItem resourcePolicyItem
 }
 
-func NewSimpleItemStore(tableName string, key []byte) policy.PolicyStore[rar.ResourceActionRolesMapper] {
+func NewSimpleItemStore(tableName string, key []byte) PolicyStore[rar.ResourceActionRolesMapper] {
 	item := resourcePolicyItem{}
 	return &simpleItemStore{tableName: tableName, key: key, simpleItem: item}
 }
@@ -37,7 +65,7 @@ type dynamicItemStore struct {
 	tableDef  *tableDefinition
 }
 
-func NewDynamicItemStore(tableName string, key []byte, tableDef *tableDefinition) policy.PolicyStore[rar.DynamicResourceActionRolesMapper] {
+func NewDynamicItemStore(tableName string, key []byte, tableDef *tableDefinition) PolicyStore[rar.DynamicResourceActionRolesMapper] {
 	return &dynamicItemStore{tableName: tableName, key: key, tableDef: tableDef}
 }
 

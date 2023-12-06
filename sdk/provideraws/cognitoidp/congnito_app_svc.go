@@ -38,6 +38,10 @@ func (as *appInfoSvc) GetApplications() ([]idp.AppInfo, error) {
 	return as.getResourceServers()
 }
 
+func (as *appInfoSvc) GetApplication(key string) (idp.AppInfo, error) {
+	panic("GetApplication NOT implemented for cognito")
+}
+
 func (as *appInfoSvc) getResourceServers() ([]idp.AppInfo, error) {
 	pools, err := as.cognito.ListUserPools()
 	if err != nil {

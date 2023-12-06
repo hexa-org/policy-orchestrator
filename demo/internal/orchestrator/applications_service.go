@@ -3,9 +3,8 @@ package orchestrator
 import (
 	"errors"
 	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/providersV2/apps/aws/providercognito"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/providersV2/policy/aws/providerdynamodb"
-	log "golang.org/x/exp/slog"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/providersV2"
+	logger "golang.org/x/exp/slog"
 	"net/http"
 	"strings"
 )
@@ -13,7 +12,8 @@ import (
 type ApplicationsService struct {
 	ApplicationsGateway ApplicationsDataGateway
 	IntegrationsGateway IntegrationsDataGateway
-	Providers           map[string]Provider
+	ProviderBuilder     *providerBuilder
+	DisableChecks       bool // Only set to true by tests
 }
 
 func (service ApplicationsService) GatherRecords(identifier string) (ApplicationInfo, IntegrationInfo, Provider, error) {
@@ -32,20 +32,35 @@ func (service ApplicationsService) GatherRecords(identifier string) (Application
 	// SAURABH - temporary workaround until we implement an app onboarding flow
 	var aProvider Provider
 	if integrationRecord.Provider == "amazon" {
-		resAttrDef := providerdynamodb.NewAttributeDefinition("Resource", "string", true, false)
-		actionsAttrDef := providerdynamodb.NewAttributeDefinition("Action", "string", false, true)
-		membersDef := providerdynamodb.NewAttributeDefinition("Members", "string", false, false)
-		tableDef := providerdynamodb.NewTableDefinition(resAttrDef, actionsAttrDef, membersDef)
-		policyStore := providerdynamodb.NewDynamicItemStore(providerdynamodb.AwsPolicyStoreTableName, integration.Key, tableDef)
+		resAttrDef := providersV2.NewAttributeDefinition("Resource", "string", true, false)
+		actionsAttrDef := providersV2.NewAttributeDefinition("Action", "string", false, true)
+		membersDef := providersV2.NewAttributeDefinition("Members", "string", false, false)
+		tableDef := providersV2.NewTableDefinition(resAttrDef, actionsAttrDef, membersDef)
+		policyStore := providersV2.NewDynamicItemStore(providersV2.AwsPolicyStoreTableName, integration.Key, tableDef)
 
-		idp := providercognito.NewCognitoIdp(integration.Key)
-		aProvider, err = NewOrchestrationProvider(idp, policyStore)
+		//idp := providersV2.GetAppsProvider(integrationRecord.Provider, integration.Key)
+		idp := providersV2.NewCognitoIdp(integration.Key)
+		aProvider, err = NewOrchestrationProvider(integrationRecord.Provider, idp, policyStore)
 		if err != nil {
-			log.Error("GatherRecords", "msg", "error creating Provider", "provider", integrationRecord.Provider, "error", err)
+			logger.Error("GatherRecords", "msg", "error creating Provider", "provider", integrationRecord.Provider, "error", err)
 			return ApplicationInfo{}, IntegrationInfo{}, nil, err
 		}
+	} else if integrationRecord.Provider == "azure" {
+		idp := providersV2.NewApimAppProvider(integration.Key)
+		policyStoreProvider := providersV2.NewApimPolicyProvider(integration.Key, application.ObjectID, application.Name)
+		aProvider, err = NewOrchestrationProvider(integrationRecord.Provider, idp, policyStoreProvider)
+
+		if err != nil {
+			logger.Error("GatherRecords", "msg", "error creating Provider", "provider", integrationRecord.Provider, "error", err)
+			return ApplicationInfo{}, IntegrationInfo{}, nil, err
+		}
+
 	} else {
-		aProvider = service.Providers[strings.ToLower(integrationRecord.Provider)]
+		aProvider, err = service.ProviderBuilder.GetAppsProvider(strings.ToLower(integrationRecord.Provider), nil)
+		if err != nil {
+			logger.Error("GatherRecords", "msg", "error creating Provider", "provider", integrationRecord.Provider, "error", err)
+			return ApplicationInfo{}, IntegrationInfo{}, nil, err
+		}
 	}
 
 	return application, integration, aProvider, nil // todo - test for lower?
@@ -62,7 +77,9 @@ func (service ApplicationsService) Apply(jsonRequest Orchestration) error {
 		return toErr
 	}
 
-	if !orchestrationSupported(toProvider, fromProvider) { // note - this should be temporary
+	logger.Info("Apply", "fromProvider", fromProvider.Name(), "toProvider", toProvider.Name(), "fromApp", fromApplication.Name, "toApp", toApplication.Name)
+
+	if !service.DisableChecks && !orchestrationSupported(toProvider, fromProvider) { // note - this should be temporary
 		return errors.New("orchestration across providers is a work in progress and currently supports azure and google cloud")
 	}
 
@@ -71,7 +88,7 @@ func (service ApplicationsService) Apply(jsonRequest Orchestration) error {
 		return getFroErr
 	}
 
-	if isBetweenAmazonAndAzure(toProvider, fromProvider) {
+	if service.DisableChecks || isBetweenAmazonAndAzure(toProvider, fromProvider) {
 		status, setErr := toProvider.SetPolicyInfo(toIntegration, toApplication, fromPolicies)
 		if setErr != nil || status != http.StatusCreated {
 			return setErr
@@ -84,7 +101,7 @@ func (service ApplicationsService) Apply(jsonRequest Orchestration) error {
 		return getToErr
 	}
 
-	if onlyWorksWithGoogleAndAzure(toProvider, fromProvider) {
+	if service.DisableChecks || onlyWorksWithGoogleAndAzure(toProvider, fromProvider) {
 		if !verifyAllMembersAreUsers(fromPolicies) { // note - this should be temporary
 			return errors.New("orchestration across providers with domain members is a work in progress")
 		}
@@ -95,7 +112,7 @@ func (service ApplicationsService) Apply(jsonRequest Orchestration) error {
 		return err
 	}
 
-	if onlyWorksWithGoogleAndAzure(toProvider, fromProvider) {
+	if service.DisableChecks || onlyWorksWithGoogleAndAzure(toProvider, fromProvider) {
 		modifiedPolicies, err = service.RetainAction(modifiedPolicies, toPolicies)
 		if err != nil {
 			return err

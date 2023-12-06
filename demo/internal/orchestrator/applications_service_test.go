@@ -33,7 +33,7 @@ insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a
 insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff210', '50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'anObjectId', 'aName', 'aDescription', 'aService');
 insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff211', '50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'anotherObjectId', 'anotherName', 'anotherDescription', 'anotherService');
 
-insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e8', 'anotherName', 'azure', 'aKey');
+insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e8', 'anotherName', 'azure_legacy', 'aKey');
 insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff212', '50e00619-9f15-4e85-a7e9-f26d87ea12e8', 'andAnotherObjectId', 'andAnotherName', 'andAnotherDescription', 'andAnotherService');
 
 insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e9', 'yetAnotherName', 'google_cloud', 'aKey');
@@ -53,7 +53,7 @@ insert into applications (id, integration_id, object_id, name, description, serv
 
 	data.providers = make(map[string]orchestrator.Provider)
 	data.providers["noop"] = &orchestrator_test.NoopProvider{}
-	data.providers["azure"] = &orchestrator_test.NoopProvider{OverrideName: "azure"}
+	data.providers["azure_legacy"] = &orchestrator_test.NoopProvider{OverrideName: "azure_legacy"}
 	data.providers["google_cloud"] = &orchestrator_test.NoopProvider{OverrideName: "google_cloud"}
 }
 
@@ -63,9 +63,11 @@ func (data *applicationsServiceData) TearDown() {
 
 func TestApplicationsService_Apply(t *testing.T) {
 	testsupport.WithSetUp(&applicationsServiceData{}, func(data *applicationsServiceData) {
+		pb := orchestrator.NewProviderBuilder(data.providers)
 		applicationsGateway := orchestrator.ApplicationsDataGateway{DB: data.db}
 		integrationsGateway := orchestrator.IntegrationsDataGateway{DB: data.db}
-		applicationsService := orchestrator.ApplicationsService{ApplicationsGateway: applicationsGateway, IntegrationsGateway: integrationsGateway, Providers: data.providers}
+
+		applicationsService := orchestrator.ApplicationsService{ApplicationsGateway: applicationsGateway, IntegrationsGateway: integrationsGateway, ProviderBuilder: pb, DisableChecks: true}
 
 		sameProviders := applicationsService.Apply(orchestrator.Orchestration{From: data.fromNoopApp, To: data.toNoopApp})
 		assert.NoError(t, sameProviders)
@@ -90,7 +92,7 @@ func TestApplicationsService_RetainResource(t *testing.T) {
 	testsupport.WithSetUp(&applicationsServiceData{}, func(data *applicationsServiceData) {
 		applicationsGateway := orchestrator.ApplicationsDataGateway{DB: data.db}
 		integrationsGateway := orchestrator.IntegrationsDataGateway{DB: data.db}
-		applicationsService := orchestrator.ApplicationsService{ApplicationsGateway: applicationsGateway, IntegrationsGateway: integrationsGateway, Providers: data.providers}
+		applicationsService := orchestrator.ApplicationsService{ApplicationsGateway: applicationsGateway, IntegrationsGateway: integrationsGateway, ProviderBuilder: nil}
 
 		from := []hexapolicy.PolicyInfo{
 			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"fromAnAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"fromAUser"}}, Object: hexapolicy.ObjectInfo{
@@ -134,7 +136,7 @@ func TestApplicationsService_RetainAction(t *testing.T) {
 	testsupport.WithSetUp(&applicationsServiceData{}, func(data *applicationsServiceData) {
 		applicationsGateway := orchestrator.ApplicationsDataGateway{DB: data.db}
 		integrationsGateway := orchestrator.IntegrationsDataGateway{DB: data.db}
-		applicationsService := orchestrator.ApplicationsService{ApplicationsGateway: applicationsGateway, IntegrationsGateway: integrationsGateway, Providers: data.providers}
+		applicationsService := orchestrator.ApplicationsService{ApplicationsGateway: applicationsGateway, IntegrationsGateway: integrationsGateway, ProviderBuilder: nil}
 
 		from := []hexapolicy.PolicyInfo{
 			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"fromAnAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"fromAUser"}}, Object: hexapolicy.ObjectInfo{
