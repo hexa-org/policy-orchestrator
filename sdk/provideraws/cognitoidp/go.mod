@@ -9,8 +9,8 @@ require (
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.21.2
-	github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.10
-	github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.10
+	github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.11
+	github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.11
 	github.com/stretchr/testify v1.8.4
 )
 
