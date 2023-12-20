@@ -39,10 +39,10 @@ github.com/google/go-cmp v0.5.8/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeN
 github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
 github.com/hexa-org/policy-mapper/hexaIdql v0.6.0-alpha.3 h1:kApPuTEC8bVualHsj0CA5avqk7DgU2ZiJOpLG5EiKTM=
 github.com/hexa-org/policy-mapper/hexaIdql v0.6.0-alpha.3/go.mod h1:mqzC3LjDSVimn8u7s98JWJjrYUm4fCR7ZlMsqI/7ABM=
-github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.8 h1:rGqQOR5KjMl4+sBQxGzOwK5Qz63nbMjDBeuV2aeBWsk=
-github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.8/go.mod h1:rK63pk8W/+VJnj08hmgo9kVXd8gpNRqo7z1h/Ecrtw0=
-github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.8 h1:iEx5oLRkYKr9ST9RGyw8E2nZAxJvAx0EiJiMxZVkETc=
-github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.8/go.mod h1:/X5vEXgKOddu3KBNP2pT8lgBsVksoRa32xaQIkLs6ZU=
+github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.10 h1:T/pjDejVb4Pdydso+dhvv/DGVHkSvPF0xhASPfr2INI=
+github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.10/go.mod h1:rK63pk8W/+VJnj08hmgo9kVXd8gpNRqo7z1h/Ecrtw0=
+github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.10 h1:z+0Y8Dty1CeS4kxisqMPPtDbM7Q4y4he1a70wj7YiAU=
+github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon v0.6.0-alpha.10/go.mod h1:E3qoY9dh79pFUAt9UI/IE9b/uobbCpE7Dz/3izdIwwM=
 github.com/jmespath/go-jmespath v0.4.0 h1:BEgLn5cpjn8UN1mAw4NjwDrS35OdebyEtFe+9YPoQUg=
 github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1 h1:shLQSRRSCCPj3f2gpwzGwWFoC7ycTf1rcQZHOlsJ6N8=
@@ -66,6 +66,7 @@ gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8
 gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c h1:Hei/4ADfdWqJk1ZMxUNpqntNwaWcugrBjAiHlqqRiVk=
 gopkg.in/yaml.v2 v2.2.8/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 gopkg.in/yaml.v2 v2.4.0 h1:D8xgwECY7CYvx+Y2n4sBz93Jn9JRvxdiyyo8CTfuKaY=
+gopkg.in/yaml.v2 v2.4.0/go.mod h1:RDklbk79AGWmwhnvt/jBztapEOGDOx6ZbXqjP6csGnQ=
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
