@@ -5,8 +5,8 @@ go 1.20
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.9.1
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/apimanagement/armapimanagement v1.1.1
-	github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.11
-	github.com/hexa-org/policy-orchestrator/sdk/providerazure/azurecommon v0.6.0-alpha.11
+	github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0
+	github.com/hexa-org/policy-orchestrator/sdk/providerazure/azurecommon v0.6.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20231219180239-dc181d75b848
 )

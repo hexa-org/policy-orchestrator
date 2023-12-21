@@ -3,8 +3,8 @@ module github.com/hexa-org/policy-orchestrator/sdk/providerazure/azad
 go 1.20
 
 require (
-	github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.11
-	github.com/hexa-org/policy-orchestrator/sdk/providerazure/azurecommon v0.6.0-alpha.11
+	github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0
+	github.com/hexa-org/policy-orchestrator/sdk/providerazure/azurecommon v0.6.0
 	github.com/microsoftgraph/msgraph-sdk-go v1.26.0
 )
 
