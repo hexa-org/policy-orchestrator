@@ -21,10 +21,10 @@ github.com/golang-jwt/jwt/v5 v5.0.0/go.mod h1:pqrtFR0X4osieyHYxtmOUWsAWrfe1Q5UVI
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
 github.com/google/uuid v1.4.0 h1:MtMxsa51/r9yyhkyLsVeVt0B+BGQZzpQiTQ4eHZ8bc4=
 github.com/google/uuid v1.4.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.11 h1:gKYVE1k7f9ayo1uTAJ3I5b8gh3htsm27SReOmTGExeA=
-github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0-alpha.11/go.mod h1:rK63pk8W/+VJnj08hmgo9kVXd8gpNRqo7z1h/Ecrtw0=
-github.com/hexa-org/policy-orchestrator/sdk/providerazure/azurecommon v0.6.0-alpha.11 h1:cjJqEE1WYCz4t3ZxlkZgrsNKRMz0uGD6grag/FKqwbs=
-github.com/hexa-org/policy-orchestrator/sdk/providerazure/azurecommon v0.6.0-alpha.11/go.mod h1:Nhgg8CrgIZep8xjMYPoatrQ+lLyj7ewB3qIh9YMf89M=
+github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0 h1:PLOTZ14Kdj/73ZJea/YO/K7cp/svWC9ji+QYcJnVY2c=
+github.com/hexa-org/policy-orchestrator/sdk/core v0.6.0/go.mod h1:rK63pk8W/+VJnj08hmgo9kVXd8gpNRqo7z1h/Ecrtw0=
+github.com/hexa-org/policy-orchestrator/sdk/providerazure/azurecommon v0.6.0 h1:wjDu/C3eDCFqP5x7n++xzlyLiolfe90dNy++g7tuass=
+github.com/hexa-org/policy-orchestrator/sdk/providerazure/azurecommon v0.6.0/go.mod h1:Nhgg8CrgIZep8xjMYPoatrQ+lLyj7ewB3qIh9YMf89M=
 github.com/kr/pretty v0.1.0 h1:L/CwN0zerZDmRFUapSPitk6f+Q3+0za1rQkzVuMiMFI=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
 github.com/kylelemons/godebug v1.1.0 h1:RPNrshWIDI6G2gRW9EHilWtl7Z6Sb1BR0xunSBf0SNc=
