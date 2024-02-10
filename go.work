@@ -1,4 +1,4 @@
-go 1.20
+go 1.21
 
 // THIS FILE IS ONLY USED FOR LOCAL DEVELOPMENT
 // THIS FILE IS ALSO USED IN THE github workflows
@@ -12,9 +12,9 @@ use (
 	./sdk/provideraws/awscommon
 	./sdk/provideraws/cognitoidp
 	./sdk/provideraws/policystore/dynamodbpolicystore
-	sdk/providerazure/azurecommon
-	sdk/providerazure/azad
-	sdk/providerazure/azapim
+	./sdk/providerazure/azad
+	./sdk/providerazure/azapim
+	./sdk/providerazure/azurecommon
 )
 
 // DO NOT ADD ANY THING ELSE IN THIS FILE

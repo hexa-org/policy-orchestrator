@@ -2,40 +2,41 @@ package awsapigw_test
 
 import (
 	"errors"
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"net/http"
+	"testing"
+
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/amazonwebservices/awsapigw"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/providerscommon"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/testsupport/awstestsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"net/http"
-	"testing"
 )
 
 type mockCognitoClient struct {
 	mock.Mock
 }
 
-func (m *mockCognitoClient) ListUserPools() (apps []orchestrator.ApplicationInfo, err error) {
+func (m *mockCognitoClient) ListUserPools() (apps []policyprovider.ApplicationInfo, err error) {
 	args := m.Called()
-	return args.Get(0).([]orchestrator.ApplicationInfo), args.Error(1)
+	return args.Get(0).([]policyprovider.ApplicationInfo), args.Error(1)
 }
 
 func (m *mockCognitoClient) GetGroups(_ string) (map[string]string, error) {
 	panic("GetGroups not implemented")
 }
 
-func (m *mockCognitoClient) GetMembersAssignedTo(_ orchestrator.ApplicationInfo, _ string) ([]string, error) {
+func (m *mockCognitoClient) GetMembersAssignedTo(_ policyprovider.ApplicationInfo, _ string) ([]string, error) {
 	panic("GetMembersAssignedTo not implemented")
 }
 
-func (m *mockCognitoClient) SetGroupsAssignedTo(_ string, _ []string, _ orchestrator.ApplicationInfo) error {
+func (m *mockCognitoClient) SetGroupsAssignedTo(_ string, _ []string, _ policyprovider.ApplicationInfo) error {
 	panic("SetGroupsAssignedTo not implemented")
 }
 
-func (m *mockCognitoClient) expectListUserPools(apps []orchestrator.ApplicationInfo, err error) {
+func (m *mockCognitoClient) expectListUserPools(apps []policyprovider.ApplicationInfo, err error) {
 	m.On("ListUserPools").Return(apps, err)
 }
 
@@ -50,7 +51,7 @@ func TestAwsApiGatewayProviderService_DiscoverApplications_Error(t *testing.T) {
 
 func TestAwsApiGatewayProviderService_DiscoverApplications(t *testing.T) {
 	cognitoClient := &mockCognitoClient{}
-	expApps := []orchestrator.ApplicationInfo{awstestsupport.AppInfo()}
+	expApps := []policyprovider.ApplicationInfo{awstestsupport.AppInfo()}
 	cognitoClient.expectListUserPools(expApps, nil)
 	service := awsapigw.NewAwsApiGatewayProviderService(cognitoClient, nil)
 	apps, err := service.DiscoverApplications(awstestsupport.IntegrationInfo())
@@ -64,7 +65,7 @@ func TestGetPolicyInfo_Error(t *testing.T) {
 	policyStoreSvc.expectGetResourceRoles(nil, errors.New("some-error"))
 	service := awsapigw.NewAwsApiGatewayProviderService(nil, policyStoreSvc)
 
-	appInfo := orchestrator.ApplicationInfo{}
+	appInfo := policyprovider.ApplicationInfo{}
 	actPolicies, err := service.GetPolicyInfo(appInfo)
 	assert.ErrorContains(t, err, "some-error")
 	assert.NotNil(t, actPolicies)
@@ -77,7 +78,7 @@ func TestGetPolicyInfo_NoResourceRoles(t *testing.T) {
 	policyStoreSvc.expectGetResourceRoles(nil, nil)
 	service := awsapigw.NewAwsApiGatewayProviderService(nil, policyStoreSvc)
 
-	appInfo := orchestrator.ApplicationInfo{}
+	appInfo := policyprovider.ApplicationInfo{}
 	actPolicies, err := service.GetPolicyInfo(appInfo)
 	assert.NoError(t, err)
 	assert.NotNil(t, actPolicies)
@@ -95,7 +96,7 @@ func TestGetPolicyInfo(t *testing.T) {
 	policyStoreSvc.expectGetResourceRoles(expReturnResourceRoles, nil)
 	service := awsapigw.NewAwsApiGatewayProviderService(nil, policyStoreSvc)
 
-	appInfo := orchestrator.ApplicationInfo{}
+	appInfo := policyprovider.ApplicationInfo{}
 	actPolicies, err := service.GetPolicyInfo(appInfo)
 	assert.NoError(t, err)
 	assert.NotNil(t, actPolicies)
@@ -115,7 +116,7 @@ func TestSetPolicyInfo_GetResourcesError(t *testing.T) {
 	policyStoreSvc := &mockPolicyStoreSvc{}
 	policyStoreSvc.expectGetResourceRoles(nil, errors.New("some-error"))
 	service := awsapigw.NewAwsApiGatewayProviderService(nil, policyStoreSvc)
-	appInfo := orchestrator.ApplicationInfo{}
+	appInfo := policyprovider.ApplicationInfo{}
 	status, err := service.SetPolicyInfo(appInfo, []hexapolicy.PolicyInfo{})
 	assert.ErrorContains(t, err, "some-error")
 	assert.Equal(t, http.StatusBadGateway, status)
@@ -140,7 +141,7 @@ func TestSetPolicyInfo_UpdateError(t *testing.T) {
 	policies := policytestsupport.MakeRoleSubjectTestPolicies(newActionRoles)
 
 	service := awsapigw.NewAwsApiGatewayProviderService(nil, policyStoreSvc)
-	appInfo := orchestrator.ApplicationInfo{}
+	appInfo := policyprovider.ApplicationInfo{}
 	status, err := service.SetPolicyInfo(appInfo, policies)
 	assert.ErrorContains(t, err, "some-error")
 	assert.Equal(t, http.StatusBadGateway, status)
@@ -166,7 +167,7 @@ func TestSetPolicyInfo_MultiplePolicies(t *testing.T) {
 	policies := policytestsupport.MakeRoleSubjectTestPolicies(newActionRoles)
 
 	service := awsapigw.NewAwsApiGatewayProviderService(nil, policyStoreSvc)
-	appInfo := orchestrator.ApplicationInfo{}
+	appInfo := policyprovider.ApplicationInfo{}
 	status, err := service.SetPolicyInfo(appInfo, policies)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, status)
@@ -190,7 +191,7 @@ func TestSetPolicyInfo_UpdateInputPolicyOnly(t *testing.T) {
 	policies := policytestsupport.MakeRoleSubjectTestPolicies(newActionRoles)
 
 	service := awsapigw.NewAwsApiGatewayProviderService(nil, policyStoreSvc)
-	appInfo := orchestrator.ApplicationInfo{}
+	appInfo := policyprovider.ApplicationInfo{}
 	status, err := service.SetPolicyInfo(appInfo, policies)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, status)
@@ -216,7 +217,7 @@ func TestSetPolicyInfo_RemoveAllMembers(t *testing.T) {
 	policies := policytestsupport.MakeRoleSubjectTestPolicies(newActionRoles)
 
 	service := awsapigw.NewAwsApiGatewayProviderService(nil, policyStoreSvc)
-	appInfo := orchestrator.ApplicationInfo{}
+	appInfo := policyprovider.ApplicationInfo{}
 	status, err := service.SetPolicyInfo(appInfo, policies)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, status)
@@ -238,7 +239,7 @@ func TestSetPolicyInfo_NoChange(t *testing.T) {
 	policies := policytestsupport.MakeRoleSubjectTestPolicies(newActionRoles)
 
 	service := awsapigw.NewAwsApiGatewayProviderService(nil, policyStoreSvc)
-	appInfo := orchestrator.ApplicationInfo{}
+	appInfo := policyprovider.ApplicationInfo{}
 	status, err := service.SetPolicyInfo(appInfo, policies)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, status)
@@ -263,7 +264,7 @@ func TestSetPolicyInfo_AddsNewMembersAll(t *testing.T) {
 	policies := policytestsupport.MakeRoleSubjectTestPolicies(newActionRoles)
 
 	service := awsapigw.NewAwsApiGatewayProviderService(nil, policyStoreSvc)
-	appInfo := orchestrator.ApplicationInfo{}
+	appInfo := policyprovider.ApplicationInfo{}
 	status, err := service.SetPolicyInfo(appInfo, policies)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, status)

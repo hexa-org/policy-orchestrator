@@ -2,14 +2,15 @@ package microsoftazure
 
 import (
 	"errors"
-	"github.com/go-playground/validator/v10"
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azad"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/workflowsupport"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azad"
+	"github.com/hexa-org/policy-orchestrator/demo/pkg/workflowsupport"
 )
 
 type AzureProvider struct {
@@ -36,7 +37,7 @@ func (a *AzureProvider) Name() string {
 	return "azure"
 }
 
-func (a *AzureProvider) DiscoverApplications(info orchestrator.IntegrationInfo) (apps []orchestrator.ApplicationInfo, err error) {
+func (a *AzureProvider) DiscoverApplications(info policyprovider.IntegrationInfo) (apps []policyprovider.ApplicationInfo, err error) {
 	if !strings.EqualFold(info.Name, a.Name()) {
 		return apps, err
 	}
@@ -47,7 +48,7 @@ func (a *AzureProvider) DiscoverApplications(info orchestrator.IntegrationInfo) 
 	return apps, err
 }
 
-func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
+func (a *AzureProvider) GetPolicyInfo(integrationInfo policyprovider.IntegrationInfo, applicationInfo policyprovider.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
 	key := integrationInfo.Key
 	servicePrincipals, _ := a.client.GetServicePrincipals(key, applicationInfo.Description) // todo - description is named poorly
 	if len(servicePrincipals.List) == 0 {
@@ -75,7 +76,7 @@ func (a *AzureProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 	return policyMapper.ToIDQL(), nil
 }
 
-func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (int, error) {
+func (a *AzureProvider) SetPolicyInfo(integrationInfo policyprovider.IntegrationInfo, applicationInfo policyprovider.ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (int, error) {
 	validate := validator.New() // todo - move this up?
 	errApp := validate.Struct(applicationInfo)
 	if errApp != nil {
@@ -121,7 +122,7 @@ func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 				AppRoleId:   appRoleId,
 				PrincipalId: principalId,
 				ResourceId:  sps.List[0].ID,
-				//ResourceId:  strings.Split(policyInfo.Object.ResourceID, ":")[0],
+				// ResourceId:  strings.Split(policyInfo.Object.ResourceID, ":")[0],
 			})
 		}
 

@@ -1,12 +1,13 @@
 package amazonwebservices
 
 import (
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/amazonwebservices/awscognito"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/amazonwebservices/awscommon"
 	"net/http"
 	"strings"
+
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/amazonwebservices/awscognito"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/amazonwebservices/awscommon"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -19,9 +20,9 @@ func (a *AmazonProvider) Name() string {
 	return "amazon"
 }
 
-func (a *AmazonProvider) DiscoverApplications(info orchestrator.IntegrationInfo) ([]orchestrator.ApplicationInfo, error) {
+func (a *AmazonProvider) DiscoverApplications(info policyprovider.IntegrationInfo) ([]policyprovider.ApplicationInfo, error) {
 	if !strings.EqualFold(info.Name, a.Name()) {
-		return []orchestrator.ApplicationInfo{}, nil
+		return []policyprovider.ApplicationInfo{}, nil
 	}
 
 	client, err := awscognito.NewCognitoClient(info.Key, a.AwsClientOpts)
@@ -31,7 +32,7 @@ func (a *AmazonProvider) DiscoverApplications(info orchestrator.IntegrationInfo)
 	return client.ListUserPools()
 }
 
-func (a *AmazonProvider) GetPolicyInfo(info orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
+func (a *AmazonProvider) GetPolicyInfo(info policyprovider.IntegrationInfo, applicationInfo policyprovider.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
 	client, err := awscognito.NewCognitoClient(info.Key, a.AwsClientOpts)
 	if err != nil {
 		return nil, err
@@ -61,7 +62,7 @@ func (a *AmazonProvider) GetPolicyInfo(info orchestrator.IntegrationInfo, applic
 	return policies, nil
 }
 
-func (a *AmazonProvider) SetPolicyInfo(info orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (int, error) {
+func (a *AmazonProvider) SetPolicyInfo(info policyprovider.IntegrationInfo, applicationInfo policyprovider.ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (int, error) {
 	validate := validator.New() // todo - move this up?
 	err := validate.Struct(applicationInfo)
 	if err != nil {

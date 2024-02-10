@@ -2,11 +2,13 @@ package orchestrator_test
 
 import (
 	"errors"
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator/test"
 	"testing"
 	"time"
+
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator/test"
 
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/workflowsupport"
@@ -26,7 +28,7 @@ func TestWorkflow(t *testing.T) {
 	_, _ = integrationsGateway.Create("aName", "noop", []byte("aKey"))
 
 	noopProvider := orchestrator_test.NoopProvider{}
-	providers := make(map[string]orchestrator.Provider)
+	providers := make(map[string]policyprovider.Provider)
 	providers["noop"] = &noopProvider
 	pb := orchestrator.NewProviderBuilder(providers)
 	worker := orchestrator.NewDiscoveryWorker(pb, appGateway)
@@ -51,7 +53,7 @@ func TestRemoveDeletedApplications(t *testing.T) {
 	app2ID, _ := appDataGateway.CreateIfAbsent(id, "object2", "app2", "", "service2")
 
 	provider := fakeProvider{
-		discoveredApplications: []orchestrator.ApplicationInfo{
+		discoveredApplications: []policyprovider.ApplicationInfo{
 			{
 				ObjectID: "object2",
 				Name:     "app2",
@@ -60,7 +62,7 @@ func TestRemoveDeletedApplications(t *testing.T) {
 		},
 	}
 
-	pb := orchestrator.NewProviderBuilder(map[string]orchestrator.Provider{"fake": provider})
+	pb := orchestrator.NewProviderBuilder(map[string]policyprovider.Provider{"fake": provider})
 
 	discoveryWorker := orchestrator.NewDiscoveryWorker(pb, appDataGateway)
 	work := []orchestrator.IntegrationRecord{{Provider: "fake"}}
@@ -111,21 +113,21 @@ func TestWorkflow_erroneousFind(t *testing.T) {
 }
 
 type fakeProvider struct {
-	discoveredApplications []orchestrator.ApplicationInfo
+	discoveredApplications []policyprovider.ApplicationInfo
 }
 
 func (f fakeProvider) Name() string {
 	return "fake"
 }
 
-func (f fakeProvider) DiscoverApplications(info orchestrator.IntegrationInfo) ([]orchestrator.ApplicationInfo, error) {
+func (f fakeProvider) DiscoverApplications(info policyprovider.IntegrationInfo) ([]policyprovider.ApplicationInfo, error) {
 	return f.discoveredApplications, nil
 }
 
-func (f fakeProvider) GetPolicyInfo(info orchestrator.IntegrationInfo, info2 orchestrator.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
+func (f fakeProvider) GetPolicyInfo(info policyprovider.IntegrationInfo, info2 policyprovider.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
 	panic("implement me")
 }
 
-func (f fakeProvider) SetPolicyInfo(info orchestrator.IntegrationInfo, info2 orchestrator.ApplicationInfo, infos []hexapolicy.PolicyInfo) (status int, foundErr error) {
+func (f fakeProvider) SetPolicyInfo(info policyprovider.IntegrationInfo, info2 policyprovider.ApplicationInfo, infos []hexapolicy.PolicyInfo) (status int, foundErr error) {
 	panic("implement me")
 }

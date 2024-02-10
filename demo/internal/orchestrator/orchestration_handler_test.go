@@ -7,12 +7,14 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator/test"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure"
 	"net"
 	"net/http"
 	"testing"
+
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator/test"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure"
 
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/hawksupport"
@@ -26,7 +28,7 @@ type orchestrationHandlerData struct {
 	db        *sql.DB
 	server    *http.Server
 	key       string
-	providers map[string]orchestrator.Provider
+	providers map[string]policyprovider.Provider
 
 	fromApp        string
 	toApp          string
@@ -55,7 +57,7 @@ insert into applications (id, integration_id, object_id, name, description) valu
 	hash := sha256.Sum256([]byte("aKey"))
 	data.key = hex.EncodeToString(hash[:])
 
-	data.providers = make(map[string]orchestrator.Provider)
+	data.providers = make(map[string]policyprovider.Provider)
 	data.providers["noop"] = &orchestrator_test.NoopProvider{}
 	data.providers["azure"] = microsoftazure.NewAzureProvider()
 	handlers, _ := orchestrator.LoadHandlers(data.db, hawksupport.NewCredentialStore(data.key), addr, data.providers)

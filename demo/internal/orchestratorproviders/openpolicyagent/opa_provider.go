@@ -7,10 +7,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/amazonwebservices/awscommon"
 
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/compressionsupport"
 
 	"io/ioutil"
@@ -40,15 +41,15 @@ func (o *OpaProvider) Name() string {
 	return "open_policy_agent"
 }
 
-func (o *OpaProvider) DiscoverApplications(info orchestrator.IntegrationInfo) ([]orchestrator.ApplicationInfo, error) {
+func (o *OpaProvider) DiscoverApplications(info policyprovider.IntegrationInfo) ([]policyprovider.ApplicationInfo, error) {
 	c, err := o.credentials(info.Key)
 	if err != nil {
 		return nil, err
 	}
 
-	var apps []orchestrator.ApplicationInfo
+	var apps []policyprovider.ApplicationInfo
 	if strings.EqualFold(info.Name, o.Name()) {
-		apps = append(apps, orchestrator.ApplicationInfo{
+		apps = append(apps, policyprovider.ApplicationInfo{
 			ObjectID:    c.objectID(),
 			Name:        c.ProjectID,
 			Description: "Open Policy Agent bundle",
@@ -85,7 +86,7 @@ type Object struct {
 	ResourceID string `json:"resource_id"`
 }
 
-func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, appInfo orchestrator.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
+func (o *OpaProvider) GetPolicyInfo(integration policyprovider.IntegrationInfo, appInfo policyprovider.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
 	key := integration.Key
 	client, err := o.ConfigureClient(key)
 	if err != nil {
@@ -126,7 +127,7 @@ func (o *OpaProvider) GetPolicyInfo(integration orchestrator.IntegrationInfo, ap
 	return hexaPolicies, nil
 }
 
-func (o *OpaProvider) SetPolicyInfo(integration orchestrator.IntegrationInfo, appInfo orchestrator.ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (int, error) {
+func (o *OpaProvider) SetPolicyInfo(integration policyprovider.IntegrationInfo, appInfo policyprovider.ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (int, error) {
 	validate := validator.New() // todo - move this up?
 	errApp := validate.Struct(appInfo)
 	if errApp != nil {

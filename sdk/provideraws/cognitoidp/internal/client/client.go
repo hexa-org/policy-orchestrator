@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/hexa-org/policy-orchestrator/sdk/provideraws/awscommon"
 	logger "golang.org/x/exp/slog"
@@ -26,13 +27,15 @@ func NewCognitoClient(key []byte, httpClient awscommon.AWSHttpClient) (CognitoCl
 }
 
 func (c *cognitoClient) ListUserPools() (*cognitoidentityprovider.ListUserPoolsOutput, error) {
-	poolsInput := cognitoidentityprovider.ListUserPoolsInput{MaxResults: 20}
+	maxRes := int32(20)
+	poolsInput := cognitoidentityprovider.ListUserPoolsInput{MaxResults: &maxRes}
 	pools, err := c.client.ListUserPools(context.Background(), &poolsInput)
 	return pools, err
 }
 
 func (c *cognitoClient) ListResourceServers(userPoolId string) (*cognitoidentityprovider.ListResourceServersOutput, error) {
-	rsInput := cognitoidentityprovider.ListResourceServersInput{UserPoolId: &userPoolId, MaxResults: 10}
+	maxRes := int32(10)
+	rsInput := cognitoidentityprovider.ListResourceServersInput{UserPoolId: &userPoolId, MaxResults: &maxRes}
 	rsOutput, err := c.client.ListResourceServers(context.Background(), &rsInput)
 	return rsOutput, err
 }

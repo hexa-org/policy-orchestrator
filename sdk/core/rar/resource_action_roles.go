@@ -2,7 +2,7 @@ package rar
 
 import (
 	"errors"
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"golang.org/x/exp/slices"
 	log "golang.org/x/exp/slog"
 	"net/http"
@@ -29,7 +29,7 @@ type DynamicResourceActionRolesMapper struct {
 }
 
 func (d DynamicResourceActionRolesMapper) MapTo() (ResourceActionRoles, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 

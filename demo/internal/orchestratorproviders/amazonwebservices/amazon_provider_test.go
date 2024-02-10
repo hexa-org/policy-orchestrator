@@ -1,16 +1,17 @@
 package amazonwebservices_test
 
 import (
+	"net/http"
+	"testing"
+
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/amazonwebservices"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/amazonwebservices/awscommon"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/testsupport/awstestsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/testsupport/cognitotestsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/testsupport/policytestsupport"
-	"net/http"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -24,7 +25,7 @@ func TestAmazonProvider_DiscoverApplications(t *testing.T) {
 
 func TestAmazonProvider_DiscoverApplications_withOtherProvider(t *testing.T) {
 	p := &amazonwebservices.AmazonProvider{}
-	info := orchestrator.IntegrationInfo{Name: "not_amazon", Key: []byte("aKey")}
+	info := policyprovider.IntegrationInfo{Name: "not_amazon", Key: []byte("aKey")}
 	apps, err := p.DiscoverApplications(info)
 	assert.NoError(t, err)
 	assert.Empty(t, apps)
@@ -89,7 +90,7 @@ func TestAmazonProvider_ListUserPools_Success(t *testing.T) {
 
 func TestAmazonProvider_GetPolicyInfo_CognitoClientError(t *testing.T) {
 	p := amazonwebservices.AmazonProvider{}
-	info := orchestrator.IntegrationInfo{Name: "amazon", Key: []byte("!!!")}
+	info := policyprovider.IntegrationInfo{Name: "amazon", Key: []byte("!!!")}
 	appInfo := awstestsupport.AppInfo()
 	policyInfo, err := p.GetPolicyInfo(info, appInfo)
 	assert.Error(t, err)
@@ -149,8 +150,8 @@ func TestSetPolicy_withInvalidArguments(t *testing.T) {
 	p := amazonwebservices.AmazonProvider{}
 
 	status, err := p.SetPolicyInfo(
-		orchestrator.IntegrationInfo{Name: "azure", Key: key},
-		orchestrator.ApplicationInfo{Name: "anAppName", Description: "anAppId"},
+		policyprovider.IntegrationInfo{Name: "azure", Key: key},
+		policyprovider.ApplicationInfo{Name: "anAppName", Description: "anAppId"},
 		[]hexapolicy.PolicyInfo{{
 			Meta:    hexapolicy.MetaInfo{Version: "0"},
 			Actions: []hexapolicy.ActionInfo{{"azure:anAppRoleId"}},
@@ -164,8 +165,8 @@ func TestSetPolicy_withInvalidArguments(t *testing.T) {
 	assert.EqualError(t, err, "Key: 'ApplicationInfo.ObjectID' Error:Field validation for 'ObjectID' failed on the 'required' tag")
 
 	status, err = p.SetPolicyInfo(
-		orchestrator.IntegrationInfo{Name: "azure", Key: key},
-		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"},
+		policyprovider.IntegrationInfo{Name: "azure", Key: key},
+		policyprovider.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"},
 		[]hexapolicy.PolicyInfo{{
 			Meta:    hexapolicy.MetaInfo{Version: "0"},
 			Actions: []hexapolicy.ActionInfo{{"azure:anAppRoleId"}},

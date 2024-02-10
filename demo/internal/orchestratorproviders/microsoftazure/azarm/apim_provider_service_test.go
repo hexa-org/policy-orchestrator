@@ -1,14 +1,15 @@
 package azarm_test
 
 import (
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"testing"
+
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azarm"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/azuretestsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/azuretestsupport/apim_testsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/azuretestsupport/armtestsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestGetPolicyInfo(t *testing.T) {
@@ -24,7 +25,7 @@ func TestGetPolicyInfo(t *testing.T) {
 	apimNamedValueSvc.ExpectGetResourceRoles(serviceInfo, existingActionRoles)
 
 	service := azarm.NewApimProviderService(apimApiSvc, azureClient, apimNamedValueSvc)
-	appInfo := orchestrator.ApplicationInfo{Service: gatewayUrl}
+	appInfo := policyprovider.ApplicationInfo{Service: gatewayUrl}
 	_, err := service.GetPolicyInfo(appInfo)
 	assert.NoError(t, err)
 }
@@ -43,7 +44,7 @@ func TestSetPolicyInfo_NoChange(t *testing.T) {
 	newActionRoles := map[string][]string{policytestsupport.ActionGetHrUs: {"some-role"}}
 	policies := policytestsupport.MakeRoleSubjectTestPolicies(newActionRoles)
 	service := azarm.NewApimProviderService(apimApiSvc, azureClient, apimNamedValueSvc)
-	appInfo := orchestrator.ApplicationInfo{Service: gatewayUrl}
+	appInfo := policyprovider.ApplicationInfo{Service: gatewayUrl}
 	_, err := service.SetPolicyInfo(appInfo, policies)
 
 	assert.NoError(t, err)

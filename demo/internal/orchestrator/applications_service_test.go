@@ -3,11 +3,13 @@ package orchestrator_test
 import (
 	"database/sql"
 	"errors"
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator/test"
 	"log"
 	"testing"
+
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator/test"
 
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/testsupport"
@@ -16,7 +18,7 @@ import (
 
 type applicationsServiceData struct {
 	db        *sql.DB
-	providers map[string]orchestrator.Provider
+	providers map[string]policyprovider.Provider
 
 	fromNoopApp string
 	toNoopApp   string
@@ -51,7 +53,7 @@ insert into applications (id, integration_id, object_id, name, description, serv
 	data.azureApp = "6409776a-367a-483a-a194-5ccf9c4ff212"
 	data.googleApp = "6409776a-367a-483a-a194-5ccf9c4ff213"
 
-	data.providers = make(map[string]orchestrator.Provider)
+	data.providers = make(map[string]policyprovider.Provider)
 	data.providers["noop"] = &orchestrator_test.NoopProvider{}
 	data.providers["azure_legacy"] = &orchestrator_test.NoopProvider{OverrideName: "azure_legacy"}
 	data.providers["google_cloud"] = &orchestrator_test.NoopProvider{OverrideName: "google_cloud"}

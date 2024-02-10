@@ -1,7 +1,9 @@
 package azarm_test
 
 import (
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"testing"
+
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azad"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azarm"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azarm/armmodel"
@@ -11,7 +13,6 @@ import (
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/azuretestsupport/apim_testsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/azuretestsupport/armtestsupport"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestNewAzureApimProvider(t *testing.T) {
@@ -34,7 +35,7 @@ func TestDiscoverApplications_Success(t *testing.T) {
 	provider := newAzureApimProvider(apimSvc, azureClient, apimNvSvc)
 
 	key := azuretestsupport.AzureKeyBytes()
-	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}
+	info := policyprovider.IntegrationInfo{Name: "azure", Key: key}
 
 	azureClient.ExpectGetAzureApplications()
 	serviceInfo := apim_testsupport.ApimServiceInfo(armtestsupport.ApimServiceGatewayUrl)
@@ -45,7 +46,7 @@ func TestDiscoverApplications_Success(t *testing.T) {
 	assert.NotNil(t, applications)
 	assert.Equal(t, 1, len(applications))
 
-	expApp := orchestrator.ApplicationInfo{
+	expApp := policyprovider.ApplicationInfo{
 		ObjectID:    azuretestsupport.ServicePrincipalId,
 		Name:        azuretestsupport.AzureAppName,
 		Description: azuretestsupport.AzureAppId,
@@ -62,7 +63,7 @@ func TestDiscoverApplications_NoApimServices(t *testing.T) {
 	provider := newAzureApimProvider(apimSvc, azureClient, apimNvSvc)
 
 	key := azuretestsupport.AzureKeyBytes()
-	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}
+	info := policyprovider.IntegrationInfo{Name: "azure", Key: key}
 
 	azureClient.ExpectGetAzureApplications()
 	apimSvc.On("GetApimServiceInfo", armtestsupport.ApimServiceGatewayUrl).
@@ -71,5 +72,5 @@ func TestDiscoverApplications_NoApimServices(t *testing.T) {
 	applications, err := provider.DiscoverApplications(info)
 	assert.NoError(t, err)
 	assert.NotNil(t, applications)
-	assert.Equal(t, []orchestrator.ApplicationInfo{}, applications)
+	assert.Equal(t, []policyprovider.ApplicationInfo{}, applications)
 }

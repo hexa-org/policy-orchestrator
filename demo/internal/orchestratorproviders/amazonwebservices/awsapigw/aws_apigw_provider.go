@@ -1,15 +1,16 @@
 package awsapigw
 
 import (
+	"net/http"
+	"strings"
+
 	"github.com/go-playground/validator/v10"
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/amazonwebservices/awsapigw/dynamodbpolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/amazonwebservices/awscognito"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/amazonwebservices/awscommon"
 	log "golang.org/x/exp/slog"
-	"net/http"
-	"strings"
 )
 
 type AwsApiGatewayProvider struct {
@@ -45,21 +46,21 @@ func (a *AwsApiGatewayProvider) Name() string {
 	return "amazon"
 }
 
-func (a *AwsApiGatewayProvider) DiscoverApplications(integrationInfo orchestrator.IntegrationInfo) (apps []orchestrator.ApplicationInfo, err error) {
+func (a *AwsApiGatewayProvider) DiscoverApplications(integrationInfo policyprovider.IntegrationInfo) (apps []policyprovider.ApplicationInfo, err error) {
 	log.Info("AwsApiGatewayProvider.DiscoverApplications", "info.Name", integrationInfo.Name, "a.Name", a.Name())
 	if !strings.EqualFold(integrationInfo.Name, a.Name()) {
-		return []orchestrator.ApplicationInfo{}, err
+		return []policyprovider.ApplicationInfo{}, err
 	}
 	service, err := a.getProviderService(integrationInfo.Key)
 	if err != nil {
 		log.Error("AwsApiGatewayProvider.DiscoverApplications", "getProviderService err", err)
-		return []orchestrator.ApplicationInfo{}, err
+		return []policyprovider.ApplicationInfo{}, err
 	}
 
 	return service.DiscoverApplications(integrationInfo)
 }
 
-func (a *AwsApiGatewayProvider) GetPolicyInfo(info orchestrator.IntegrationInfo, appInfo orchestrator.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
+func (a *AwsApiGatewayProvider) GetPolicyInfo(info policyprovider.IntegrationInfo, appInfo policyprovider.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
 	service, err := a.getProviderService(info.Key)
 	if err != nil {
 		log.Error("AwsApiGatewayProvider.GetPolicyInfo", "getProviderService err", err)
@@ -68,7 +69,7 @@ func (a *AwsApiGatewayProvider) GetPolicyInfo(info orchestrator.IntegrationInfo,
 	return service.GetPolicyInfo(appInfo)
 }
 
-func (a *AwsApiGatewayProvider) SetPolicyInfo(info orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (status int, foundErr error) {
+func (a *AwsApiGatewayProvider) SetPolicyInfo(info policyprovider.IntegrationInfo, applicationInfo policyprovider.ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (status int, foundErr error) {
 	validate := validator.New()
 	err := validate.Struct(applicationInfo)
 	if err != nil {

@@ -1,8 +1,10 @@
 package orchestrator
 
 import (
-	logger "golang.org/x/exp/slog"
 	"log"
+
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	logger "golang.org/x/exp/slog"
 )
 
 type DiscoveryWorker struct {
@@ -17,25 +19,25 @@ func NewDiscoveryWorker(providerBuilder *providerBuilder, gateway ApplicationsDa
 func (n *DiscoveryWorker) Run(work interface{}) error {
 	discoveredApps := make(map[string]struct{})
 
-	//log.Printf("Found discovery provider %s.", p.Name())
+	// log.Printf("Found discovery provider %s.", p.Name())
 
 	for _, record := range work.([]IntegrationRecord) {
-		//providerName := record.Provider
-		//p := n.Providers[providerName]
+		// providerName := record.Provider
+		// p := n.Providers[providerName]
 		p, err := n.providerBuilder.GetAppsProvider(record.Provider, record.Key)
-		//p, err := GetAppsProvider(record.Provider, record.Key)
+		// p, err := GetAppsProvider(record.Provider, record.Key)
 		if err != nil {
 			logger.Error("DiscoveryWorker.Run", "msg", "failed to get apps provider", "provider", record.Provider)
 			continue
 		}
-		//log.Printf("Finding applications for integration provider %s.", p.Name())
-		applications, _ := p.DiscoverApplications(IntegrationInfo{Name: record.Provider, Key: record.Key})
+		// log.Printf("Finding applications for integration provider %s.", p.Name())
+		applications, _ := p.DiscoverApplications(policyprovider.IntegrationInfo{Name: record.Provider, Key: record.Key})
 
-		//log.Printf("Found %d applications for integration provider %s.", len(applications), p.Name())
+		// log.Printf("Found %d applications for integration provider %s.", len(applications), p.Name())
 		for _, app := range applications {
 			id, err := n.gateway.CreateIfAbsent(record.ID, app.ObjectID, app.Name, app.Description, app.Service) // idempotent work
 			if err != nil {
-				//log.Printf("Failed to create application: %s", err)
+				// log.Printf("Failed to create application: %s", err)
 				continue
 			}
 			discoveredApps[id] = struct{}{}
