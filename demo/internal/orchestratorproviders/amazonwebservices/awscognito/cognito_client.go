@@ -4,21 +4,23 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/amazonwebservices/awscommon"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/workflowsupport"
-	"log"
-	"strings"
 )
 
 type CognitoClient interface {
-	ListUserPools() (apps []orchestrator.ApplicationInfo, err error)
+	ListUserPools() (apps []policyprovider.ApplicationInfo, err error)
 	GetGroups(userPoolId string) (map[string]string, error)
-	GetMembersAssignedTo(appInfo orchestrator.ApplicationInfo, groupName string) ([]string, error)
-	SetGroupsAssignedTo(groupName string, members []string, applicationInfo orchestrator.ApplicationInfo) error
+	GetMembersAssignedTo(appInfo policyprovider.ApplicationInfo, groupName string) ([]string, error)
+	SetGroupsAssignedTo(groupName string, members []string, applicationInfo policyprovider.ApplicationInfo) error
 }
 
 type cognitoClient struct {
@@ -42,7 +44,7 @@ func newCognitoClient(key []byte, opts awscommon.AWSClientOptions) (*cognitoiden
 	return cognitoidentityprovider.NewFromConfig(cfg), nil
 }
 
-func (c *cognitoClient) ListUserPools() (apps []orchestrator.ApplicationInfo, err error) {
+func (c *cognitoClient) ListUserPools() (apps []policyprovider.ApplicationInfo, err error) {
 	pools, listErr := c.listUserPools()
 	if listErr != nil {
 		return nil, listErr
@@ -54,7 +56,7 @@ func (c *cognitoClient) ListUserPools() (apps []orchestrator.ApplicationInfo, er
 		}
 
 		for _, rs := range rsOutput.ResourceServers {
-			apps = append(apps, orchestrator.ApplicationInfo{
+			apps = append(apps, policyprovider.ApplicationInfo{
 				ObjectID:    *rs.UserPoolId,
 				Name:        *rs.Name,
 				Description: "Cognito",
@@ -66,13 +68,15 @@ func (c *cognitoClient) ListUserPools() (apps []orchestrator.ApplicationInfo, er
 }
 
 func (c *cognitoClient) listUserPools() (*cognitoidentityprovider.ListUserPoolsOutput, error) {
-	poolsInput := cognitoidentityprovider.ListUserPoolsInput{MaxResults: 20}
+	maxRes := int32(20)
+	poolsInput := cognitoidentityprovider.ListUserPoolsInput{MaxResults: &maxRes}
 	pools, err := c.client.ListUserPools(context.Background(), &poolsInput)
 	return pools, err
 }
 
 func (c *cognitoClient) listResourceServers(userPoolId string) (*cognitoidentityprovider.ListResourceServersOutput, error) {
-	rsInput := cognitoidentityprovider.ListResourceServersInput{UserPoolId: &userPoolId, MaxResults: 10}
+	maxRes := int32(10)
+	rsInput := cognitoidentityprovider.ListResourceServersInput{UserPoolId: &userPoolId, MaxResults: &maxRes}
 	rsOutput, err := c.client.ListResourceServers(context.Background(), &rsInput)
 	return rsOutput, err
 }
@@ -94,7 +98,7 @@ func (c *cognitoClient) GetGroups(userPoolId string) (map[string]string, error) 
 	return groups, nil
 }
 
-func (c *cognitoClient) GetMembersAssignedTo(appInfo orchestrator.ApplicationInfo, groupName string) ([]string, error) {
+func (c *cognitoClient) GetMembersAssignedTo(appInfo policyprovider.ApplicationInfo, groupName string) ([]string, error) {
 	tmpUserEmailMap, err := c.listUsersInGroup(groupName, appInfo.ObjectID)
 
 	if err != nil {
@@ -108,7 +112,7 @@ func (c *cognitoClient) GetMembersAssignedTo(appInfo orchestrator.ApplicationInf
 	return members, nil
 }
 
-func (c *cognitoClient) SetGroupsAssignedTo(groupName string, members []string, applicationInfo orchestrator.ApplicationInfo) error {
+func (c *cognitoClient) SetGroupsAssignedTo(groupName string, members []string, applicationInfo policyprovider.ApplicationInfo) error {
 	existingUserEmailMap, err := c.listUsersInGroup(groupName, applicationInfo.ObjectID)
 	if err != nil {
 		return err
@@ -185,7 +189,7 @@ func (c *cognitoClient) listUsersInGroup(groupName, userPoolId string) (map[stri
 	return userEmailMap, nil
 }
 
-func (c *cognitoClient) getPrincipalIdFromEmail(appInfo orchestrator.ApplicationInfo, email string) (string, error) {
+func (c *cognitoClient) getPrincipalIdFromEmail(appInfo policyprovider.ApplicationInfo, email string) (string, error) {
 	filter := fmt.Sprintf("email=\"%s\"", email)
 	listUserInput := cognitoidentityprovider.ListUsersInput{UserPoolId: &appInfo.ObjectID, Filter: &filter}
 	users, err := c.client.ListUsers(context.Background(), &listUserInput)
@@ -199,7 +203,7 @@ func (c *cognitoClient) getPrincipalIdFromEmail(appInfo orchestrator.Application
 	return *users.Users[0].Username, nil
 }
 
-func (c *cognitoClient) addUsersToGroup(appInfo orchestrator.ApplicationInfo, groupName string, toAdd []string) error {
+func (c *cognitoClient) addUsersToGroup(appInfo policyprovider.ApplicationInfo, groupName string, toAdd []string) error {
 	for _, principalId := range toAdd {
 		input := cognitoidentityprovider.AdminAddUserToGroupInput{
 			GroupName:  &groupName,
@@ -216,7 +220,7 @@ func (c *cognitoClient) addUsersToGroup(appInfo orchestrator.ApplicationInfo, gr
 	return nil
 }
 
-func (c *cognitoClient) removeUsersFromGroup(appInfo orchestrator.ApplicationInfo, groupName string, toAdd []string) error {
+func (c *cognitoClient) removeUsersFromGroup(appInfo policyprovider.ApplicationInfo, groupName string, toAdd []string) error {
 	for _, principalId := range toAdd {
 		input := cognitoidentityprovider.AdminRemoveUserFromGroupInput{
 			GroupName:  &groupName,

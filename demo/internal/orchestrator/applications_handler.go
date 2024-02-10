@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"

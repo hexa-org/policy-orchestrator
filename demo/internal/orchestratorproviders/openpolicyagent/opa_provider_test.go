@@ -8,8 +8,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/openpolicyagent"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/openpolicyagent/test"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/compressionsupport"
@@ -114,7 +114,7 @@ func TestDiscoverApplications(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			p := openpolicyagent.OpaProvider{}
 
-			applications, err := p.DiscoverApplications(orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: tt.key})
+			applications, err := p.DiscoverApplications(policyprovider.IntegrationInfo{Name: "open_policy_agent", Key: tt.key})
 
 			assert.NoError(t, err)
 			assert.Equal(t, 1, len(applications))
@@ -129,7 +129,7 @@ func TestDiscoverApplications(t *testing.T) {
 func TestDiscoverApplications_Error(t *testing.T) {
 	p := openpolicyagent.OpaProvider{}
 
-	applications, err := p.DiscoverApplications(orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: []byte("bad key")})
+	applications, err := p.DiscoverApplications(policyprovider.IntegrationInfo{Name: "open_policy_agent", Key: []byte("bad key")})
 
 	assert.Empty(t, applications)
 	assert.Error(t, err)
@@ -251,7 +251,7 @@ func TestGetPolicyInfo(t *testing.T) {
 		ResourcesDirectory:   resourcesDirectory,
 	}
 
-	policies, _ := p.GetPolicyInfo(orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key}, orchestrator.ApplicationInfo{})
+	policies, _ := p.GetPolicyInfo(policyprovider.IntegrationInfo{Name: "open_policy_agent", Key: key}, policyprovider.ApplicationInfo{})
 
 	assert.Equal(t, 4, len(policies))
 }
@@ -262,8 +262,8 @@ func TestGetPolicyInfo_withBadKey(t *testing.T) {
 	}
 
 	_, err := p.GetPolicyInfo(
-		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: []byte("bad key")},
-		orchestrator.ApplicationInfo{},
+		policyprovider.IntegrationInfo{Name: "open_policy_agent", Key: []byte("bad key")},
+		policyprovider.ApplicationInfo{},
 	)
 
 	assert.Contains(t, err.Error(), "invalid client")
@@ -280,7 +280,7 @@ func TestGetPolicyInfo_withBadRequest(t *testing.T) {
 	}
 	p := openpolicyagent.OpaProvider{BundleClientOverride: mockClient}
 
-	_, err := p.GetPolicyInfo(orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key}, orchestrator.ApplicationInfo{})
+	_, err := p.GetPolicyInfo(policyprovider.IntegrationInfo{Name: "open_policy_agent", Key: key}, policyprovider.ApplicationInfo{})
 
 	assert.Error(t, err)
 }
@@ -296,8 +296,8 @@ func TestSetPolicyInfo(t *testing.T) {
 	p := openpolicyagent.OpaProvider{BundleClientOverride: mockClient, ResourcesDirectory: filepath.Join(file, "../resources")}
 
 	status, err := p.SetPolicyInfo(
-		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
-		orchestrator.ApplicationInfo{ObjectID: "anotherResourceId"},
+		policyprovider.IntegrationInfo{Name: "open_policy_agent", Key: key},
+		policyprovider.ApplicationInfo{ObjectID: "anotherResourceId"},
 		[]hexapolicy.PolicyInfo{
 			{Meta: hexapolicy.MetaInfo{Version: "0.5"}, Actions: []hexapolicy.ActionInfo{{"http:GET"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"allusers"}}, Object: hexapolicy.ObjectInfo{
 				ResourceID: "aResourceId",
@@ -328,8 +328,8 @@ func TestSetPolicyInfo_withInvalidArguments(t *testing.T) {
 	p := openpolicyagent.OpaProvider{BundleClientOverride: client, ResourcesDirectory: filepath.Join(file, "../resources")}
 
 	status, err := p.SetPolicyInfo(
-		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
-		orchestrator.ApplicationInfo{},
+		policyprovider.IntegrationInfo{Name: "open_policy_agent", Key: key},
+		policyprovider.ApplicationInfo{},
 		[]hexapolicy.PolicyInfo{},
 	)
 
@@ -337,8 +337,8 @@ func TestSetPolicyInfo_withInvalidArguments(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid app info")
 
 	status, err = p.SetPolicyInfo(
-		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
-		orchestrator.ApplicationInfo{ObjectID: "aResourceId"},
+		policyprovider.IntegrationInfo{Name: "open_policy_agent", Key: key},
+		policyprovider.ApplicationInfo{ObjectID: "aResourceId"},
 		[]hexapolicy.PolicyInfo{
 			{
 				Actions: []hexapolicy.ActionInfo{{"http:GET"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"allusers"}}, Object: hexapolicy.ObjectInfo{
@@ -355,8 +355,8 @@ func TestSetPolicyInfo_withInvalidArguments(t *testing.T) {
   "gcp": {"key": {}}
 }`)
 	status, err = p.SetPolicyInfo(
-		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
-		orchestrator.ApplicationInfo{ObjectID: "anObjectID"},
+		policyprovider.IntegrationInfo{Name: "open_policy_agent", Key: key},
+		policyprovider.ApplicationInfo{ObjectID: "anObjectID"},
 		[]hexapolicy.PolicyInfo{},
 	)
 
@@ -389,8 +389,8 @@ func TestSetPolicyInfo_WithHTTPSBundleServer(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	p := openpolicyagent.OpaProvider{ResourcesDirectory: filepath.Join(file, "../resources")}
 	status, err := p.SetPolicyInfo(
-		orchestrator.IntegrationInfo{Name: "open_policy_agent", Key: key},
-		orchestrator.ApplicationInfo{ObjectID: "aResourceId"},
+		policyprovider.IntegrationInfo{Name: "open_policy_agent", Key: key},
+		policyprovider.ApplicationInfo{ObjectID: "aResourceId"},
 		[]hexapolicy.PolicyInfo{
 			{Meta: hexapolicy.MetaInfo{Version: "0.5"}, Actions: []hexapolicy.ActionInfo{{"http:GET"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"allusers"}}, Object: hexapolicy.ObjectInfo{
 				ResourceID: "aResourceId",

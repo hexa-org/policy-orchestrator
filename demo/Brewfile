@@ -14,4 +14,4 @@ brew "overmind"
 brew "pack"
 brew "golang-migrate"
 
-cask "docker"
+#cask "docker"

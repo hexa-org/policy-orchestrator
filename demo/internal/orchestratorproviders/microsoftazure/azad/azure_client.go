@@ -5,18 +5,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/go-playground/validator/v10"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azurecommon"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azurecommon"
 )
 
 type AzureClient interface {
 	GetAzureApplications(key []byte) ([]AzureWebApp, error)
-	GetWebApplications(key []byte) ([]orchestrator.ApplicationInfo, error)
+	GetWebApplications(key []byte) ([]policyprovider.ApplicationInfo, error)
 	GetServicePrincipals(key []byte, appId string) (AzureServicePrincipals, error)
 	GetUserInfoFromPrincipalId(key []byte, principalId string) (AzureUser, error)
 	GetPrincipalIdFromEmail(key []byte, email string) (string, error)
@@ -121,31 +122,31 @@ func (c *azureClient) GetAzureApplications(key []byte) ([]AzureWebApp, error) {
 	return webapps.List, nil
 }
 
-func (c *azureClient) GetWebApplications(key []byte) ([]orchestrator.ApplicationInfo, error) {
+func (c *azureClient) GetWebApplications(key []byte) ([]policyprovider.ApplicationInfo, error) {
 	request, _ := http.NewRequest("GET", "https://graph.microsoft.com/v1.0/applications", nil)
 	get, err := c.azureRequest(key, request, "https://graph.microsoft.com/.default")
 	if err != nil {
 		log.Println("Unable to get azure web applications. Error=" + err.Error())
-		return []orchestrator.ApplicationInfo{}, err
+		return []policyprovider.ApplicationInfo{}, err
 	}
 
 	if get.StatusCode != http.StatusOK {
 		errMsg := "unable to get azure web applications. Unexpected status " + get.Status
 		log.Println(errMsg)
-		return []orchestrator.ApplicationInfo{}, errors.New(errMsg)
+		return []policyprovider.ApplicationInfo{}, errors.New(errMsg)
 	}
 
 	var webapps azureWebApps
 	if err = json.NewDecoder(get.Body).Decode(&webapps); err != nil {
 		log.Println("Unable to decode azure web app response.")
-		return []orchestrator.ApplicationInfo{}, err
+		return []policyprovider.ApplicationInfo{}, err
 	}
 
-	var apps []orchestrator.ApplicationInfo
+	var apps []policyprovider.ApplicationInfo
 	for _, app := range webapps.List {
 		log.Printf("Found azure app service web app %s.\n", app.Name)
 		if app.Web.HomePageUrl != "" { // todo - a better way to find enterprise apps, WindowsAzureActiveDirectoryIntegratedApp?
-			apps = append(apps, orchestrator.ApplicationInfo{
+			apps = append(apps, policyprovider.ApplicationInfo{
 				ObjectID:    app.ID,
 				Name:        app.Name,
 				Description: app.AppID,

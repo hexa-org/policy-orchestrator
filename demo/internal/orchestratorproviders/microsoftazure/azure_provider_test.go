@@ -1,23 +1,24 @@
 package microsoftazure_test
 
 import (
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"log"
+	"net/http"
+	"testing"
+
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azad"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/azuretestsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"log"
-	"net/http"
-	"testing"
 )
 
 func TestDiscoverApplications(t *testing.T) {
 	key := azuretestsupport.AzureKeyBytes()
 	mockAzClient := azuretestsupport.NewMockAzureClient()
-	expApps := []orchestrator.ApplicationInfo{
+	expApps := []policyprovider.ApplicationInfo{
 		{
 			ObjectID:    "anId",
 			Name:        "aName",
@@ -29,7 +30,7 @@ func TestDiscoverApplications(t *testing.T) {
 
 	p := microsoftazure.NewAzureProvider(microsoftazure.WithAzureClient(mockAzClient))
 
-	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}
+	info := policyprovider.IntegrationInfo{Name: "azure", Key: key}
 	applications, _ := p.DiscoverApplications(info)
 	log.Println(applications[0])
 
@@ -53,8 +54,8 @@ func TestGetPolicy_WithoutUserEmail(t *testing.T) {
 
 	p := microsoftazure.NewAzureProvider(microsoftazure.WithAzureClient(mockAzClient))
 
-	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}
-	appInfo := orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId}
+	info := policyprovider.IntegrationInfo{Name: "azure", Key: key}
+	appInfo := policyprovider.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId}
 
 	actualPolicies, err := p.GetPolicyInfo(info, appInfo)
 	assert.NoError(t, err)
@@ -82,8 +83,8 @@ func TestGetPolicy_WithRoleAssignment(t *testing.T) {
 
 	p := microsoftazure.NewAzureProvider(microsoftazure.WithAzureClient(mockAzClient))
 
-	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}
-	appInfo := orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId}
+	info := policyprovider.IntegrationInfo{Name: "azure", Key: key}
+	appInfo := policyprovider.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId}
 
 	actualPolicies, err := p.GetPolicyInfo(info, appInfo)
 	assert.NoError(t, err)
@@ -108,8 +109,8 @@ func TestGetPolicy_MultiplePolicies(t *testing.T) {
 
 	p := microsoftazure.NewAzureProvider(microsoftazure.WithAzureClient(mockAzClient))
 
-	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}
-	appInfo := orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId}
+	info := policyprovider.IntegrationInfo{Name: "azure", Key: key}
+	appInfo := policyprovider.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId}
 
 	actualPolicies, err := p.GetPolicyInfo(info, appInfo)
 	assert.NoError(t, err)
@@ -134,8 +135,8 @@ func TestGetPolicy_MultipleMembersInOnePolicy(t *testing.T) {
 
 	p := microsoftazure.NewAzureProvider(microsoftazure.WithAzureClient(mockAzClient))
 
-	info := orchestrator.IntegrationInfo{Name: "azure", Key: key}
-	appInfo := orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId}
+	info := policyprovider.IntegrationInfo{Name: "azure", Key: key}
+	appInfo := policyprovider.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId}
 
 	actualPolicies, err := p.GetPolicyInfo(info, appInfo)
 	assert.NoError(t, err)
@@ -153,8 +154,8 @@ func TestSetPolicy_withInvalidArguments(t *testing.T) {
 	key := []byte("key")
 
 	status, err := azureProvider.SetPolicyInfo(
-		orchestrator.IntegrationInfo{Name: "azure", Key: key},
-		orchestrator.ApplicationInfo{Name: "anAppName", Description: "anAppId"},
+		policyprovider.IntegrationInfo{Name: "azure", Key: key},
+		policyprovider.ApplicationInfo{Name: "anAppName", Description: "anAppId"},
 		[]hexapolicy.PolicyInfo{{
 			Meta:    hexapolicy.MetaInfo{Version: "0"},
 			Actions: []hexapolicy.ActionInfo{{"azure:anAppRoleId"}},
@@ -168,8 +169,8 @@ func TestSetPolicy_withInvalidArguments(t *testing.T) {
 	assert.EqualError(t, err, "Key: 'ApplicationInfo.ObjectID' Error:Field validation for 'ObjectID' failed on the 'required' tag")
 
 	status, err = azureProvider.SetPolicyInfo(
-		orchestrator.IntegrationInfo{Name: "azure", Key: key},
-		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"},
+		policyprovider.IntegrationInfo{Name: "azure", Key: key},
+		policyprovider.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: "aDescription"},
 		[]hexapolicy.PolicyInfo{{
 			Meta:    hexapolicy.MetaInfo{Version: "0"},
 			Actions: []hexapolicy.ActionInfo{{"azure:anAppRoleId"}},
@@ -193,8 +194,8 @@ func TestSetPolicy_IgnoresAllPrincipalIdsNotFound(t *testing.T) {
 
 	p := microsoftazure.NewAzureProvider(microsoftazure.WithAzureClient(mockAzClient))
 	status, err := p.SetPolicyInfo(
-		orchestrator.IntegrationInfo{Name: "azure", Key: key},
-		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
+		policyprovider.IntegrationInfo{Name: "azure", Key: key},
+		policyprovider.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
 		[]hexapolicy.PolicyInfo{{
 			Meta:    hexapolicy.MetaInfo{Version: "0"},
 			Actions: []hexapolicy.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
@@ -223,8 +224,8 @@ func TestSetPolicy_IgnoresAnyNotFoundPrincipalId(t *testing.T) {
 
 	p := microsoftazure.NewAzureProvider(microsoftazure.WithAzureClient(mockAzClient))
 	status, err := p.SetPolicyInfo(
-		orchestrator.IntegrationInfo{Name: "azure", Key: key},
-		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
+		policyprovider.IntegrationInfo{Name: "azure", Key: key},
+		policyprovider.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
 		[]hexapolicy.PolicyInfo{{
 			Meta:    hexapolicy.MetaInfo{Version: "0"},
 			Actions: []hexapolicy.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
@@ -249,8 +250,8 @@ func TestSetPolicy_AddAssignment_IgnoresInvalidAction(t *testing.T) {
 
 	p := microsoftazure.NewAzureProvider(microsoftazure.WithAzureClient(mockAzClient))
 	status, err := p.SetPolicyInfo(
-		orchestrator.IntegrationInfo{Name: "azure", Key: key},
-		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
+		policyprovider.IntegrationInfo{Name: "azure", Key: key},
+		policyprovider.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
 		[]hexapolicy.PolicyInfo{{
 			Meta:    hexapolicy.MetaInfo{Version: "0"},
 			Actions: []hexapolicy.ActionInfo{{"azure:GET/not_defined"}},
@@ -279,8 +280,8 @@ func TestSetPolicy(t *testing.T) {
 
 	p := microsoftazure.NewAzureProvider(microsoftazure.WithAzureClient(mockAzClient))
 	status, err := p.SetPolicyInfo(
-		orchestrator.IntegrationInfo{Name: "azure", Key: key},
-		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
+		policyprovider.IntegrationInfo{Name: "azure", Key: key},
+		policyprovider.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
 		[]hexapolicy.PolicyInfo{{
 			Meta:    hexapolicy.MetaInfo{Version: "0"},
 			Actions: []hexapolicy.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
@@ -306,8 +307,8 @@ func TestSetPolicy_RemovedAllMembers_FromOnePolicy(t *testing.T) {
 
 	p := microsoftazure.NewAzureProvider(microsoftazure.WithAzureClient(mockAzClient))
 	status, err := p.SetPolicyInfo(
-		orchestrator.IntegrationInfo{Name: "azure", Key: key},
-		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
+		policyprovider.IntegrationInfo{Name: "azure", Key: key},
+		policyprovider.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
 		[]hexapolicy.PolicyInfo{{
 			Meta:    hexapolicy.MetaInfo{Version: "0"},
 			Actions: []hexapolicy.ActionInfo{{"azure:" + policytestsupport.ActionGetHrUs}},
@@ -335,8 +336,8 @@ func TestSetPolicy_RemovedAllMembers_FromAllPolicies(t *testing.T) {
 
 	p := microsoftazure.NewAzureProvider(microsoftazure.WithAzureClient(mockAzClient))
 	status, err := p.SetPolicyInfo(
-		orchestrator.IntegrationInfo{Name: "azure", Key: key},
-		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
+		policyprovider.IntegrationInfo{Name: "azure", Key: key},
+		policyprovider.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
 		[]hexapolicy.PolicyInfo{
 			{
 				Meta:    hexapolicy.MetaInfo{Version: "0"},
@@ -375,8 +376,8 @@ func TestSetPolicy_MultipleAppRolePolicies(t *testing.T) {
 
 	p := microsoftazure.NewAzureProvider(microsoftazure.WithAzureClient(mockAzClient))
 	status, err := p.SetPolicyInfo(
-		orchestrator.IntegrationInfo{Name: "azure", Key: key},
-		orchestrator.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
+		policyprovider.IntegrationInfo{Name: "azure", Key: key},
+		policyprovider.ApplicationInfo{ObjectID: "anObjectId", Name: "anAppName", Description: appId},
 		[]hexapolicy.PolicyInfo{
 			{
 				Meta:    hexapolicy.MetaInfo{Version: "0"},

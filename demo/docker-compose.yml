@@ -47,6 +47,8 @@ services:
   postgresql:
     image: postgres:14.5
     container_name: postgresql
+    ports:
+      - "5432:5432"
     restart: always
     environment:
       POSTGRES_USER: postgresql

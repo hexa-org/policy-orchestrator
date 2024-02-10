@@ -42,11 +42,12 @@ setup::brew() {
 # asdf packages (just golang)
 # ----------------------------------------------------------
 ensure::asdf() {
-  (go version | grep 'go1.19' > /dev/null) || setup::asdf
+  (go version | grep 'go1.21' > /dev/null) || setup::asdf
 }
 
 setup::asdf() {
-  asdf install golang
+  echo "Install golang called"
+  # asdf install golang
 }
 
 # path (i.e., direnv)

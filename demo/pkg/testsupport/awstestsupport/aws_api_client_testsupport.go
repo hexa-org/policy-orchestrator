@@ -2,7 +2,8 @@ package awstestsupport
 
 import (
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
 )
 
 const TestAwsRegion = "us-west-1"
@@ -26,12 +27,12 @@ func AwsCredentialsForTest() []byte {
 	return []byte(str)
 }
 
-func IntegrationInfo() orchestrator.IntegrationInfo {
-	return orchestrator.IntegrationInfo{Name: "amazon", Key: AwsCredentialsForTest()}
+func IntegrationInfo() policyprovider.IntegrationInfo {
+	return policyprovider.IntegrationInfo{Name: "amazon", Key: AwsCredentialsForTest()}
 }
 
-func AppInfo() orchestrator.ApplicationInfo {
-	return orchestrator.ApplicationInfo{
+func AppInfo() policyprovider.ApplicationInfo {
+	return policyprovider.ApplicationInfo{
 		ObjectID:    TestUserPoolId,
 		Name:        TestResourceServerName,
 		Description: "Cognito",

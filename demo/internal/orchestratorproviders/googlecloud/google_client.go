@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/hexa-org/policy-mapper/mapper/formats/gcpBind"
+
 	"io"
 	"log"
 	"net/http"
 	"strings"
 
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-mapper/models/formats/gcpBind"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/functionalsupport"
 	"google.golang.org/api/iam/v1"
 )
@@ -43,53 +44,53 @@ type engines struct {
 	DefaultHostname string `json:"defaultHostname"`
 }
 
-func (c *GoogleClient) GetAppEngineApplications() ([]orchestrator.ApplicationInfo, error) {
+func (c *GoogleClient) GetAppEngineApplications() ([]policyprovider.ApplicationInfo, error) {
 	url := fmt.Sprintf("https://appengine.googleapis.com/v1/apps/%s", c.ProjectId)
 	var appEngines engines
 
 	get, err := c.HttpClient.Get(url)
 	if err != nil {
 		log.Println("Unable to find google cloud app engine applications.")
-		return []orchestrator.ApplicationInfo{}, err
+		return []policyprovider.ApplicationInfo{}, err
 	}
 
 	if get.StatusCode == 404 {
 		log.Println("No App Engine Found")
-		return []orchestrator.ApplicationInfo{}, nil
+		return []policyprovider.ApplicationInfo{}, nil
 	}
 
 	log.Printf("Google cloud response %s.\n", get.Status)
 
 	if err = json.NewDecoder(get.Body).Decode(&appEngines); err != nil {
 		log.Println("Unable to decode google cloud app engine applications.")
-		return []orchestrator.ApplicationInfo{}, err
+		return []policyprovider.ApplicationInfo{}, err
 	}
 
 	log.Printf("Found google cloud backend app engine applications %s.\n", appEngines.Name)
 
-	apps := []orchestrator.ApplicationInfo{
+	apps := []policyprovider.ApplicationInfo{
 		{ObjectID: appEngines.ID, Name: appEngines.Name, Description: appEngines.DefaultHostname, Service: "AppEngine"},
 	}
 	return apps, nil
 }
 
-func (c *GoogleClient) GetBackendApplications() ([]orchestrator.ApplicationInfo, error) {
+func (c *GoogleClient) GetBackendApplications() ([]policyprovider.ApplicationInfo, error) {
 	url := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/backendServices", c.ProjectId)
 
 	get, err := c.HttpClient.Get(url)
 	if err != nil {
 		log.Println("Unable to find google cloud backend services.")
-		return []orchestrator.ApplicationInfo{}, err
+		return []policyprovider.ApplicationInfo{}, err
 	}
 	log.Printf("Google cloud response %s.\n", get.Status)
 
 	var backend backends
 	if err = json.NewDecoder(get.Body).Decode(&backend); err != nil {
 		log.Println("Unable to decode google cloud backend services.")
-		return []orchestrator.ApplicationInfo{}, err
+		return []policyprovider.ApplicationInfo{}, err
 	}
 
-	var apps []orchestrator.ApplicationInfo
+	var apps []policyprovider.ApplicationInfo
 	for _, info := range backend.Resources {
 		log.Printf("Found google cloud backend services %s.\n", info.Name)
 		var service string
@@ -98,7 +99,7 @@ func (c *GoogleClient) GetBackendApplications() ([]orchestrator.ApplicationInfo,
 		} else {
 			service = "Cloud Run"
 		}
-		apps = append(apps, orchestrator.ApplicationInfo{ObjectID: info.ID, Name: info.Name, Description: info.Description, Service: service})
+		apps = append(apps, policyprovider.ApplicationInfo{ObjectID: info.ID, Name: info.Name, Description: info.Description, Service: service})
 	}
 	return apps, nil
 }
@@ -144,7 +145,7 @@ func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]hexapolicy.Pol
 		return []hexapolicy.PolicyInfo{}, err
 	}
 
-	/// todo - below is work in progress
+	// / todo - below is work in progress
 
 	iamBindings := functionalsupport.Map(binds.Bindings, func(binding bindingInfo) iam.Binding {
 		return iam.Binding{
@@ -159,7 +160,7 @@ func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]hexapolicy.Pol
 	policies := functionalsupport.Map(iamBindings, func(iamBinding iam.Binding) hexapolicy.PolicyInfo {
 		p, mappingErr := gcpBind.New(map[string]string{}).MapBindingToPolicy(objectId, iamBinding)
 
-		//p, mappingErr := googlesupport.New(map[string]string{}).MapBindingToPolicy(objectId, iamBinding)
+		// p, mappingErr := googlesupport.New(map[string]string{}).MapBindingToPolicy(objectId, iamBinding)
 		if mappingErr != nil {
 			return hexapolicy.PolicyInfo{}
 		}

@@ -3,8 +3,8 @@ package orchestrator_test
 import (
 	"net/http"
 
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 )
 
 type NoopProvider struct {
@@ -20,16 +20,16 @@ func (n *NoopProvider) Name() string {
 	return "noop"
 }
 
-func (n *NoopProvider) DiscoverApplications(info orchestrator.IntegrationInfo) (apps []orchestrator.ApplicationInfo, err error) {
+func (n *NoopProvider) DiscoverApplications(info policyprovider.IntegrationInfo) (apps []policyprovider.ApplicationInfo, err error) {
 	if info.Name == n.Name() {
-		found := []orchestrator.ApplicationInfo{{ObjectID: "anId", Name: "appEngine"}, {ObjectID: "anotherId", Name: "cloudRun"}, {ObjectID: "andAnotherId", Name: "kubernetes"}}
+		found := []policyprovider.ApplicationInfo{{ObjectID: "anId", Name: "appEngine"}, {ObjectID: "anotherId", Name: "cloudRun"}, {ObjectID: "andAnotherId", Name: "kubernetes"}}
 		apps = append(apps, found...)
 		n.Discovered = n.Discovered + 3
 	}
 	return apps, n.Err
 }
 
-func (n *NoopProvider) GetPolicyInfo(_ orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
+func (n *NoopProvider) GetPolicyInfo(_ policyprovider.IntegrationInfo, _ policyprovider.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
 
 	return []hexapolicy.PolicyInfo{
 		{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"anAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"user:aUser"}}, Object: hexapolicy.ObjectInfo{
@@ -41,6 +41,6 @@ func (n *NoopProvider) GetPolicyInfo(_ orchestrator.IntegrationInfo, _ orchestra
 	}, n.Err
 }
 
-func (n *NoopProvider) SetPolicyInfo(_ orchestrator.IntegrationInfo, _ orchestrator.ApplicationInfo, _ []hexapolicy.PolicyInfo) (int, error) {
+func (n *NoopProvider) SetPolicyInfo(_ policyprovider.IntegrationInfo, _ policyprovider.ApplicationInfo, _ []hexapolicy.PolicyInfo) (int, error) {
 	return http.StatusCreated, n.Err
 }

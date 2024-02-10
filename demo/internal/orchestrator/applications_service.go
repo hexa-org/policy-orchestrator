@@ -2,11 +2,13 @@ package orchestrator
 
 import (
 	"errors"
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/providersV2"
-	logger "golang.org/x/exp/slog"
 	"net/http"
 	"strings"
+
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/providersV2"
+	logger "golang.org/x/exp/slog"
 )
 
 type ApplicationsService struct {
@@ -16,21 +18,21 @@ type ApplicationsService struct {
 	DisableChecks       bool // Only set to true by tests
 }
 
-func (service ApplicationsService) GatherRecords(identifier string) (ApplicationInfo, IntegrationInfo, Provider, error) {
+func (service ApplicationsService) GatherRecords(identifier string) (policyprovider.ApplicationInfo, policyprovider.IntegrationInfo, policyprovider.Provider, error) {
 	applicationRecord, err := service.ApplicationsGateway.FindById(identifier)
 	if err != nil {
-		return ApplicationInfo{}, IntegrationInfo{}, nil, err
+		return policyprovider.ApplicationInfo{}, policyprovider.IntegrationInfo{}, nil, err
 	}
-	application := ApplicationInfo{ObjectID: applicationRecord.ObjectId, Name: applicationRecord.Name, Description: applicationRecord.Description, Service: applicationRecord.Service}
+	application := policyprovider.ApplicationInfo{ObjectID: applicationRecord.ObjectId, Name: applicationRecord.Name, Description: applicationRecord.Description, Service: applicationRecord.Service}
 
 	integrationRecord, err := service.IntegrationsGateway.FindById(applicationRecord.IntegrationId)
 	if err != nil {
-		return ApplicationInfo{}, IntegrationInfo{}, nil, err
+		return policyprovider.ApplicationInfo{}, policyprovider.IntegrationInfo{}, nil, err
 	}
-	integration := IntegrationInfo{Name: integrationRecord.Name, Key: integrationRecord.Key}
+	integration := policyprovider.IntegrationInfo{Name: integrationRecord.Name, Key: integrationRecord.Key}
 
 	// SAURABH - temporary workaround until we implement an app onboarding flow
-	var aProvider Provider
+	var aProvider policyprovider.Provider
 	if integrationRecord.Provider == "amazon" {
 		resAttrDef := providersV2.NewAttributeDefinition("Resource", "string", true, false)
 		actionsAttrDef := providersV2.NewAttributeDefinition("Action", "string", false, true)
@@ -38,12 +40,12 @@ func (service ApplicationsService) GatherRecords(identifier string) (Application
 		tableDef := providersV2.NewTableDefinition(resAttrDef, actionsAttrDef, membersDef)
 		policyStore := providersV2.NewDynamicItemStore(providersV2.AwsPolicyStoreTableName, integration.Key, tableDef)
 
-		//idp := providersV2.GetAppsProvider(integrationRecord.Provider, integration.Key)
+		// idp := providersV2.GetAppsProvider(integrationRecord.Provider, integration.Key)
 		idp := providersV2.NewCognitoIdp(integration.Key)
 		aProvider, err = NewOrchestrationProvider(integrationRecord.Provider, idp, policyStore)
 		if err != nil {
 			logger.Error("GatherRecords", "msg", "error creating Provider", "provider", integrationRecord.Provider, "error", err)
-			return ApplicationInfo{}, IntegrationInfo{}, nil, err
+			return policyprovider.ApplicationInfo{}, policyprovider.IntegrationInfo{}, nil, err
 		}
 	} else if integrationRecord.Provider == "azure" {
 		idp := providersV2.NewApimAppProvider(integration.Key)
@@ -52,14 +54,14 @@ func (service ApplicationsService) GatherRecords(identifier string) (Application
 
 		if err != nil {
 			logger.Error("GatherRecords", "msg", "error creating Provider", "provider", integrationRecord.Provider, "error", err)
-			return ApplicationInfo{}, IntegrationInfo{}, nil, err
+			return policyprovider.ApplicationInfo{}, policyprovider.IntegrationInfo{}, nil, err
 		}
 
 	} else {
 		aProvider, err = service.ProviderBuilder.GetAppsProvider(strings.ToLower(integrationRecord.Provider), nil)
 		if err != nil {
 			logger.Error("GatherRecords", "msg", "error creating Provider", "provider", integrationRecord.Provider, "error", err)
-			return ApplicationInfo{}, IntegrationInfo{}, nil, err
+			return policyprovider.ApplicationInfo{}, policyprovider.IntegrationInfo{}, nil, err
 		}
 	}
 
@@ -173,14 +175,14 @@ func verifyAllMembersAreUsers(policies []hexapolicy.PolicyInfo) bool {
 	return areMembersUsers
 }
 
-func orchestrationSupported(toProvider Provider, fromProvider Provider) bool {
+func orchestrationSupported(toProvider policyprovider.Provider, fromProvider policyprovider.Provider) bool {
 	if toProvider == fromProvider {
 		return true
 	}
 	return onlyWorksWithGoogleAndAzure(toProvider, fromProvider)
 }
 
-func onlyWorksWithGoogleAndAzure(toProvider Provider, fromProvider Provider) bool {
+func onlyWorksWithGoogleAndAzure(toProvider policyprovider.Provider, fromProvider policyprovider.Provider) bool {
 	if toProvider.Name() == "google_cloud" && fromProvider.Name() == "azure" {
 		return true
 	}
@@ -194,7 +196,7 @@ func onlyWorksWithGoogleAndAzure(toProvider Provider, fromProvider Provider) boo
 	return false
 }
 
-func isBetweenAmazonAndAzure(toProvider Provider, fromProvider Provider) bool {
+func isBetweenAmazonAndAzure(toProvider policyprovider.Provider, fromProvider policyprovider.Provider) bool {
 	if toProvider.Name() == "amazon" && fromProvider.Name() == "azure" {
 		return true
 	}

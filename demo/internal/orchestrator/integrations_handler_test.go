@@ -7,10 +7,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 	"net"
 	"net/http"
 	"testing"
+
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/hawksupport"
@@ -43,7 +45,7 @@ func (s *HandlerSuite) SetupTest() {
 	hash := sha256.Sum256([]byte("aKey"))
 	s.key = hex.EncodeToString(hash[:])
 
-	handlers, _ := orchestrator.LoadHandlers(s.db, hawksupport.NewCredentialStore(s.key), addr, map[string]orchestrator.Provider{})
+	handlers, _ := orchestrator.LoadHandlers(s.db, hawksupport.NewCredentialStore(s.key), addr, map[string]policyprovider.Provider{})
 	s.server = websupport.Create(addr, handlers, websupport.Options{})
 
 	go websupport.Start(s.server, listener)

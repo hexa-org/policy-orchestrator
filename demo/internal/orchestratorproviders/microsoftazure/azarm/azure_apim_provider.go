@@ -1,14 +1,15 @@
 package azarm
 
 import (
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"net/http"
+	"strings"
+
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azad"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azarm/azapim"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azarm/azapim/apimnv"
 	log "golang.org/x/exp/slog"
-	"net/http"
-	"strings"
 )
 
 type AzureApimProvider struct {
@@ -53,23 +54,23 @@ func (a *AzureApimProvider) Name() string {
 	return "azure"
 }
 
-func (a *AzureApimProvider) DiscoverApplications(integrationInfo orchestrator.IntegrationInfo) (apps []orchestrator.ApplicationInfo, err error) {
+func (a *AzureApimProvider) DiscoverApplications(integrationInfo policyprovider.IntegrationInfo) (apps []policyprovider.ApplicationInfo, err error) {
 	log.Info("ApimProvider.DiscoverApplications", "info.Name", integrationInfo.Name, "a.Name", a.Name())
 	if !strings.EqualFold(integrationInfo.Name, a.Name()) {
-		return []orchestrator.ApplicationInfo{}, err
+		return []policyprovider.ApplicationInfo{}, err
 	}
 
 	service, err := a.getApimProviderService(integrationInfo.Key)
 	if err != nil {
 		log.Error("ApimProvider.GetPolicyInfo", "getApimProviderService err", err)
-		return []orchestrator.ApplicationInfo{}, err
+		return []policyprovider.ApplicationInfo{}, err
 	}
 
 	return service.DiscoverApplications(integrationInfo)
 
 }
 
-func (a *AzureApimProvider) GetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
+func (a *AzureApimProvider) GetPolicyInfo(integrationInfo policyprovider.IntegrationInfo, applicationInfo policyprovider.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
 	service, err := a.getApimProviderService(integrationInfo.Key)
 	if err != nil {
 		log.Error("ApimProvider.GetPolicyInfo", "getApimProviderService err", err)
@@ -79,7 +80,7 @@ func (a *AzureApimProvider) GetPolicyInfo(integrationInfo orchestrator.Integrati
 	return service.GetPolicyInfo(applicationInfo)
 }
 
-func (a *AzureApimProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationInfo, applicationInfo orchestrator.ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (int, error) {
+func (a *AzureApimProvider) SetPolicyInfo(integrationInfo policyprovider.IntegrationInfo, applicationInfo policyprovider.ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (int, error) {
 	service, err := a.getApimProviderService(integrationInfo.Key)
 	if err != nil {
 		log.Error("ApimProvider.SetPolicyInfo", "getApimProviderService err", err)

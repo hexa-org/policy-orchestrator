@@ -3,15 +3,16 @@ package azarm
 import (
 	"errors"
 	"fmt"
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"net/http"
+
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azad"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azarm/armmodel"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azarm/azapim"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azarm/azapim/apimnv"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/providerscommon"
 	log "golang.org/x/exp/slog"
-	"net/http"
 )
 
 type ApimProviderService struct {
@@ -24,14 +25,14 @@ func NewApimProviderService(armApimSvc azapim.ArmApimSvc, azureClient azad.Azure
 	return &ApimProviderService{armApimSvc: armApimSvc, azureClient: azureClient, apimNamedValueSvc: apimNamedValueSvc}
 }
 
-func (s *ApimProviderService) DiscoverApplications(info orchestrator.IntegrationInfo) ([]orchestrator.ApplicationInfo, error) {
+func (s *ApimProviderService) DiscoverApplications(info policyprovider.IntegrationInfo) ([]policyprovider.ApplicationInfo, error) {
 	azWebApps, err := s.azureClient.GetAzureApplications(info.Key)
 	if err != nil {
 		log.Error("ApimProviderService.DiscoverApplications", "GetAzureApplications err", err)
-		return []orchestrator.ApplicationInfo{}, err
+		return []policyprovider.ApplicationInfo{}, err
 	}
 
-	apps := make([]orchestrator.ApplicationInfo, 0)
+	apps := make([]policyprovider.ApplicationInfo, 0)
 	for _, oneApp := range azWebApps {
 		log.Info("1 ApimProviderService.DiscoverApplications", "App.Name", oneApp.Name, "identifierUris[]", oneApp.IdentifierUris)
 		if len(oneApp.IdentifierUris) == 0 {
@@ -53,7 +54,7 @@ func (s *ApimProviderService) DiscoverApplications(info orchestrator.Integration
 		}
 
 		log.Info("3d ApimProviderService.DiscoverApplications found apim service with matching identifierUrl", "App.Name", oneApp.Name, "identifierUrl", identifierUrl)
-		apps = append(apps, orchestrator.ApplicationInfo{
+		apps = append(apps, policyprovider.ApplicationInfo{
 			ObjectID:    oneApp.AppID,
 			Name:        oneApp.Name,
 			Description: oneApp.ID,
@@ -64,7 +65,7 @@ func (s *ApimProviderService) DiscoverApplications(info orchestrator.Integration
 	return apps, nil
 }
 
-func (s *ApimProviderService) GetPolicyInfo(appInfo orchestrator.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
+func (s *ApimProviderService) GetPolicyInfo(appInfo policyprovider.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
 	serviceInfoAndRars, err := s.getResourceRolesForApi(appInfo)
 	if err != nil {
 		log.Error("ApimProviderService.GetPolicyInfo", "error calling getResourceRolesForApi App.Name", appInfo.Name, "identifierUrl[0]", appInfo.Service, "err=", err)
@@ -73,7 +74,7 @@ func (s *ApimProviderService) GetPolicyInfo(appInfo orchestrator.ApplicationInfo
 	return providerscommon.BuildPolicies(serviceInfoAndRars.rarList), nil
 }
 
-func (s *ApimProviderService) SetPolicyInfo(appInfo orchestrator.ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (int, error) {
+func (s *ApimProviderService) SetPolicyInfo(appInfo policyprovider.ApplicationInfo, policyInfos []hexapolicy.PolicyInfo) (int, error) {
 	serviceInfoAndRars, err := s.getResourceRolesForApi(appInfo)
 	if err != nil {
 		log.Error("ApimProviderService.SetPolicyInfo", "error calling getResourceRolesForApi App.Name", appInfo.Name, "identifierUrl[0]", appInfo.Service, "err=", err)
@@ -96,7 +97,7 @@ type serviceAndRars struct {
 	rarList     []providerscommon.ResourceActionRoles
 }
 
-func (s *ApimProviderService) getResourceRolesForApi(appInfo orchestrator.ApplicationInfo) (serviceAndRars, error) {
+func (s *ApimProviderService) getResourceRolesForApi(appInfo policyprovider.ApplicationInfo) (serviceAndRars, error) {
 	serviceInfo, err := s.getApimServiceInfo(appInfo.Service)
 	if err != nil {
 		log.Error("ApimProviderService.SetPolicyInfo", "error calling getApimServiceInfo App.Name", appInfo.Name, "identifierUrl[0]", appInfo.Service, "err=", err)

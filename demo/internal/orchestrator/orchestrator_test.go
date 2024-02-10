@@ -4,11 +4,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator/test"
 	"net"
 	"net/http"
 	"testing"
+
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator/test"
 
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/hawksupport"
@@ -26,7 +28,7 @@ func TestOrchestratorHandlers(t *testing.T) {
 
 	listener, _ := net.Listen("tcp", "localhost:0")
 
-	providers := make(map[string]orchestrator.Provider)
+	providers := make(map[string]policyprovider.Provider)
 	providers["noop"] = &orchestrator_test.NoopProvider{}
 
 	handlers, _ := orchestrator.LoadHandlers(db, store, listener.Addr().String(), providers)

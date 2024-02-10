@@ -2,12 +2,13 @@ package awsapigw_test
 
 import (
 	"errors"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"testing"
+
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/amazonwebservices/awsapigw"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/testsupport/awstestsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestNewAwsApiGatewayProvider_NoOverrides(t *testing.T) {
@@ -61,7 +62,7 @@ func TestAwsApiGatewayProvider_DiscoverApplications_Error(t *testing.T) {
 
 func TestAwsApiGatewayProvider_DiscoverApplications(t *testing.T) {
 	cognitoClient := &mockCognitoClient{}
-	expApps := []orchestrator.ApplicationInfo{awstestsupport.AppInfo()}
+	expApps := []policyprovider.ApplicationInfo{awstestsupport.AppInfo()}
 	cognitoClient.expectListUserPools(expApps, nil)
 
 	opt := awsapigw.WithCognitoClientOverride(cognitoClient)

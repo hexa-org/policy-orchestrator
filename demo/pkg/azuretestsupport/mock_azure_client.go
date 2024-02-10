@@ -1,12 +1,13 @@
 package azuretestsupport
 
 import (
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
+	"reflect"
+
+	"github.com/hexa-org/policy-mapper/api/policyprovider"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azad"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/azuretestsupport/armtestsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/testsupport/policytestsupport"
 	"github.com/stretchr/testify/mock"
-	"reflect"
 )
 
 type MockAzureClient struct {
@@ -18,9 +19,9 @@ func (m *MockAzureClient) GetAzureApplications(key []byte) ([]azad.AzureWebApp, 
 	return returnArgs.Get(0).([]azad.AzureWebApp), returnArgs.Error(1)
 }
 
-func (m *MockAzureClient) GetWebApplications(key []byte) ([]orchestrator.ApplicationInfo, error) {
+func (m *MockAzureClient) GetWebApplications(key []byte) ([]policyprovider.ApplicationInfo, error) {
 	returnArgs := m.Called(key)
-	return returnArgs.Get(0).([]orchestrator.ApplicationInfo), returnArgs.Error(1)
+	return returnArgs.Get(0).([]policyprovider.ApplicationInfo), returnArgs.Error(1)
 }
 
 func (m *MockAzureClient) GetServicePrincipals(key []byte, appId string) (azad.AzureServicePrincipals, error) {
