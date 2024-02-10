@@ -2,7 +2,7 @@ package policytestsupport
 
 import (
 	"fmt"
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"strings"
 )
 

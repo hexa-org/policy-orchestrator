@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/hexa-org/policy-mapper/mapper/formats/gcpBind"
+
 	"io"
 	"log"
 	"net/http"
 	"strings"
 
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/models/formats/gcpBind"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/functionalsupport"
 	"google.golang.org/api/iam/v1"
@@ -144,7 +145,7 @@ func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]hexapolicy.Pol
 		return []hexapolicy.PolicyInfo{}, err
 	}
 
-	/// todo - below is work in progress
+	// / todo - below is work in progress
 
 	iamBindings := functionalsupport.Map(binds.Bindings, func(binding bindingInfo) iam.Binding {
 		return iam.Binding{
@@ -159,7 +160,7 @@ func (c *GoogleClient) GetBackendPolicy(name, objectId string) ([]hexapolicy.Pol
 	policies := functionalsupport.Map(iamBindings, func(iamBinding iam.Binding) hexapolicy.PolicyInfo {
 		p, mappingErr := gcpBind.New(map[string]string{}).MapBindingToPolicy(objectId, iamBinding)
 
-		//p, mappingErr := googlesupport.New(map[string]string{}).MapBindingToPolicy(objectId, iamBinding)
+		// p, mappingErr := googlesupport.New(map[string]string{}).MapBindingToPolicy(objectId, iamBinding)
 		if mappingErr != nil {
 			return hexapolicy.PolicyInfo{}
 		}

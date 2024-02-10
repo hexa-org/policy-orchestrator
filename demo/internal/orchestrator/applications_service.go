@@ -2,7 +2,7 @@ package orchestrator
 
 import (
 	"errors"
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/providersV2"
 	logger "golang.org/x/exp/slog"
 	"net/http"
@@ -38,7 +38,7 @@ func (service ApplicationsService) GatherRecords(identifier string) (Application
 		tableDef := providersV2.NewTableDefinition(resAttrDef, actionsAttrDef, membersDef)
 		policyStore := providersV2.NewDynamicItemStore(providersV2.AwsPolicyStoreTableName, integration.Key, tableDef)
 
-		//idp := providersV2.GetAppsProvider(integrationRecord.Provider, integration.Key)
+		// idp := providersV2.GetAppsProvider(integrationRecord.Provider, integration.Key)
 		idp := providersV2.NewCognitoIdp(integration.Key)
 		aProvider, err = NewOrchestrationProvider(integrationRecord.Provider, idp, policyStore)
 		if err != nil {

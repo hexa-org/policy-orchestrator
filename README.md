@@ -40,7 +40,7 @@ git clone git@github.com:hexa-org/policy-orchestrator.git
 
 Install the following dependencies.
 
-- [Go 1.20](https://go.dev)
+- [Go 1.21](https://go.dev)
 - [Pack](https://buildpacks.io)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop)
 

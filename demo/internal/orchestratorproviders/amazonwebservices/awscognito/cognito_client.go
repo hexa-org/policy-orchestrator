@@ -4,14 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/amazonwebservices/awscommon"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/workflowsupport"
-	"log"
-	"strings"
 )
 
 type CognitoClient interface {
@@ -66,13 +68,15 @@ func (c *cognitoClient) ListUserPools() (apps []orchestrator.ApplicationInfo, er
 }
 
 func (c *cognitoClient) listUserPools() (*cognitoidentityprovider.ListUserPoolsOutput, error) {
-	poolsInput := cognitoidentityprovider.ListUserPoolsInput{MaxResults: 20}
+	maxRes := int32(20)
+	poolsInput := cognitoidentityprovider.ListUserPoolsInput{MaxResults: &maxRes}
 	pools, err := c.client.ListUserPools(context.Background(), &poolsInput)
 	return pools, err
 }
 
 func (c *cognitoClient) listResourceServers(userPoolId string) (*cognitoidentityprovider.ListResourceServersOutput, error) {
-	rsInput := cognitoidentityprovider.ListResourceServersInput{UserPoolId: &userPoolId, MaxResults: 10}
+	maxRes := int32(10)
+	rsInput := cognitoidentityprovider.ListResourceServersInput{UserPoolId: &userPoolId, MaxResults: &maxRes}
 	rsOutput, err := c.client.ListResourceServers(context.Background(), &rsInput)
 	return rsOutput, err
 }

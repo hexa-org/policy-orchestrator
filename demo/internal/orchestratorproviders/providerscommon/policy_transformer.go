@@ -1,12 +1,13 @@
 package providerscommon
 
 import (
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
+	"sort"
+	"strings"
+
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/functionalsupport"
 	"golang.org/x/exp/slices"
 	log "golang.org/x/exp/slog"
-	"sort"
-	"strings"
 )
 
 const ActionUriPrefix = "http:"

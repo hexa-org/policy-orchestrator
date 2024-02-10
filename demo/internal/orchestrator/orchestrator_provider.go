@@ -2,7 +2,7 @@ package orchestrator
 
 import (
 	"fmt"
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/providersV2"
 	"github.com/hexa-org/policy-orchestrator/sdk/core/idp"
 	"github.com/hexa-org/policy-orchestrator/sdk/core/policyprovider"
@@ -15,21 +15,21 @@ type providerBuilder struct {
 	legacyProviders map[string]Provider
 }
 
-//var legacyProviders = map[string]Provider{
+// var legacyProviders = map[string]Provider{
 //	"google_cloud":      &googlecloud.GoogleProvider{},
 //	"open_policy_agent": &openpolicyagent.OpaProvider{},
-//}
+// }
 
 func NewProviderBuilder(legacyProviders map[string]Provider) *providerBuilder {
 	return &providerBuilder{legacyProviders: legacyProviders}
 }
 
-//legacyProviders["google_cloud"] = &googlecloud.GoogleProvider{}
-//providers["azure"] = azarm.NewAzureApimProvider()
-//providers["azure_apim"] = microsoftazure.NewAzureApimProvider()
-//providers["amazon"] = &amazonwebservices.AmazonProvider{}
-//providers["amazon"] = &awsapigw.AwsApiGatewayProvider{}
-//providers["open_policy_agent"] = &openpolicyagent.OpaProvider{}
+// legacyProviders["google_cloud"] = &googlecloud.GoogleProvider{}
+// providers["azure"] = azarm.NewAzureApimProvider()
+// providers["azure_apim"] = microsoftazure.NewAzureApimProvider()
+// providers["amazon"] = &amazonwebservices.AmazonProvider{}
+// providers["amazon"] = &awsapigw.AwsApiGatewayProvider{}
+// providers["open_policy_agent"] = &openpolicyagent.OpaProvider{}
 
 var idpMap = map[string]func(key []byte) providersV2.Idp{
 	"amazon": func(key []byte) providersV2.Idp {
@@ -79,8 +79,8 @@ type OrchestrationProvider struct {
 
 func NewOrchestrationProvider[R any](name string, aIdp providersV2.Idp, policyStoreOpt providersV2.PolicyStore[R]) (*OrchestrationProvider, error) {
 	// idpCredentials []byte, policyStoreCredentials []byte
-	//tableInfo, err := dynamodbpolicystore.NewSimpleTableInfo(awsPolicyStoreTableName, resourcePolicyItem{})
-	//policyStoreSvc, err := dynamodbpolicystore.NewPolicyStoreSvc(tableInfo, policyStoreOpt.key)
+	// tableInfo, err := dynamodbpolicystore.NewSimpleTableInfo(awsPolicyStoreTableName, resourcePolicyItem{})
+	// policyStoreSvc, err := dynamodbpolicystore.NewPolicyStoreSvc(tableInfo, policyStoreOpt.key)
 	policyStoreSvc, err := policyStoreOpt.Provider()
 	if err != nil {
 		logger.Error("NewOrchestrationProvider",
@@ -89,7 +89,7 @@ func NewOrchestrationProvider[R any](name string, aIdp providersV2.Idp, policySt
 		return nil, err
 	}
 
-	//appInfoSvc, err := cognitoidp.NewAppInfoSvc(idpOpt.key)
+	// appInfoSvc, err := cognitoidp.NewAppInfoSvc(idpOpt.key)
 	appInfoSvc, err := aIdp.Provider()
 	if err != nil {
 		logger.Error("NewAwsApiGatewayProviderV2",
@@ -153,12 +153,12 @@ func (a *OrchestrationProvider) SetPolicyInfo(_ IntegrationInfo, applicationInfo
 // demo apps ApplicationInfo
 func toApplicationInfo(anApp idp.AppInfo) ApplicationInfo {
 	/*rsApp := (anApp).(cognitoidp.ResourceServerAppInfo)
-	return ApplicationInfo{
-		ObjectID:    rsApp.Id(),
-		Name:        rsApp.Name(),
-		Description: rsApp.DisplayName(),
-		Service:     rsApp.Identifier(),
-	}*/
+	  return ApplicationInfo{
+	  	ObjectID:    rsApp.Id(),
+	  	Name:        rsApp.Name(),
+	  	Description: rsApp.DisplayName(),
+	  	Service:     rsApp.Identifier(),
+	  }*/
 	return ApplicationInfo{
 		ObjectID:    anApp.Id(),
 		Name:        anApp.Name(),

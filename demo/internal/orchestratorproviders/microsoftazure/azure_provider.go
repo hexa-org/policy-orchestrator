@@ -3,7 +3,7 @@ package microsoftazure
 import (
 	"errors"
 	"github.com/go-playground/validator/v10"
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure/azad"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/workflowsupport"
@@ -121,7 +121,7 @@ func (a *AzureProvider) SetPolicyInfo(integrationInfo orchestrator.IntegrationIn
 				AppRoleId:   appRoleId,
 				PrincipalId: principalId,
 				ResourceId:  sps.List[0].ID,
-				//ResourceId:  strings.Split(policyInfo.Object.ResourceID, ":")[0],
+				// ResourceId:  strings.Split(policyInfo.Object.ResourceID, ":")[0],
 			})
 		}
 

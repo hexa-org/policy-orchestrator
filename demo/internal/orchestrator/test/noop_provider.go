@@ -3,7 +3,7 @@ package orchestrator_test
 import (
 	"net/http"
 
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 )
 

@@ -1,7 +1,7 @@
 package providerscommon
 
 import (
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/functionalsupport"
 	log "golang.org/x/exp/slog"
 )

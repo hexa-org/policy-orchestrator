@@ -1,7 +1,7 @@
 package policyprovider
 
 import (
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/sdk/core/idp"
 	"github.com/hexa-org/policy-orchestrator/sdk/core/policystore"
 	"github.com/hexa-org/policy-orchestrator/sdk/core/rar"

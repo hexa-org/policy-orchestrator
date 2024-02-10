@@ -3,7 +3,7 @@ package googlecloud_test
 import (
 	"testing"
 
-	"github.com/hexa-org/policy-mapper/hexaIdql/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/googlecloud"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/testsupport"
