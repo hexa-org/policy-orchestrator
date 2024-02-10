@@ -3,6 +3,7 @@
 .env*
 **/.opa/**
 .postgres
+.postgres_test
 .bundle*
 .codeql
 .freshcloud
