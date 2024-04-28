@@ -1,0 +1,230 @@
+{
+  "policies": [
+    {
+      "meta": {
+        "policyId": "TestBasicCanary",
+        "version": "0.6",
+        "date": "2021-08-01 21:32:44 UTC",
+        "description": "Access enabling user self service for users with role"
+      },
+      "subject": {
+        "members": ["anyAuthenticated"]
+      },
+      "actions": [
+        {
+          "actionUri": "ietf:http:POST:/testpath*"
+        },
+        {
+          "actionUri": "ietf:http:PUT:/testpath*"
+        },
+        {
+          "actionUri": "ietf:http:GET:/testpath*"
+        }
+      ],
+      "object": {
+        "resource_id": "CanaryProfileService"
+      },
+      "condition": {
+        "rule": "subject.type eq basic",
+        "action": "allow"
+      }
+    },
+    {
+      "meta": {
+        "policyId": "TestBasicCanaryCondition",
+        "version": "0.6",
+        "date": "2021-08-01 21:32:44 UTC",
+        "description": "Access enabling user self service for users with role with condition"
+      },
+      "subject": {
+        "members": ["anyAuthenticated"]
+      },
+      "actions": [
+        {
+          "actionUri": "ietf:http:POST:/testpath*"
+        },
+        {
+          "actionUri": "ietf:http:PUT:/testpath*"
+        },
+        {
+          "actionUri": "ietf:http:GET:/testpath*"
+        }
+      ],
+      "condition": {
+        "rule": "req.ip sw 127.0.0.1 and subject.type eq basic",
+        "action": "allow"
+      },
+      "object": {
+        "resource_id": "CanaryProfileService"
+      }
+    },
+    {
+      "meta": {
+        "version": "0.6",
+        "date": "2021-08-01 21:32:44 UTC",
+        "description": "Tests any authenticated JWT user",
+        "policyId": "TestJwtCanary"
+      },
+      "subject": {
+        "members": ["anyAuthenticated"]
+      },
+      "actions": [
+        {
+          "actionUri": "ietf:http:POST:/testpath*"
+        },
+        {
+          "actionUri": "ietf:http:!PUT:/testpath*"
+        },
+        {
+          "actionUri": "ietf:http:GET:/testpath*"
+        }
+      ],
+      "object": {
+        "resource_id": "CanaryProfileService"
+      },
+      "condition": {
+        "rule": "subject.type eq jwt and subject.iss eq testIssuer and subject.aud co testAudience",
+        "action": "allow"
+      }
+    },
+    {
+      "meta": {
+        "version": "0.6",
+        "date": "2021-08-01 21:32:44 UTC",
+        "description": "Access enabling user self service for users with role",
+        "policyId": "TestIPMaskCanary"
+      },
+      "subject": {
+        "comment": "any used, but the condition is what restricts subjects",
+        "members": ["net:127.0.0.1/24"]
+      },
+      "actions": [
+        {
+          "actionUri": "ietf:http:POST:/testpath*"
+        },
+        {
+          "actionUri": "ietf:http:!PUT:/testpath*"
+        },
+        {
+          "actionUri": "ietf:http:GET:/testpath*"
+        }
+      ],
+      "condition": {
+        "rule": "req.method eq GET",
+        "action": "allow"
+      },
+      "object": {
+        "resource_id": "CanaryProfileService"
+      }
+    },
+    {
+      "meta": {
+        "version": "0.6",
+        "date": "2021-08-01 21:32:44 UTC",
+        "description": "Access enabling user self service for users with role",
+        "policyId": "TestIPMaskCanaryPOST"
+      },
+      "subject": {
+        "members": ["net:192.1.0.1/24"]
+      },
+      "actions": [
+        {
+          "actionUri": "ietf:http:POST:/testpath*"
+        },
+        {
+          "actionUri": "ietf:http:!PUT:/testpath*"
+        },
+        {
+          "actionUri": "ietf:http:GET:/testpath*"
+        }
+      ],
+      "object": {
+        "resource_id": "CanaryProfileService"
+      }
+    },
+    {
+      "meta": {
+        "version": "0.6",
+        "date": "2021-08-01 21:32:44 UTC",
+        "description": "Access enabling user self service for users with role",
+        "policyId": "TestIPMaskCanaryNotDelete"
+      },
+      "subject": {
+        "members": ["any"]
+      },
+      "actions": [
+        {
+          "actionUri": "ietf:http:POST:/testpath*"
+        },
+        {
+          "actionUri": "ietf:http:!PUT:/testpath*"
+        },
+        {
+          "actionUri": "ietf:http:GET:/testpath*"
+        }
+      ],
+      "condition": {
+        "rule": "req.ip sw 127 and req.method NE DELETE",
+        "action": "allow"
+      },
+      "object": {
+        "resource_id": "CanaryProfileService"
+      }
+    },
+    {
+      "meta": {
+        "version": "0.6",
+        "date": "2021-08-01 21:32:44 UTC",
+        "description": "Test that allows jwt authenticated specific subject *and* has a role",
+        "policyId": "TestJwtRole"
+      },
+      "subject": {
+        "members" : ["user:BaSicBob"]
+      },
+      "actions": [
+        {
+          "actionUri": "ietf:http:POST:/testpath*"
+        },
+        {
+          "actionUri": "ietf:http:GET:/testpath*"
+        }
+      ],
+      "object": {
+        "resource_id": "CanaryProfileService"
+      },
+      "condition": {
+        "rule": "subject.type eq jwt and subject.iss eq testIssuer and subject.aud co testAudience and subject.roles co abc",
+        "action": "allow"
+      }
+    },
+    {
+      "meta": {
+        "version": "0.6",
+        "date": "2021-08-01 21:32:44 UTC",
+        "description": "test that allows JWT authenticated subjects with a role or specific users",
+        "policyId": "TestJwtMember"
+      },
+      "subject": {
+        "members": ["role:abc","user:JwtAlice","user:BasicBoB"]
+      },
+      "actions": [
+        {
+          "actionUri": "ietf:http:POST:/testpath*"
+        },
+        {
+          "actionUri": "ietf:http:PUT:/testpath*"
+        },
+        {
+          "actionUri": "ietf:http:GET:/testpath*"
+        }
+      ],
+      "object": {
+        "resource_id": "CanaryProfileService"
+      },
+      "condition": {
+        "rule": "subject.type eq jwt and subject.iss eq testIssuer and subject.aud co testAudience",
+        "action": "allow"
+      }
+    }
+  ]
+}

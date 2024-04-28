@@ -31,18 +31,21 @@ services:
       PORT: 8886
       OPA_SERVER_URL: http://opa-agent:8887/v1/data/authz/allow
 
-  demo-app-config:
-    image: hexa
-    container_name: hexa-demo-config
+  hexa-bundle-server:
+    image: independentid/hexaopa:latest
+    container_name: hexa-bundle-server
     ports:
       - "8889:8889"
-    command: democonfig
+    command: /app/hexaBundleServer
     environment:
       PORT: 8889
-      SERVER_CERT: "/home/config/server-cert.pem"
-      SERVER_KEY: "/home/config/server-key.pem"
+      HEXA_CERT_DIRECTORY: "/home/certs"
+      SERVER_CERT: "/home/certs/server-cert.pem"
+      SERVER_KEY: "/home/certs/server-key.pem"
+      BUNDLE_DIR: "/home/resources/bundles"
     volumes:
-      - "./deployments/bundle-server/config:/home/config:ro"
+      - "./deployments/hexaBundleServer/resources:/home/resources"
+      - "./.certs:/home/certs:ro"
 
   postgresql:
     image: postgres:14.5
@@ -68,15 +71,21 @@ services:
     depends_on:
       - postgresql
 
-  opa-agent:
-    image: openpolicyagent/opa
-    container_name: opa-server
+  hexa-opa-agent:
+    image: independentid/hexaopa:latest
+    container_name: hexa-opa-server
     ports:
       - "8887:8887"
-    command: run --server --addr :8887 --log-level debug -c /home/config/config.yaml
+    depends_on:
+      - hexa-bundle-server
+    command: /app/hexaOpa run --server --addr :8887 --log-level debug -c /home/config/config.yaml
     environment:
-      HEXA_DEMO_CONFIG_URL: "https://hexa-demo-config:8889"
-      HEXA_DEMO_CA_CERT: "/home/config/ca-cert.pem"
+      # These environment values are referenced in ./deployments/hexaOpaServer/config/config.yaml
+      HEXA_CERT_DIRECTORY: "/home/certs"
+      HEXA_CONFIG_URL: "https://hexa-bundle-server:8889"
+      HEXA_CA_CERT: "/home/certs/ca-cert.pem"
     volumes:
-      - "./deployments/opa-server/config:/home/config:ro"
-      - "./deployments/opa-server/.opa:/.opa"
+      - "./deployments/hexaOpaServer/config:/home/config:ro"
+      - "./deployments/hexaOpaServer/.opa:/app/.opa"
+      - "./.certs:/home/certs:ro"
+
