@@ -22,9 +22,7 @@ func (n *DiscoveryWorker) Run(work interface{}) error {
 	// log.Printf("Found discovery provider %s.", p.Name())
 
 	for _, record := range work.([]IntegrationRecord) {
-		// providerName := record.Provider
-		// p := n.Providers[providerName]
-		p, err := n.providerBuilder.GetAppsProvider(record.Provider, record.Key)
+		p, err := n.providerBuilder.GetAppsProvider(record.ID, record.Provider, record.Key)
 		// p, err := GetAppsProvider(record.Provider, record.Key)
 		if err != nil {
 			logger.Error("DiscoveryWorker.Run", "msg", "failed to get apps provider", "provider", record.Provider)

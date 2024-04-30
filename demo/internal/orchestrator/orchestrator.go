@@ -10,8 +10,11 @@ import (
 	"github.com/hiyosi/hawk"
 )
 
-func LoadHandlers(database *sql.DB, store hawk.CredentialStore, hostPort string, legacyProviders map[string]policyprovider.Provider) (func(router *mux.Router), *workflowsupport.WorkScheduler) {
-	pb := NewProviderBuilder(legacyProviders)
+func LoadHandlers(database *sql.DB, store hawk.CredentialStore, hostPort string, cacheProviders map[string]policyprovider.Provider) (func(router *mux.Router), *workflowsupport.WorkScheduler) {
+	pb := NewProviderBuilder()
+	if cacheProviders != nil {
+		pb.AddProviders(cacheProviders)
+	}
 	applicationsGateway := ApplicationsDataGateway{database}
 	integrationsGateway := IntegrationsDataGateway{database}
 	applicationsService := ApplicationsService{ApplicationsGateway: applicationsGateway, IntegrationsGateway: integrationsGateway, ProviderBuilder: pb}

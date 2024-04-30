@@ -25,12 +25,13 @@ func setUp() (orchestrator.IntegrationsDataGateway, orchestrator.ApplicationsDat
 
 func TestWorkflow(t *testing.T) {
 	integrationsGateway, appGateway := setUp()
-	_, _ = integrationsGateway.Create("aName", "noop", []byte("aKey"))
+	id, _ := integrationsGateway.Create("aName", "noop", []byte("aKey"))
 
 	noopProvider := orchestrator_test.NoopProvider{}
 	providers := make(map[string]policyprovider.Provider)
-	providers["noop"] = &noopProvider
-	pb := orchestrator.NewProviderBuilder(providers)
+	providers[id] = &noopProvider
+	pb := orchestrator.NewProviderBuilder()
+	pb.AddProviders(providers)
 	worker := orchestrator.NewDiscoveryWorker(pb, appGateway)
 	finder := orchestrator.NewDiscoveryWorkFinder(integrationsGateway)
 	list := []workflowsupport.Worker{worker}
@@ -52,7 +53,11 @@ func TestRemoveDeletedApplications(t *testing.T) {
 	_, _ = appDataGateway.CreateIfAbsent(id, "object1", "app1", "", "service1")
 	app2ID, _ := appDataGateway.CreateIfAbsent(id, "object2", "app2", "", "service2")
 
-	provider := fakeProvider{
+	// noopProvider := orchestrator_test.NoopProvider{}
+	providers := make(map[string]policyprovider.Provider)
+	// providers[id] = &noopProvider
+
+	fakeprovider := fakeProvider{
 		discoveredApplications: []policyprovider.ApplicationInfo{
 			{
 				ObjectID: "object2",
@@ -62,12 +67,15 @@ func TestRemoveDeletedApplications(t *testing.T) {
 		},
 	}
 
-	pb := orchestrator.NewProviderBuilder(map[string]policyprovider.Provider{"fake": provider})
+	providers["object2"] = &fakeprovider
+
+	pb := orchestrator.NewProviderBuilder()
+	pb.AddProviders(providers)
 
 	discoveryWorker := orchestrator.NewDiscoveryWorker(pb, appDataGateway)
-	work := []orchestrator.IntegrationRecord{{Provider: "fake"}}
+	work := []orchestrator.IntegrationRecord{{ID: "object2", Provider: "fake"}}
 
-	discoveryWorker.Run(work)
+	_ = discoveryWorker.Run(work)
 
 	found, err := appDataGateway.Find()
 	assert.NoError(t, err)
@@ -120,14 +128,14 @@ func (f fakeProvider) Name() string {
 	return "fake"
 }
 
-func (f fakeProvider) DiscoverApplications(info policyprovider.IntegrationInfo) ([]policyprovider.ApplicationInfo, error) {
+func (f fakeProvider) DiscoverApplications(_ policyprovider.IntegrationInfo) ([]policyprovider.ApplicationInfo, error) {
 	return f.discoveredApplications, nil
 }
 
-func (f fakeProvider) GetPolicyInfo(info policyprovider.IntegrationInfo, info2 policyprovider.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
+func (f fakeProvider) GetPolicyInfo(_ policyprovider.IntegrationInfo, _ policyprovider.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
 	panic("implement me")
 }
 
-func (f fakeProvider) SetPolicyInfo(info policyprovider.IntegrationInfo, info2 policyprovider.ApplicationInfo, infos []hexapolicy.PolicyInfo) (status int, foundErr error) {
+func (f fakeProvider) SetPolicyInfo(_ policyprovider.IntegrationInfo, _ policyprovider.ApplicationInfo, _ []hexapolicy.PolicyInfo) (status int, foundErr error) {
 	panic("implement me")
 }

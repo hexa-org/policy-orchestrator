@@ -14,7 +14,6 @@ import (
 	"github.com/hexa-org/policy-mapper/api/policyprovider"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator/test"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/microsoftazure"
 
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/databasesupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/hawksupport"
@@ -58,8 +57,8 @@ insert into applications (id, integration_id, object_id, name, description) valu
 	data.key = hex.EncodeToString(hash[:])
 
 	data.providers = make(map[string]policyprovider.Provider)
-	data.providers["noop"] = &orchestrator_test.NoopProvider{}
-	data.providers["azure"] = microsoftazure.NewAzureProvider()
+	data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e7"] = &orchestrator_test.NoopProvider{}
+	// data.providers["azure"] = microsoftazure.NewAzureProvider() This will auto load
 	handlers, _ := orchestrator.LoadHandlers(data.db, hawksupport.NewCredentialStore(data.key), addr, data.providers)
 	data.server = websupport.Create(addr, handlers, websupport.Options{})
 	go websupport.Start(data.server, listener)

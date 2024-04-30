@@ -13,6 +13,10 @@ type NoopProvider struct {
 	Err          error
 }
 
+func (n *NoopProvider) SetTestErr(err error) {
+	n.Err = err
+}
+
 func (n *NoopProvider) Name() string {
 	if n.OverrideName != "" {
 		return n.OverrideName
