@@ -49,14 +49,14 @@ insert into applications (id, integration_id, object_id, name, description, serv
 	}
 
 	data.fromNoopApp = "6409776a-367a-483a-a194-5ccf9c4ff210"
-	data.toNoopApp = "6409776a-367a-483a-a194-5ccf9c4ff211"
+	data.toNoopApp = "6409776a-367a-483a-a194-5ccf9c4ff210"
 	data.azureApp = "6409776a-367a-483a-a194-5ccf9c4ff212"
 	data.googleApp = "6409776a-367a-483a-a194-5ccf9c4ff213"
 
 	data.providers = make(map[string]policyprovider.Provider)
-	data.providers["noop"] = &orchestrator_test.NoopProvider{}
-	data.providers["azure_legacy"] = &orchestrator_test.NoopProvider{OverrideName: "azure_legacy"}
-	data.providers["google_cloud"] = &orchestrator_test.NoopProvider{OverrideName: "google_cloud"}
+	data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e7"] = &orchestrator_test.NoopProvider{}
+	data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e8"] = &orchestrator_test.NoopProvider{OverrideName: "azure_legacy"}
+	data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e9"] = &orchestrator_test.NoopProvider{OverrideName: "google_cloud"}
 }
 
 func (data *applicationsServiceData) TearDown() {
@@ -65,7 +65,8 @@ func (data *applicationsServiceData) TearDown() {
 
 func TestApplicationsService_Apply(t *testing.T) {
 	testsupport.WithSetUp(&applicationsServiceData{}, func(data *applicationsServiceData) {
-		pb := orchestrator.NewProviderBuilder(data.providers)
+		pb := orchestrator.NewProviderBuilder()
+		pb.AddProviders(data.providers)
 		applicationsGateway := orchestrator.ApplicationsDataGateway{DB: data.db}
 		integrationsGateway := orchestrator.IntegrationsDataGateway{DB: data.db}
 
@@ -83,10 +84,14 @@ func TestApplicationsService_Apply(t *testing.T) {
 		badToApp := applicationsService.Apply(orchestrator.Orchestration{From: data.fromNoopApp, To: ""})
 		assert.Error(t, badToApp)
 
-		data.providers["noop"] = &orchestrator_test.NoopProvider{Err: errors.New("oops")}
+		noopProvider := data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e7"].(*orchestrator_test.NoopProvider)
+		noopProvider.SetTestErr(errors.New("oops"))
 
 		providerError := applicationsService.Apply(orchestrator.Orchestration{From: data.fromNoopApp, To: data.toNoopApp})
 		assert.Error(t, providerError)
+
+		// reset after test
+		noopProvider.SetTestErr(nil)
 	})
 }
 

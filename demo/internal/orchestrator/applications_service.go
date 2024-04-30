@@ -7,7 +7,6 @@ import (
 
 	"github.com/hexa-org/policy-mapper/api/policyprovider"
 	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/providersV2"
 	logger "golang.org/x/exp/slog"
 )
 
@@ -33,39 +32,13 @@ func (service ApplicationsService) GatherRecords(identifier string) (policyprovi
 
 	// SAURABH - temporary workaround until we implement an app onboarding flow
 	var aProvider policyprovider.Provider
-	if integrationRecord.Provider == "amazon" {
-		resAttrDef := providersV2.NewAttributeDefinition("Resource", "string", true, false)
-		actionsAttrDef := providersV2.NewAttributeDefinition("Action", "string", false, true)
-		membersDef := providersV2.NewAttributeDefinition("Members", "string", false, false)
-		tableDef := providersV2.NewTableDefinition(resAttrDef, actionsAttrDef, membersDef)
-		policyStore := providersV2.NewDynamicItemStore(providersV2.AwsPolicyStoreTableName, integration.Key, tableDef)
-
-		// idp := providersV2.GetAppsProvider(integrationRecord.Provider, integration.Key)
-		idp := providersV2.NewCognitoIdp(integration.Key)
-		aProvider, err = NewOrchestrationProvider(integrationRecord.Provider, idp, policyStore)
-		if err != nil {
-			logger.Error("GatherRecords", "msg", "error creating Provider", "provider", integrationRecord.Provider, "error", err)
-			return policyprovider.ApplicationInfo{}, policyprovider.IntegrationInfo{}, nil, err
-		}
-	} else if integrationRecord.Provider == "azure" {
-		idp := providersV2.NewApimAppProvider(integration.Key)
-		policyStoreProvider := providersV2.NewApimPolicyProvider(integration.Key, application.ObjectID, application.Name)
-		aProvider, err = NewOrchestrationProvider(integrationRecord.Provider, idp, policyStoreProvider)
-
-		if err != nil {
-			logger.Error("GatherRecords", "msg", "error creating Provider", "provider", integrationRecord.Provider, "error", err)
-			return policyprovider.ApplicationInfo{}, policyprovider.IntegrationInfo{}, nil, err
-		}
-
-	} else {
-		aProvider, err = service.ProviderBuilder.GetAppsProvider(strings.ToLower(integrationRecord.Provider), nil)
-		if err != nil {
-			logger.Error("GatherRecords", "msg", "error creating Provider", "provider", integrationRecord.Provider, "error", err)
-			return policyprovider.ApplicationInfo{}, policyprovider.IntegrationInfo{}, nil, err
-		}
+	aProvider, err = service.ProviderBuilder.GetAppsProvider(integrationRecord.ID, integrationRecord.Provider, integrationRecord.Key)
+	if err != nil {
+		logger.Error("GatherRecords", "msg", "error creating Provider", "provider", integrationRecord.Provider, "error", err)
+		return policyprovider.ApplicationInfo{}, policyprovider.IntegrationInfo{}, nil, err
 	}
 
-	return application, integration, aProvider, nil // todo - test for lower?
+	return application, integration, aProvider, nil
 }
 
 func (service ApplicationsService) Apply(jsonRequest Orchestration) error {

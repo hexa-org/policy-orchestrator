@@ -3,7 +3,21 @@
 **NOTE:**
 
 The development tasks herein are also made available via (optional) bash "CLI"
-utilities within the repository. Once the initial bootstrapping setup has been
+utilities within the repository. 
+
+If not already done, install Postgresql and start the service
+```bash
+brew install postgresql
+brew services start postgresql
+```
+
+Bootstrap the initial development environment by doing the following:
+```bash
+$ cd demo
+$ export REPO=$PWD
+$ ./bin/pkg.d/setup.sh
+```
+Once the initial bootstrapping setup has been
 run (via `./bin/pkg.d/setup.sh`), these tasks and more may be executed via the
 `dev` and `pkg` CLIs.
 
@@ -11,11 +25,11 @@ For example, try running the following from anywhere within the repository
 (assuming the prerequisite "setup" has been run).
 
 ```bash
-$ dev version
-$ dev --help
+$ ./bin/dev version
+$ ./bin/dev --help
 
-$ pkg version
-$ pkg --help
+$ ./bin/pkg version
+$ ./bin/pkg --help
 ```
 
 ## Task: Bootstrap

@@ -7,10 +7,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/hexa-org/policy-mapper/api/policyprovider"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/googlecloud"
-	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestratorproviders/openpolicyagent"
+
 	log "golang.org/x/exp/slog"
 
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/databasesupport"
@@ -58,12 +56,7 @@ func App(key string, addr string, hostPort string, dbUrl string) (*http.Server, 
 	  providers["amazon"] = &awsapigw.AwsApiGatewayProvider{}
 	  providers["open_policy_agent"] = &openpolicyagent.OpaProvider{}*/
 
-	var legacyProviders = map[string]policyprovider.Provider{
-		"google_cloud":      &googlecloud.GoogleProvider{},
-		"open_policy_agent": &openpolicyagent.OpaProvider{},
-	}
-
-	handlers, scheduler := orchestrator.LoadHandlers(db, store, hostPort, legacyProviders)
+	handlers, scheduler := orchestrator.LoadHandlers(db, store, hostPort, nil)
 	return websupport.Create(addr, handlers, websupport.Options{
 		HealthChecks: []healthsupport.HealthCheck{
 			ServerHealthCheck{},
