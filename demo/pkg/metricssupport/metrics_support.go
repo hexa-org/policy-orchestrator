@@ -1,11 +1,8 @@
 package metricssupport
 
 import (
-	"log"
 	"net/http"
 	"strings"
-
-	"github.com/gorilla/mux"
 )
 
 type metricsHandler struct {
@@ -29,9 +26,9 @@ func MetricsMiddleware(next http.Handler) http.Handler {
 				return
 			}
 		}
-		route := mux.CurrentRoute(r)
-		path, _ := route.GetPathTemplate()
-		log.Printf("Collecting metrics for path %v\n", path)
+		// route := mux.CurrentRoute(r)
+		// path, _ := route.GetPathTemplate()
+		// log.Printf("Collecting metrics for path %v\n", path)
 		next.ServeHTTP(w, r)
 	})
 }
