@@ -1,32 +1,42 @@
+name: hexa_demo
+
 services:
   hexa-orchestrator:
-    image: hexa
+    image: hexaorchestrator
     container_name: hexa-orchestrator
     ports:
       - "8885:8885"
-    command: orchestrator
+    command: /app/hexaOrchestrator
     environment:
       ORCHESTRATOR_HOSTPORT: hexa-orchestrator:8885
       ORCHESTRATOR_KEY: 0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb
       POSTGRESQL_URL: postgres://orchestrator:orchestrator@postgresql:5432/orchestrator_development?sslmode=disable
     volumes:
       - "./databases/docker_support:/home/databases/docker_support:ro"
-  hexa-admin:
-    image: hexa
-    container_name: hexa-admin
+    depends_on:
+      postgresql:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
+
+  hexa-admin-ui:
+    image: hexaorchestrator
+    container_name: hexa-admin-ui
     ports:
       - "8884:8884"
-    command: admin
+    command: /app/hexaAdminUi
     environment:
       ORCHESTRATOR_URL: http://hexa-orchestrator:8885
       ORCHESTRATOR_KEY: 0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb
+    depends_on:
+      - hexa-orchestrator
 
   demo-app:
-    image: hexa
+    image: hexaorchestrator
     container_name: hexa-demo
     ports:
       - "8886:8886"
-    command: demo
+    command: /app/hexaDemo
     environment:
       PORT: 8886
       OPA_SERVER_URL: http://opa-agent:8887/v1/data/authz/allow
