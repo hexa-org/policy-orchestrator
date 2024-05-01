@@ -2,6 +2,7 @@ package admin
 
 import (
 	"embed"
+	"io/fs"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -9,9 +10,6 @@ import (
 
 //go:embed resources
 var resources embed.FS
-
-//go:embed resources/static/*
-var staticResources embed.FS
 
 type Client interface {
 	Health() (string, error)
@@ -50,7 +48,8 @@ func LoadHandlers(orchestratorUrl string, client Client) func(router *mux.Router
 		router.HandleFunc("/orchestration", orchestration.Update).Methods("POST")
 		router.HandleFunc("/status", status.StatusHandler).Methods("GET")
 
-		fileServer := http.FileServer(http.FS(staticResources))
+		staticFs, _ := fs.Sub(resources, "resources/static")
+		fileServer := http.FileServer(http.FS(staticFs))
 		router.PathPrefix("/").Handler(http.StripPrefix("/", fileServer))
 	}
 }
