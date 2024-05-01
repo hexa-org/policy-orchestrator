@@ -1,6 +1,7 @@
 package orchestrator
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/hexa-org/policy-mapper/api/policyprovider"
@@ -25,7 +26,7 @@ func (n *DiscoveryWorker) Run(work interface{}) error {
 		p, err := n.providerBuilder.GetAppsProvider(record.ID, record.Provider, record.Key)
 		// p, err := GetAppsProvider(record.Provider, record.Key)
 		if err != nil {
-			logger.Error("DiscoveryWorker.Run", "msg", "failed to get apps provider", "provider", record.Provider)
+			logger.Error("DiscoveryWorker.Run", "msg", fmt.Sprintf("failed to get apps provider: %s", err.Error()), "provider", record.Provider)
 			continue
 		}
 		// log.Printf("Finding applications for integration provider %s.", p.Name())
