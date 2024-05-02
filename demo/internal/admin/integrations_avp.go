@@ -9,19 +9,19 @@ import (
 	"github.com/hexa-org/policy-mapper/sdk"
 )
 
-type amazonKeyFile struct {
+type avpKeyFile struct {
 	Region string `json:"region"`
 }
 
-type amazonProvider struct {
+type avpProvider struct {
 }
 
-func (p amazonProvider) detect(provider string) bool {
-	return provider == "amazon" || provider == sdk.ProviderTypeCognito
+func (p avpProvider) detect(provider string) bool {
+	return provider == sdk.ProviderTypeAvp
 }
 
-func (p amazonProvider) name(key []byte) (string, error) {
-	var foundKeyFile amazonKeyFile
+func (p avpProvider) name(key []byte) (string, error) {
+	var foundKeyFile avpKeyFile
 	err := json.NewDecoder(bytes.NewReader(key)).Decode(&foundKeyFile)
 	if err != nil || foundKeyFile.Region == "" {
 		return "", errors.New("unable to read key file, missing region")

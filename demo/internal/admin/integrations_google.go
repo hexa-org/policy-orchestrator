@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/hexa-org/policy-mapper/sdk"
 )
 
 type googleKeyFile struct {
@@ -15,7 +17,7 @@ type googleProvider struct {
 }
 
 func (p googleProvider) detect(provider string) bool {
-	return provider == "google_cloud"
+	return provider == sdk.ProviderTypeGoogleCloudIAP || provider == sdk.ProviderTypeGoogleCloudLegacy
 }
 
 func (p googleProvider) name(key []byte) (string, error) {

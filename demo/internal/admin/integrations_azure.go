@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/hexa-org/policy-mapper/sdk"
 )
 
 type azureKeyFile struct {
@@ -15,7 +17,7 @@ type azureProvider struct {
 }
 
 func (p azureProvider) detect(provider string) bool {
-	return provider == "azure"
+	return provider == sdk.ProviderTypeAzure
 }
 
 func (p azureProvider) name(key []byte) (string, error) {
