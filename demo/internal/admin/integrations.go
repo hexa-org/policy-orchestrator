@@ -1,12 +1,13 @@
 package admin
 
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/hexa-org/policy-mapper/sdk"
 
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/websupport"
 )
@@ -40,7 +41,7 @@ func NewIntegrationsHandler(orchestratorUrl string, client Client) IntegrationHa
 	return integrationsHandler{
 		orchestratorUrl,
 		client,
-		[]IntegrationProviderInterface{googleProvider{}, azureProvider{}, amazonProvider{}, opaProvider{}},
+		[]IntegrationProviderInterface{googleProvider{}, azureProvider{}, amazonProvider{}, avpProvider{}, opaProvider{}},
 	}
 }
 
@@ -83,7 +84,7 @@ func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	key, err = ioutil.ReadAll(file)
+	key, err = io.ReadAll(file)
 	if err != nil {
 		return
 	}
@@ -132,7 +133,7 @@ func (i integrationsHandler) knownIntegrationViews(provider string) string {
 	integrationViews := make(map[string]string)
 	integrationViews["google_cloud"] = "integrations_new_google_cloud"
 	integrationViews["azure"] = "integrations_new_azure"
-	integrationViews["avp"] = "integrations_new_avp"
+	integrationViews[sdk.ProviderTypeAvp] = "integrations_new_avp"
 	integrationViews["amazon"] = "integrations_new_amazon"
 	integrationViews["open_policy_agent"] = "integrations_new_open_policy"
 	integrationView := integrationViews[strings.ToLower(provider)]

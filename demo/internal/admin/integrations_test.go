@@ -2,6 +2,7 @@ package admin_test
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -144,7 +145,7 @@ func (suite *IntegrationsSuite) TestCreateIntegration_withOPA() {
 			resp, _ := http.Post(fmt.Sprintf("http://%s/integrations", suite.server.Addr), contentType, buf)
 			assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
 			assert.Equal(suite.T(), "open_policy_agent", suite.client.Provider)
-			assert.Equal(suite.T(), "opa-project-id:open-policy-agent", suite.client.Name)
+			assert.Equal(suite.T(), fmt.Sprintf("%s:open-policy-agent", base64.StdEncoding.EncodeToString([]byte("http://opa-bundle-url"))), suite.client.Name)
 		})
 	}
 }

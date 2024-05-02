@@ -18,8 +18,9 @@
             {{- range index .Map "integrations"}}
                 <tr>
                     <td>
-                        {{if eq .Provider "google_cloud"}}Google Cloud Platform{{end}}
-                        {{if eq .Provider "amazon"}}Amazon Web Services{{end}}
+                        {{if eq .Provider "google_cloud"}}Google Cloud IAP{{end}}
+                        {{if eq .Provider "avp"}}Amazon Verified Permissions{{end}}
+                        {{if eq .Provider "amazon"}}Amazon Cognito{{end}}
                         {{if eq .Provider "azure"}}Azure Cloud Platform{{end}}
                         {{if eq .Provider "open_policy_agent"}}Open Policy Agent{{end}}
                     </td>

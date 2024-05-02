@@ -1,40 +1,46 @@
 package admin
 
 import (
-	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/hexa-org/policy-mapper/providers/openpolicyagent"
+	"github.com/hexa-org/policy-mapper/sdk"
 )
-
-type bundleFile struct {
-	BundleUrl string `json:"bundle_url"`
-	ProjectID string `json:"project_id,omitempty"`
-	GCP       any    `json:"gcp,omitempty"`
-	AWS       any    `json:"aws,omitempty"`
-	GITHUB    any    `json:"github,omitempty"`
-}
-
-func (b bundleFile) isCloudHosted() bool {
-	return b.GCP != nil || b.AWS != nil || b.GITHUB != nil
-}
 
 type opaProvider struct {
 }
 
 func (p opaProvider) detect(provider string) bool {
-	return provider == "open_policy_agent"
+	return provider == "open_policy_agent" || provider == sdk.ProviderTypeOpa
+}
+
+func convertToName(c *openpolicyagent.Credentials) string {
+	if c.GCP != nil {
+		return c.GCP.BucketName
+	}
+
+	if c.AWS != nil {
+		return c.AWS.BucketName
+	}
+
+	if c.GITHUB != nil {
+		return c.GITHUB.Repo
+	}
+
+	return base64.StdEncoding.EncodeToString([]byte(c.BundleUrl))
 }
 
 func (p opaProvider) name(key []byte) (string, error) {
-	var foundBundleFile bundleFile
-	err := json.NewDecoder(bytes.NewReader(key)).Decode(&foundBundleFile)
-	if err != nil || (foundBundleFile.BundleUrl == "" && !foundBundleFile.isCloudHosted()) {
-		return "", errors.New("unable to read key file, missing bundle url")
+
+	var cred openpolicyagent.Credentials
+	err := json.Unmarshal(key, &cred)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("unable to read key file: %s", err.Error()))
 	}
-	projectID := "bundle"
-	if foundBundleFile.ProjectID != "" {
-		projectID = foundBundleFile.ProjectID
-	}
+
+	projectID := convertToName(&cred)
 	return fmt.Sprintf("%s:open-policy-agent", projectID), nil
 }
