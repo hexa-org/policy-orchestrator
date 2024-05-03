@@ -73,7 +73,7 @@ func TestDemoFlow(t *testing.T) {
 
 	assertContains(t, "http://localhost:8886/humanresources", "Sorry, you're not able to access this page.")
 
-	/// test update
+	// test update
 
 	_, _ = db.Exec(deleteAll)
 	createAnIntegration([]byte(`{ "bundle_url": "http://localhost:8889/bundles/bundle.tar.gz" }`))
@@ -88,7 +88,7 @@ func TestDemoFlow(t *testing.T) {
 	demoConfigResourceId := base64.StdEncoding.EncodeToString([]byte("http://localhost:8889/bundles/bundle.tar.gz"))
 	assertContains(t, "http://localhost:8887/v1/data", demoConfigResourceId)
 
-	/// test erroneous
+	// test erroneous
 
 	_, _ = db.Exec(deleteAll)
 	createAnErroneousIntegration()
@@ -100,7 +100,7 @@ func TestDemoFlow(t *testing.T) {
 	body, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, "unable to update policy.\n", string(body))
 
-	/// test orchestration
+	// test orchestration
 
 	_, _ = db.Exec(deleteAll)
 	fromBundleUrl := "http://localhost:8889/bundles/bundle.tar.gz"
@@ -204,7 +204,7 @@ func orchestratePolicy(fromApp, toApp string) {
 		"http://localhost:8885/orchestration", bytes.NewReader(orchestration))
 }
 
-/// supporting structs
+// / supporting structs
 
 type Integration struct {
 	ID       string `json:"id"`
@@ -222,39 +222,12 @@ type Application struct {
 	ObjectId string `json:"object_id"`
 }
 
-type Policies struct {
-	Policies []Policy `json:"policies"`
-}
-
-type Policy struct {
-	Meta    Meta     `json:"meta"`
-	Actions []Action `json:"actions"`
-	Subject Subject  `json:"subject"`
-	Object  Object   `json:"object"`
-}
-
-type Meta struct {
-	Version string `json:"version"`
-}
-
-type Action struct {
-	ActionUri string `json:"action_uri"`
-}
-
-type Subject struct {
-	Members []string `json:"members"`
-}
-
-type Object struct {
-	ResourceID string `json:"resource_id"`
-}
-
 type Orchestration struct {
 	From string `json:"from"`
 	To   string `json:"to"`
 }
 
-/// supporting functions
+// / supporting functions
 
 func makeCmd(cmdString string, envs []string) *exec.Cmd {
 	_, file, _, _ := runtime.Caller(0)

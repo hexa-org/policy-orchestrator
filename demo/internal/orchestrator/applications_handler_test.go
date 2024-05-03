@@ -13,9 +13,9 @@ import (
 	"testing"
 
 	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator/test"
-
 	"github.com/stretchr/testify/assert"
 
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/databasesupport"
@@ -154,7 +154,7 @@ func TestGetPolicies(t *testing.T) {
 		resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", data.key, url)
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-		var policies orchestrator.Policies
+		var policies hexapolicy.Policies
 		_ = json.NewDecoder(resp.Body).Decode(&policies)
 		assert.Equal(t, 2, len(policies.Policies))
 
@@ -196,15 +196,15 @@ func TestGetPolicies_withFailedRequest(t *testing.T) {
 func TestSetPolicies(t *testing.T) {
 	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
 		var buf bytes.Buffer
-		policy := orchestrator.Policy{
-			Meta:    orchestrator.Meta{Version: "v0.5"},
-			Actions: []orchestrator.Action{{"anAction"}},
-			Subject: orchestrator.Subject{Members: []string{"anEmail", "anotherEmail"}},
-			Object: orchestrator.Object{
+		policy := hexapolicy.PolicyInfo{
+			Meta:    hexapolicy.MetaInfo{Version: "v0.5"},
+			Actions: []hexapolicy.ActionInfo{{"anAction"}},
+			Subject: hexapolicy.SubjectInfo{Members: []string{"anEmail", "anotherEmail"}},
+			Object: hexapolicy.ObjectInfo{
 				ResourceID: "aResourceId",
 			},
 		}
-		_ = json.NewEncoder(&buf).Encode(orchestrator.Policies{Policies: []orchestrator.Policy{policy}})
+		_ = json.NewEncoder(&buf).Encode(hexapolicy.Policies{Policies: []hexapolicy.PolicyInfo{policy}})
 
 		url := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
 
@@ -231,7 +231,7 @@ func TestSetPolicies_withErroneousProvider(t *testing.T) {
 		noop.SetTestErr(errors.New("oops"))
 
 		var buf bytes.Buffer
-		policy := orchestrator.Policy{Meta: orchestrator.Meta{Version: "v0.5"}, Actions: []orchestrator.Action{{"anAction"}}, Subject: orchestrator.Subject{Members: []string{"anEmail", "anotherEmail"}}, Object: orchestrator.Object{ResourceID: "aResourceId"}}
+		policy := hexapolicy.PolicyInfo{Meta: hexapolicy.MetaInfo{Version: "v0.5"}, Actions: []hexapolicy.ActionInfo{{"anAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"anEmail", "anotherEmail"}}, Object: hexapolicy.ObjectInfo{ResourceID: "aResourceId"}}
 		_ = json.NewEncoder(&buf).Encode(policy)
 
 		url := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)

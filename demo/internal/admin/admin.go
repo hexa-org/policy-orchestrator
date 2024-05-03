@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 )
 
 //go:embed resources
@@ -18,7 +19,7 @@ type Client interface {
 	DeleteIntegration(id string) error
 	Applications() ([]Application, error)
 	Application(id string) (Application, error)
-	GetPolicies(id string) ([]Policy, string, error)
+	GetPolicies(id string) ([]hexapolicy.PolicyInfo, string, error)
 	SetPolicies(id string, policies string) error
 	Orchestration(from string, to string) error
 }

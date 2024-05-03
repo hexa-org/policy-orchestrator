@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/admin"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/admin/test"
 
@@ -76,14 +77,24 @@ func (suite *ApplicationsSuite) TestApplications_with_error() {
 	assert.Contains(suite.T(), string(body), "Something went wrong.")
 }
 
+var testPolicies = []hexapolicy.PolicyInfo{
+	{
+		Meta:    hexapolicy.MetaInfo{Version: "aVersion"},
+		Actions: []hexapolicy.ActionInfo{{"anAction"}},
+		Subject: hexapolicy.SubjectInfo{Members: []string{"aUser"}},
+		Object:  hexapolicy.ObjectInfo{ResourceID: "aResourceId"}},
+	{
+		Meta:    hexapolicy.MetaInfo{Version: "anotherVersion"},
+		Actions: []hexapolicy.ActionInfo{{"anotherAction"}},
+		Subject: hexapolicy.SubjectInfo{Members: []string{"anotherUser"}},
+		Object:  hexapolicy.ObjectInfo{ResourceID: "anotherResourceId"}},
+}
+
 func (suite *ApplicationsSuite) TestApplication() {
 	suite.client.DesiredApplications = []admin.Application{
 		{ID: "anotherId", IntegrationId: "anotherIntegrationId", ObjectId: "anotherObjectId", Name: "anotherName", Description: "anotherDescription", ProviderName: "google_cloud"},
 	}
-	suite.client.DesiredPolicies = []admin.Policy{
-		{admin.Meta{Version: "aVersion"}, []admin.Action{{"anAction"}}, admin.Subject{Members: []string{"aUser"}}, admin.Object{ResourceID: "aResourceId"}},
-		{admin.Meta{Version: "anotherVersion"}, []admin.Action{{"anotherAction"}}, admin.Subject{Members: []string{"anotherUser"}}, admin.Object{ResourceID: "anotherResourceId"}},
-	}
+	suite.client.DesiredPolicies = testPolicies
 
 	identifier := "anotherId"
 	resp, _ := http.Get(fmt.Sprintf("http://%s/applications/%s", suite.server.Addr, identifier))
@@ -132,10 +143,7 @@ func (suite *ApplicationsSuite) TestApplication_Edit() {
 	suite.client.DesiredApplications = []admin.Application{
 		{ID: "anotherId", IntegrationId: "anotherIntegrationId", ObjectId: "anotherObjectId", Name: "anotherName", Description: "anotherDescription", ProviderName: "google_cloud"},
 	}
-	suite.client.DesiredPolicies = []admin.Policy{
-		{admin.Meta{Version: "aVersion"}, []admin.Action{{"anAction"}}, admin.Subject{Members: []string{"aUser"}}, admin.Object{ResourceID: "aResourceId"}},
-		{admin.Meta{Version: "anotherVersion"}, []admin.Action{{"anotherAction"}}, admin.Subject{Members: []string{"anotherUser"}}, admin.Object{ResourceID: "anotherResourceId"}},
-	}
+	suite.client.DesiredPolicies = testPolicies
 
 	identifier := "anotherId"
 	resp, _ := http.Get(fmt.Sprintf("http://%s/applications/%s/edit", suite.server.Addr, identifier))
@@ -174,9 +182,7 @@ func (suite *ApplicationsSuite) TestApplication_Update() {
 	suite.client.DesiredApplications = []admin.Application{
 		{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription", ProviderName: "google_cloud"},
 	}
-	suite.client.DesiredPolicies = []admin.Policy{
-		{admin.Meta{Version: "aVersion"}, []admin.Action{{"anAction"}}, admin.Subject{Members: []string{"aUser"}}, admin.Object{ResourceID: "aResourceId"}},
-	}
+	suite.client.DesiredPolicies = []hexapolicy.PolicyInfo{testPolicies[0]}
 
 	identifier := "anId"
 	resp, _ := http.Post(fmt.Sprintf("http://%s/applications/%s", suite.server.Addr, identifier), "application/json", nil)
@@ -217,9 +223,7 @@ func (suite *ApplicationsSuite) TestApplication_Policies() {
 	suite.client.DesiredApplications = []admin.Application{
 		{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription", ProviderName: "google_cloud"},
 	}
-	suite.client.DesiredPolicies = []admin.Policy{
-		{admin.Meta{Version: "aVersion"}, []admin.Action{{"anAction"}}, admin.Subject{Members: []string{"aUser"}}, admin.Object{ResourceID: "aResourceId"}},
-	}
+	suite.client.DesiredPolicies = []hexapolicy.PolicyInfo{testPolicies[0]}
 
 	identifier := "anId"
 	resp, _ := http.Get(fmt.Sprintf("http://%s/applications/%s/policies", suite.server.Addr, identifier))

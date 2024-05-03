@@ -21,29 +21,6 @@ type Application struct {
 	Service       string
 }
 
-type Policy struct {
-	Meta    Meta     `validate:"required"`
-	Actions []Action `validate:"required"`
-	Subject Subject  `validate:"required"`
-	Object  Object   `validate:"required"`
-}
-
-type Meta struct {
-	Version string `validate:"required"`
-}
-
-type Action struct {
-	ActionUri string `validate:"required"`
-}
-
-type Subject struct {
-	Members []string `validate:"required"`
-}
-
-type Object struct {
-	ResourceID string `validate:"required"`
-}
-
 type ApplicationsHandler interface {
 	List(w http.ResponseWriter, r *http.Request)
 	Show(w http.ResponseWriter, r *http.Request)

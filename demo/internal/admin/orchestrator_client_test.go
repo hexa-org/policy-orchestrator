@@ -5,10 +5,11 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/admin"
 
 	"github.com/go-playground/validator/v10"
@@ -24,12 +25,12 @@ type MockClient struct {
 }
 
 func (m *MockClient) Do(_ *http.Request) (*http.Response, error) {
-	r := ioutil.NopCloser(bytes.NewReader(m.response))
+	r := io.NopCloser(bytes.NewReader(m.response))
 	return &http.Response{StatusCode: m.status, Body: r}, m.err
 }
 
 func (m *MockClient) Get(_ string) (resp *http.Response, err error) {
-	r := ioutil.NopCloser(bytes.NewReader(m.response))
+	r := io.NopCloser(bytes.NewReader(m.response))
 	return &http.Response{StatusCode: m.status, Body: r}, m.err
 }
 
@@ -152,8 +153,8 @@ func TestOrchestratorClient_GetPolicy(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.status = http.StatusOK
 	rawJson := "{\"policies\":[" +
-		"{\"meta\":{\"version\":\"aVersion\"},\"actions\":[{\"action_uri\": \"anAction\"}],\"subject\":{\"members\":[\"aUser\"]},\"object\":{\"resource_id\":\"aResourceId\"}}," +
-		"{\"meta\":{\"version\":\"anotherVersion\"},\"actions\":[{\"action\": \"anotherAction\"}],\"subject\":{\"members\":[\"anotherUser\"]},\"object\":{\"resource_id\":\"anotherResourceId\"}}]}"
+		"{\"meta\":{\"version\":\"aVersion\"},\"actions\":[{\"actionUri\": \"anAction\"}],\"subject\":{\"members\":[\"aUser\"]},\"object\":{\"resource_id\":\"aResourceId\"}}," +
+		"{\"meta\":{\"version\":\"anotherVersion\"},\"actions\":[{\"actionUri\": \"anotherAction\"}],\"subject\":{\"members\":[\"anotherUser\"]},\"object\":{\"resource_id\":\"anotherResourceId\"}}]}"
 	mockClient.response = []byte(rawJson)
 	client := admin.NewOrchestratorClient(mockClient, "localhost:8883", "aKey")
 
@@ -179,7 +180,7 @@ func TestOrchestratorClient_GetPolicy_withErroneousGet(t *testing.T) {
 
 	resp, _, err := client.GetPolicies("anId")
 	assert.Error(t, err)
-	assert.Equal(t, []admin.Policy{}, resp)
+	assert.Equal(t, []hexapolicy.PolicyInfo{}, resp)
 }
 
 func TestOrchestratorClient_GetPolicy_withBadJson(t *testing.T) {
@@ -189,7 +190,7 @@ func TestOrchestratorClient_GetPolicy_withBadJson(t *testing.T) {
 
 	resp, _, err := client.GetPolicies("anId")
 	assert.Error(t, err)
-	assert.Equal(t, []admin.Policy{}, resp)
+	assert.Equal(t, []hexapolicy.PolicyInfo{}, resp)
 }
 
 func TestOrchestratorClient_SetPolicy(t *testing.T) {
