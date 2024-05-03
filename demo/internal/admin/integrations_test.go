@@ -57,9 +57,10 @@ func (suite *IntegrationsSuite) TestListIntegrations_templateRenders() {
 	resp := suite.must(http.Get(fmt.Sprintf("http://%s/integrations", suite.server.Addr)))
 	body, _ := io.ReadAll(resp.Body)
 
-	assert.Contains(suite.T(), string(body), "Google Cloud")
+	assert.Contains(suite.T(), string(body), "Google IAP")
 	assert.Contains(suite.T(), string(body), "Azure")
-	assert.Contains(suite.T(), string(body), "Amazon Web Services")
+	assert.Contains(suite.T(), string(body), "AWS Cognito")
+	assert.Contains(suite.T(), string(body), "AWS AVP")
 	assert.Contains(suite.T(), string(body), "Open Policy Agent")
 }
 

@@ -3,6 +3,7 @@ package admin_test
 import (
 	"fmt"
 
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/admin"
 
 	"github.com/stretchr/testify/mock"
@@ -18,7 +19,7 @@ type MockClient struct {
 	Url      string
 
 	DesiredApplications []admin.Application
-	DesiredPolicies     []admin.Policy
+	DesiredPolicies     []hexapolicy.PolicyInfo
 }
 
 func (m *MockClient) Health() (string, error) {
@@ -65,7 +66,7 @@ func (m *MockClient) Application(id string) (admin.Application, error) {
 	return m.DesiredApplications[0], m.Errs[url]
 }
 
-func (m *MockClient) GetPolicies(id string) ([]admin.Policy, string, error) {
+func (m *MockClient) GetPolicies(id string) ([]hexapolicy.PolicyInfo, string, error) {
 	url := fmt.Sprintf("%v/applications/%s/policies", m.Url, id)
 	return m.DesiredPolicies, "{\"policies\":[]}", m.Errs[url]
 }
@@ -75,7 +76,7 @@ func (m *MockClient) SetPolicies(id string, _ string) error {
 	return m.Errs[url]
 }
 
-func (m *MockClient) Orchestration(from string, to string) error {
+func (m *MockClient) Orchestration(_ string, _ string) error {
 	url := fmt.Sprintf("%v/orchestration", m.Url)
 	return m.Errs[url]
 }

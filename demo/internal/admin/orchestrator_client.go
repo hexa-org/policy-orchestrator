@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/hawksupport"
 )
 
@@ -146,66 +147,25 @@ func (c orchestratorClient) DeleteIntegration(id string) error {
 	return errorOrBadResponse(resp, http.StatusOK, hawkErr)
 }
 
-type policies struct {
-	Policies []policy `json:"policies"`
-}
-
-type policy struct {
-	Meta    meta     `json:"meta"`
-	Actions []action `json:"actions"`
-	Subject subject  `json:"subject"`
-	Object  object   `json:"object"`
-}
-
-type meta struct {
-	Version string `json:"version"`
-}
-
-type action struct {
-	ActionUri string `json:"action_uri"`
-}
-
-type subject struct {
-	Members []string `json:"members"`
-}
-
-type object struct {
-	ResourceId string   `json:"resource_id"`
-	Resources  []string `json:"resources"`
-}
-
-func (c orchestratorClient) GetPolicies(id string) ([]Policy, string, error) {
+func (c orchestratorClient) GetPolicies(id string) ([]hexapolicy.PolicyInfo, string, error) {
 	url := fmt.Sprintf("%v/applications/%s/policies", c.url, id)
 	resp, hawkErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
 	if err := errorOrBadResponse(resp, http.StatusOK, hawkErr); err != nil {
-		return []Policy{}, "{}", err
+		return []hexapolicy.PolicyInfo{}, "{}", err
 	}
 
 	jsonBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return []Policy{}, "{}", err
+		return []hexapolicy.PolicyInfo{}, "{}", err
 	}
 
-	var jsonResponse policies
+	var jsonResponse hexapolicy.Policies
 	if err := json.NewDecoder(bytes.NewReader(jsonBody)).Decode(&jsonResponse); err != nil {
 		log.Println(err)
-		return []Policy{}, string(jsonBody), err
+		return []hexapolicy.PolicyInfo{}, string(jsonBody), err
 	}
 
-	var foundPolicies []Policy
-	for _, p := range jsonResponse.Policies {
-		var actions []Action
-		for _, a := range p.Actions {
-			actions = append(actions, Action{a.ActionUri})
-		}
-		foundPolicies = append(foundPolicies, Policy{
-			Meta:    Meta{p.Meta.Version},
-			Actions: actions,
-			Subject: Subject{Members: p.Subject.Members},
-			Object:  Object{ResourceID: p.Object.ResourceId},
-		})
-	}
-	return foundPolicies, string(jsonBody), nil
+	return jsonResponse.Policies, string(jsonBody), nil
 }
 
 func (c orchestratorClient) SetPolicies(id string, policies string) error {

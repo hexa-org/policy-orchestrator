@@ -27,33 +27,6 @@ type Application struct {
 	Service       string `json:"service"`
 }
 
-type Policies struct {
-	Policies []Policy `json:"policies"`
-}
-
-type Policy struct {
-	Meta    Meta     `json:"meta" validate:"required"`
-	Actions []Action `json:"actions" validate:"required"`
-	Subject Subject  `json:"subject" validate:"required"`
-	Object  Object   `json:"object" validate:"required"`
-}
-
-type Meta struct {
-	Version string `json:"version" validate:"required"`
-}
-
-type Action struct {
-	ActionUri string `json:"action_uri" validate:"required"`
-}
-
-type Subject struct {
-	Members []string `json:"members" validate:"required"`
-}
-
-type Object struct {
-	ResourceID string `json:"resource_id" validate:"required"`
-}
-
 type ApplicationsHandler struct {
 	applicationsGateway ApplicationsDataGateway
 	integrationsGateway IntegrationsDataGateway
@@ -138,34 +111,19 @@ func (handler ApplicationsHandler) GetPolicies(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	list := make([]Policy, 0)
-	for _, rec := range records {
-		var actions []Action
-		for _, a := range rec.Actions {
-			actions = append(actions, Action{a.ActionUri})
-		}
-		list = append(
-			list, Policy{
-				Meta: Meta{
-					rec.Meta.Version,
-				},
-				Actions: actions,
-				Subject: Subject{
-					rec.Subject.Members,
-				},
-				Object: Object{
-					ResourceID: rec.Object.ResourceID,
-				},
-			})
+	policies := hexapolicy.Policies{
+		Policies: records,
+		App:      &application.ObjectID,
 	}
-	data, _ := json.Marshal(Policies{list})
+
+	data, _ := json.Marshal(policies)
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(data)
 }
 
 func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Request) {
-	var policies Policies
+	var policies hexapolicy.Policies
 	if erroneousDecode := json.NewDecoder(r.Body).Decode(&policies); erroneousDecode != nil {
 		http.Error(w, erroneousDecode.Error(), http.StatusInternalServerError)
 		return
@@ -177,33 +135,12 @@ func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	var policyInfos []hexapolicy.PolicyInfo
-	for _, policy := range policies.Policies {
-		var actionInfos []hexapolicy.ActionInfo
-		for _, a := range policy.Actions {
-			actionInfos = append(actionInfos, hexapolicy.ActionInfo{ActionUri: a.ActionUri})
-		}
-		info := hexapolicy.PolicyInfo{
-			Meta: hexapolicy.MetaInfo{
-				Version: policy.Meta.Version,
-			},
-			Actions: actionInfos,
-			Subject: hexapolicy.SubjectInfo{
-				Members: policy.Subject.Members,
-			},
-			Object: hexapolicy.ObjectInfo{
-				ResourceID: policy.Object.ResourceID,
-			},
-		}
-		policyInfos = append(policyInfos, info)
-	}
-
 	application, integration, provider, err := handler.applicationsService.GatherRecords(mux.Vars(r)["id"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	status, setErr := provider.SetPolicyInfo(integration, application, policyInfos)
+	status, setErr := provider.SetPolicyInfo(integration, application, policies.Policies)
 	if setErr != nil {
 		log.Printf("unable to update policy: %s", setErr.Error())
 		// todo - should we return the error msg here.
