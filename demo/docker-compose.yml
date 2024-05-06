@@ -4,8 +4,8 @@ services:
   hexa-orchestrator:
     image: hexaorchestrator
     container_name: hexa-orchestrator
-    ports:
-      - "8885:8885"
+    expose:
+      - "8885"
     command: /app/hexaOrchestrator
     environment:
       ORCHESTRATOR_HOSTPORT: hexa-orchestrator:8885
@@ -60,8 +60,8 @@ services:
   postgresql:
     image: postgres:14.5
     container_name: postgresql
-    ports:
-      - "5432:5432"
+    expose:
+      - "5432"
     restart: always
     environment:
       POSTGRES_USER: postgresql
@@ -84,8 +84,8 @@ services:
   hexa-opa-agent:
     image: independentid/hexaopa:latest
     container_name: hexa-opa-server
-    ports:
-      - "8887:8887"
+    expose:
+      - "8887"
     depends_on:
       - hexa-bundle-server
     command: /app/hexaOpa run --server --addr :8887 --log-level debug -c /home/config/config.yaml
