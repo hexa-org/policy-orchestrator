@@ -40,26 +40,15 @@ git clone git@github.com:hexa-org/policy-orchestrator.git
 
 Install the following dependencies.
 
-- [Go 1.21](https://go.dev)
-- [Pack](https://buildpacks.io)
+- [Go 1.22](https://go.dev)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop)
 
-> NOTE:
->
-> These packages, along with a number of supporting software utilities, may be
-> installed via `./bin/pkg.d/setup.sh`.
->
-> Additionally, once that setup script has been run, the `pkg` bash CLI is made
-> available and may be executed from anywhere within the repository. Try
-> `pkg --help`, for example.
+### Task: Build the Hexa Orchestrator image
 
-### Task: Build the Hexa image
-
-Build a Hexa image with `pack`. The newly created image will contain the policy
-administrator web application, policy orchestrator server, and demo application.
+Build a Hexa Orchestrator image
 
 ```bash
-pack build hexa --builder heroku/buildpacks:20
+
 ```
 
 > NOTE:
@@ -187,3 +176,9 @@ This [repository](https://github.com/hexa-org/policy-orchestrator) also includes
 infrastructure.
 
 [opa-bundles]: https://www.openpolicyagent.org/docs/latest/management-bundles/
+
+<footer>
+   <p>The Linux Foundation has registered trademarks and uses trademarks. For a list of trademarks of The Linux Foundation, 
+         please see our <a href="https://www.linuxfoundation.org/legal/trademark-usage">Trademark Usage page</a>.
+   </p>
+</footer>

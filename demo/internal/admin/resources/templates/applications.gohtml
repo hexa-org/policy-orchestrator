@@ -20,10 +20,15 @@
             {{- range index .Map "applications"}}
                 <tr>
                     <td>
-                        {{if eq .ProviderName "google_cloud"}}Google Cloud Platform{{end}}
-                        {{if eq .ProviderName "amazon"}}Amazon Web Services{{end}}
+                        {{if eq .ProviderName "google_cloud"}}Google Cloud IAP{{end}}
+                        {{if eq .ProviderName "gcp_iap"}}Google Cloud IAP{{end}}
+                        {{if eq .ProviderName "avp"}}Amazon AVP{{end}}
+                        {{if eq .ProviderName "amazon"}}Amazon Cognito{{end}}
+                        {{if eq .ProviderName "cognito"}}Amazon Cognito{{end}}
+                        {{if eq .ProviderName "awsapigw"}}Amazon API Gateway{{end}}
                         {{if eq .ProviderName "azure"}}Azure Cloud Platform{{end}}
                         {{if eq .ProviderName "open_policy_agent"}}Open Policy Agent{{end}}
+                        {{if eq .ProviderName "opa"}}Open Policy Agent{{end}}
                     </td>
                     <td>{{.Service}}</td>
                     <td><a href="/applications/{{.ID}}">{{.ObjectId}}</a></td>

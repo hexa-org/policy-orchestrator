@@ -19,10 +19,14 @@
                 <tr>
                     <td>
                         {{if eq .Provider "google_cloud"}}Google Cloud IAP{{end}}
-                        {{if eq .Provider "avp"}}Amazon Verified Permissions{{end}}
+                        {{if eq .Provider "gcp_iap"}}Google Cloud IAP{{end}}
+                        {{if eq .Provider "avp"}}Amazon AVP{{end}}
                         {{if eq .Provider "amazon"}}Amazon Cognito{{end}}
+                        {{if eq .Provider "cognito"}}Amazon Cognito{{end}}
+                        {{if eq .Provider "awsapigw"}}Amazon API Gateway{{end}}
                         {{if eq .Provider "azure"}}Azure Cloud Platform{{end}}
                         {{if eq .Provider "open_policy_agent"}}Open Policy Agent{{end}}
+                        {{if eq .Provider "opa"}}Open Policy Agent{{end}}
                     </td>
                     <td>{{.Name}}</td>
                     <td>

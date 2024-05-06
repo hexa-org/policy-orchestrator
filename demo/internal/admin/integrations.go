@@ -41,7 +41,7 @@ func NewIntegrationsHandler(orchestratorUrl string, client Client) IntegrationHa
 	return integrationsHandler{
 		orchestratorUrl,
 		client,
-		[]IntegrationProviderInterface{googleProvider{}, azureProvider{}, amazonProvider{}, avpProvider{}, opaProvider{}},
+		[]IntegrationProviderInterface{googleProvider{}, azureProvider{}, amazonProvider{}, awsApiGatewayProvider{}, avpProvider{}, opaProvider{}},
 	}
 }
 
@@ -135,6 +135,7 @@ func (i integrationsHandler) knownIntegrationViews(provider string) string {
 	integrationViews["azure"] = "integrations_new_azure"
 	integrationViews[sdk.ProviderTypeAvp] = "integrations_new_avp"
 	integrationViews["amazon"] = "integrations_new_amazon"
+	integrationViews[sdk.ProviderTypeAwsApiGW] = "integrations_new_amazon"
 	integrationViews["open_policy_agent"] = "integrations_new_open_policy"
 	integrationView := integrationViews[strings.ToLower(provider)]
 	return integrationView
