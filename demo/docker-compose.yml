@@ -1,16 +1,18 @@
-name: hexa_demo
+name: hexa_orchestrator_demo
 
 services:
   hexa-orchestrator:
     image: hexaorchestrator
     container_name: hexa-orchestrator
-    expose:
-      - "8885"
+    ports:
+      - "8885:8885"
     command: /app/hexaOrchestrator
     environment:
       ORCHESTRATOR_HOSTPORT: hexa-orchestrator:8885
       ORCHESTRATOR_KEY: 0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb
       POSTGRESQL_URL: postgres://orchestrator:orchestrator@postgresql:5432/orchestrator_development?sslmode=disable
+    external_links:
+      - hexa-opaBundle-server
     volumes:
       - "./databases/docker_support:/home/databases/docker_support:ro"
     depends_on:
@@ -22,6 +24,8 @@ services:
   hexa-admin-ui:
     image: hexaorchestrator
     container_name: hexa-admin-ui
+    networks:
+      - hexa-net
     ports:
       - "8884:8884"
     command: /app/hexaAdminUi
@@ -31,21 +35,30 @@ services:
     depends_on:
       - hexa-orchestrator
 
+  # demo-app is the Hexa Industries test application used for demoing OPA policy services. From: github.com/hexa-org/policy-opa
   demo-app:
-    image: hexaorchestrator
+    image: independentid/hexaopa:latest
     container_name: hexa-demo
+    networks:
+      - hexa-net
     ports:
       - "8886:8886"
-    command: /app/hexaDemo
+    command: /app/hexaIndustriesDemo
+    depends_on:
+      - hexa-opa-sidecar
     environment:
       PORT: 8886
-      OPA_SERVER_URL: http://opa-agent:8887/v1/data/hexaPolicy
+      OPA_SERVER_URL: http://hexa-opa-server:8887/v1/data/hexaPolicy
 
   postgresql:
     image: postgres:14.5
     container_name: postgresql
-    expose:
-      - "5432"
+    networks:
+      - hexa-net
+    #expose:
+    #  - "5432"
+    ports:
+      - "5432:5432"
     restart: always
     environment:
       POSTGRES_USER: postgresql
@@ -57,6 +70,8 @@ services:
   migrate:
     image: migrate/migrate
     container_name: migrate
+    networks:
+      - hexa-net
     entrypoint: ""
     command: "/bin/sh /home/databases/docker_support/migrate-databases.sh"
     volumes:
@@ -65,22 +80,29 @@ services:
     depends_on:
       - postgresql
 
-  hexa-bundle-server:
+  # hexa-opaBundle-server is an HTTP Bundle endpoint that can be used by Hexa-Orchestrator or Hexa CLI to configure policy to be delivered to OPA Servers.
+  # From: github.com/hexa-org/policy-opa
+  hexa-opaBundle-server:
     image: independentid/hexaopa:latest
-    container_name: hexa-bundle-server
+    container_name: hexa-opaBundle-server
     ports:
       - "8889:8889"
     command: /app/hexaBundleServer
     environment:
       PORT: 8889
+      TKN_DIRECTORY: "/home/certs"
       HEXA_CERT_DIRECTORY: "/home/certs"
       SERVER_CERT: "/home/certs/server-cert.pem"
       SERVER_KEY: "/home/certs/server-key.pem"
       BUNDLE_DIR: "/home/resources/bundles"
+      SERVER_DNS_NAME: "hexa-opaBundle-server"
+      TKN_MODE: "ANON"
     volumes:
       - "./deployments/hexaBundleServer/resources:/home/resources"
-      - "./.certs:/home/certs:ro"
+      - "./.certs:/home/certs"
 
+  # hexa-opa-agent is an OPA Server instance extended to support IDQL Filter expressions (run time evaluation)
+  # From: github.com/hexa-org/policy-opa
   hexa-opa-agent:
     image: independentid/hexaopa:latest
     container_name: hexa-opa-server
@@ -92,7 +114,7 @@ services:
     environment:
       # These environment values are referenced in ./deployments/hexaOpaServer/config/config.yaml
       HEXA_CERT_DIRECTORY: "/home/certs"
-      HEXA_CONFIG_URL: "https://hexa-bundle-server:8889"
+      HEXA_CONFIG_URL: "https://hexa-opaBundle-server:8889"
       HEXA_CA_CERT: "/home/certs/ca-cert.pem"
     volumes:
       - "./deployments/hexaOpaServer/config:/home/config:ro"
