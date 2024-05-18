@@ -29,9 +29,13 @@ func (n *DiscoveryWorker) Run(work interface{}) error {
 			logger.Error("DiscoveryWorker.Run", "msg", fmt.Sprintf("failed to get apps provider: %s", err.Error()), "provider", record.Provider)
 			continue
 		}
+		providerType := MapSdkProviderName(record.Provider)
 		// log.Printf("Finding applications for integration provider %s.", p.Name())
-		applications, _ := p.DiscoverApplications(policyprovider.IntegrationInfo{Name: record.Provider, Key: record.Key})
-
+		applications, err := p.DiscoverApplications(policyprovider.IntegrationInfo{Name: providerType, Key: record.Key})
+		if err != nil {
+			logger.Error("DiscoveryWorker.Run", "msg", fmt.Sprintf("failed to discover applications: %s", err.Error()), "provider", providerType)
+			continue
+		}
 		// log.Printf("Found %d applications for integration provider %s.", len(applications), p.Name())
 		for _, app := range applications {
 			id, err := n.gateway.CreateIfAbsent(record.ID, app.ObjectID, app.Name, app.Description, app.Service) // idempotent work
