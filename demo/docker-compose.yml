@@ -24,8 +24,6 @@ services:
   hexa-admin-ui:
     image: hexaorchestrator
     container_name: hexa-admin-ui
-    networks:
-      - hexa-net
     ports:
       - "8884:8884"
     command: /app/hexaAdminUi
@@ -36,16 +34,14 @@ services:
       - hexa-orchestrator
 
   # demo-app is the Hexa Industries test application used for demoing OPA policy services. From: github.com/hexa-org/policy-opa
-  demo-app:
+  hexa-industry-demo-app:
     image: independentid/hexaopa:latest
     container_name: hexa-demo
-    networks:
-      - hexa-net
     ports:
       - "8886:8886"
     command: /app/hexaIndustriesDemo
     depends_on:
-      - hexa-opa-sidecar
+      - hexa-opa-agent
     environment:
       PORT: 8886
       OPA_SERVER_URL: http://hexa-opa-server:8887/v1/data/hexaPolicy
@@ -53,8 +49,6 @@ services:
   postgresql:
     image: postgres:14.5
     container_name: postgresql
-    networks:
-      - hexa-net
     #expose:
     #  - "5432"
     ports:
@@ -70,8 +64,6 @@ services:
   migrate:
     image: migrate/migrate
     container_name: migrate
-    networks:
-      - hexa-net
     entrypoint: ""
     command: "/bin/sh /home/databases/docker_support/migrate-databases.sh"
     volumes:
@@ -109,7 +101,7 @@ services:
     expose:
       - "8887"
     depends_on:
-      - hexa-bundle-server
+      - hexa-opaBundle-server
     command: /app/hexaOpa run --server --addr :8887 --log-level debug -c /home/config/config.yaml
     environment:
       # These environment values are referenced in ./deployments/hexaOpaServer/config/config.yaml
