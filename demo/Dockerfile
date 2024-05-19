@@ -17,7 +17,6 @@ USER ${USER}
 # ADD docker/config/config.yaml ./config.yaml
 
 ADD --chmod=ug+x ./hexaAdminUi ./hexaAdminUi
-ADD --chmod=ug+x ./hexaDemo ./hexaDemo
 ADD --chmod=ug+x ./hexaOrchestrator ./hexaOrchestrator
 
 # Optional:
@@ -26,10 +25,12 @@ ADD --chmod=ug+x ./hexaOrchestrator ./hexaOrchestrator
 # the application is going to listen on by default.
 # https://docs.docker.com/engine/reference/builder/#expose
 
-# ENTRYPOINT ["hexaOpa run --server"]
-# ENTRYPOINT ["/app/hexaOpa"]
-EXPOSE 8181:8181
+EXPOSE 8885:8885
 
-CMD ["/app/hexaOpa","run","--server","--log-level","debug","--addr",":8181"]
+ENV ORCHESTRATOR_HOSTPORT=hexa-orchestrator:8885
+ENV ORCHESTRATOR_KEY=0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb
+ENV POSTGRESQL_URL=postgres://orchestrator:orchestrator@postgresql:5432/orchestrator_development?sslmode=disable
+
+CMD ["/app/hexaOrchestrator"]
 # CMD "./hexaOpa help"
 

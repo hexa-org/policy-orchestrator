@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/aws/aws-sdk-go-v2 v1.27.0
 	github.com/gorilla/mux v1.8.1
-	github.com/hexa-org/policy-mapper v0.6.9
+	github.com/hexa-org/policy-mapper v0.6.10
 	github.com/hiyosi/hawk v1.0.1
 	github.com/lib/pq v1.10.9
 	github.com/stretchr/testify v1.9.0
