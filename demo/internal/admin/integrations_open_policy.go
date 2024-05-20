@@ -1,10 +1,10 @@
 package admin
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 
 	"github.com/hexa-org/policy-mapper/providers/openpolicyagent"
 	"github.com/hexa-org/policy-mapper/sdk"
@@ -30,7 +30,8 @@ func convertToName(c *openpolicyagent.Credentials) string {
 		return c.GITHUB.Repo
 	}
 
-	return base64.StdEncoding.EncodeToString([]byte(c.BundleUrl))
+	bundleUrl, _ := url.Parse(c.BundleUrl)
+	return fmt.Sprintf("%s/%s", bundleUrl.Host, bundleUrl.Path)
 }
 
 func (p opaProvider) name(key []byte) (string, error) {
