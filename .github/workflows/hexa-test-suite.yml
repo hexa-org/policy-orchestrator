@@ -52,6 +52,7 @@ jobs:
         run: |
           #./test_workspace.sh
           cd demo
+          source ./.env_development
           go test -tags integration -coverprofile coverage.out  ./.../
       - name: Upload coverage to Codecov
         run: bash <(curl -s https://codecov.io/bash)

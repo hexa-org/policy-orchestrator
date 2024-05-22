@@ -41,8 +41,10 @@ done
 
 if [ "$test" = 'Y' ];then
     echo "  building and running tests ..."
+    source ./.env_development
     go build ./...
     go test ./...
+    exit
 fi
 
 echo "  building go linux executables for docker ..."
