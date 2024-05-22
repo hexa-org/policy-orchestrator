@@ -8,7 +8,7 @@ import (
 	"github.com/hexa-org/policy-mapper/sdk"
 )
 
-type providerBuilder struct {
+type ProviderBuilder struct {
 	providerCache map[string]policyprovider.Provider
 }
 
@@ -17,8 +17,8 @@ type providerBuilder struct {
 //	"open_policy_agent": &openpolicyagent.OpaProvider{},
 // }
 
-func NewProviderBuilder() *providerBuilder {
-	return &providerBuilder{providerCache: make(map[string]policyprovider.Provider)}
+func NewProviderBuilder() *ProviderBuilder {
+	return &ProviderBuilder{providerCache: make(map[string]policyprovider.Provider)}
 }
 
 // legacyProviders["google_cloud"] = &googlecloud.GoogleProvider{}
@@ -45,15 +45,18 @@ func MapSdkProviderName(legacyName string) string {
 }
 
 // AddProviders is primarily used in testing to allow a test provider to be directly injected rather than from the sdk integration providers
-func (b *providerBuilder) AddProviders(cacheProviders map[string]policyprovider.Provider) {
+func (b *ProviderBuilder) AddProviders(cacheProviders map[string]policyprovider.Provider) {
 	for k, v := range cacheProviders {
 		b.providerCache[k] = v
 	}
 }
 
 // GetAppsProvider returns a policyprovider.Provider that can be used to retrieve applications, as well as get and set policies
-func (b *providerBuilder) GetAppsProvider(id string, providerType string, key []byte) (policyprovider.Provider, error) {
-
+func (b *ProviderBuilder) GetAppsProvider(id string, providerType string, key []byte) (policyprovider.Provider, error) {
+	if b.providerCache == nil {
+		fmt.Print("... provider cache is nil! ")
+		return nil, nil
+	}
 	provider, ok := b.providerCache[id]
 	if ok {
 		return provider, nil

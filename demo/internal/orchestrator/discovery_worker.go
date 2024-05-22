@@ -9,11 +9,11 @@ import (
 )
 
 type DiscoveryWorker struct {
-	providerBuilder *providerBuilder
+	providerBuilder *ProviderBuilder
 	gateway         ApplicationsDataGateway
 }
 
-func NewDiscoveryWorker(providerBuilder *providerBuilder, gateway ApplicationsDataGateway) *DiscoveryWorker {
+func NewDiscoveryWorker(providerBuilder *ProviderBuilder, gateway ApplicationsDataGateway) *DiscoveryWorker {
 	return &DiscoveryWorker{providerBuilder: providerBuilder, gateway: gateway}
 }
 

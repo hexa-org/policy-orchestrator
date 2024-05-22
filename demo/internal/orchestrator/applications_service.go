@@ -13,7 +13,7 @@ import (
 type ApplicationsService struct {
 	ApplicationsGateway ApplicationsDataGateway
 	IntegrationsGateway IntegrationsDataGateway
-	ProviderBuilder     *providerBuilder
+	ProviderBuilder     *ProviderBuilder
 	DisableChecks       bool // Only set to true by tests
 }
 
