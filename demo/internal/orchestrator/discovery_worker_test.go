@@ -25,13 +25,14 @@ func setUp() (orchestrator.IntegrationsDataGateway, orchestrator.ApplicationsDat
 
 func TestWorkflow(t *testing.T) {
 	integrationsGateway, appGateway := setUp()
-	id, _ := integrationsGateway.Create("aName", "noop", []byte("aKey"))
-
 	noopProvider := orchestrator_test.NoopProvider{}
+
+	id, _ := integrationsGateway.Create("aName", "noop", []byte("aKey"))
 	providers := make(map[string]policyprovider.Provider)
 	providers[id] = &noopProvider
 	pb := orchestrator.NewProviderBuilder()
 	pb.AddProviders(providers)
+
 	worker := orchestrator.NewDiscoveryWorker(pb, appGateway)
 	finder := orchestrator.NewDiscoveryWorkFinder(integrationsGateway)
 	list := []workflowsupport.Worker{worker}

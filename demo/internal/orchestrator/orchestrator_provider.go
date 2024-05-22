@@ -39,7 +39,7 @@ func MapSdkProviderName(legacyName string) string {
 	case "open_policy_agent":
 		return sdk.ProviderTypeOpa
 	case "noop":
-		return sdk.ProviderTypeMock
+		return "noop"
 	}
 	return legacyName
 }
