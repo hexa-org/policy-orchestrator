@@ -1,5 +1,8 @@
 
-echo "Building the demonstration environment to run in docker."
+echo "Building and testing Policy-Orchestrator."
+echo "  if running manually, see demo/build.sh"
+# This is called by CodeQL Github Action
 
 cd ./demo
-source ./build_.sh
+source ./.env_development
+source ./build.sh -b
