@@ -58,7 +58,7 @@ func TestOrchestratorClient_Applications(t *testing.T) {
 	mockClient.status = http.StatusOK
 	client := admin.NewOrchestratorClient(mockClient, "localhost:8883", "aKey")
 
-	resp, _ := client.Applications()
+	resp, _ := client.Applications(false)
 	assert.Equal(t, []admin.Application{{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "anApp", Description: "aDescription", ProviderName: "aProviderName", Service: "aService"}}, resp)
 }
 
@@ -67,7 +67,7 @@ func TestOrchestratorClient_Applications_withErroneousGet(t *testing.T) {
 	mockClient.err = errors.New("oops")
 	client := admin.NewOrchestratorClient(mockClient, "localhost:8883", "aKey")
 
-	_, err := client.Applications()
+	_, err := client.Applications(false)
 	assert.Error(t, err)
 }
 
@@ -76,7 +76,7 @@ func TestOrchestratorClient_Applications_withBadJson(t *testing.T) {
 	mockClient.response = []byte("{\"_applications\":[}")
 	client := admin.NewOrchestratorClient(mockClient, "localhost:8883", "aKey")
 
-	resp, err := client.Applications()
+	resp, err := client.Applications(false)
 	assert.Error(t, err)
 	assert.Equal(t, []admin.Application(nil), resp)
 }

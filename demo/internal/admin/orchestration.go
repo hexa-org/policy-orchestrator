@@ -22,7 +22,7 @@ func NewOrchestrationHandler(orchestratorUrl string, client Client) Orchestratio
 }
 
 func (p orchestrationHandler) New(w http.ResponseWriter, _ *http.Request) {
-	foundApplications, clientErr := p.client.Applications()
+	foundApplications, clientErr := p.client.Applications(false)
 	if clientErr != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "orchestration", "message": clientErr.Error()}}
 		_ = websupport.ModelAndView(w, &resources, "orchestration_new", model)
@@ -30,14 +30,14 @@ func (p orchestrationHandler) New(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	/// todo - remove once working across providers
+	// / todo - remove once working across providers
 	// TODO - Check this with Gerry
 	/*available := make([]Application, 0)
-	for _, app := range foundApplications {
-		if app.ProviderName == "google_cloud" || app.ProviderName == "open_policy_agent" || app.ProviderName == "azure" {
-			available = append(available, app)
-		}
-	}*/
+	  for _, app := range foundApplications {
+	  	if app.ProviderName == "google_cloud" || app.ProviderName == "open_policy_agent" || app.ProviderName == "azure" {
+	  		available = append(available, app)
+	  	}
+	  }*/
 
 	model := websupport.Model{Map: map[string]interface{}{"resource": "orchestration", "applications": foundApplications}}
 	_ = websupport.ModelAndView(w, &resources, "orchestration_new", model)

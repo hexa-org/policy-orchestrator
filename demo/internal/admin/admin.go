@@ -17,7 +17,7 @@ type Client interface {
 	Integrations() ([]Integration, error)
 	CreateIntegration(name string, provider string, key []byte) error
 	DeleteIntegration(id string) error
-	Applications() ([]Application, error)
+	Applications(refresh bool) ([]Application, error)
 	Application(id string) (Application, error)
 	GetPolicies(id string) ([]hexapolicy.PolicyInfo, string, error)
 	SetPolicies(id string, policies string) error

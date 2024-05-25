@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/databasesupport"
+	"github.com/hexa-org/policy-orchestrator/demo/pkg/dataConfigGateway"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/hawksupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/websupport"
@@ -17,7 +19,6 @@ import (
 )
 
 func TestOrchestratorHandlers(t *testing.T) {
-	db, _ := databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
 
 	hash := sha256.Sum256([]byte("aKey"))
 	key := hex.EncodeToString(hash[:])
@@ -25,7 +26,16 @@ func TestOrchestratorHandlers(t *testing.T) {
 
 	listener, _ := net.Listen("tcp", "localhost:0")
 
-	handlers, _ := orchestrator.LoadHandlers(db, store, listener.Addr().String(), nil)
+	tempDir, err := os.MkdirTemp("", "hexa-orchestrator-*")
+	assert.NoError(t, err, "Error creating temp dir")
+
+	testConfigPath := filepath.Join(tempDir, ".hexa", "config.json")
+
+	_ = os.Setenv(dataConfigGateway.EnvIntegrationConfigFile, testConfigPath)
+
+	config, err := dataConfigGateway.NewIntegrationConfigData()
+	assert.NoError(t, err, "Error initializing config")
+	handlers := orchestrator.LoadHandlers(config, store, listener.Addr().String(), nil)
 	server := websupport.Create(listener.Addr().String(), handlers, websupport.Options{})
 
 	go websupport.Start(server, listener)
@@ -37,4 +47,6 @@ func TestOrchestratorHandlers(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	websupport.Stop(server)
+
+	_ = os.RemoveAll(tempDir)
 }

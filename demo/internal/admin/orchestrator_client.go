@@ -53,8 +53,12 @@ type application struct {
 	Service       string `json:"service"`
 }
 
-func (c orchestratorClient) Applications() (applications []Application, err error) {
-	url := fmt.Sprintf("%v/applications", c.url)
+func (c orchestratorClient) Applications(refresh bool) (applications []Application, err error) {
+	refreshParam := ""
+	if refresh {
+		refreshParam = "?refresh=true"
+	}
+	url := fmt.Sprintf("%v/applications%s", c.url, refreshParam)
 	resp, hawkErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
 	if err = errorOrBadResponse(resp, http.StatusOK, hawkErr); err != nil {
 		return applications, err
