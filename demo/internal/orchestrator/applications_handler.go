@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
+	"github.com/hexa-org/policy-orchestrator/demo/pkg/dataConfigGateway"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -28,25 +29,25 @@ type Application struct {
 }
 
 type ApplicationsHandler struct {
-	applicationsGateway ApplicationsDataGateway
-	integrationsGateway IntegrationsDataGateway
+	applicationsGateway dataConfigGateway.ApplicationsDataGateway
+	integrationsGateway dataConfigGateway.IntegrationsDataGateway
 	applicationsService ApplicationsService
 }
 
-func (handler ApplicationsHandler) List(w http.ResponseWriter, _ *http.Request) {
-	integrationRecords, integrationErr := handler.integrationsGateway.Find()
-	if integrationErr != nil {
-		log.Println("Error accessing database: " + integrationErr.Error())
-		http.Error(w, integrationErr.Error(), http.StatusInternalServerError)
-		return
+func (handler ApplicationsHandler) List(w http.ResponseWriter, r *http.Request) {
+	doRefresh := false
+	refresh := r.URL.Query().Get("refresh")
+	if refresh == "true" {
+		doRefresh = true
 	}
+	integrationRecords := handler.integrationsGateway.Find()
 
-	integrationNamesById := make(map[string]string, 0)
+	integrationNamesById := make(map[string]string)
 	for _, integration := range integrationRecords {
 		integrationNamesById[integration.ID] = integration.Provider // todo - include provider within applications table
 	}
 
-	records, applicationErr := handler.applicationsGateway.Find()
+	records, applicationErr := handler.applicationsGateway.Find(doRefresh)
 	if applicationErr != nil {
 		log.Println("Error accessing database: " + applicationErr.Error())
 		http.Error(w, applicationErr.Error(), http.StatusInternalServerError)

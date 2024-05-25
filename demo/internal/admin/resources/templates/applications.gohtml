@@ -9,6 +9,7 @@
         <table>
             <thead>
             <tr>
+                <th width="140">Integration</th>
                 <th>Provider</th>
                 <th>Service</th>
                 <th>Platform Identifier</th>
@@ -19,6 +20,7 @@
             <tbody>
             {{- range index .Map "applications"}}
                 <tr>
+                    <td>{{.IntegrationId}}</td>
                     <td>
                         {{if eq .ProviderName "google_cloud"}}Google Cloud IAP{{end}}
                         {{if eq .ProviderName "gcp_iap"}}Google Cloud IAP{{end}}

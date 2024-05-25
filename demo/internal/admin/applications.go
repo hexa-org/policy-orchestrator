@@ -38,8 +38,13 @@ func NewApplicationsHandler(orchestratorUrl string, client Client) ApplicationsH
 	return appsHandler{orchestratorUrl, client}
 }
 
-func (p appsHandler) List(w http.ResponseWriter, _ *http.Request) {
-	foundApplications, clientErr := p.client.Applications()
+func (p appsHandler) List(w http.ResponseWriter, r *http.Request) {
+	doRefresh := false
+	refresh := r.URL.Query().Get("refresh")
+	if refresh == "true" {
+		doRefresh = true
+	}
+	foundApplications, clientErr := p.client.Applications(doRefresh)
 	if clientErr != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "message": clientErr.Error()}}
 		_ = websupport.ModelAndView(w, &resources, "applications", model)
@@ -48,6 +53,7 @@ func (p appsHandler) List(w http.ResponseWriter, _ *http.Request) {
 	}
 	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "applications": foundApplications}}
 	_ = websupport.ModelAndView(w, &resources, "applications", model)
+	w.Header()
 }
 
 func (p appsHandler) Show(w http.ResponseWriter, r *http.Request) {

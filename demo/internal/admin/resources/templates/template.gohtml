@@ -42,6 +42,11 @@
                                                                                              alt="add"></a>
             </div>
         {{end}}
+        {{- if (eq $resource "applications")}}
+            <div class="menu">
+                <a href="/applications?refresh=true">Refresh <img src="/images/refresh.svg" alt="rediscover applications"></a>
+            </div>
+        {{end}}
         {{- if and (startsWith $resource "applications") $resource_link }}
             <a href="{{$resource_link}}/edit"><img src="/images/edit_white.svg" alt="add"></a>
         {{end}}
