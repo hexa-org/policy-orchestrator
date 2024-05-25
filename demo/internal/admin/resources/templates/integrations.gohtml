@@ -10,7 +10,7 @@
             <thead>
             <tr>
                 <th>Provider</th>
-                <th>Name</th>
+                <th>Alias</th>
                 <th></th>
             </tr>
             </thead>
@@ -28,7 +28,7 @@
                         {{if eq .Provider "open_policy_agent"}}Open Policy Agent{{end}}
                         {{if eq .Provider "opa"}}Open Policy Agent{{end}}
                     </td>
-                    <td>{{.Name}}</td>
+                    <td>{{.ID}}</td>
                     <td>
                         <form action="integrations/{{.ID}}"
                               onsubmit="confirm('Are you sure?')" method="post" class="delete-form">

@@ -53,7 +53,7 @@ func (m *MockClient) DeleteIntegration(id string) error {
 	return m.Errs[url]
 }
 
-func (m *MockClient) Applications() ([]admin.Application, error) {
+func (m *MockClient) Applications(bool) ([]admin.Application, error) {
 	url := fmt.Sprintf("%v/applications", m.Url)
 	return m.DesiredApplications, m.Errs[url]
 }

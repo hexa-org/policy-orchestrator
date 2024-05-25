@@ -1,33 +1,26 @@
 package orchestrator
 
 import (
-	"database/sql"
-
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-orchestrator/demo/pkg/dataConfigGateway"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/hawksupport"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/workflowsupport"
 	"github.com/hiyosi/hawk"
 )
 
-func LoadHandlers(database *sql.DB, store hawk.CredentialStore, hostPort string, cacheProviders map[string]policyprovider.Provider) (func(router *mux.Router), *workflowsupport.WorkScheduler) {
+func LoadHandlers(configHandler *dataConfigGateway.ConfigData, store hawk.CredentialStore, hostPort string, cacheProviders map[string]policyprovider.Provider) func(router *mux.Router) {
 	pb := NewProviderBuilder()
 	if cacheProviders != nil {
 		pb.AddProviders(cacheProviders)
 	}
-	applicationsGateway := ApplicationsDataGateway{database}
-	integrationsGateway := IntegrationsDataGateway{database}
+	integrationsGateway := configHandler
+	applicationsGateway := configHandler.GetApplicationDataGateway()
+
 	applicationsService := ApplicationsService{ApplicationsGateway: applicationsGateway, IntegrationsGateway: integrationsGateway, ProviderBuilder: pb}
 
-	worker := DiscoveryWorker{pb, applicationsGateway}
-	finder := NewDiscoveryWorkFinder(integrationsGateway)
-
 	applicationsHandler := ApplicationsHandler{applicationsGateway, integrationsGateway, applicationsService}
-	integrationsHandler := IntegrationsHandler{integrationsGateway, worker}
+	integrationsHandler := IntegrationsHandler{integrationsGateway}
 	orchestrationHandler := OrchestrationHandler{applicationsService: applicationsService}
-
-	list := []workflowsupport.Worker{&worker}
-	scheduler := workflowsupport.NewScheduler(&finder, list, 60_000)
 
 	return func(router *mux.Router) {
 		router.HandleFunc("/applications", hawksupport.HawkMiddleware(applicationsHandler.List, store, hostPort)).Methods("GET")
@@ -38,5 +31,5 @@ func LoadHandlers(database *sql.DB, store hawk.CredentialStore, hostPort string,
 		router.HandleFunc("/integrations", hawksupport.HawkMiddleware(integrationsHandler.Create, store, hostPort)).Methods("POST")
 		router.HandleFunc("/integrations/{id}", hawksupport.HawkMiddleware(integrationsHandler.Delete, store, hostPort)).Methods("GET")
 		router.HandleFunc("/orchestration", hawksupport.HawkMiddleware(orchestrationHandler.Update, store, hostPort)).Methods("POST")
-	}, &scheduler
+	}
 }

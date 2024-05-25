@@ -2,10 +2,10 @@ package orchestrator
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/hexa-org/policy-mapper/api/policyprovider"
 	"github.com/hexa-org/policy-mapper/sdk"
+	"github.com/hexa-org/policy-orchestrator/demo/pkg/migrationSupport"
 )
 
 type ProviderBuilder struct {
@@ -28,22 +28,6 @@ func NewProviderBuilder() *ProviderBuilder {
 // providers["amazon"] = &awsapigw.AwsApiGatewayProvider{}
 // providers["open_policy_agent"] = &openpolicyagent.OpaProvider{}
 
-func MapSdkProviderName(legacyName string) string {
-	switch strings.ToLower(legacyName) {
-	case "azure", "azure_apim":
-		return sdk.ProviderTypeAzure
-	case "amazon":
-		return sdk.ProviderTypeCognito
-	case "google_cloud", "gcp":
-		return sdk.ProviderTypeGoogleCloudIAP
-	case "open_policy_agent":
-		return sdk.ProviderTypeOpa
-	case "noop":
-		return "noop"
-	}
-	return legacyName
-}
-
 // AddProviders is primarily used in testing to allow a test provider to be directly injected rather than from the sdk integration providers
 func (b *ProviderBuilder) AddProviders(cacheProviders map[string]policyprovider.Provider) {
 	for k, v := range cacheProviders {
@@ -63,7 +47,7 @@ func (b *ProviderBuilder) GetAppsProvider(id string, providerType string, key []
 	}
 
 	info := policyprovider.IntegrationInfo{
-		Name: MapSdkProviderName(providerType),
+		Name: migrationSupport.MapSdkProviderName(providerType),
 		Key:  key,
 	}
 

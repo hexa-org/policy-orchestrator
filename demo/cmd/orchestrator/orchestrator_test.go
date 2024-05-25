@@ -19,29 +19,30 @@ import (
 
 func TestApp(t *testing.T) {
 	listener, _ := net.Listen("tcp", "localhost:0")
-	app, scheduler := App("aKey", listener.Addr().String(), listener.Addr().String(), "postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
+	app := App("aKey", listener.Addr().String(), listener.Addr().String())
+
 	go func() {
 		websupport.Start(app, listener)
-		scheduler.Start()
+
 	}()
 	healthsupport.WaitForHealthy(app)
 
 	get, _ := http.Get(fmt.Sprintf("http://%s/health", app.Addr))
 	body, _ := io.ReadAll(get.Body)
-	assert.Equal(t, "[{\"name\":\"server\",\"pass\":\"true\"},{\"name\":\"database\",\"pass\":\"true\"}]", string(body))
+	assert.Equal(t, "[{\"name\":\"server\",\"pass\":\"true\"}]", string(body))
 
 	websupport.Stop(app)
-	scheduler.Stop()
+
 }
 
 func TestAppWithTransportLayerSecurity(t *testing.T) {
 	listener, _ := net.Listen("tcp", "localhost:0")
-	app, scheduler := App("aKey", listener.Addr().String(), listener.Addr().String(), "postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
+	app := App("aKey", listener.Addr().String(), listener.Addr().String())
 	_, file, _, _ := runtime.Caller(0)
 	configureWithTransportLayerSecurity(file, app)
 	go func() {
 		websupport.Start(app, listener)
-		scheduler.Start()
+
 	}()
 
 	caCert := must(os.ReadFile(filepath.Join(file, "../test/ca-cert.pem")))
@@ -63,7 +64,6 @@ func TestAppWithTransportLayerSecurity(t *testing.T) {
 	healthsupport.WaitForHealthyWithClient(app, client, fmt.Sprintf("https://%s/health", app.Addr))
 
 	websupport.Stop(app)
-	scheduler.Stop()
 }
 
 func TestConfigWithPort(t *testing.T) {

@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -53,6 +54,15 @@ func (i integrationsHandler) List(w http.ResponseWriter, _ *http.Request) {
 		log.Println(err)
 		return
 	}
+	sort.Slice(integrations, func(i, j int) bool {
+		if integrations[i].Provider < integrations[j].Provider {
+			return true
+		}
+		if integrations[i].Provider == integrations[j].Provider {
+			return integrations[i].ID < integrations[j].ID
+		}
+		return false
+	})
 	model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "integrations": integrations}}
 	_ = websupport.ModelAndView(w, &resources, "integrations", model)
 }

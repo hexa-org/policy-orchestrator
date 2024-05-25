@@ -7,12 +7,13 @@ import (
 
 	"github.com/hexa-org/policy-mapper/api/policyprovider"
 	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
+	"github.com/hexa-org/policy-orchestrator/demo/pkg/dataConfigGateway"
 	logger "golang.org/x/exp/slog"
 )
 
 type ApplicationsService struct {
-	ApplicationsGateway ApplicationsDataGateway
-	IntegrationsGateway IntegrationsDataGateway
+	ApplicationsGateway dataConfigGateway.ApplicationsDataGateway
+	IntegrationsGateway dataConfigGateway.IntegrationsDataGateway
 	ProviderBuilder     *ProviderBuilder
 	DisableChecks       bool // Only set to true by tests
 }

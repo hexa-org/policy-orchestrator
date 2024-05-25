@@ -29,7 +29,7 @@ EXPOSE 8885:8885
 
 ENV ORCHESTRATOR_HOSTPORT=hexa-orchestrator:8885
 ENV ORCHESTRATOR_KEY=0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb
-ENV POSTGRESQL_URL=postgres://orchestrator:orchestrator@postgresql:5432/orchestrator_development?sslmode=disable
+ENV ORCHESTRATOR_CONFIG_FILE: /app/config/config.json
 
 CMD ["/app/hexaOrchestrator"]
 # CMD "./hexaOpa help"
