@@ -3,30 +3,33 @@ package orchestrator_test
 import (
 	"bytes"
 	"crypto/sha256"
-	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/hexa-org/policy-mapper/api/policyprovider"
 	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/sdk"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator/test"
-	"github.com/stretchr/testify/assert"
-
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/databasesupport"
+	"github.com/hexa-org/policy-orchestrator/demo/pkg/dataConfigGateway"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/hawksupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/testsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/websupport"
+	"github.com/stretchr/testify/assert"
 )
 
 type applicationsHandlerData struct {
-	db                *sql.DB
+	testDir           string
+	Data              *dataConfigGateway.ConfigData
+	gateway           dataConfigGateway.ApplicationsDataGateway
 	server            *http.Server
 	key               string
 	providers         map[string]policyprovider.Provider
@@ -34,20 +37,39 @@ type applicationsHandlerData struct {
 }
 
 func (data *applicationsHandlerData) SetUp() {
-	data.db, _ = databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
-	_, _ = data.db.Exec(`
-delete from applications;
-delete from integrations;
+	tempDir, _ := os.MkdirTemp("", "hexa-orchestrator-*")
 
-insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'aName', 'noop', 'aKey');
-insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff210', '50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'anObjectId', 'aName', 'aDescription', 'aService');
-insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff211', '50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'anotherObjectId', 'anotherName', 'anotherDescription', 'anotherService');
+	data.testDir = tempDir
 
-insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e9', 'yetAnotherName', 'zone_cloud', 'aKey');
-insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff212', '50e00619-9f15-4e85-a7e9-f26d87ea12e9', 'yetAnotherObjectId', 'yetAnotherName1', 'yetAnotherDescription', 'Kubernetes');
-insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff213', '50e00619-9f15-4e85-a7e9-f26d87ea12e9', 'yetAnotherObjectId2', 'yetAnotherName2', 'yetAnotherDescription2', 'Container Kubernetes');
-`)
-	data.applicationTestId = "6409776a-367a-483a-a194-5ccf9c4ff210"
+	testConfigPath := filepath.Join(data.testDir, ".hexa", "config.json")
+	_ = os.Setenv(sdk.EnvTestProvider, sdk.ProviderTypeMock)
+	// _ = os.Unsetenv(sdk.EnvTestProvider)
+
+	_ = os.Setenv(dataConfigGateway.EnvIntegrationConfigFile, testConfigPath)
+
+	data.Data, _ = dataConfigGateway.NewIntegrationConfigData()
+	data.gateway = data.Data.GetApplicationDataGateway()
+	/*
+	   	data.db, _ = databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
+	   	_, _ = data.db.Exec(`
+	   delete from applications;
+	   delete from integrations;
+
+	   insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'aName', 'noop', 'aKey');
+	   insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff210', '50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'anObjectId', 'aName', 'aDescription', 'aService');
+	   insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff211', '50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'anotherObjectId', 'anotherName', 'anotherDescription', 'anotherService');
+
+	   insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e9', 'yetAnotherName', 'zone_cloud', 'aKey');
+	   insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff212', '50e00619-9f15-4e85-a7e9-f26d87ea12e9', 'yetAnotherObjectId', 'yetAnotherName1', 'yetAnotherDescription', 'Kubernetes');
+	   insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff213', '50e00619-9f15-4e85-a7e9-f26d87ea12e9', 'yetAnotherObjectId2', 'yetAnotherName2', 'yetAnotherDescription2', 'Container Kubernetes');
+	   `)
+	*/
+
+	_, err := data.Data.Create("aName", "noop", []byte("aKey"))
+	if err != nil {
+		panic(err)
+	}
+	_, err = data.Data.Create("yetAnotherName", "zone_cloud", []byte("aKey"))
 
 	listener, _ := net.Listen("tcp", "localhost:0")
 	addr := listener.Addr().String()
@@ -56,16 +78,20 @@ insert into applications (id, integration_id, object_id, name, description, serv
 	data.key = hex.EncodeToString(hash[:])
 
 	data.providers = make(map[string]policyprovider.Provider)
-	data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e7"] = &orchestrator_test.NoopProvider{}
-	handlers, _ := orchestrator.LoadHandlers(data.db, hawksupport.NewCredentialStore(data.key), addr, data.providers)
+	data.providers["yetAnotherName"] = &orchestrator_test.NoopProvider{}
+	data.providers["aName"] = &orchestrator_test.NoopProvider{}
+
+	handlers := orchestrator.LoadHandlers(data.Data, hawksupport.NewCredentialStore(data.key), addr, data.providers)
 	data.server = websupport.Create(addr, handlers, websupport.Options{})
 	go websupport.Start(data.server, listener)
 	healthsupport.WaitForHealthy(data.server)
+	apps, _ := data.gateway.Find(false)
+	data.applicationTestId = apps[0].ID
 }
 
 func (data *applicationsHandlerData) TearDown() {
-	_ = data.db.Close()
 	websupport.Stop(data.server)
+	_ = os.RemoveAll(data.testDir)
 }
 
 func TestListApps(t *testing.T) {
@@ -77,14 +103,14 @@ func TestListApps(t *testing.T) {
 
 		var apps orchestrator.Applications
 		_ = json.NewDecoder(resp.Body).Decode(&apps)
-		assert.Equal(t, 4, len(apps.Applications))
+		assert.Equal(t, 2, len(apps.Applications))
 
 		application := apps.Applications[0]
-		assert.Equal(t, "anObjectId", application.ObjectId)
-		assert.Equal(t, "aName", application.Name)
+		assert.Equal(t, "somewhereToMock", application.ObjectId)
+		assert.Equal(t, "mock", application.Name)
 		assert.Equal(t, "noop", application.ProviderName)
-		assert.Equal(t, "aDescription", application.Description)
-		assert.Equal(t, "aService", application.Service)
+		assert.Equal(t, "Mock PAP", application.Description)
+		assert.Equal(t, "noop", application.Service)
 	})
 }
 
@@ -96,29 +122,16 @@ func TestListApps_withSort(t *testing.T) {
 
 		var apps orchestrator.Applications
 		_ = json.NewDecoder(resp.Body).Decode(&apps)
-		assert.Equal(t, 4, len(apps.Applications))
+		assert.Equal(t, 2, len(apps.Applications))
 
 		expApps := []orchestrator.Application{
-			{ProviderName: "noop", Service: "aService"},
-			{ProviderName: "noop", Service: "anotherService"},
-			{ProviderName: "zone_cloud", Service: "Container Kubernetes"},
-			{ProviderName: "zone_cloud", Service: "Kubernetes"}}
+			{ProviderName: "noop", Service: "noop"},
+			{ProviderName: "zone_cloud", Service: "zone_cloud"}}
 
 		for a, actApp := range apps.Applications {
 			assert.Equal(t, expApps[a].ProviderName, actApp.ProviderName)
 			assert.Equal(t, expApps[a].Service, actApp.Service)
 		}
-	})
-}
-
-func TestListApps_withErroneousDatabase(t *testing.T) {
-	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
-		_ = data.db.Close()
-
-		url := fmt.Sprintf("http://%s/applications", data.server.Addr)
-
-		resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", data.key, url)
-		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 	})
 }
 
@@ -131,10 +144,11 @@ func TestShowApps(t *testing.T) {
 
 		var app orchestrator.Application
 		_ = json.NewDecoder(resp.Body).Decode(&app)
-		assert.Equal(t, "anObjectId", app.ObjectId)
-		assert.Equal(t, "aName", app.Name)
-		assert.Equal(t, "aDescription", app.Description)
-		assert.Equal(t, "aService", app.Service)
+
+		assert.Equal(t, "somewhereToMock", app.ObjectId)
+		assert.Equal(t, "mock", app.Name)
+		assert.Equal(t, "Mock PAP", app.Description)
+		assert.Equal(t, "noop", app.Service)
 	})
 }
 
@@ -166,22 +180,14 @@ func TestGetPolicies(t *testing.T) {
 	})
 }
 
-func TestGetPolicies_withDatabaseError(t *testing.T) {
-	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
-		_ = data.db.Close()
-
-		url := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
-
-		resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", data.key, url)
-		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
-	})
-}
-
 func TestGetPolicies_withFailedRequest(t *testing.T) {
 	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
 
-		provider := data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e7"]
+		provider := data.providers["aName"]
 		noop := provider.(*orchestrator_test.NoopProvider)
+		noop.SetTestErr(errors.New("oops"))
+		provider = data.providers["yetAnotherName"]
+		noop = provider.(*orchestrator_test.NoopProvider)
 		noop.SetTestErr(errors.New("oops"))
 		url := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
 
@@ -213,20 +219,9 @@ func TestSetPolicies(t *testing.T) {
 	})
 }
 
-func TestSetPolicies_withDatabaseError(t *testing.T) {
-	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
-		_ = data.db.Close()
-
-		url := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
-
-		resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", data.key, url, bytes.NewReader([]byte("")))
-		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
-	})
-}
-
 func TestSetPolicies_withErroneousProvider(t *testing.T) {
 	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
-		provider := data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e7"]
+		provider := data.providers["aName"]
 		noop := provider.(*orchestrator_test.NoopProvider)
 		noop.SetTestErr(errors.New("oops"))
 
