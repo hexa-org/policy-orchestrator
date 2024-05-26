@@ -48,7 +48,9 @@ if [ "$test" = 'Y' ];then
 fi
 
 echo "  building go linux executables for docker ..."
+
 CGO_ENABLED=0 GOOS=linux go build -o ./hexaAdminUi  cmd/admin/admin.go
+
 CGO_ENABLED=0 GOOS=linux go build -o ./hexaOrchestrator cmd/orchestrator/orchestrator.go
 
 echo "  building docker container image ($tag)..."
