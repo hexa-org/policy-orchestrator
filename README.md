@@ -1,8 +1,8 @@
 # Table of Contents
 - [Hexa Policy Orchestrator](#hexa-policy-orchestrator)
   * [Getting Started](#getting-started)
-    + [Build the Hexa image](#build-the-hexa-image)
-    + [Run the Policy Orchestrator](#run-the-policy-orchestrator)
+    + [Build the Hexa image](#task-build-the-hexa-orchestrator-image)
+    + [Run the Policy Orchestrator](#task-run-the-policy-orchestrator)
   * [Application descriptions](#application-descriptions)
     + [Example workflow](#example-workflow)
   * [Getting involved](#getting-involved)
@@ -23,11 +23,12 @@ so that you can unify access policy management. The below diagram describes the 
 
 ## Getting Started
 
-The Hexa project contains three applications
+The Hexa project contains two applications, and demonstrates use of applications from [Policy-Opa](https://github.com/hexa-org/policy-opa)
 
 - Policy Orchestrator with policy translations
 - Demo Policy Administrator
-- Demo web application
+- Demo web application (Policy-OPA)
+- Hexa OPA Server and Bundle Server (Policy-OPA)
 
 To get started with running these, clone or download the codebase from GitHub to your local machine:
 
@@ -40,43 +41,21 @@ git clone git@github.com:hexa-org/policy-orchestrator.git
 
 Install the following dependencies.
 
-- [Go 1.22](https://go.dev)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop)
+- [Go 1.22](https://go.dev) - Needed to compile and install
+- [Docker Desktop](https://www.docker.com/products/docker-desktop) - Needed to run docker-compose configuration
 
 ### Task: Build the Hexa Orchestrator image
 
 Build a Hexa Orchestrator image
 
 ```bash
-
+cd demo
+sh ./build.sh
 ```
-
-> NOTE:
->
-> Assuming previous execution of the "setup" script above, this task may be run
-> from anywhere in the repository as `pkg build`.
-
-### Task: Prepare the Database
-
-The Hexa applications use PostgreSQL. A number of scripts and TLS files need to be installed/executed when running in Docker (see below). So...
-
-```bash
-chmod 775 ./databases/docker_support/initdb.d/create-databases.sh
-chmod 775 ./databases/docker_support/migrate-databases.sh
-chmod 600 ./databases/docker_support/ca-cert.pem
-chmod 600 ./databases/docker_support/client-cert.pem
-chmod 600 ./databases/docker_support/client-key.pem
-```
-
-> NOTE:
->
-> Assuming previous execution of the "setup" script above, this task will be
-> run as part of `pkg serve`, executable from anywhere in the repository.
 
 ### Task: Run the Policy Orchestrator
 
- 
-Run all the applications with Docker Compose.
+Run all the applications with Docker Compose from within the `demo` directory
 
 > On Apple Silicon M1 (and M2) ARM
 > ```bash
@@ -99,46 +78,45 @@ Docker runs the following applications:
 
 - **hexa-orchestrator**
 
-  Runs on [localhost:8885](http://localhost:8885/health). The main application
+  Runs on [localhost:8885](http://localhost:8885/health). The main application service
   that manages IDQL policy across various platforms and communicates with the
   various platform interfaces, converting IDQL policy to and from the respective
   platform types.
 
-- **hexa-admin**
+- **hexa-admin-ui**
 
-  Runs on [localhost:8884](http://localhost:8884/). An example application
+  Runs on [localhost:8884](http://localhost:8884/). An example web application user-interface
   demonstrating the latest interactions with the policy orchestrator.
 
-- **hexa-demo**
+- **hexa-industry-demo-app**
 
-  Runs on [localhost:8886](http://localhost:8886/). A demo application used to
+  Runs on [localhost:8886](http://localhost:8886/). A demo web application used to
   highlight enforcing of both coarse and fine-grained policy. The application
   integrates with platform authentication/authorization proxies,
   [Google IAP](https://cloud.google.com/iap) for example, for coarse-grained
   access and the [Open Policy Agent (OPA)](https://www.openpolicyagent.org/)
-  for fine-grained policy access.
+  for fine-grained policy access. 
 
-- **OPA server**
+- **Hexa-OPA-Agent**
 
-  Runs on [localhost:8887](http://localhost:8887/). The Open Policy Agent (OPA)
+  Runs on [localhost:8887](http://localhost:8887/). A [Hexa extended](https://github.com/hexa-org/policy-opa) Open Policy Agent (OPA)
   server used to demonstrate fine-grained policy management. IDQL policy is
   represented as data and interpreted by the [Rego](https://www.openpolicyagent.org/docs/latest/policy-language/)
   expression language.
 
-- **hexa-demo-config**
+- **hexa-opaBundle-server**
 
-  Runs on [localhost:8889](http://localhost:8889/health). The bundle HTTP
-  server from which the OPA server can download the bundles of policy and data
-  from. See [OPA bundles][opa-bundles] for more info.
+  Runs on [localhost:8889](http://localhost:8889/health). An OPA HTTP Bundle server from which the OPA server can download policy bundles configured
+  by Hexa-Orchestrator. See [OPA bundles][opa-bundles] for more info.
 
 ## Example Workflow
 
 Fine-grained policy management with OPA.
 
-Using the **hexa-admin** application available via `docker-compose`, upload an
+Using the **hexa-admin-ui** application available via `docker-compose`, upload an
 OPA integration configuration file. The file describes the location of the IDQL
 policy. An example integration configuration file may be found in
-[deployments/opa-server/example](deployments/opa-server/example).
+[deployments/opa-server/example](demo/deployments/hexaOpaServer/example).
 
 Once configured, IDQL policy for the **hexa-demo** application can be modified
 on the [Applications](http://localhost:8884/applications) page. The
