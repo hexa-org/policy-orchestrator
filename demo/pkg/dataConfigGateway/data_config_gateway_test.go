@@ -48,7 +48,7 @@ func TestConfigGateway(t *testing.T) {
 		suite.Run(t, &s)
 	}
 
-	os.RemoveAll(s.testDir)
+	_ = os.RemoveAll(s.testDir)
 	fmt.Println("** Test complete **")
 }
 
@@ -115,7 +115,7 @@ func (s *testSuite) Test4_AG_Find() {
 	assert.NoError(s.T(), err)
 	assert.NotEqual(s.T(), s.test1Id, id2)
 
-	apps, err := s.appDataGateway.Find(false)
+	apps, err := s.appDataGateway.Find(true)
 	assert.NoError(s.T(), err)
 	assert.Len(s.T(), apps, 2)
 
@@ -128,11 +128,14 @@ func (s *testSuite) Test4_AG_Find() {
 
 func (s *testSuite) Test5_AG_FindByObjectId() {
 
-	testObj := s.testApp.ObjectId
+	apps, err := s.appDataGateway.Find(true)
+	assert.NoError(s.T(), err)
+	assert.Greater(s.T(), len(apps), 0, "Should not be empty")
+	testObj := apps[0].ObjectId
 
 	app, err := s.appDataGateway.FindByObjectId(testObj)
 	assert.NoError(s.T(), err)
-	assert.Equal(s.T(), s.testApp.IntegrationId, app.IntegrationId)
+	assert.Equal(s.T(), apps[0].IntegrationId, app.IntegrationId)
 
 	_, err = s.appDataGateway.FindByObjectId("dummy")
 	assert.Error(s.T(), err, "application dummy not found")
