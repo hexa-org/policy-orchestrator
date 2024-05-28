@@ -2,6 +2,11 @@ name: "CodeQL"
 on:
   schedule:
     - cron: "0 0 * * *"
+  push:
+    branches:
+      - main
+    paths:
+      - demo/**
 jobs:
   analyze:
     name: Analyze
