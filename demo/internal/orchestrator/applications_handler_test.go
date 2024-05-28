@@ -85,7 +85,7 @@ func (data *applicationsHandlerData) SetUp() {
 	data.server = websupport.Create(addr, handlers, websupport.Options{})
 	go websupport.Start(data.server, listener)
 	healthsupport.WaitForHealthy(data.server)
-	apps, _ := data.gateway.Find(false)
+	apps, _ := data.gateway.Find(true)
 	data.applicationTestId = apps[0].ID
 }
 
