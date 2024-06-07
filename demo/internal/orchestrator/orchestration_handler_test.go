@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
@@ -17,8 +18,9 @@ import (
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator/test"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/dataConfigGateway"
+	"github.com/hexa-org/policy-orchestrator/demo/pkg/oauth2support"
+	"github.com/hexa-org/policy-orchestrator/demo/pkg/oidctestsupport"
 
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/hawksupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/testsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/websupport"
@@ -37,6 +39,9 @@ type orchestrationHandlerData struct {
 	testDir    string
 	Data       *dataConfigGateway.ConfigData
 	appGateway dataConfigGateway.ApplicationsDataGateway
+
+	MockOauth       *oidctestsupport.MockAuthServer
+	oauthHttpClient *http.Client
 }
 
 func (data *orchestrationHandlerData) SetUp() {
@@ -54,6 +59,20 @@ func (data *orchestrationHandlerData) SetUp() {
 	   `)
 
 	*/
+	data.MockOauth = oidctestsupport.NewMockAuthServer("clientId", "secret", map[string]interface{}{})
+	mockUrlJwks, _ := url.JoinPath(data.MockOauth.Server.URL, "/jwks")
+	// Set Env for Jwt Token Validation by Orchestrator handlers
+	_ = os.Setenv(oauth2support.EnvOAuthJwksUrl, mockUrlJwks)
+	_ = os.Setenv(oauth2support.EnvJwtRealm, "TEST_REALM")
+	_ = os.Setenv(oauth2support.EnvJwtAuth, "true")
+
+	// Set Env for Orchestrator Client
+	_ = os.Setenv(oauth2support.EnvOAuthClientId, "clientId")
+	_ = os.Setenv(oauth2support.EnvOAuthClientSecret, "secret")
+
+	_ = os.Setenv(oauth2support.EnvOAuthTokenEndpoint, fmt.Sprintf("%s/token", data.MockOauth.Server.URL))
+
+	data.oauthHttpClient = oauth2support.NewJwtClientHandler().GetHttpClient()
 
 	tempDir, _ := os.MkdirTemp("", "hexa-orchestrator-*")
 
@@ -98,7 +117,7 @@ func (data *orchestrationHandlerData) SetUp() {
 	data.providers = make(map[string]policyprovider.Provider)
 	data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e7"] = &orchestrator_test.NoopProvider{}
 	// data.providers["azure"] = microsoftazure.NewAzureProvider() This will auto load
-	handlers := orchestrator.LoadHandlers(data.Data, hawksupport.NewCredentialStore(data.key), addr, data.providers)
+	handlers := orchestrator.LoadHandlers(data.Data, data.providers)
 	data.server = websupport.Create(addr, handlers, websupport.Options{})
 	go websupport.Start(data.server, listener)
 	healthsupport.WaitForHealthy(data.server)
@@ -107,6 +126,8 @@ func (data *orchestrationHandlerData) SetUp() {
 func (data *orchestrationHandlerData) TearDown() {
 	// _ = data.db.Close()
 	websupport.Stop(data.server)
+	data.oauthHttpClient.CloseIdleConnections()
+	data.MockOauth.Shutdown()
 	_ = os.RemoveAll(data.testDir)
 }
 
@@ -115,7 +136,10 @@ func TestOrchestration(t *testing.T) {
 		url := fmt.Sprintf("http://%s/orchestration", data.server.Addr)
 		marshal, _ := json.Marshal(orchestrator.Orchestration{From: data.fromApp, To: data.toApp})
 
-		resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", data.key, url, bytes.NewReader(marshal))
+		resp, err := data.oauthHttpClient.Post(url, "application/json", bytes.NewReader(marshal))
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 		assert.Equal(t, http.StatusCreated, resp.StatusCode)
 	})
 }
@@ -125,7 +149,7 @@ func TestOrchestration_failsAcrossProviders(t *testing.T) {
 		url := fmt.Sprintf("http://%s/orchestration", data.server.Addr)
 		marshal, _ := json.Marshal(orchestrator.Orchestration{From: data.fromApp, To: data.toAppDifferent})
 
-		resp, err := hawksupport.HawkPost(&http.Client{}, "anId", data.key, url, bytes.NewReader(marshal))
+		resp, err := data.oauthHttpClient.Post(url, "application/json", bytes.NewReader(marshal))
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 	})

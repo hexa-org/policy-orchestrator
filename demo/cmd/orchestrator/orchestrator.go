@@ -11,7 +11,6 @@ import (
 
 	log "golang.org/x/exp/slog"
 
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/hawksupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/websupport"
 )
@@ -29,14 +28,12 @@ func (s ServerHealthCheck) Check() bool {
 
 func App(key string, addr string, hostPort string) *http.Server {
 
-	store := hawksupport.NewCredentialStore(key)
-
 	config, err := dataConfigGateway.NewIntegrationConfigData()
 	if err != nil {
 		panic(err)
 	}
 
-	handlers := orchestrator.LoadHandlers(config, store, hostPort, nil)
+	handlers := orchestrator.LoadHandlers(config, nil)
 	return websupport.Create(addr, handlers, websupport.Options{
 		HealthChecks: []healthsupport.HealthCheck{
 			ServerHealthCheck{},

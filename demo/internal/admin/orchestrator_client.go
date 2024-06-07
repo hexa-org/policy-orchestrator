@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/hawksupport"
+	"github.com/hexa-org/policy-orchestrator/demo/pkg/oauth2support"
 )
 
 type HTTPClient interface {
@@ -20,13 +20,25 @@ type HTTPClient interface {
 }
 
 type orchestratorClient struct {
-	client HTTPClient
-	url    string
-	key    string
+	client     HTTPClient
+	jwtHandler oauth2support.JwtClientHandler
+	url        string
 }
 
-func NewOrchestratorClient(client HTTPClient, url, key string) Client {
-	return &orchestratorClient{client, url, key}
+// GetHttpClient used mainly for testing
+func (c orchestratorClient) GetHttpClient() HTTPClient {
+	return c.client
+}
+
+// NewOrchestratorClient returns a handle to a client that calls the Orchestrator service.
+// When `client` is specified it will override OAuth2 token support.
+func NewOrchestratorClient(client HTTPClient, url string) Client {
+	var jwtHandler oauth2support.JwtClientHandler
+	if client == nil {
+		jwtHandler = oauth2support.NewJwtClientHandler()
+		client = jwtHandler.GetHttpClient()
+	}
+	return &orchestratorClient{client, jwtHandler, url}
 }
 
 func (c orchestratorClient) Health() (string, error) {
@@ -59,7 +71,7 @@ func (c orchestratorClient) Applications(refresh bool) (applications []Applicati
 		refreshParam = "?refresh=true"
 	}
 	url := fmt.Sprintf("%v/applications%s", c.url, refreshParam)
-	resp, hawkErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
+	resp, hawkErr := c.client.Get(url)
 	if err = errorOrBadResponse(resp, http.StatusOK, hawkErr); err != nil {
 		return applications, err
 	}
@@ -87,7 +99,7 @@ func (c orchestratorClient) Applications(refresh bool) (applications []Applicati
 
 func (c orchestratorClient) Application(id string) (Application, error) {
 	url := fmt.Sprintf("%v/applications/%s", c.url, id)
-	resp, hawkErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
+	resp, hawkErr := c.client.Get(url)
 	if err := errorOrBadResponse(resp, http.StatusOK, hawkErr); err != nil {
 		return Application{}, err
 	}
@@ -121,7 +133,7 @@ type integration struct {
 
 func (c orchestratorClient) Integrations() (integrations []Integration, err error) {
 	url := fmt.Sprintf("%v/integrations", c.url)
-	resp, hawkErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
+	resp, hawkErr := c.client.Get(url)
 	if err = errorOrBadResponse(resp, http.StatusOK, hawkErr); err != nil {
 		return integrations, err
 	}
@@ -141,19 +153,20 @@ func (c orchestratorClient) Integrations() (integrations []Integration, err erro
 func (c orchestratorClient) CreateIntegration(name string, provider string, key []byte) error {
 	url := fmt.Sprintf("%v/integrations", c.url)
 	marshal, _ := json.Marshal(integration{Name: name, Provider: provider, Key: key})
-	resp, hawkErr := hawksupport.HawkPost(c.client, "anId", c.key, url, bytes.NewReader(marshal))
+	req, _ := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(marshal))
+	resp, hawkErr := c.client.Do(req)
 	return errorOrBadResponse(resp, http.StatusCreated, hawkErr)
 }
 
 func (c orchestratorClient) DeleteIntegration(id string) error {
 	url := fmt.Sprintf("%v/integrations/%s", c.url, id)
-	resp, hawkErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
+	resp, hawkErr := c.client.Get(url)
 	return errorOrBadResponse(resp, http.StatusOK, hawkErr)
 }
 
 func (c orchestratorClient) GetPolicies(id string) ([]hexapolicy.PolicyInfo, string, error) {
 	url := fmt.Sprintf("%v/applications/%s/policies", c.url, id)
-	resp, hawkErr := hawksupport.HawkGet(c.client, "anId", c.key, url)
+	resp, hawkErr := c.client.Get(url)
 	if err := errorOrBadResponse(resp, http.StatusOK, hawkErr); err != nil {
 		return []hexapolicy.PolicyInfo{}, "{}", err
 	}
@@ -174,7 +187,8 @@ func (c orchestratorClient) GetPolicies(id string) ([]hexapolicy.PolicyInfo, str
 
 func (c orchestratorClient) SetPolicies(id string, policies string) error {
 	url := fmt.Sprintf("%v/applications/%s/policies", c.url, id)
-	resp, err := hawksupport.HawkPost(c.client, "anId", c.key, url, strings.NewReader(policies))
+	req, _ := http.NewRequest(http.MethodPost, url, strings.NewReader(policies))
+	resp, err := c.client.Do(req)
 	return errorOrBadResponse(resp, http.StatusCreated, err)
 }
 
@@ -186,7 +200,8 @@ type orchestration struct {
 func (c orchestratorClient) Orchestration(from string, to string) error {
 	url := fmt.Sprintf("%v/orchestration", c.url)
 	marshal, _ := json.Marshal(orchestration{From: from, To: to})
-	resp, err := hawksupport.HawkPost(c.client, "anId", c.key, url, bytes.NewReader(marshal))
+	req, _ := http.NewRequest(http.MethodPost, url, bytes.NewReader(marshal))
+	resp, err := c.client.Do(req)
 	return errorOrBadResponse(resp, http.StatusCreated, err)
 }
 

@@ -22,6 +22,7 @@ type Client interface {
 	GetPolicies(id string) ([]hexapolicy.PolicyInfo, string, error)
 	SetPolicies(id string, policies string) error
 	Orchestration(from string, to string) error
+	GetHttpClient() HTTPClient
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
