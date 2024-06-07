@@ -1,8 +1,6 @@
 package orchestrator_test
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"net"
 	"net/http"
@@ -12,17 +10,12 @@ import (
 
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/dataConfigGateway"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/hawksupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestOrchestratorHandlers(t *testing.T) {
-
-	hash := sha256.Sum256([]byte("aKey"))
-	key := hex.EncodeToString(hash[:])
-	store := hawksupport.NewCredentialStore(key)
 
 	listener, _ := net.Listen("tcp", "localhost:0")
 
@@ -35,7 +28,7 @@ func TestOrchestratorHandlers(t *testing.T) {
 
 	config, err := dataConfigGateway.NewIntegrationConfigData()
 	assert.NoError(t, err, "Error initializing config")
-	handlers := orchestrator.LoadHandlers(config, store, listener.Addr().String(), nil)
+	handlers := orchestrator.LoadHandlers(config, nil)
 	server := websupport.Create(listener.Addr().String(), handlers, websupport.Options{})
 
 	go websupport.Start(server, listener)

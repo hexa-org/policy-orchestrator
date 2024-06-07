@@ -2,6 +2,7 @@ package admin_test
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/admin"
@@ -20,6 +21,11 @@ type MockClient struct {
 
 	DesiredApplications []admin.Application
 	DesiredPolicies     []hexapolicy.PolicyInfo
+}
+
+// GetHttpClient used mainly for testing
+func (m *MockClient) GetHttpClient() admin.HTTPClient {
+	return &http.Client{}
 }
 
 func (m *MockClient) Health() (string, error) {

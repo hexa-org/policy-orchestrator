@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
@@ -19,8 +20,9 @@ import (
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator/test"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/dataConfigGateway"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/hawksupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/healthsupport"
+	"github.com/hexa-org/policy-orchestrator/demo/pkg/oauth2support"
+	"github.com/hexa-org/policy-orchestrator/demo/pkg/oidctestsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/testsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/websupport"
 	"github.com/stretchr/testify/assert"
@@ -34,10 +36,29 @@ type applicationsHandlerData struct {
 	key               string
 	providers         map[string]policyprovider.Provider
 	applicationTestId string
+	MockOauth         *oidctestsupport.MockAuthServer
+	oauthHttpClient   *http.Client
 }
 
 func (data *applicationsHandlerData) SetUp() {
+
+	// The Mock Authorization Server is needed to issue tokens, and provide a JWKS endpoint for validation
+	data.MockOauth = oidctestsupport.NewMockAuthServer("clientId", "secret", map[string]interface{}{})
+	mockUrlJwks, _ := url.JoinPath(data.MockOauth.Server.URL, "/jwks")
+	// Set Env for Jwt Token Validation by Orchestrator handlers
+	_ = os.Setenv(oauth2support.EnvOAuthJwksUrl, mockUrlJwks)
+	_ = os.Setenv(oauth2support.EnvJwtRealm, "TEST_REALM")
+	_ = os.Setenv(oauth2support.EnvJwtAuth, "true")
+
+	// Set Env for Orchestrator Client
+	_ = os.Setenv(oauth2support.EnvOAuthClientId, "clientId")
+	_ = os.Setenv(oauth2support.EnvOAuthClientSecret, "secret")
+	_ = os.Setenv(oauth2support.EnvOAuthTokenEndpoint, fmt.Sprintf("%s/token", data.MockOauth.Server.URL))
+
 	tempDir, _ := os.MkdirTemp("", "hexa-orchestrator-*")
+
+	jwtClientHandler := oauth2support.NewJwtClientHandler()
+	data.oauthHttpClient = jwtClientHandler.GetHttpClient()
 
 	data.testDir = tempDir
 
@@ -81,7 +102,7 @@ func (data *applicationsHandlerData) SetUp() {
 	data.providers["yetAnotherName"] = &orchestrator_test.NoopProvider{}
 	data.providers["aName"] = &orchestrator_test.NoopProvider{}
 
-	handlers := orchestrator.LoadHandlers(data.Data, hawksupport.NewCredentialStore(data.key), addr, data.providers)
+	handlers := orchestrator.LoadHandlers(data.Data, data.providers)
 	data.server = websupport.Create(addr, handlers, websupport.Options{})
 	go websupport.Start(data.server, listener)
 	healthsupport.WaitForHealthy(data.server)
@@ -91,14 +112,16 @@ func (data *applicationsHandlerData) SetUp() {
 
 func (data *applicationsHandlerData) TearDown() {
 	websupport.Stop(data.server)
+	data.oauthHttpClient.CloseIdleConnections()
+	data.MockOauth.Shutdown()
 	_ = os.RemoveAll(data.testDir)
 }
 
 func TestListApps(t *testing.T) {
 	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
-		url := fmt.Sprintf("http://%s/applications", data.server.Addr)
+		reqUrl := fmt.Sprintf("http://%s/applications", data.server.Addr)
 
-		resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", data.key, url)
+		resp, _ := data.oauthHttpClient.Get(reqUrl)
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 		var apps orchestrator.Applications
@@ -116,8 +139,8 @@ func TestListApps(t *testing.T) {
 
 func TestListApps_withSort(t *testing.T) {
 	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
-		url := fmt.Sprintf("http://%s/applications", data.server.Addr)
-		resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", data.key, url)
+		reqUrl := fmt.Sprintf("http://%s/applications", data.server.Addr)
+		resp, _ := data.oauthHttpClient.Get(reqUrl)
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 		var apps orchestrator.Applications
@@ -137,9 +160,9 @@ func TestListApps_withSort(t *testing.T) {
 
 func TestShowApps(t *testing.T) {
 	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
-		url := fmt.Sprintf("http://%s/applications/%s", data.server.Addr, data.applicationTestId)
+		reqUrl := fmt.Sprintf("http://%s/applications/%s", data.server.Addr, data.applicationTestId)
 
-		resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", data.key, url)
+		resp, _ := data.oauthHttpClient.Get(reqUrl)
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 		var app orchestrator.Application
@@ -154,18 +177,18 @@ func TestShowApps(t *testing.T) {
 
 func TestShowApps_withUnknownID(t *testing.T) {
 	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
-		url := fmt.Sprintf("http://%s/applications/oops", data.server.Addr)
+		reqUrl := fmt.Sprintf("http://%s/applications/oops", data.server.Addr)
 
-		resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", data.key, url)
+		resp, _ := data.oauthHttpClient.Get(reqUrl)
 		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 	})
 }
 
 func TestGetPolicies(t *testing.T) {
 	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
-		url := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
+		reqUrl := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
 
-		resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", data.key, url)
+		resp, _ := data.oauthHttpClient.Get(reqUrl)
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 		var policies hexapolicy.Policies
@@ -189,9 +212,9 @@ func TestGetPolicies_withFailedRequest(t *testing.T) {
 		provider = data.providers["yetAnotherName"]
 		noop = provider.(*orchestrator_test.NoopProvider)
 		noop.SetTestErr(errors.New("oops"))
-		url := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
+		reqUrl := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
 
-		resp, _ := hawksupport.HawkGet(&http.Client{}, "anId", data.key, url)
+		resp, _ := data.oauthHttpClient.Get(reqUrl)
 		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 
 		// reset
@@ -212,9 +235,9 @@ func TestSetPolicies(t *testing.T) {
 		}
 		_ = json.NewEncoder(&buf).Encode(hexapolicy.Policies{Policies: []hexapolicy.PolicyInfo{policy}})
 
-		url := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
+		reqUrl := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
 
-		resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", data.key, url, bytes.NewReader(buf.Bytes()))
+		resp, _ := data.oauthHttpClient.Post(reqUrl, "application/json", bytes.NewReader(buf.Bytes()))
 		assert.Equal(t, http.StatusCreated, resp.StatusCode)
 	})
 }
@@ -229,9 +252,9 @@ func TestSetPolicies_withErroneousProvider(t *testing.T) {
 		policy := hexapolicy.PolicyInfo{Meta: hexapolicy.MetaInfo{Version: "v0.5"}, Actions: []hexapolicy.ActionInfo{{"anAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"anEmail", "anotherEmail"}}, Object: hexapolicy.ObjectInfo{ResourceID: "aResourceId"}}
 		_ = json.NewEncoder(&buf).Encode(policy)
 
-		url := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
+		reqUrl := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
 
-		resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", data.key, url, bytes.NewReader(buf.Bytes()))
+		resp, _ := data.oauthHttpClient.Post(reqUrl, "application/json", bytes.NewReader(buf.Bytes()))
 		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 
 		// reset after test
@@ -241,9 +264,9 @@ func TestSetPolicies_withErroneousProvider(t *testing.T) {
 
 func TestSetPolicies_withMissingJson(t *testing.T) {
 	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
-		url := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, "anId")
+		reqUrl := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, "anId")
 
-		resp, _ := hawksupport.HawkPost(&http.Client{}, "anId", data.key, url, nil)
+		resp, _ := data.oauthHttpClient.Post(reqUrl, "application/json", nil)
 		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 	})
 }

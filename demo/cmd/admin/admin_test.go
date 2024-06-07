@@ -13,7 +13,7 @@ import (
 
 func TestApp(t *testing.T) {
 	listener, _ := net.Listen("tcp", "localhost:0")
-	app := App(listener.Addr().String(), "http://localhost:8885/", "aKey")
+	app := App(listener.Addr().String(), "http://localhost:8885/")
 	go func() {
 		websupport.Start(app, listener)
 	}()

@@ -53,6 +53,8 @@ CGO_ENABLED=0 GOOS=linux go build -o ./hexaAdminUi  cmd/admin/admin.go
 
 CGO_ENABLED=0 GOOS=linux go build -o ./hexaOrchestrator cmd/orchestrator/orchestrator.go
 
+CGO_ENABLED=0 GOOS=linux go build -o ./hexaKeytool cmd/hexaKeytool/main.go
+
 echo "  building docker container image ($tag)..."
 
 docker build --tag $tag .
