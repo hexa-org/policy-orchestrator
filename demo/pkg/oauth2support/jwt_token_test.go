@@ -25,9 +25,10 @@ type testData struct {
 	MockAuth     *oidctestsupport.MockAuthServer
 	MockResource *oidctestsupport.MockResourceServer
 	cid          string
+	audience     string
 	secret       string
 	claims       map[string]interface{}
-	jwtHandler   *ResourceServerJwtHandler
+	jwtHandler   *ResourceJwtAuthorizer
 	config       *clientcredentials.Config
 }
 
@@ -37,6 +38,7 @@ func TestResourceServer(t *testing.T) {
 	s.cid = "testClientId"
 	s.secret = "testClientSecret"
 	s.claims = map[string]interface{}{"roles": []string{"a", "b"}}
+	s.audience = "orchestrator"
 	s.MockAuth = oidctestsupport.NewMockAuthServer(s.cid, s.secret, s.claims)
 	mockerAddr := s.MockAuth.Server.URL
 	mockUrlJwks, err := url.JoinPath(mockerAddr, "/jwks")
@@ -44,7 +46,9 @@ func TestResourceServer(t *testing.T) {
 	_ = os.Setenv(EnvOAuthJwksUrl, mockUrlJwks)
 	_ = os.Setenv(EnvJwtRealm, "TEST_REALM")
 	_ = os.Setenv(EnvJwtAuth, "true")
-	s.jwtHandler = NewResourceServerJwtHandler()
+	_ = os.Setenv(EnvJwtAudience, s.audience)
+	_ = os.Setenv(EnvJwtScope, "orchestrator")
+	s.jwtHandler = NewResourceJwtAuthorizer()
 	assert.NotNil(t, s.jwtHandler)
 	assert.Equal(t, mockUrlJwks, s.jwtHandler.jwksUrl)
 	assert.Equal(t, "TEST_REALM", s.jwtHandler.realm)
@@ -68,7 +72,7 @@ func TestResourceServer(t *testing.T) {
 	_ = os.Setenv(EnvOAuthClientId, s.cid)
 	_ = os.Setenv(EnvOAuthClientSecret, s.secret)
 	_ = os.Setenv(EnvOAuthTokenEndpoint, authUrl)
-	// os.Setenv(EnvOAuthClientScope, "orchestrator")
+	_ = os.Setenv(EnvOAuthClientScope, "orchestrator")
 
 	defer Cleanup(&s)
 
@@ -87,7 +91,7 @@ func Cleanup(s *testData) {
 }
 
 func (s *testData) Test1_JWT() {
-	tokenString, err := s.MockAuth.BuildJWT(60, nil)
+	tokenString, err := s.MockAuth.BuildJWT(60, nil, []string{"orchestrator"})
 	assert.NoError(s.T(), err, "Build JWT failed")
 
 	fmt.Println("Test Token: " + tokenString)
@@ -104,7 +108,7 @@ func (s *testData) Test1_JWT() {
 }
 
 func (s *testData) Test2_JWT_Errors() {
-	expireTokenString, _ := s.MockAuth.BuildJWT(1, nil)
+	expireTokenString, _ := s.MockAuth.BuildJWT(1, nil, []string{"orchestrator"})
 	fmt.Println("Test wrong type")
 	tokenString := "Basic " + base64.RawURLEncoding.EncodeToString([]byte("testClientId"))
 	req := httptest.NewRequest("GET", "/hello", nil)
@@ -120,7 +124,7 @@ func (s *testData) Test2_JWT_Errors() {
 	assert.Equal(s.T(), "Bearer realm=\"TEST_REALM\", error=\"invalid_token\", error_description=\"Bearer token required\"", wwwauthheader)
 
 	fmt.Println("Testing missing prefix")
-	tokenString, _ = s.MockAuth.BuildJWT(60, nil)
+	tokenString, _ = s.MockAuth.BuildJWT(60, nil, []string{"orchestrator"})
 	req2 := httptest.NewRequest("GET", "/hello", nil)
 	req2.Header.Set("Authorization", tokenString)
 	resp2 := httptest.NewRecorder()
@@ -146,7 +150,7 @@ func (s *testData) Test2_JWT_Errors() {
 
 	// JWT Parse error
 	fmt.Println("Invalid JWT error")
-	tokenString, _ = s.MockAuth.BuildJWT(60, nil)
+	tokenString, _ = s.MockAuth.BuildJWT(60, nil, []string{"orchestrator"})
 	req4 := httptest.NewRequest("GET", "/hello", nil)
 	req4.Header.Set("Authorization", "Bearer Bearer "+tokenString)
 	resp4 := httptest.NewRecorder()
@@ -172,6 +176,31 @@ func (s *testData) Test2_JWT_Errors() {
 	wwwauthheader = resp5.Header().Get("WWW-Authenticate")
 	assert.Equal(s.T(), "Bearer realm=\"TEST_REALM\", error=\"invalid_token\", error_description=\"token has invalid claims: token is expired\"", wwwauthheader)
 
+	// testing invalid audience
+	fmt.Println("Invalid audience error")
+	tokenString, _ = s.MockAuth.BuildJWT(60, nil, []string{"wrongwrongwrong"})
+	req6 := httptest.NewRequest("GET", "/hello", nil)
+	req6.Header.Set("Authorization", "Bearer "+tokenString)
+	resp6 := httptest.NewRecorder()
+	token, valid = s.jwtHandler.authenticate(resp6, req6)
+	assert.False(s.T(), valid)
+	assert.Nil(s.T(), token)
+	assert.Equal(s.T(), http.StatusUnauthorized, resp6.Code)
+	wwwauthheader = resp6.Header().Get("WWW-Authenticate")
+	assert.Equal(s.T(), "Bearer realm=\"TEST_REALM\", error=\"invalid_token\", error_description=\"invalid audience\"", wwwauthheader)
+
+	// testing invalid scope
+	fmt.Println("Invalid scope error")
+	tokenString, _ = s.MockAuth.BuildJWT(60, []string{"badScope"}, []string{"orchestrator"})
+	req7 := httptest.NewRequest("GET", "/hello", nil)
+	req7.Header.Set("Authorization", "Bearer "+tokenString)
+	resp7 := httptest.NewRecorder()
+	token, valid = s.jwtHandler.authenticate(resp7, req7)
+	assert.False(s.T(), valid)
+	assert.Nil(s.T(), token)
+	assert.Equal(s.T(), http.StatusForbidden, resp7.Code)
+	wwwauthheader = resp7.Header().Get("WWW-Authenticate")
+	assert.Equal(s.T(), "Bearer realm=\"TEST_REALM\", error=\"insufficient_scope\", error_description=\"requires scope=orchestrator\"", wwwauthheader)
 }
 
 func (s *testData) Test3_JwtHandlerToken() {

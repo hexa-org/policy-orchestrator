@@ -211,10 +211,26 @@ func errorOrBadResponse(response *http.Response, status int, err error) error {
 		return err
 	}
 	if response.StatusCode != status {
+		err := checkTokenError(response)
+		if err != nil {
+			log.Println(err.Error())
+			return err
+		}
 		all, _ := io.ReadAll(response.Body)
 		message := string(all)
 		log.Println(message)
 		return errors.New(message)
 	}
 	return err
+}
+
+func checkTokenError(response *http.Response) error {
+	if response.StatusCode == http.StatusUnauthorized || response.StatusCode == http.StatusForbidden {
+		msg := response.Header.Get("WWW-Authenticate")
+		if msg == "" {
+			return errors.New(http.StatusText(response.StatusCode))
+		}
+		return errors.New(msg)
+	}
+	return nil
 }

@@ -15,23 +15,28 @@ import (
 )
 
 const (
-	EnvOAuthJwksUrl       string = "HEXA_TOKEN_JWKSURL"
-	EnvJwtAuth            string = "HEXA_JWT_AUTH_ENABLE"
-	EnvJwtRealm           string = "HEXA_JWT_REALM"
+	EnvOAuthJwksUrl string = "HEXA_TOKEN_JWKSURL"
+	EnvJwtAuth      string = "HEXA_JWT_AUTH_ENABLE"
+	EnvJwtRealm     string = "HEXA_JWT_REALM"
+	EnvJwtAudience  string = "HEXA_JWT_AUDIENCE"
+	EnvJwtScope     string = "HEXA_JWT_SCOPE"
+
 	EnvOAuthClientId      string = "HEXA_OAUTH_CLIENT_ID"
 	EnvOAuthClientSecret  string = "HEXA_OAUTH_CLIENT_SECRET"
 	EnvOAuthClientScope   string = "HEXA_OAUTH_CLIENT_SCOPE"
 	EnvOAuthTokenEndpoint string = "HEXA_OAUTH_TOKEN_ENDPOINT"
 )
 
-type ResourceServerJwtHandler struct {
+type ResourceJwtAuthorizer struct {
 	jwksUrl string
 	realm   string
 	enable  bool
 	Key     keyfunc.Keyfunc
+	Aud     string
+	Scope   string
 }
 
-func NewResourceServerJwtHandler() *ResourceServerJwtHandler {
+func NewResourceJwtAuthorizer() *ResourceJwtAuthorizer {
 	enable := os.Getenv(EnvJwtAuth)
 	if enable == "true" {
 		url := os.Getenv(EnvOAuthJwksUrl)
@@ -45,20 +50,35 @@ func NewResourceServerJwtHandler() *ResourceServerJwtHandler {
 				log.Println(fmt.Sprintf("Warning: realm environment value not set (%s)", EnvJwtRealm))
 				realm = "UNDEFINED"
 			}
-			return &ResourceServerJwtHandler{
+			aud := os.Getenv(EnvJwtAudience)
+			if aud == "" {
+				log.Println(fmt.Sprintf("Warning: audience environment value not set (%s)", EnvJwtAudience))
+				log.Println("Defaulting to aud=orchestrator")
+				aud = "orchestrator"
+			}
+			scope := os.Getenv(EnvJwtScope)
+			if scope == "" {
+				log.Println(fmt.Sprintf("Warning: scope environment value not set (%s)", EnvOAuthClientScope))
+				log.Println("Defaulting to scope=orchestrator")
+				scope = "orchestrator"
+			}
+			return &ResourceJwtAuthorizer{
 				jwksUrl: url,
 				enable:  true,
 				Key:     jwkKeyfunc,
 				realm:   realm,
+				Aud:     aud,
+				Scope:   scope,
 			}
 		}
 		log.Fatalf("Configuration parameter %s not set", EnvOAuthJwksUrl)
+
 	}
 	log.Println("JWT Authentication disabled.")
-	return &ResourceServerJwtHandler{enable: false}
+	return &ResourceJwtAuthorizer{enable: false}
 }
 
-func JwtAuthenticationHandler(next http.HandlerFunc, s *ResourceServerJwtHandler) http.HandlerFunc {
+func JwtAuthenticationHandler(next http.HandlerFunc, s *ResourceJwtAuthorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if s.enable {
 			if r.Header.Get("Authorization") == "" {
@@ -84,7 +104,12 @@ func JwtAuthenticationHandler(next http.HandlerFunc, s *ResourceServerJwtHandler
 	}
 }
 
-func (s *ResourceServerJwtHandler) authenticate(w http.ResponseWriter, r *http.Request) (*jwt.Token, bool) {
+type AccessTokenInfo struct {
+	*jwt.RegisteredClaims
+	Scope string `json:"scope"`
+}
+
+func (s *ResourceJwtAuthorizer) authenticate(w http.ResponseWriter, r *http.Request) (*jwt.Token, bool) {
 	authorization := r.Header.Get("Authorization")
 	if authorization == "" {
 		w.Header().Set("www-authenticate", fmt.Sprintf("Bearer realm=\"%s\"", s.realm))
@@ -102,7 +127,8 @@ func (s *ResourceServerJwtHandler) authenticate(w http.ResponseWriter, r *http.R
 
 	if strings.EqualFold(parts[0], "bearer") {
 		tokenString := strings.TrimSpace(parts[1])
-		token, err := jwt.Parse(tokenString, s.Key.Keyfunc)
+
+		token, err := jwt.ParseWithClaims(tokenString, &AccessTokenInfo{}, s.Key.Keyfunc)
 
 		if err != nil {
 			headerMsg := fmt.Sprintf("Bearer realm=\"%s\", error=\"invalid_token\", error_description=\"%s\"", s.realm, err.Error())
@@ -112,6 +138,46 @@ func (s *ResourceServerJwtHandler) authenticate(w http.ResponseWriter, r *http.R
 			return nil, false
 		}
 
+		// Check Audience
+		audMatch := false
+		var audStrings []string
+		audStrings, err = token.Claims.GetAudience()
+		if err != nil {
+			log.Printf("Error parsing audience from token claims: %s", err.Error())
+		}
+		for _, aud := range audStrings {
+			if strings.EqualFold(aud, s.Aud) {
+				audMatch = true
+			}
+		}
+		if !audMatch {
+			headerMsg := fmt.Sprintf("Bearer realm=\"%s\", error=\"invalid_token\", error_description=\"invalid audience\"", s.realm)
+			w.Header().Set("www-authenticate", headerMsg)
+			w.WriteHeader(http.StatusUnauthorized)
+			// log.Printf("Authorization invalid: [%s]\n", err.Error())
+			return nil, false
+		}
+
+		scopeMatch := false
+		var scopes []string
+		atToken := token.Claims.(*AccessTokenInfo)
+		scopeString := atToken.Scope
+		scopes = strings.Split(scopeString, " ")
+		if s.Scope != "" {
+			for _, scope := range scopes {
+				if strings.EqualFold(s.Scope, scope) {
+					scopeMatch = true
+				}
+			}
+		}
+
+		if !scopeMatch {
+			headerMsg := fmt.Sprintf("Bearer realm=\"%s\", error=\"insufficient_scope\", error_description=\"requires scope=%s\"", s.realm, s.Scope)
+			w.Header().Set("www-authenticate", headerMsg)
+			w.WriteHeader(http.StatusForbidden)
+			// log.Printf("Authorization invalid: [%s]\n", err.Error())
+			return nil, false
+		}
 		return token, true
 	}
 

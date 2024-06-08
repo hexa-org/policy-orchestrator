@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/hexa-org/policy-mapper/api/policyprovider"
 	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
@@ -41,9 +42,9 @@ type applicationsHandlerData struct {
 }
 
 func (data *applicationsHandlerData) SetUp() {
-
 	// The Mock Authorization Server is needed to issue tokens, and provide a JWKS endpoint for validation
 	data.MockOauth = oidctestsupport.NewMockAuthServer("clientId", "secret", map[string]interface{}{})
+
 	mockUrlJwks, _ := url.JoinPath(data.MockOauth.Server.URL, "/jwks")
 	// Set Env for Jwt Token Validation by Orchestrator handlers
 	_ = os.Setenv(oauth2support.EnvOAuthJwksUrl, mockUrlJwks)
@@ -111,9 +112,13 @@ func (data *applicationsHandlerData) SetUp() {
 }
 
 func (data *applicationsHandlerData) TearDown() {
-	websupport.Stop(data.server)
 	data.oauthHttpClient.CloseIdleConnections()
 	data.MockOauth.Shutdown()
+	websupport.Stop(data.server)
+	data.testDir = ""
+	data.providers = nil
+	data.server = nil
+	data.gateway = nil
 	_ = os.RemoveAll(data.testDir)
 }
 
@@ -244,6 +249,7 @@ func TestSetPolicies(t *testing.T) {
 
 func TestSetPolicies_withErroneousProvider(t *testing.T) {
 	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
+		time.Sleep(time.Millisecond * 100)
 		provider := data.providers["aName"]
 		noop := provider.(*orchestrator_test.NoopProvider)
 		noop.SetTestErr(errors.New("oops"))
