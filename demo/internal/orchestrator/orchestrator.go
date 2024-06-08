@@ -20,7 +20,7 @@ func LoadHandlers(configHandler *dataConfigGateway.ConfigData, cacheProviders ma
 	applicationsHandler := ApplicationsHandler{applicationsGateway, integrationsGateway, applicationsService}
 	integrationsHandler := IntegrationsHandler{integrationsGateway}
 	orchestrationHandler := OrchestrationHandler{applicationsService: applicationsService}
-	jwtHandler := oauth2support.NewResourceServerJwtHandler()
+	jwtHandler := oauth2support.NewResourceJwtAuthorizer()
 
 	return func(router *mux.Router) {
 		router.HandleFunc("/applications", oauth2support.JwtAuthenticationHandler(applicationsHandler.List, jwtHandler)).Methods("GET")

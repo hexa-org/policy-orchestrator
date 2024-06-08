@@ -341,7 +341,7 @@
         "backchannel.logout.revoke.offline.tokens": "false"
       },
       "authenticationFlowBindingOverrides": {},
-      "fullScopeAllowed": true,
+      "fullScopeAllowed": false,
       "nodeReRegistrationTimeout": -1,
       "protocolMappers": [
         {
@@ -392,16 +392,17 @@
       ],
       "defaultClientScopes": [
         "web-origins",
-        "acr",
-        "roles",
-        "profile",
-        "email"
+        "orchestrator",
+        "roles"
       ],
       "optionalClientScopes": [
+        "acr",
         "address",
         "phone",
         "offline_access",
-        "microprofile-jwt"
+        "profile",
+        "microprofile-jwt",
+        "email"
       ]
     },
     {
@@ -731,6 +732,7 @@
       "attributes": {
         "include.in.token.scope": "false",
         "display.on.consent.screen": "true",
+        "gui.order": "",
         "consent.screen.text": "${rolesScopeConsentText}"
       },
       "protocolMappers": [
@@ -1022,6 +1024,33 @@
       ]
     },
     {
+      "id": "38a79a14-15b1-49ce-ab08-e5bd82492068",
+      "name": "orchestrator",
+      "description": "Access to Orchestrator API",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "gui.order": "",
+        "consent.screen.text": ""
+      },
+      "protocolMappers": [
+        {
+          "id": "9ad832a8-16cb-4b98-a98e-2ad5592fdf67",
+          "name": "Orchestrator Service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true",
+            "included.custom.audience": "http://hexa-orchestrator:8885"
+          }
+        }
+      ]
+    },
+    {
       "id": "ba98fa67-4a1f-4f7c-8023-22f1494b466e",
       "name": "web-origins",
       "description": "OpenID Connect scope for add allowed web origins to the access token",
@@ -1047,19 +1076,10 @@
     }
   ],
   "defaultDefaultClientScopes": [
-    "role_list",
-    "profile",
-    "email",
-    "roles",
     "web-origins",
-    "acr"
+    "orchestrator"
   ],
-  "defaultOptionalClientScopes": [
-    "offline_access",
-    "address",
-    "phone",
-    "microprofile-jwt"
-  ],
+  "defaultOptionalClientScopes": [],
   "browserSecurityHeaders": {
     "contentSecurityPolicyReportOnly": "",
     "xContentTypeOptions": "nosniff",

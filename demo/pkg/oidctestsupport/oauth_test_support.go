@@ -119,7 +119,7 @@ func (as *MockAuthServer) handleToken(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 		log.Println(fmt.Sprintf("Issuing token/client_credentials response to: %s, %s", username, r.RemoteAddr))
-		token, err = as.BuildJWT(60, scopes)
+		token, err = as.BuildJWT(60, scopes, []string{"orchestrator"})
 
 	}
 	if r.FormValue("grant_type") == "authorize" {
@@ -128,14 +128,14 @@ func (as *MockAuthServer) handleToken(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 		log.Println(fmt.Sprintf("Issuing token/authorize response to: %s", r.RemoteAddr))
-		token, err = as.BuildJWT(2, nil)
+		token, err = as.BuildJWT(2, nil, []string{"orchestrator"})
 	}
 	if err != nil {
 		http.Error(rw, fmt.Sprintf("unable to build token: %s", err), http.StatusInternalServerError)
 		return
 	}
 
-	refresh, err := as.BuildJWT(60, []string{"refresh"})
+	refresh, err := as.BuildJWT(60, []string{"refresh"}, []string{"orchestrator"})
 
 	resp := struct {
 		AccessToken  string `json:"access_token,omitempty"`
@@ -193,7 +193,7 @@ type AccessTokenData struct {
 	Scope string `json:"scope"`
 }
 
-func (as *MockAuthServer) BuildJWT(expireSecs int64, scopes []string) (string, error) {
+func (as *MockAuthServer) BuildJWT(expireSecs int64, scopes []string, audience []string) (string, error) {
 	issuedAt := time.Now()
 	if expireSecs == 0 {
 		expireSecs = 60
@@ -204,12 +204,14 @@ func (as *MockAuthServer) BuildJWT(expireSecs int64, scopes []string) (string, e
 	var scopeString string
 	if scopes != nil {
 		scopeString = strings.Join(scopes, " ")
+	} else {
+		scopeString = "orchestrator"
 	}
 
 	claims := AccessTokenData{
 		&jwt.RegisteredClaims{
 			Issuer:    as.Issuer,
-			Audience:  []string{as.clientID},
+			Audience:  audience,
 			Subject:   as.clientID,
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(issuedAt),

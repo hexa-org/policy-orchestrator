@@ -14,6 +14,8 @@ services:
       HEXA_JWT_REALM: Hexa-Orchestrator-Realm
       HEXA_TOKEN_JWKSURL: http://keycloak:8080/realms/Hexa-Orchestrator-Realm/protocol/openid-connect/certs
       HEXA_JWT_AUTH_ENABLE: true
+      HEXA_JWT_AUDIENCE: http://hexa-orchestrator:8885
+      HEXA_JWT_SCOPE: orchestrator
       ORCHESTRATOR_CONFIG_FILE: /app/.hexa/config.json
     external_links:
       - hexa-opaBundle-server
