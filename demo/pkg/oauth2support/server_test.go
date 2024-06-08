@@ -199,14 +199,17 @@ func (s *testData) Test3_JwtHandlerToken() {
 	assert.Equal(s.T(), "testClientId", sub)
 	assert.True(s.T(), tokenParsed.Valid)
 
-	claims := tokenParsed.Claims
-	switch v := claims.(type) {
-	case jwt.MapClaims:
-		scope := v["scope"]
-		assert.Equal(s.T(), "orchestrator", scope)
-	default:
-		assert.Fail(s.T(), "unexpected claim type")
-	}
+	/* For now we are not using scopes
+	   claims := tokenParsed.Claims
+	   switch v := claims.(type) {
+	   case jwt.MapClaims:
+	   	scope := v["scope"]
+	   	assert.Equal(s.T(), "orchestrator", scope)
+	   default:
+	   	assert.Fail(s.T(), "unexpected claim type")
+	   }
+
+	*/
 
 	// check the refresh token
 	refresh := token.RefreshToken
