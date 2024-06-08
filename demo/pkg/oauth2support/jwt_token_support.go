@@ -147,18 +147,14 @@ func NewJwtClientHandler() JwtClientHandler {
 	if tokenUrl == "" {
 		log.Println(fmt.Sprintf("Error: Token endpoint (%s) not declared", EnvOAuthTokenEndpoint))
 	}
-	scopeString := os.Getenv(EnvOAuthClientScope)
-	if scopeString == "" {
-		scopeString = "orchestrator" // default to orchestrator since this is typically used for the Orchestrator service
-	}
-	scopes := strings.Split(scopeString, " ")
+
 	config := &clientcredentials.Config{
 		ClientID:     clientId,
 		ClientSecret: secret,
-		Scopes:       scopes,
 		TokenURL:     tokenUrl,
 		AuthStyle:    oauth2.AuthStyle(oauth2.AuthStyleAutoDetect),
 	}
+
 	return NewJwtClientHandlerWithConfig(config)
 }
 

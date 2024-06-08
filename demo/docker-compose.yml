@@ -7,9 +7,13 @@ services:
     ports:
       - "8885:8885"
     command: /app/hexaOrchestrator
+    networks:
+      - hexa_network
     environment:
       ORCHESTRATOR_HOSTPORT: hexa-orchestrator:8885
-      ORCHESTRATOR_KEY: 0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb
+      HEXA_JWT_REALM: Hexa-Orchestrator-Realm
+      HEXA_TOKEN_JWKSURL: http://keycloak:8080/realms/Hexa-Orchestrator-Realm/protocol/openid-connect/certs
+      HEXA_JWT_AUTH_ENABLE: true
       ORCHESTRATOR_CONFIG_FILE: /app/.hexa/config.json
     external_links:
       - hexa-opaBundle-server
@@ -24,9 +28,16 @@ services:
     ports:
       - "8884:8884"
     command: /app/hexaAdminUi
+    networks:
+      - hexa_network
     environment:
       ORCHESTRATOR_URL: http://hexa-orchestrator:8885
-      ORCHESTRATOR_KEY: 0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb
+      HEXA_JWT_REALM: Hexa-Orchestrator-Realm
+      HEXA_JWT_AUTH_ENABLE: true
+      HEXA_OAUTH_CLIENT_ID: hexaclient
+      HEXA_OAUTH_CLIENT_SECRET: "uuXVzfbqH635Ob0oTON1uboONUqasmTt"
+      HEXA_OAUTH_TOKEN_ENDPOINT: http://keycloak:8080/realms/Hexa-Orchestrator-Realm/protocol/openid-connect/token
+
     depends_on:
       - hexa-orchestrator
 
@@ -39,6 +50,8 @@ services:
     command: /app/hexaIndustriesDemo
     depends_on:
       - hexa-opa-agent
+    networks:
+      - hexa_network
     environment:
       PORT: 8886
       OPA_SERVER_URL: http://hexa-opa-server:8887/v1/data/hexaPolicy
@@ -51,6 +64,8 @@ services:
     ports:
       - "8889:8889"
     command: /app/hexaBundleServer
+    depends_on:
+      - keycloak
     environment:
       PORT: 8889
       TKN_DIRECTORY: "/home/certs"
@@ -60,6 +75,8 @@ services:
       BUNDLE_DIR: "/home/resources/bundles"
       SERVER_DNS_NAME: "hexa-opaBundle-server"
       TKN_MODE: "ANON"
+    networks:
+      - hexa_network
     volumes:
       - "./deployments/hexaBundleServer/resources:/home/resources"
       - "./.certs:/home/certs"
@@ -73,6 +90,7 @@ services:
       - "8887"
     depends_on:
       - hexa-opaBundle-server
+      - keycloak
     command: /app/hexaOpa run --server --addr :8887 --log-level debug -c /home/config/config.yaml
     environment:
       # These environment values are referenced in ./deployments/hexaOpaServer/config/config.yaml
@@ -83,6 +101,8 @@ services:
       - "./deployments/hexaOpaServer/config:/home/config:ro"
       - "./deployments/hexaOpaServer/.opa:/app/.opa"
       - "./.certs:/home/certs:ro"
+    networks:
+      - hexa_network
 
   postgres:
     image: postgres:alpine
@@ -97,7 +117,8 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:23.0.6
-    command: start
+    container_name: keycloak
+    command: start --import-realm
     environment:
       KC_HOSTNAME: localhost
       KC_HOSTNAME_PORT: 8080
@@ -118,6 +139,9 @@ services:
       - postgres
     networks:
       - keycloak_network
+      - hexa_network
+    volumes:
+      - "./deployments/keycloakrealm:/opt/keycloak/data/import"
 
 volumes:
   postgres_data:
@@ -125,4 +149,6 @@ volumes:
 
 networks:
   keycloak_network:
+    driver: bridge
+  hexa_network:
     driver: bridge
