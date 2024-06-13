@@ -30,9 +30,9 @@ ADD --chmod=ug+x ./hexaOrchestrator ./hexaOrchestrator
 
 EXPOSE 8885:8885
 
-ENV ORCHESTRATOR_HOSTPORT=hexa-orchestrator:8885
-ENV ORCHESTRATOR_KEY=0861f51ab66590798406be5b184c71b637bfc907c83f27d461e4956bffebf6cb
+ENV ORCHESTRATOR_HOSTPORT: hexa-orchestrator:8885
 ENV ORCHESTRATOR_CONFIG_FILE: /app/config/config.json
+ENV HEXA_CERT_DIRECTORY: "/home/certs"
 
 CMD ["/app/hexaOrchestrator"]
 # CMD "./hexaOpa help"

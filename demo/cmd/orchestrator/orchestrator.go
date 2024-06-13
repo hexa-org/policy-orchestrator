@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/hexa-org/policy-opa/pkg/keysupport"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/dataConfigGateway"
 
@@ -60,10 +61,14 @@ func newApp(addr string) (*http.Server, net.Listener) {
 	listener, _ := net.Listen("tcp", addr)
 	app := App(key, listener.Addr().String(), hostPort)
 
-	if certFile := os.Getenv("SERVER_CERT_PATH"); certFile != "" {
-		keyFile := os.Getenv("SERVER_KEY_PATH")
-		websupport.WithTransportLayerSecurity(certFile, keyFile, app)
+	keyConfig := keysupport.GetKeyConfig()
+	err := keyConfig.InitializeKeys()
+	if err != nil {
+		log.Error("Error initializing keys: " + err.Error())
+		panic(err)
 	}
+
+	websupport.WithTransportLayerSecurity(keyConfig.ServerCertPath, keyConfig.ServerKeyPath, app)
 
 	return app, listener
 }

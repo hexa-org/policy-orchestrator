@@ -38,6 +38,7 @@ func NewOrchestratorClient(client HTTPClient, url string) Client {
 		jwtHandler = oauth2support.NewJwtClientHandler()
 		client = jwtHandler.GetHttpClient()
 	}
+
 	return &orchestratorClient{client, jwtHandler, url}
 }
 
