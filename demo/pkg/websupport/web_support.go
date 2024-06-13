@@ -3,15 +3,20 @@ package websupport
 import (
 	"context"
 	"crypto/tls"
-	"log"
+
 	"net"
 	"net/http"
 	"os"
+	"strings"
+
+	log "golang.org/x/exp/slog"
 
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/metricssupport"
 )
+
+const EnvTlsEnabled string = "HEXA_TLS_ENABLED"
 
 type Options struct {
 	HealthChecks []healthsupport.HealthCheck
@@ -54,48 +59,59 @@ func Create(addr string, handlers func(x *mux.Router), options Options) *http.Se
 		Handler: router,
 	}
 	for _, p := range Paths(router) {
-		log.Println("Registered route", p.Methods, p.URI)
+		log.Debug("Registered route", p.Methods, p.URI)
 	}
 	return &server
 }
 
 func Start(server *http.Server, l net.Listener) {
 	if server.TLSConfig != nil {
-		log.Println("Starting the server with tls support", server.Addr)
+		log.Info("Starting the server with tls support", "address", server.Addr)
 		err := server.ServeTLS(l, "", "")
 		if err != nil {
-			log.Println("error starting the server:", err.Error())
+			log.Error("error starting the server:", err.Error())
 			return
 		}
 	}
 
-	log.Println("Starting the server", server.Addr)
+	log.Info("Starting the server", "address", server.Addr)
 	err := server.Serve(l)
 	if err != nil {
-		log.Println("error starting the server:", err.Error())
+		log.Error("error starting the server:", err.Error())
 		return
 	}
 }
 
 func Stop(server *http.Server) {
-	log.Printf("Stopping the server.")
+	log.Info("Stopping the server.")
 	_ = server.Shutdown(context.Background())
 }
 
+func IsTlsEnabled() bool {
+	mode := os.Getenv(EnvTlsEnabled)
+	if mode != "" && (strings.EqualFold(mode[0:1], "y") || strings.EqualFold(mode[0:1], "t")) {
+		return true
+	}
+	return false
+}
+
 func WithTransportLayerSecurity(certFile, keyFile string, app *http.Server) {
-	cert, certErr := os.ReadFile(certFile)
-	if certErr != nil {
-		panic(certErr.Error())
-	}
-	key, keyErr := os.ReadFile(keyFile)
-	if keyErr != nil {
-		panic(certErr.Error())
-	}
-	pair, pairErr := tls.X509KeyPair(cert, key)
-	if pairErr != nil {
-		panic(pairErr.Error())
-	}
-	app.TLSConfig = &tls.Config{
-		Certificates: []tls.Certificate{pair},
+	if IsTlsEnabled() {
+		cert, certErr := os.ReadFile(certFile)
+		if certErr != nil {
+			panic(certErr.Error())
+		}
+		key, keyErr := os.ReadFile(keyFile)
+		if keyErr != nil {
+			panic(certErr.Error())
+		}
+		pair, pairErr := tls.X509KeyPair(cert, key)
+		if pairErr != nil {
+			panic(pairErr.Error())
+		}
+		app.TLSConfig = &tls.Config{
+			Certificates: []tls.Certificate{pair},
+		}
+		return
 	}
 }

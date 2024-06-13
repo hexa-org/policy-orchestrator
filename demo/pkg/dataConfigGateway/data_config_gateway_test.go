@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 	"testing"
 
 	"github.com/hexa-org/policy-mapper/sdk"
@@ -21,6 +22,15 @@ type testSuite struct {
 	ConfigPath       string
 	test1Id          string
 	testApp          ApplicationRecord
+	mu               sync.Mutex
+}
+
+func (suite *testSuite) SetupTest() {
+	suite.mu.Lock()
+}
+
+func (suite *testSuite) TearDownTest() {
+	suite.mu.Unlock()
 }
 
 func TestConfigGateway(t *testing.T) {

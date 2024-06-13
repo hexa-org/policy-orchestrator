@@ -45,6 +45,7 @@ while getopts ${optString} OPTION; do
   esac
 done
 
+echo ""
 
 if [ "$test" = 'Y' ];then
     echo "* Building and running tests ..."
@@ -54,7 +55,7 @@ if [ "$test" = 'Y' ];then
     echo ""
 fi
 
-echo "  building go linux executables for docker ..."
+echo "* building go linux executables for docker ..."
 
 CGO_ENABLED=0 GOOS=linux go build -o ./hexaAdminUi  cmd/admin/admin.go
 CGO_ENABLED=0 GOOS=linux go build -o ./hexaOrchestrator cmd/orchestrator/orchestrator.go
