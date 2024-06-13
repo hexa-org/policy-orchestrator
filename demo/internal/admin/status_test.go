@@ -36,6 +36,7 @@ func (data *StatusData) SetUp() {
 
 func (data *StatusData) TearDown() {
 	websupport.Stop(data.server)
+	data.server = nil
 }
 
 func TestStatusHandler(t *testing.T) {

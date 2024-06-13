@@ -18,6 +18,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/hexa-org/policy-orchestrator/demo/pkg/healthsupport"
+
 	// "github.com/hexa-org/policy-orchestrator/demo/pkg/oauth2support"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/websupport"
 )
@@ -53,9 +55,13 @@ func NewMockAuthServer(clientID, secret string, claims map[string]interface{}) *
 	serveMux.HandleFunc("/authorize", authServer.handleAuthorize)
 	serveMux.HandleFunc("/token", authServer.handleToken)
 	serveMux.HandleFunc("/jwks", authServer.handleJWKS)
+	serveMux.HandleFunc("/health", healthsupport.HealthHandlerFunction)
 
 	authServer.Server = httptest.NewServer(serveMux)
 	authServer.Issuer = authServer.Server.URL
+
+	healthUrl := authServer.Server.URL + "/health"
+	healthsupport.WaitForHealthyWithClient(authServer.Server.Config, http.DefaultClient, healthUrl)
 	return authServer
 }
 

@@ -128,7 +128,13 @@ func (data *orchestrationHandlerData) TearDown() {
 	websupport.Stop(data.server)
 	data.oauthHttpClient.CloseIdleConnections()
 	data.MockOauth.Shutdown()
+	data.MockOauth = nil
+	data.server = nil
+	data.Data = nil
+	data.appGateway = nil
+	data.oauthHttpClient = nil
 	_ = os.RemoveAll(data.testDir)
+	data.testDir = ""
 }
 
 func TestOrchestration(t *testing.T) {

@@ -12,9 +12,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"sync"
 	"testing"
-	"time"
 
 	"github.com/hexa-org/policy-mapper/api/policyprovider"
 	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
@@ -40,15 +38,17 @@ type applicationsHandlerData struct {
 	applicationTestId string
 	MockOauth         *oidctestsupport.MockAuthServer
 	oauthHttpClient   *http.Client
-	mu                sync.Mutex
 }
 
 func (data *applicationsHandlerData) SetUp() {
-	data.mu.Lock()
+	_ = os.Setenv(sdk.EnvTestProvider, sdk.ProviderTypeMock)
+	tempDir, _ := os.MkdirTemp("", "hexa-orchestrator-*")
+	data.testDir = tempDir
 	// The Mock Authorization Server is needed to issue tokens, and provide a JWKS endpoint for validation
 	data.MockOauth = oidctestsupport.NewMockAuthServer("clientId", "secret", map[string]interface{}{})
 
 	mockUrlJwks, _ := url.JoinPath(data.MockOauth.Server.URL, "/jwks")
+	tokenUrl, _ := url.JoinPath(data.MockOauth.Server.URL, "/token")
 	// Set Env for Jwt Token Validation by Orchestrator handlers
 	_ = os.Setenv(oauth2support.EnvOAuthJwksUrl, mockUrlJwks)
 	_ = os.Setenv(oauth2support.EnvJwtRealm, "TEST_REALM")
@@ -57,44 +57,26 @@ func (data *applicationsHandlerData) SetUp() {
 	// Set Env for Orchestrator Client
 	_ = os.Setenv(oauth2support.EnvOAuthClientId, "clientId")
 	_ = os.Setenv(oauth2support.EnvOAuthClientSecret, "secret")
-	_ = os.Setenv(oauth2support.EnvOAuthTokenEndpoint, fmt.Sprintf("%s/token", data.MockOauth.Server.URL))
-
-	tempDir, _ := os.MkdirTemp("", "hexa-orchestrator-*")
+	_ = os.Setenv(oauth2support.EnvOAuthTokenEndpoint, tokenUrl)
 
 	jwtClientHandler := oauth2support.NewJwtClientHandler()
 	data.oauthHttpClient = jwtClientHandler.GetHttpClient()
 
-	data.testDir = tempDir
-
 	testConfigPath := filepath.Join(data.testDir, ".hexa", "config.json")
-	_ = os.Setenv(sdk.EnvTestProvider, sdk.ProviderTypeMock)
-	// _ = os.Unsetenv(sdk.EnvTestProvider)
 
 	_ = os.Setenv(dataConfigGateway.EnvIntegrationConfigFile, testConfigPath)
 
 	data.Data, _ = dataConfigGateway.NewIntegrationConfigData()
 	data.gateway = data.Data.GetApplicationDataGateway()
-	/*
-	   	data.db, _ = databasesupport.Open("postgres://orchestrator:orchestrator@localhost:5432/orchestrator_test?sslmode=disable")
-	   	_, _ = data.db.Exec(`
-	   delete from applications;
-	   delete from integrations;
-
-	   insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'aName', 'noop', 'aKey');
-	   insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff210', '50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'anObjectId', 'aName', 'aDescription', 'aService');
-	   insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff211', '50e00619-9f15-4e85-a7e9-f26d87ea12e7', 'anotherObjectId', 'anotherName', 'anotherDescription', 'anotherService');
-
-	   insert into integrations (id, name, provider, key) values ('50e00619-9f15-4e85-a7e9-f26d87ea12e9', 'yetAnotherName', 'zone_cloud', 'aKey');
-	   insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff212', '50e00619-9f15-4e85-a7e9-f26d87ea12e9', 'yetAnotherObjectId', 'yetAnotherName1', 'yetAnotherDescription', 'Kubernetes');
-	   insert into applications (id, integration_id, object_id, name, description, service) values ('6409776a-367a-483a-a194-5ccf9c4ff213', '50e00619-9f15-4e85-a7e9-f26d87ea12e9', 'yetAnotherObjectId2', 'yetAnotherName2', 'yetAnotherDescription2', 'Container Kubernetes');
-	   `)
-	*/
 
 	_, err := data.Data.Create("aName", "noop", []byte("aKey"))
 	if err != nil {
 		panic(err)
 	}
 	_, err = data.Data.Create("yetAnotherName", "zone_cloud", []byte("aKey"))
+	if err != nil {
+		panic(err)
+	}
 
 	listener, _ := net.Listen("tcp", "localhost:0")
 	addr := listener.Addr().String()
@@ -118,12 +100,20 @@ func (data *applicationsHandlerData) TearDown() {
 	data.oauthHttpClient.CloseIdleConnections()
 	data.MockOauth.Shutdown()
 	websupport.Stop(data.server)
-	data.testDir = ""
+
+	data.key = ""
+	data.Data = nil
 	data.providers = nil
 	data.server = nil
 	data.gateway = nil
-	data.mu.Unlock()
+	data.oauthHttpClient = nil
+	data.MockOauth = nil
+
+	_ = os.Unsetenv(oauth2support.EnvOAuthTokenEndpoint)
+	_ = os.Unsetenv(oauth2support.EnvOAuthJwksUrl)
+
 	_ = os.RemoveAll(data.testDir)
+	data.testDir = ""
 }
 
 func TestListApps(t *testing.T) {
@@ -253,7 +243,6 @@ func TestSetPolicies(t *testing.T) {
 
 func TestSetPolicies_withErroneousProvider(t *testing.T) {
 	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
-		time.Sleep(time.Millisecond * 100)
 		provider := data.providers["aName"]
 		noop := provider.(*orchestrator_test.NoopProvider)
 		noop.SetTestErr(errors.New("oops"))
