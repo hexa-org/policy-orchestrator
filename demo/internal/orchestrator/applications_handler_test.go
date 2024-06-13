@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -39,9 +40,11 @@ type applicationsHandlerData struct {
 	applicationTestId string
 	MockOauth         *oidctestsupport.MockAuthServer
 	oauthHttpClient   *http.Client
+	mu                sync.Mutex
 }
 
 func (data *applicationsHandlerData) SetUp() {
+	data.mu.Lock()
 	// The Mock Authorization Server is needed to issue tokens, and provide a JWKS endpoint for validation
 	data.MockOauth = oidctestsupport.NewMockAuthServer("clientId", "secret", map[string]interface{}{})
 
@@ -119,6 +122,7 @@ func (data *applicationsHandlerData) TearDown() {
 	data.providers = nil
 	data.server = nil
 	data.gateway = nil
+	data.mu.Unlock()
 	_ = os.RemoveAll(data.testDir)
 }
 
