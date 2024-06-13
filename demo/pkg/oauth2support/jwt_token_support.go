@@ -10,6 +10,7 @@ import (
 
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/hexa-org/policy-opa/pkg/keysupport"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
@@ -193,8 +194,9 @@ type HTTPClient interface {
 }
 
 type jwtClient struct {
-	State  string `json:"state"`
-	Config *clientcredentials.Config
+	State      string `json:"state"`
+	Config     *clientcredentials.Config
+	httpClient *http.Client
 }
 
 type JwtClientHandler interface {
@@ -229,15 +231,22 @@ NewJwtClientHandlerWithConfig opens a new JwtClientHandler which allows an OAuth
 endpoint. The `config` parameter specifies a client credential for the OAuth2 Client Credential Flow
 */
 func NewJwtClientHandlerWithConfig(config *clientcredentials.Config) JwtClientHandler {
+	// Set up an http.Client to use and install self-signed CA if needed
+	client := http.Client{}
+	keysupport.CheckCaInstalled(&client)
+
 	return &jwtClient{
-		Config: config,
+		Config:     config,
+		httpClient: &client,
 	}
 }
 
 // GetHttpClient returns an http.Client object that can be used to make calls to protected services. The client
 // automatically appends the authorization header and handles refresh with the OAuth Token Server as needed.
 func (j *jwtClient) GetHttpClient() *http.Client {
-	return j.Config.Client(context.Background())
+	// j.httpClient is a client with the self-signed CA instlled if needed
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, j.httpClient)
+	return j.Config.Client(ctx)
 }
 
 // GetToken returns a token object providing access to access token and refresh token as needed.

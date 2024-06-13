@@ -11,6 +11,10 @@ services:
       - hexa_network
     environment:
       ORCHESTRATOR_HOSTPORT: hexa-orchestrator:8885
+      HEXA_CERT_DIRECTORY: "/home/certs"
+      HEXA_SERVER_CERT: "/home/certs/server-hexaorchestrator-cert.pem"
+      HEXA_SERVER_KEY_PATH: "/home/certs/server-hexaorchestrator-key.pem"
+      HEXA_SERVER_DNS_NAME: "hexa-orchestrator"
       HEXA_JWT_REALM: Hexa-Orchestrator-Realm
       HEXA_TOKEN_JWKSURL: http://keycloak:8080/realms/Hexa-Orchestrator-Realm/protocol/openid-connect/certs
       HEXA_JWT_AUTH_ENABLE: true
@@ -22,6 +26,7 @@ services:
     volumes:
       - "./databases/docker_support:/home/databases/docker_support:ro"
       - "./deployments/hexaOrchestrator/config:/app/.hexa"
+      - "./.certs:/home/certs"
 
 
   hexa-admin-ui:
@@ -33,13 +38,15 @@ services:
     networks:
       - hexa_network
     environment:
-      ORCHESTRATOR_URL: http://hexa-orchestrator:8885
+      ORCHESTRATOR_URL: https://hexa-orchestrator:8885
+      HEXA_CA_CERT: "/home/certs/ca-cert.pem"
       HEXA_JWT_REALM: Hexa-Orchestrator-Realm
       HEXA_JWT_AUTH_ENABLE: true
       HEXA_OAUTH_CLIENT_ID: hexaclient
       HEXA_OAUTH_CLIENT_SECRET: "uuXVzfbqH635Ob0oTON1uboONUqasmTt"
       HEXA_OAUTH_TOKEN_ENDPOINT: http://keycloak:8080/realms/Hexa-Orchestrator-Realm/protocol/openid-connect/token
-
+    volumes:
+      - "./.certs:/home/certs:ro"
     depends_on:
       - hexa-orchestrator
 
@@ -56,7 +63,11 @@ services:
       - hexa_network
     environment:
       PORT: 8886
-      OPA_SERVER_URL: http://hexa-opa-server:8887/v1/data/hexaPolicy
+      OPA_SERVER_URL: https://hexa-opa-server:8887/v1/data/hexaPolicy
+      HEXAOPA_DETAIL: "notes&pretty"
+      HEXA_CA_CERT: "/home/certs/ca-cert.pem"
+    volumes:
+      - "./.certs:/home/certs:ro"
 
   # hexa-opaBundle-server is an HTTP Bundle endpoint that can be used by Hexa-Orchestrator or Hexa CLI to configure policy to be delivered to OPA Servers.
   # From: github.com/hexa-org/policy-opa
@@ -70,13 +81,13 @@ services:
       - keycloak
     environment:
       PORT: 8889
-      TKN_DIRECTORY: "/home/certs"
+      HEXA_TKN_DIRECTORY: "/home/certs"
       HEXA_CERT_DIRECTORY: "/home/certs"
-      SERVER_CERT: "/home/certs/server-cert.pem"
-      SERVER_KEY: "/home/certs/server-key.pem"
+      HEXA_SERVER_CERT: "/home/certs/hexa-opabundle-server-cert.pem"
+      HEXA_SERVER_KEY_PATH: "/home/certs/hexa-opabundle-server-key.pem"
+      HEXA_SERVER_DNS_NAME: hexa-opaBundle-server
       BUNDLE_DIR: "/home/resources/bundles"
-      SERVER_DNS_NAME: "hexa-opaBundle-server"
-      TKN_MODE: "ANON"
+      HEXA_TKN_MODE: "ANON"
     networks:
       - hexa_network
     volumes:
@@ -93,16 +104,20 @@ services:
     depends_on:
       - hexa-opaBundle-server
       - keycloak
-    command: /app/hexaOpa run --server --addr :8887 --log-level debug -c /home/config/config.yaml
+    command: /app/hexaOpa run --server --addr :8887 --tls-cert-file=/home/certs/hexaOpa-cert.pem --tls-private-key-file=/home/certs/hexaOpa-key.pem --log-level debug -c /home/config/config.yaml
     environment:
       # These environment values are referenced in ./deployments/hexaOpaServer/config/config.yaml
-      HEXA_CERT_DIRECTORY: "/home/certs"
       HEXA_CONFIG_URL: "https://hexa-opaBundle-server:8889"
       HEXA_CA_CERT: "/home/certs/ca-cert.pem"
+      HEXA_CERT_DIRECTORY: "/home/certs"
+      HEXA_SERVER_CERT: "/home/certs/hexaOpa-cert.pem"
+      HEXA_SERVER_KEY_PATH: "/home/certs/hexaOpa-key.pem"
+      HEXA_SERVER_DNS_NAME: "hexa-opa-server"
+
     volumes:
       - "./deployments/hexaOpaServer/config:/home/config:ro"
       - "./deployments/hexaOpaServer/.opa:/app/.opa"
-      - "./.certs:/home/certs:ro"
+      - "./.certs:/home/certs"
     networks:
       - hexa_network
 

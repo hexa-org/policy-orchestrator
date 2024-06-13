@@ -28,7 +28,7 @@ import (
 func doTlsKeys() {
 	config := keysupport.GetKeyConfig()
 	// get our ca and server certificate
-	err := config.CreateSelfSignedKeys()
+	err := config.InitializeKeys()
 	if err != nil {
 		panic(err)
 	}

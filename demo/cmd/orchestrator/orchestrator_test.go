@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/hexa-org/policy-opa/pkg/keysupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/healthsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/websupport"
 	"github.com/stretchr/testify/assert"
@@ -66,16 +67,11 @@ func TestAppWithTransportLayerSecurity(t *testing.T) {
 	websupport.Stop(app)
 }
 
-func TestConfigWithPort(t *testing.T) {
-	t.Setenv("PORT", "0")
-	t.Setenv("HOST", "localhost")
-	newApp("localhost:0")
-}
-
 func TestConfigWithTransportLayerSecurity(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
-	t.Setenv("SERVER_CERT", filepath.Join(file, "../test/server-cert.pem"))
-	t.Setenv("SERVER_KEY", filepath.Join(file, "../test/server-key.pem"))
+	t.Setenv(keysupport.EnvServerCert, filepath.Join(file, "../test/server-cert.pem"))
+	t.Setenv(keysupport.EnvServerKey, filepath.Join(file, "../test/server-key.pem"))
+	t.Setenv(keysupport.EnvCertDirectory, filepath.Join(file, "../test"))
 	newApp("localhost:0")
 }
 
