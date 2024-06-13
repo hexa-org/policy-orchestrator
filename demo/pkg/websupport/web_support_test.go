@@ -40,6 +40,8 @@ func TestWithTransportLayerSecurity(t *testing.T) {
 	certPath := filepath.Join(file, "../test/certs/server-cert.pem")
 	keyPath := filepath.Join(file, "../test/certs/server-key.pem")
 
+	os.Setenv(websupport.EnvTlsEnabled, "t")
+
 	server := &http.Server{}
 
 	websupport.WithTransportLayerSecurity(certPath, keyPath, server)
@@ -71,4 +73,16 @@ func must(file []byte, err error) []byte {
 		panic("unable to read file.")
 	}
 	return file
+}
+
+func TestIsTlsEnabled(t *testing.T) {
+	// by default TLS is off
+	os.Unsetenv(websupport.EnvTlsEnabled)
+	assert.False(t, websupport.IsTlsEnabled())
+
+	os.Setenv(websupport.EnvTlsEnabled, "true")
+	assert.True(t, websupport.IsTlsEnabled())
+
+	os.Setenv(websupport.EnvTlsEnabled, "Y")
+	assert.True(t, websupport.IsTlsEnabled())
 }

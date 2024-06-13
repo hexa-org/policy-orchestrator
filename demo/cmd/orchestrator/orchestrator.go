@@ -61,14 +61,16 @@ func newApp(addr string) (*http.Server, net.Listener) {
 	listener, _ := net.Listen("tcp", addr)
 	app := App(key, listener.Addr().String(), hostPort)
 
-	keyConfig := keysupport.GetKeyConfig()
-	err := keyConfig.InitializeKeys()
-	if err != nil {
-		log.Error("Error initializing keys: " + err.Error())
-		panic(err)
-	}
+	if websupport.IsTlsEnabled() {
+		keyConfig := keysupport.GetKeyConfig()
+		err := keyConfig.InitializeKeys()
+		if err != nil {
+			log.Error("Error initializing keys: " + err.Error())
+			panic(err)
+		}
 
-	websupport.WithTransportLayerSecurity(keyConfig.ServerCertPath, keyConfig.ServerKeyPath, app)
+		websupport.WithTransportLayerSecurity(keyConfig.ServerCertPath, keyConfig.ServerKeyPath, app)
+	}
 
 	return app, listener
 }
