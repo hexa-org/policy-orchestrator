@@ -1,11 +1,12 @@
 # Table of Contents
+
 - [Hexa Policy Orchestrator](#hexa-policy-orchestrator)
-  * [Getting Started](#getting-started)
-    + [Build the Hexa image](#task-build-the-hexa-orchestrator-image)
-    + [Run the Policy Orchestrator](#task-run-the-policy-orchestrator)
-  * [Application descriptions](#application-descriptions)
-    + [Example workflow](#example-workflow)
-  * [Getting involved](#getting-involved)
+    * [Getting Started](#getting-started)
+        + [Build the Hexa image](#task-build-the-hexa-orchestrator-image)
+        + [Run the Policy Orchestrator](#task-run-the-policy-orchestrator)
+    * [Application descriptions](#application-descriptions)
+        + [Example workflow](#example-workflow)
+    * [Getting involved](#getting-involved)
 
 ![hexa-logo](docs/hexa-logo.svg)
 
@@ -23,7 +24,8 @@ so that you can unify access policy management. The below diagram describes the 
 
 ## Getting Started
 
-The Hexa project contains two applications, and demonstrates use of applications from [Policy-Opa](https://github.com/hexa-org/policy-opa)
+The Hexa project contains two applications, and demonstrates use of applications
+from [Policy-Opa](https://github.com/hexa-org/policy-opa)
 
 - Policy Orchestrator with policy translations
 - Demo Policy Administrator
@@ -46,7 +48,7 @@ Install the following dependencies.
 
 ### Task: Build the Hexa Orchestrator image
 
-Build a Hexa Orchestrator image
+Build the Hexa Orchestrator Docker containers...
 
 ```bash
 cd demo
@@ -57,20 +59,10 @@ sh ./build.sh
 
 Run all the applications with Docker Compose from within the `demo` directory
 
-> On Apple Silicon M1 (and M2) ARM
 > ```bash
-> DOCKER_DEFAULT_PLATFORM=linux/amd64 docker-compose up
-> ```
-
-> Others
-> ```bash
+> source .env_development
 > docker-compose up
 > ```
-
-> NOTE:
->
-> Assuming previous execution of the "setup" script above, this task may be run
-> from anywhere in the repository as `pkg build`.
 
 ## Application Descriptions
 
@@ -78,15 +70,21 @@ Docker runs the following applications:
 
 - **hexa-orchestrator**
 
-  Runs on [localhost:8885](http://localhost:8885/health). The main application service
+  Runs on [localhost:8885](http://localhost:8885/health). The main application service API
   that manages IDQL policy across various platforms and communicates with the
   various platform interfaces, converting IDQL policy to and from the respective
-  platform types.
+  platform types using the [Hexa Policy-Mapper](https://github.com/hexa-org/policy-mapper) SDK. This service uses TLS
+  and is protected and uses JWT authorization tokens
+  (see [RFC7519](https://datatracker.ietf.org/doc/html/rfc7519)) for authenticating access.
 
 - **hexa-admin-ui**
 
   Runs on [localhost:8884](http://localhost:8884/). An example web application user-interface
-  demonstrating the latest interactions with the policy orchestrator.
+  demonstrating the latest interactions with the policy orchestrator. Uses `hexa-orchestrator` to retrieve and provision
+  policy.
+  <p/>
+  The Hexa Admin UI service uses the OAuth2 Client Credentials Grant Flow (see [RFC6749 Section 4.4](https://datatracker.ietf.org/doc/html/rfc6749#section-4.4)) to authenticate to a token server (e.g. Keycloak) and obtain tokens for accessing
+  the Hexa-Orchestrator API service using JWT tokens.
 
 - **hexa-industry-demo-app**
 
@@ -95,19 +93,30 @@ Docker runs the following applications:
   integrates with platform authentication/authorization proxies,
   [Google IAP](https://cloud.google.com/iap) for example, for coarse-grained
   access and the [Open Policy Agent (OPA)](https://www.openpolicyagent.org/)
-  for fine-grained policy access. 
+  for fine-grained policy access. In the docker-compose configuration, the server uses the Hexa-OPA-Server
 
-- **Hexa-OPA-Agent**
+- **hexa-opa-agent**
 
-  Runs on [localhost:8887](http://localhost:8887/). A [Hexa extended](https://github.com/hexa-org/policy-opa) Open Policy Agent (OPA)
-  server used to demonstrate fine-grained policy management. IDQL policy is
-  represented as data and interpreted by the [Rego](https://www.openpolicyagent.org/docs/latest/policy-language/)
-  expression language.
+  Runs on [localhost:8887](http://localhost:8887/). HexaOPA is
+  an [IDQL extended](https://github.com/hexa-org/policy-opa) Open Policy Agent ([OPA](https://openpolicyagent.org))
+  server used as an IDQL Policy Decision service. In this configuration, The `hexa-opa-agent` server retrieves policies
+  from
+  the `hexa-opaBundle-server` instance which is an OPA provisioning service.
 
 - **hexa-opaBundle-server**
 
-  Runs on [localhost:8889](http://localhost:8889/health). An OPA HTTP Bundle server from which the OPA server can download policy bundles configured
+  Runs on [localhost:8889](http://localhost:8889/health). An OPA HTTP Bundle server from which the OPA server can
+  download policy bundles configured
   by Hexa-Orchestrator. See [OPA bundles][opa-bundles] for more info.
+
+- **keycloak** and **postgres**
+
+  These two servers are used to provide an OAuth2 demonstration and testing environment for Hexa
+  services. [Keycloak](https://www.keycloak.org) is pre-configured with a demonstration security "realm" called
+  [Hexa-Orchestrator-Realm](http://localhost:8080/admin/master/console/#/Hexa-Orchestrator-Realm). This realm contains
+  role definitions and Client credential enabling Hexa Admin UI service to access the Hexa Orchestrator service. By default,
+  a bootstrap admin user id and password are configured (see .env_development). It is strongly recommended that these be
+  changed.
 
 ## Example Workflow
 
@@ -129,7 +138,8 @@ OPA, the "Policy Decision Point (PDP)", periodically reads config from the
 the IDQL policy. Decision enforcement is handled within the **hexa-demo**
 application or "Policy Enforcement Point (PEP)".
 
-The Hexa Demo architecture may be visualized as follows:
+The Hexa Demo architecture may be visualized as follows (note: POSTGRES is no longer used by Hexa-Orchestrator and now
+uses a JSON based configuration file specified by `ORCHESTRATOR_CONFIG_FILE`):
 
 ![Hexa Demo Architecture](docs/hexa-demo-architecture.svg "hexa demo architecture")
 
