@@ -7,7 +7,7 @@ import (
 
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/oauth2support"
+	"github.com/hexa-org/policy-mapper/pkg/oauth2support"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
@@ -20,7 +20,7 @@ func main() {
 		AuthStyle:    oauth2.AuthStyle(oauth2.AuthStyleAutoDetect),
 	}
 
-	handler := oauth2support.NewJwtClientHandlerWithConfig(&config)
+	handler := oauth2support.NewJwtClientHandlerWithConfig(&config, nil)
 
 	tokenSet, err := handler.GetToken()
 	if err != nil {

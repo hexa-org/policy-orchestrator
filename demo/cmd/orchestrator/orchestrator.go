@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/hexa-org/policy-opa/pkg/keysupport"
+	"github.com/hexa-org/policy-mapper/pkg/keysupport"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/dataConfigGateway"
 
 	log "golang.org/x/exp/slog"
 
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/healthsupport"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/websupport"
+	"github.com/hexa-org/policy-mapper/pkg/healthsupport"
+	"github.com/hexa-org/policy-mapper/pkg/websupport"
 )
 
 type ServerHealthCheck struct {

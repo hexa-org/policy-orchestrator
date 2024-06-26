@@ -21,8 +21,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hexa-org/policy-opa/pkg/keysupport"
-	"github.com/hexa-org/policy-opa/pkg/tokensupport"
+	"github.com/hexa-org/policy-mapper/pkg/keysupport"
+	"github.com/hexa-org/policy-mapper/pkg/tokensupport"
 )
 
 func doTlsKeys() {

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/websupport"
+	"github.com/hexa-org/policy-mapper/pkg/websupport"
 )
 
 type Status struct {

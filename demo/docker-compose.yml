@@ -75,6 +75,7 @@ services:
   hexa-opaBundle-server:
     image: independentid/hexaopa:latest
     container_name: hexa-opaBundle-server
+    pull_policy: always # ensure we have the latest update
     ports:
       - "8889:8889"
     command: /app/hexaBundleServer
@@ -153,7 +154,6 @@ services:
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - 8080:8080
-    restart: always
     depends_on:
       - postgres
     networks:

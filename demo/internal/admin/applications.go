@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/websupport"
+	"github.com/hexa-org/policy-mapper/pkg/websupport"
 )
 
 type Application struct {

@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/hexa-org/policy-mapper/pkg/healthsupport"
+	"github.com/hexa-org/policy-mapper/pkg/websupport"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/dataConfigGateway"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/healthsupport"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 )
 

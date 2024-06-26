@@ -15,16 +15,16 @@ import (
 	"testing"
 
 	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-mapper/pkg/healthsupport"
 	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/pkg/oauth2support"
+	"github.com/hexa-org/policy-mapper/pkg/oidctestsupport"
+	"github.com/hexa-org/policy-mapper/pkg/websupport"
 	"github.com/hexa-org/policy-mapper/sdk"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator/test"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/dataConfigGateway"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/healthsupport"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/oauth2support"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/oidctestsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/testsupport"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/oauth2support"
+	"github.com/hexa-org/policy-mapper/pkg/oauth2support"
 )
 
 type HTTPClient interface {
@@ -72,8 +72,8 @@ func (c orchestratorClient) Applications(refresh bool) (applications []Applicati
 		refreshParam = "?refresh=true"
 	}
 	url := fmt.Sprintf("%v/applications%s", c.url, refreshParam)
-	resp, hawkErr := c.client.Get(url)
-	if err = errorOrBadResponse(resp, http.StatusOK, hawkErr); err != nil {
+	resp, reqErr := c.client.Get(url)
+	if err = errorOrBadResponse(resp, http.StatusOK, reqErr); err != nil {
 		return applications, err
 	}
 
@@ -100,8 +100,8 @@ func (c orchestratorClient) Applications(refresh bool) (applications []Applicati
 
 func (c orchestratorClient) Application(id string) (Application, error) {
 	url := fmt.Sprintf("%v/applications/%s", c.url, id)
-	resp, hawkErr := c.client.Get(url)
-	if err := errorOrBadResponse(resp, http.StatusOK, hawkErr); err != nil {
+	resp, reqErr := c.client.Get(url)
+	if err := errorOrBadResponse(resp, http.StatusOK, reqErr); err != nil {
 		return Application{}, err
 	}
 
@@ -134,8 +134,8 @@ type integration struct {
 
 func (c orchestratorClient) Integrations() (integrations []Integration, err error) {
 	url := fmt.Sprintf("%v/integrations", c.url)
-	resp, hawkErr := c.client.Get(url)
-	if err = errorOrBadResponse(resp, http.StatusOK, hawkErr); err != nil {
+	resp, reqErr := c.client.Get(url)
+	if err = errorOrBadResponse(resp, http.StatusOK, reqErr); err != nil {
 		return integrations, err
 	}
 
@@ -155,20 +155,20 @@ func (c orchestratorClient) CreateIntegration(name string, provider string, key 
 	url := fmt.Sprintf("%v/integrations", c.url)
 	marshal, _ := json.Marshal(integration{Name: name, Provider: provider, Key: key})
 	req, _ := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(marshal))
-	resp, hawkErr := c.client.Do(req)
-	return errorOrBadResponse(resp, http.StatusCreated, hawkErr)
+	resp, reqErr := c.client.Do(req)
+	return errorOrBadResponse(resp, http.StatusCreated, reqErr)
 }
 
 func (c orchestratorClient) DeleteIntegration(id string) error {
 	url := fmt.Sprintf("%v/integrations/%s", c.url, id)
-	resp, hawkErr := c.client.Get(url)
-	return errorOrBadResponse(resp, http.StatusOK, hawkErr)
+	resp, reqErr := c.client.Get(url)
+	return errorOrBadResponse(resp, http.StatusOK, reqErr)
 }
 
 func (c orchestratorClient) GetPolicies(id string) ([]hexapolicy.PolicyInfo, string, error) {
 	url := fmt.Sprintf("%v/applications/%s/policies", c.url, id)
-	resp, hawkErr := c.client.Get(url)
-	if err := errorOrBadResponse(resp, http.StatusOK, hawkErr); err != nil {
+	resp, reqErr := c.client.Get(url)
+	if err := errorOrBadResponse(resp, http.StatusOK, reqErr); err != nil {
 		return []hexapolicy.PolicyInfo{}, "{}", err
 	}
 

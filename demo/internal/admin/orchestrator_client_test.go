@@ -13,9 +13,9 @@ import (
 	"testing"
 
 	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/pkg/oauth2support"
+	"github.com/hexa-org/policy-mapper/pkg/oidctestsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/admin"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/oauth2support"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/oidctestsupport"
 	"golang.org/x/oauth2"
 
 	"github.com/go-playground/validator/v10"

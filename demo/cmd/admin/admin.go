@@ -9,7 +9,7 @@ import (
 
 	"github.com/hexa-org/policy-orchestrator/demo/internal/admin"
 
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/websupport"
+	"github.com/hexa-org/policy-mapper/pkg/websupport"
 )
 
 func App(addr string, orchestratorUrl string) *http.Server {

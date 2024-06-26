@@ -12,8 +12,8 @@ import (
 	"github.com/hexa-org/policy-orchestrator/demo/internal/admin"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/admin/test"
 
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/healthsupport"
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/websupport"
+	"github.com/hexa-org/policy-mapper/pkg/healthsupport"
+	"github.com/hexa-org/policy-mapper/pkg/websupport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )

@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-mapper/sdk"
 
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/websupport"
+	"github.com/hexa-org/policy-mapper/pkg/websupport"
 )
 
 type IntegrationProviderInterface interface {

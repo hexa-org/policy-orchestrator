@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/hexa-org/policy-orchestrator/demo/pkg/websupport"
+	"github.com/hexa-org/policy-mapper/pkg/websupport"
 )
 
 type OrchestrationHandler interface {
