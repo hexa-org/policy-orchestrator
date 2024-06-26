@@ -5,7 +5,6 @@ source ./.env
 tag="hexaorchestrator"
 test="N"
 doPush="N"
-platform=""
 multi="N"
 optString="srmhtdcpn:"
 start="N"
