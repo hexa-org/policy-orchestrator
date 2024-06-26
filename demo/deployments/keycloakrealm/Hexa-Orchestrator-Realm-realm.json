@@ -1,4 +1,4 @@
-[ {
+{
   "id" : "ba0306b8-649e-48a5-8572-e443905c790a",
   "realm" : "Hexa-Orchestrator-Realm",
   "displayName" : "Hexa Orchestrator Demonstration Realm",
@@ -3881,4 +3881,4 @@
   "clientPolicies" : {
     "policies" : [ ]
   }
-} ]
+}
