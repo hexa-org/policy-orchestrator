@@ -9,6 +9,7 @@ import (
 	"github.com/hexa-org/policy-mapper/pkg/keysupport"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/dataConfigGateway"
+	"github.com/hexa-org/policy-orchestrator/demo/pkg/hexaConstants"
 
 	log "golang.org/x/exp/slog"
 
@@ -47,14 +48,14 @@ func newApp(addr string) (*http.Server, net.Listener) {
 		host, _, _ := net.SplitHostPort(addr)
 		addr = fmt.Sprintf("%v:%v", host, found)
 	}
-	log.Info("Orchestrator Start", "Found server address", addr)
+	log.Debug("Orchestrator Start", "Found server address", addr)
 
 	if found := os.Getenv("HOST"); found != "" {
 		_, port, _ := net.SplitHostPort(addr)
 		addr = fmt.Sprintf("%v:%v", found, port)
 	}
 
-	log.Info("Orchestrator Start", "Found server host", addr)
+	log.Debug("Orchestrator Start", "Found server host", addr)
 
 	key := os.Getenv("ORCHESTRATOR_KEY")
 	hostPort := os.Getenv("ORCHESTRATOR_HOSTPORT")
@@ -76,6 +77,8 @@ func newApp(addr string) (*http.Server, net.Listener) {
 }
 
 func main() {
+	log.Info("Hexa Orchestrator API Server starting...", "version", hexaConstants.HexaOrchestratorVersion)
+
 	app, listener := newApp("0.0.0.0:8885")
 
 	websupport.Start(app, listener)

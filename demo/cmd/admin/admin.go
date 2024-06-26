@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"os"
+
+	"github.com/hexa-org/policy-orchestrator/demo/pkg/hexaConstants"
+	log "golang.org/x/exp/slog"
 
 	"github.com/hexa-org/policy-orchestrator/demo/internal/admin"
 
@@ -24,7 +26,7 @@ func newApp(addr string) (*http.Server, net.Listener) {
 		host, _, _ := net.SplitHostPort(addr)
 		addr = fmt.Sprintf("%v:%v", host, found)
 	}
-	log.Printf("Found server address %v", addr)
+	log.Debug("Found server address %v", addr)
 
 	orchestratorUrl := os.Getenv("ORCHESTRATOR_URL")
 
@@ -33,5 +35,6 @@ func newApp(addr string) (*http.Server, net.Listener) {
 }
 
 func main() {
+	log.Info("Hexa Orchestrator Admin UI Server starting...", "version", hexaConstants.HexaOrchestratorVersion)
 	websupport.Start(newApp("0.0.0.0:8884"))
 }

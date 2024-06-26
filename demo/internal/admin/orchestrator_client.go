@@ -6,9 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
+
+	log "golang.org/x/exp/slog"
 
 	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-mapper/pkg/oauth2support"
@@ -45,7 +46,7 @@ func NewOrchestratorClient(client HTTPClient, url string) Client {
 func (c orchestratorClient) Health() (string, error) {
 	resp, err := c.client.Get(fmt.Sprintf("%v/health", c.url))
 	if err != nil {
-		log.Println(err)
+		log.Error(err.Error())
 		return "[{\"name\":\"Unreachable\",\"pass\":\"fail\"}]", err
 	}
 	body, err := io.ReadAll(resp.Body)
@@ -79,7 +80,7 @@ func (c orchestratorClient) Applications(refresh bool) (applications []Applicati
 
 	var jsonResponse applicationList
 	if err = json.NewDecoder(resp.Body).Decode(&jsonResponse); err != nil {
-		log.Printf("unable to parse found json: %s\n", err.Error())
+		log.Error(fmt.Sprintf("unable to parse found json: %s\n", err.Error()))
 		return applications, err
 	}
 
@@ -107,7 +108,7 @@ func (c orchestratorClient) Application(id string) (Application, error) {
 
 	var jsonResponse application
 	if err := json.NewDecoder(resp.Body).Decode(&jsonResponse); err != nil {
-		log.Printf("unable to parse found json: %s\n", err.Error())
+		log.Error(fmt.Sprintf("unable to parse found json: %s\n", err.Error()))
 		return Application{}, err
 	}
 	app := Application{
@@ -141,7 +142,7 @@ func (c orchestratorClient) Integrations() (integrations []Integration, err erro
 
 	var jsonResponse integrationList
 	if err = json.NewDecoder(resp.Body).Decode(&jsonResponse); err != nil {
-		log.Printf("unable to parse found json: %s\n", err.Error())
+		log.Error(fmt.Sprintf("unable to parse found json: %s\n", err.Error()))
 		return integrations, err
 	}
 
@@ -179,7 +180,7 @@ func (c orchestratorClient) GetPolicies(id string) ([]hexapolicy.PolicyInfo, str
 
 	var jsonResponse hexapolicy.Policies
 	if err := json.NewDecoder(bytes.NewReader(jsonBody)).Decode(&jsonResponse); err != nil {
-		log.Println(err)
+		log.Error(err.Error())
 		return []hexapolicy.PolicyInfo{}, string(jsonBody), err
 	}
 
@@ -208,18 +209,18 @@ func (c orchestratorClient) Orchestration(from string, to string) error {
 
 func errorOrBadResponse(response *http.Response, status int, err error) error {
 	if err != nil {
-		log.Println(err)
+		log.Error(err.Error())
 		return err
 	}
 	if response.StatusCode != status {
 		err := checkTokenError(response)
 		if err != nil {
-			log.Println(err.Error())
+			log.Error(err.Error())
 			return err
 		}
 		all, _ := io.ReadAll(response.Body)
 		message := string(all)
-		log.Println(message)
+		log.Error(message)
 		return errors.New(message)
 	}
 	return err

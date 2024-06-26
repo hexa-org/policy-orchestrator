@@ -2,10 +2,12 @@ package orchestrator
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 	"sort"
 	"strings"
+
+	log "golang.org/x/exp/slog"
 
 	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/dataConfigGateway"
@@ -49,7 +51,7 @@ func (handler ApplicationsHandler) List(w http.ResponseWriter, r *http.Request) 
 
 	records, applicationErr := handler.applicationsGateway.Find(doRefresh)
 	if applicationErr != nil {
-		log.Println("Error accessing database: " + applicationErr.Error())
+		log.Error("Error accessing database: " + applicationErr.Error())
 		http.Error(w, applicationErr.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -143,7 +145,7 @@ func (handler ApplicationsHandler) SetPolicies(w http.ResponseWriter, r *http.Re
 	}
 	status, setErr := provider.SetPolicyInfo(integration, application, policies.Policies)
 	if setErr != nil {
-		log.Printf("unable to update policy: %s", setErr.Error())
+		log.Error(fmt.Sprintf("unable to update policy: %s", setErr.Error()))
 		// todo - should we return the error msg here.
 		http.Error(w, "unable to update policy.", http.StatusInternalServerError)
 		return
