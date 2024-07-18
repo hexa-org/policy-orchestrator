@@ -17,10 +17,7 @@ USER ${USER}
 # ADD docker/config/config.yaml ./config.yaml
 
 ADD --chmod=ug+x ./hexaAdminUi ./hexaAdminUi
-ADD --chmod=ug+x ./hexaKeytool ./hexaKeytool
-
 ADD --chmod=ug+x ./hexaOrchestrator ./hexaOrchestrator
-
 
 # Optional:
 # To bind to a TCP port, runtime parameters must be supplied to the docker command.

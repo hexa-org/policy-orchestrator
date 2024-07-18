@@ -36,11 +36,12 @@ while getopts ${optString} OPTION; do
   and loaded from ~/.hexa/config.json
 EOF
 
-      echo "* installing 'hexa' CLI"
+      echo "* installing 'hexa' CLI tools"
       go install github.com/hexa-org/policy-mapper/cmd/hexa@latest
+      go install github.com/hexa-org/policy-opa/cmd/hexakey@latest
 
       echo "* installing 'hexaKey' tool"
-      go install ./cmd/hexaKey
+      go install ./cmd/hexakey
 
       exit
       ;;
@@ -103,7 +104,6 @@ echo "  .. building go linux executables for docker ..."
 
 CGO_ENABLED=0 GOOS=linux go build -o ./hexaAdminUi  cmd/admin/admin.go
 CGO_ENABLED=0 GOOS=linux go build -o ./hexaOrchestrator cmd/orchestrator/orchestrator.go
-CGO_ENABLED=0 GOOS=linux go build -o ./hexaKeytool cmd/hexaKeytool/main.go
 
 echo "  .. downloading latest chainguard platform image"
 docker pull cgr.dev/chainguard/static:latest
