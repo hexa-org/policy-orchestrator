@@ -33,6 +33,7 @@ services:
   hexa-admin-ui:
     image: hexaorchestrator
     container_name: hexa-admin-ui
+    hostname: admin.hexa.org
     ports:
       - "8884:8884"
     command: /app/hexaAdminUi
@@ -46,8 +47,11 @@ services:
       HEXA_OAUTH_CLIENT_ID: hexaclient
       HEXA_OAUTH_CLIENT_SECRET: "uuXVzfbqH635Ob0oTON1uboONUqasmTt"
       HEXA_OAUTH_TOKEN_ENDPOINT: http://keycloak:8080/realms/Hexa-Orchestrator-Realm/protocol/openid-connect/token
+      HEXA_OIDC_ENABLED: true
+      HEXA_OIDC_PROVIDER_URL: http://keycloak:8080/realms/Hexa-Orchestrator-Realm
+      HEXA_OIDC_REDIRECT_URL: http://admin.hexa.org:8884/redirect
     volumes:
-      - "./.certs:/home/certs:ro"
+      - "./.certs:/home/certs"
     depends_on:
       - hexa-orchestrator
 
@@ -79,8 +83,7 @@ services:
     ports:
       - "8889:8889"
     command: /app/hexaBundleServer
-    depends_on:
-      - keycloak
+
     environment:
       PORT: 8889
       HEXA_TKN_DIRECTORY: "/home/certs"
@@ -106,7 +109,6 @@ services:
       - "8887"
     depends_on:
       - hexa-opaBundle-server
-      - keycloak
     command: /app/hexaOpa run --server --addr :8887 --tls-cert-file=/home/certs/hexaOpa-cert.pem --tls-private-key-file=/home/certs/hexaOpa-key.pem --log-level debug -c /home/config/config.yaml
     environment:
       # These environment values are referenced in ./deployments/hexaOpaServer/config/config.yaml
@@ -124,50 +126,7 @@ services:
     networks:
       - hexa_network
 
-  postgres:
-    image: postgres:alpine
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    networks:
-      - keycloak_network
-
-  keycloak:
-    image: quay.io/keycloak/keycloak:23.0.6
-    container_name: keycloak
-    command: start --import-realm
-    environment:
-      KC_HOSTNAME: localhost
-      KC_HOSTNAME_PORT: 8080
-      KC_HOSTNAME_STRICT_BACKCHANNEL: false
-      KC_HTTP_ENABLED: true
-      KC_HOSTNAME_STRICT_HTTPS: false
-      KC_HEALTH_ENABLED: true
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres/${POSTGRES_DB}
-      KC_DB_USERNAME: ${POSTGRES_USER}
-      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - 8080:8080
-    depends_on:
-      - postgres
-    networks:
-      - keycloak_network
-      - hexa_network
-    volumes:
-      - "./deployments/keycloakrealm:/opt/keycloak/data/import"
-
-volumes:
-  postgres_data:
-    driver: local
-
 networks:
-  keycloak_network:
-    driver: bridge
   hexa_network:
-    driver: bridge
+    name: hexa_shared_hexa_network
+    external: true

@@ -1,0 +1,110 @@
+{
+  "realm" : "Hexa-Orchestrator-Realm",
+  "users" : [ {
+    "id" : "bc55c461-d8cc-48b2-8781-5bc3d63e2154",
+    "createdTimestamp" : 1720751924200,
+    "username" : "alice@hexaindustries.io",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : true,
+    "firstName" : "Alice",
+    "lastName" : "Jay",
+    "email" : "alice@hexaindustries.io",
+    "credentials" : [ {
+      "id" : "28263152-bd64-454e-ac5b-aba1d911174a",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1720751960315,
+      "secretData" : "{\"value\":\"x1APHjmN6WsgK6fcFBCC32i0+bmG5dlPbl6QBtSqXWQ=\",\"salt\":\"SGYXce8wdEinn1PZmsN5gg==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-hexa-orchestrator-realm" ],
+    "notBefore" : 0,
+    "groups" : [ "/marketing", "/sales" ]
+  }, {
+    "id" : "d93ab6af-5608-42bc-8661-83a8a321f8dc",
+    "createdTimestamp" : 1720752047940,
+    "username" : "bob@hexaindustries.io",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : true,
+    "firstName" : "Bob",
+    "lastName" : "Roberts",
+    "email" : "bob@hexaindustries.io",
+    "credentials" : [ {
+      "id" : "b4d88c10-c035-424c-8fe4-2d3cd05b5afa",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1720752067566,
+      "secretData" : "{\"value\":\"vg4HLq8K2Y7OFr+7QJyMR+ba3JzwzpPDWt/v1zFR/V4=\",\"salt\":\"2OTilF36heOMn1+R8V4Lcw==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-hexa-orchestrator-realm" ],
+    "notBefore" : 0,
+    "groups" : [ "/accounting", "/humanresources" ]
+  }, {
+    "id" : "fd9b4c1d-2065-441c-8eb5-09634273fcc8",
+    "createdTimestamp" : 1720812295818,
+    "username" : "carol@hexaindustries.io",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : true,
+    "firstName" : "Carol",
+    "lastName" : "Carlos",
+    "email" : "carol@hexaindustries.io",
+    "credentials" : [ {
+      "id" : "09ff98a4-f99b-473e-96d3-3ed8465c2879",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1720812315334,
+      "secretData" : "{\"value\":\"WqeIZUv3VsiNm3PFtmU8g/C/0z8a1EsQfjtsLXe0Rww=\",\"salt\":\"IkJWV/+wbIEoO4a/9/Ke9A==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-hexa-orchestrator-realm" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "80666dad-928a-4219-aa25-d511b03cf147",
+    "createdTimestamp" : 1720752172622,
+    "username" : "gerry@hexaindustries.io",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : true,
+    "firstName" : "Gerry",
+    "lastName" : "Bossman",
+    "email" : "gerry@hexaindustries.io",
+    "credentials" : [ {
+      "id" : "a5c5c1f0-12f0-45be-a1eb-10cdec94d5ee",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1720752188807,
+      "secretData" : "{\"value\":\"IVxC+Wofj1fpuzMWr6O8doeBkfs0J89fcJ3j0HBoh1k=\",\"salt\":\"qotJ3bvlJVzqh/IkbkHzKw==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-hexa-orchestrator-realm" ],
+    "notBefore" : 0,
+    "groups" : [ "/accounting", "/humanresources", "/marketing", "/sales" ]
+  }, {
+    "id" : "42d63382-d681-4a4c-bc68-69373c48c217",
+    "createdTimestamp" : 1717818402408,
+    "username" : "service-account-hexaclient",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : false,
+    "serviceAccountClientId" : "hexaclient",
+    "credentials" : [ ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-hexa-orchestrator-realm" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  } ]
+}
