@@ -13,8 +13,8 @@ import (
 	"testing"
 
 	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/pkg/mockOidcSupport"
 	"github.com/hexa-org/policy-mapper/pkg/oauth2support"
-	"github.com/hexa-org/policy-mapper/pkg/oidctestsupport"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/admin"
 	"golang.org/x/oauth2"
 
@@ -43,7 +43,7 @@ func (m *MockClient) Get(_ string) (resp *http.Response, err error) {
 func TestOrchestratorJwtClient(t *testing.T) {
 	log.Println("Starting Mock OAuth Server")
 	cid := "testClientId"
-	mockAuth := oidctestsupport.NewMockAuthServer(cid, "secret", map[string]interface{}{})
+	mockAuth := mockOidcSupport.NewMockAuthServer(cid, "secret", map[string]interface{}{})
 	defer mockAuth.Server.Close()
 	mockerAddr := mockAuth.Server.URL
 	mockUrlJwks, _ := url.JoinPath(mockerAddr, "/jwks")

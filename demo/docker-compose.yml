@@ -15,7 +15,7 @@ services:
       HEXA_CERT_DIRECTORY: "/home/certs"
       HEXA_SERVER_CERT: "/home/certs/server-hexaorchestrator-cert.pem"
       HEXA_SERVER_KEY_PATH: "/home/certs/server-hexaorchestrator-key.pem"
-      HEXA_SERVER_DNS_NAME: "hexa-orchestrator"
+      HEXA_SERVER_DNS_NAME: "hexa-orchestrator,localhost"
       HEXA_JWT_REALM: Hexa-Orchestrator-Realm
       HEXA_TOKEN_JWKSURL: http://keycloak:8080/realms/Hexa-Orchestrator-Realm/protocol/openid-connect/certs
       HEXA_JWT_AUTH_ENABLE: true
@@ -41,7 +41,13 @@ services:
       - hexa_network
     environment:
       ORCHESTRATOR_URL: https://hexa-orchestrator:8885
+      # HEXA_CA_CERT used to install the self-signed CA trust root to call Orchestrator service
       HEXA_CA_CERT: "/home/certs/ca-cert.pem"
+      HEXA_TLS_ENABLED: false
+      HEXA_CERT_DIRECTORY: "/home/certs"
+      HEXA_SERVER_CERT: "/home/certs/server-hexa-admin-cert.pem"
+      HEXA_SERVER_KEY_PATH: "/home/certs/server-hexa-admin-key.pem"
+      HEXA_SERVER_DNS_NAME: "admin.hexa.org,localhost"
       HEXA_JWT_REALM: Hexa-Orchestrator-Realm
       HEXA_JWT_AUTH_ENABLE: true
       HEXA_OAUTH_CLIENT_ID: hexaclient
@@ -59,6 +65,7 @@ services:
   hexa-industry-demo-app:
     image: independentid/hexaopa:latest
     container_name: hexa-demo
+    hostname: demo.hexa.org
     ports:
       - "8886:8886"
     command: /app/hexaIndustriesDemo
@@ -69,8 +76,22 @@ services:
     environment:
       PORT: 8886
       OPA_SERVER_URL: https://hexa-opa-server:8887/v1/data/hexaPolicy
-      HEXAOPA_DETAIL: "notes&pretty"
+      # HEXAOPA_DETAIL enables debug responses in console  notes, fails, full, debug
+      HEXAOPA_DETAIL: "notes"
+      # HEXA_CA_CERT is used to trust self-signed TLS keys for hexa-opa-sidecar (OPA_SERVER_URL)
       HEXA_CA_CERT: "/home/certs/ca-cert.pem"
+      HEXA_CERT_DIRECTORY: "/home/certs"
+      HEXA_OIDC_ENABLED: true
+      HEXA_OIDC_CLIENT_ID: hexaclient
+      HEXA_OIDC_CLIENT_SECRET: "uuXVzfbqH635Ob0oTON1uboONUqasmTt"
+      HEXA_OIDC_PROVIDER_URL: "http://keycloak:8080/realms/Hexa-Orchestrator-Realm"
+      # If TLS enabled, OIDC redirect must be changed to https
+      HEXA_OIDC_REDIRECT_URL: "http://demo.hexa.org:8886/redirect"
+      HEXA_TLS_ENABLED: false
+      # Following only used when HEXA_TLS_ENABLED=true and auto generate keys enabled (default)
+      HEXA_SERVER_CERT: "/home/certs/server-hexademo-cert.pem"
+      HEXA_SERVER_KEY_PATH: "/home/certs/server-hexademo-key.pem"
+      HEXA_SERVER_DNS_NAME: "demo.hexa.org,localhost"
     volumes:
       - "./.certs:/home/certs:ro"
 

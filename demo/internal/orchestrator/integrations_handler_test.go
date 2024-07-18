@@ -14,8 +14,8 @@ import (
 	"testing"
 
 	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-mapper/pkg/mockOidcSupport"
 	"github.com/hexa-org/policy-mapper/pkg/oauth2support"
-	"github.com/hexa-org/policy-mapper/pkg/oidctestsupport"
 	"github.com/hexa-org/policy-mapper/sdk"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 	orchestratortest "github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator/test"
@@ -34,7 +34,7 @@ type HandlerSuite struct {
 	testDir         string
 	Data            *dataConfigGateway.ConfigData
 	gateway         dataConfigGateway.IntegrationsDataGateway
-	MockOauth       *oidctestsupport.MockAuthServer
+	MockOauth       *mockOidcSupport.MockAuthServer
 	oauthHttpClient *http.Client
 }
 
@@ -42,7 +42,7 @@ func TestIntegrationsHandler(t *testing.T) {
 	var err error
 	s := HandlerSuite{}
 	// The Mock Authorization Server is needed to issue tokens, and provide a JWKS endpoint for validation
-	s.MockOauth = oidctestsupport.NewMockAuthServer("clientId", "secret", map[string]interface{}{})
+	s.MockOauth = mockOidcSupport.NewMockAuthServer("clientId", "secret", map[string]interface{}{})
 	mockUrlJwks, _ := url.JoinPath(s.MockOauth.Server.URL, "/jwks")
 	// Set Env for Jwt Token Validation by Orchestrator handlers
 	_ = os.Setenv(oauth2support.EnvOAuthJwksUrl, mockUrlJwks)

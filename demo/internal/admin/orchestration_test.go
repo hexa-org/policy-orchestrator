@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hexa-org/policy-mapper/pkg/sessionSupport"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/admin"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/admin/test"
 
@@ -30,9 +31,10 @@ func TestOrchestration(t *testing.T) {
 func (suite *OrchestrationSuite) SetupTest() {
 	listener, _ := net.Listen("tcp", "localhost:0")
 	suite.client = &admin_test.MockClient{Url: "http://noop"}
+	sessionHandler := sessionSupport.NewSessionManager()
 	suite.server = websupport.Create(
 		listener.Addr().String(),
-		admin.LoadHandlers("http://noop", suite.client),
+		admin.LoadHandlers("http://noop", suite.client, sessionHandler),
 		websupport.Options{})
 	go websupport.Start(suite.server, listener)
 	healthsupport.WaitForHealthy(suite.server)

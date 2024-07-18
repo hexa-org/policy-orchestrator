@@ -7,6 +7,9 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/pkg/oidcSupport"
+	"github.com/hexa-org/policy-mapper/pkg/sessionSupport"
+	log "golang.org/x/exp/slog"
 )
 
 //go:embed resources
@@ -29,29 +32,42 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/integrations", http.StatusPermanentRedirect)
 }
 
-func LoadHandlers(orchestratorUrl string, client Client) func(router *mux.Router) {
-	apps := NewApplicationsHandler(orchestratorUrl, client)
-	integrations := NewIntegrationsHandler(orchestratorUrl, client)
-	orchestration := NewOrchestrationHandler(orchestratorUrl, client)
+func LoadHandlers(orchestratorUrl string, client Client, sessionHandler sessionSupport.SessionManager) func(router *mux.Router) {
+
+	oidcHandler, err := oidcSupport.NewOidcClientHandler(sessionHandler, &resources)
+	apps := NewApplicationsHandler(sessionHandler, orchestratorUrl, client)
+
+	integrations := NewIntegrationsHandler(orchestratorUrl, client, sessionHandler)
+	orchestration := NewOrchestrationHandler(orchestratorUrl, client, sessionHandler)
 	status := NewStatusHandler(orchestratorUrl, client)
 
 	return func(router *mux.Router) {
-		router.HandleFunc("/", IndexHandler).Methods("GET")
-		router.HandleFunc("/integrations", integrations.List).Methods("GET")
-		router.HandleFunc("/integrations/new", integrations.New).Methods("GET").Queries("provider", "{provider}")
-		router.HandleFunc("/integrations", integrations.CreateIntegration).Methods("POST")
-		router.HandleFunc("/integrations/{id}", integrations.Delete).Methods("POST")
-		router.HandleFunc("/applications", apps.List).Methods("GET")
-		router.HandleFunc("/applications/{id}", apps.Show).Methods("GET")
-		router.HandleFunc("/applications/{id}/policies", apps.Policies).Methods("GET")
-		router.HandleFunc("/applications/{id}/edit", apps.Edit).Methods("GET")
-		router.HandleFunc("/applications/{id}", apps.Update).Methods("POST")
-		router.HandleFunc("/orchestration/new", orchestration.New).Methods("GET")
-		router.HandleFunc("/orchestration", orchestration.Update).Methods("POST")
-		router.HandleFunc("/status", status.StatusHandler).Methods("GET")
+
+		oidcHandler.InitHandlers(router)
+		if err != nil {
+			log.Error(err.Error())
+			log.Warn("OIDC Login is disabled")
+		}
+		if !oidcHandler.Enabled {
+			router.HandleFunc("/", IndexHandler)
+		}
+
+		router.HandleFunc("/integrations", oidcHandler.HandleSessionScope(integrations.List, []string{"integration"})).Methods("GET")
+		router.HandleFunc("/integrations/new", oidcHandler.HandleSessionScope(integrations.New, []string{"integration"})).Methods("GET").Queries("provider", "{provider}")
+		router.HandleFunc("/integrations", oidcHandler.HandleSessionScope(integrations.CreateIntegration, []string{"integration"})).Methods("POST")
+		router.HandleFunc("/integrations/{id}", oidcHandler.HandleSessionScope(integrations.Delete, []string{"integration"})).Methods("POST")
+		router.HandleFunc("/applications", oidcHandler.HandleSessionScope(apps.List, []string{"integration"})).Methods("GET")
+		router.HandleFunc("/applications/{id}", oidcHandler.HandleSessionScope(apps.Show, []string{"integration"})).Methods("GET")
+		router.HandleFunc("/applications/{id}/policies", oidcHandler.HandleSessionScope(apps.Policies, []string{"integration"})).Methods("GET")
+		router.HandleFunc("/applications/{id}/edit", oidcHandler.HandleSessionScope(apps.Edit, []string{"integration"})).Methods("GET")
+		router.HandleFunc("/applications/{id}", oidcHandler.HandleSessionScope(apps.Update, []string{"integration"})).Methods("POST")
+		router.HandleFunc("/orchestration/new", oidcHandler.HandleSessionScope(orchestration.New, []string{"integration"})).Methods("GET")
+		router.HandleFunc("/orchestration", oidcHandler.HandleSessionScope(orchestration.Update, []string{"integration"})).Methods("POST")
+		router.HandleFunc("/status", oidcHandler.HandleSessionScope(status.StatusHandler, []string{"integration"})).Methods("GET")
 
 		staticFs, _ := fs.Sub(resources, "resources/static")
 		fileServer := http.FileServer(http.FS(staticFs))
 		router.PathPrefix("/").Handler(http.StripPrefix("/", fileServer))
 	}
+
 }

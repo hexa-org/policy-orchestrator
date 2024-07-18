@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/hexa-org/policy-mapper/sdk"
-
+	"github.com/hexa-org/policy-mapper/pkg/sessionSupport"
 	"github.com/hexa-org/policy-mapper/pkg/websupport"
+	"github.com/hexa-org/policy-mapper/sdk"
 )
 
 type IntegrationProviderInterface interface {
@@ -36,17 +36,19 @@ type integrationsHandler struct {
 	orchestratorUrl string
 	client          Client
 	providerStructs []IntegrationProviderInterface
+	session         sessionSupport.SessionManager
 }
 
-func NewIntegrationsHandler(orchestratorUrl string, client Client) IntegrationHandler {
+func NewIntegrationsHandler(orchestratorUrl string, client Client, sessionHandler sessionSupport.SessionManager) IntegrationHandler {
 	return integrationsHandler{
 		orchestratorUrl,
 		client,
 		[]IntegrationProviderInterface{googleProvider{}, azureProvider{}, amazonProvider{}, awsApiGatewayProvider{}, avpProvider{}, opaProvider{}},
+		sessionHandler,
 	}
 }
 
-func (i integrationsHandler) List(w http.ResponseWriter, _ *http.Request) {
+func (i integrationsHandler) List(w http.ResponseWriter, r *http.Request) {
 	integrations, err := i.client.Integrations()
 	if err != nil {
 		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "message": "Unable to contact orchestrator."}}
@@ -63,13 +65,21 @@ func (i integrationsHandler) List(w http.ResponseWriter, _ *http.Request) {
 		}
 		return false
 	})
-	model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "integrations": integrations}}
+	sessionInfo, err := i.session.Session(r)
+	if err != nil {
+		sessionInfo = &sessionSupport.SessionInfo{}
+	}
+	model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "integrations": integrations, "session": sessionInfo}}
 	_ = websupport.ModelAndView(w, &resources, "integrations", model)
 }
 
 func (i integrationsHandler) New(w http.ResponseWriter, r *http.Request) {
 	provider := r.URL.Query().Get("provider")
-	model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider}}
+	sessionInfo, err := i.session.Session(r)
+	if err != nil {
+		sessionInfo = &sessionSupport.SessionInfo{}
+	}
+	model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "session": sessionInfo}}
 	integrationView := i.knownIntegrationViews(provider)
 	_ = websupport.ModelAndView(w, &resources, integrationView, model)
 }
@@ -89,7 +99,11 @@ func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Re
 	file, _, err := r.FormFile("key")
 	if err != nil {
 		log.Printf("Missing key file %s.\n", err.Error())
-		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Missing key file."}}
+		sessionInfo, err := i.session.Session(r)
+		if err != nil {
+			sessionInfo = &sessionSupport.SessionInfo{}
+		}
+		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Missing key file.", "session": sessionInfo}}
 		_ = websupport.ModelAndView(w, &resources, integrationView, model)
 		return
 	}
@@ -118,7 +132,11 @@ func (i integrationsHandler) CreateIntegration(w http.ResponseWriter, r *http.Re
 
 	err = i.client.CreateIntegration(name, provider, key)
 	if err != nil {
-		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Unable to communicate with orchestrator."}}
+		sessionInfo, err := i.session.Session(r)
+		if err != nil {
+			sessionInfo = &sessionSupport.SessionInfo{}
+		}
+		model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": "Unable to communicate with orchestrator.", "session": sessionInfo}}
 		_ = websupport.ModelAndView(w, &resources, integrationView, model)
 		return
 	}
@@ -135,6 +153,7 @@ func (i integrationsHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (i integrationsHandler) viewWithMessage(w http.ResponseWriter, provider string, message string, integrationView string) {
+
 	model := websupport.Model{Map: map[string]interface{}{"resource": "integrations", "provider": provider, "message": message}}
 	_ = websupport.ModelAndView(w, &resources, integrationView, model)
 }

@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/hexa-org/policy-mapper/pkg/keysupport"
+	"github.com/hexa-org/policy-mapper/pkg/sessionSupport"
 	"github.com/hexa-org/policy-orchestrator/demo/pkg/hexaConstants"
 	log "golang.org/x/exp/slog"
 
@@ -17,7 +19,10 @@ import (
 func App(addr string, orchestratorUrl string) *http.Server {
 
 	client := admin.NewOrchestratorClient(nil, orchestratorUrl)
-	handlers := admin.LoadHandlers(orchestratorUrl, client)
+
+	sessionHandler := sessionSupport.NewSessionManager()
+
+	handlers := admin.LoadHandlers(orchestratorUrl, client, sessionHandler)
 	return websupport.Create(addr, handlers, websupport.Options{})
 }
 
@@ -31,7 +36,19 @@ func newApp(addr string) (*http.Server, net.Listener) {
 	orchestratorUrl := os.Getenv("ORCHESTRATOR_URL")
 
 	listener, _ := net.Listen("tcp", addr)
-	return App(listener.Addr().String(), orchestratorUrl), listener
+	server := App(listener.Addr().String(), orchestratorUrl)
+
+	if websupport.IsTlsEnabled() {
+		keyConfig := keysupport.GetKeyConfig()
+		err := keyConfig.InitializeKeys()
+		if err != nil {
+			log.Error("Error initializing keys: " + err.Error())
+			panic(err)
+		}
+
+		websupport.WithTransportLayerSecurity(keyConfig.ServerCertPath, keyConfig.ServerKeyPath, server)
+	}
+	return server, listener
 }
 
 func main() {

@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/hexa-org/policy-mapper/pkg/sessionSupport"
 	"github.com/hexa-org/policy-mapper/pkg/websupport"
 )
 
@@ -32,10 +33,11 @@ type ApplicationsHandler interface {
 type appsHandler struct {
 	orchestratorUrl string
 	client          Client
+	session         sessionSupport.SessionManager
 }
 
-func NewApplicationsHandler(orchestratorUrl string, client Client) ApplicationsHandler {
-	return appsHandler{orchestratorUrl, client}
+func NewApplicationsHandler(sessionHandler sessionSupport.SessionManager, orchestratorUrl string, client Client) ApplicationsHandler {
+	return appsHandler{orchestratorUrl, client, sessionHandler}
 }
 
 func (p appsHandler) List(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +53,11 @@ func (p appsHandler) List(w http.ResponseWriter, r *http.Request) {
 		log.Println(clientErr)
 		return
 	}
-	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "applications": foundApplications}}
+	sessionInfo, err := p.session.Session(r)
+	if err != nil {
+		sessionInfo = &sessionSupport.SessionInfo{}
+	}
+	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "applications": foundApplications, "session": sessionInfo}}
 	_ = websupport.ModelAndView(w, &resources, "applications", model)
 	w.Header()
 }
@@ -79,7 +85,11 @@ func (p appsHandler) Show(w http.ResponseWriter, r *http.Request) {
 	var buffer bytes.Buffer
 	_ = json.Indent(&buffer, []byte(rawJson), "", "  ")
 	resourceLink := fmt.Sprintf("/applications/%v", identifier)
-	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "resource_link": resourceLink, "application": foundApplication, "policies": foundPolicies, "rawJson": buffer.String()}}
+	sessionInfo, err := p.session.Session(r)
+	if err != nil {
+		sessionInfo = &sessionSupport.SessionInfo{}
+	}
+	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "resource_link": resourceLink, "application": foundApplication, "policies": foundPolicies, "rawJson": buffer.String(), "session": sessionInfo}}
 	_ = websupport.ModelAndView(w, &resources, "applications_show", model)
 }
 
@@ -94,9 +104,14 @@ func (p appsHandler) Edit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sessionInfo, err := p.session.Session(r)
+	if err != nil {
+		sessionInfo = &sessionSupport.SessionInfo{}
+	}
 	foundPolicies, rawJson, policiesError := p.client.GetPolicies(identifier)
 	if policiesError != nil {
-		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": foundApplication, "message": policiesError.Error()}}
+
+		model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": foundApplication, "message": policiesError.Error(), "session": sessionInfo}}
 		_ = websupport.ModelAndView(w, &resources, "applications_edit", model)
 		log.Println(policiesError)
 		return
@@ -104,7 +119,7 @@ func (p appsHandler) Edit(w http.ResponseWriter, r *http.Request) {
 
 	var buffer bytes.Buffer
 	_ = json.Indent(&buffer, []byte(rawJson), "", "  ")
-	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": foundApplication, "policies": foundPolicies, "rawJson": buffer.String()}}
+	model := websupport.Model{Map: map[string]interface{}{"resource": "applications", "application": foundApplication, "policies": foundPolicies, "rawJson": buffer.String(), "session": sessionInfo}}
 	_ = websupport.ModelAndView(w, &resources, "applications_edit", model)
 }
 

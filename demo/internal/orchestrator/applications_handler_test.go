@@ -17,8 +17,8 @@ import (
 	"github.com/hexa-org/policy-mapper/api/policyprovider"
 	"github.com/hexa-org/policy-mapper/pkg/healthsupport"
 	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/pkg/mockOidcSupport"
 	"github.com/hexa-org/policy-mapper/pkg/oauth2support"
-	"github.com/hexa-org/policy-mapper/pkg/oidctestsupport"
 	"github.com/hexa-org/policy-mapper/pkg/websupport"
 	"github.com/hexa-org/policy-mapper/sdk"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
@@ -36,7 +36,7 @@ type applicationsHandlerData struct {
 	key               string
 	providers         map[string]policyprovider.Provider
 	applicationTestId string
-	MockOauth         *oidctestsupport.MockAuthServer
+	MockOauth         *mockOidcSupport.MockAuthServer
 	oauthHttpClient   *http.Client
 }
 
@@ -45,7 +45,7 @@ func (data *applicationsHandlerData) SetUp() {
 	tempDir, _ := os.MkdirTemp("", "hexa-orchestrator-*")
 	data.testDir = tempDir
 	// The Mock Authorization Server is needed to issue tokens, and provide a JWKS endpoint for validation
-	data.MockOauth = oidctestsupport.NewMockAuthServer("clientId", "secret", map[string]interface{}{})
+	data.MockOauth = mockOidcSupport.NewMockAuthServer("clientId", "secret", map[string]interface{}{})
 
 	mockUrlJwks, _ := url.JoinPath(data.MockOauth.Server.URL, "/jwks")
 	tokenUrl, _ := url.JoinPath(data.MockOauth.Server.URL, "/token")

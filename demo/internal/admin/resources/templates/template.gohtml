@@ -1,6 +1,7 @@
 {{- define "base"}}
     {{- $resource := index .Map "resource"}}
     {{- $resource_link := index .Map "resource_link"}}
+    {{- $userInfo := index .Map "session"}}
     <!doctype html>
     <html lang="en">
     <head>
@@ -17,7 +18,11 @@
 
     <nav class="top-nav top-bar">
         <h1 class="hexa-title">Policy Administrator</h1>
-        <div class="gray">Log out</div>
+        <div class="gray">
+            {{- if (ne $userInfo.Email "") }}
+            {{ $userInfo.Email }}
+            {{ end }}
+        </div>
     </nav>
 
     <header class="top-bar">
@@ -53,6 +58,7 @@
     </header>
     <main>
         <div class="side-nav">
+            {{- if (ne $resource "login") }}
             <ul>
                 <li class="no-hover">
                     <h2>Administrator</h2>
@@ -85,9 +91,10 @@
             </ul>
             <ul>
                 <li>
-                    Log out
+                    <a href="/logout">Log out</a>
                 </li>
             </ul>
+            {{end}}
         </div>
 
         <div class="content">

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hexa-org/policy-mapper/pkg/sessionSupport"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/admin"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/admin/test"
 
@@ -15,8 +16,9 @@ import (
 )
 
 func TestAdminHandlers(t *testing.T) {
+	sessionHandler := sessionSupport.NewSessionManager()
 	listener, _ := net.Listen("tcp", "localhost:0")
-	handlers := admin.LoadHandlers("localhost:8885", new(admin_test.MockClient))
+	handlers := admin.LoadHandlers("localhost:8885", new(admin_test.MockClient), sessionHandler)
 	server := websupport.Create(listener.Addr().String(), handlers, websupport.Options{})
 	go websupport.Start(server, listener)
 	healthsupport.WaitForHealthy(server)

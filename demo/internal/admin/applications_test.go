@@ -6,9 +6,12 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/pkg/oidcSupport"
+	"github.com/hexa-org/policy-mapper/pkg/sessionSupport"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/admin"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/admin/test"
 
@@ -31,9 +34,11 @@ func TestApplications(t *testing.T) {
 func (suite *ApplicationsSuite) SetupTest() {
 	listener, _ := net.Listen("tcp", "localhost:0")
 	suite.client = &admin_test.MockClient{Url: "http://noop"}
+	_ = os.Setenv(oidcSupport.EnvOidcEnabled, "false")
+	sessionHandler := sessionSupport.NewSessionManager()
 	suite.server = websupport.Create(
 		listener.Addr().String(),
-		admin.LoadHandlers("http://noop", suite.client),
+		admin.LoadHandlers("http://noop", suite.client, sessionHandler),
 		websupport.Options{})
 	go websupport.Start(suite.server, listener)
 	healthsupport.WaitForHealthy(suite.server)

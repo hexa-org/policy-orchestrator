@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/hexa-org/policy-mapper/pkg/sessionSupport"
 	"github.com/hexa-org/policy-mapper/pkg/websupport"
 )
 
@@ -15,16 +16,22 @@ type OrchestrationHandler interface {
 type orchestrationHandler struct {
 	orchestratorUrl string
 	client          Client
+	session         sessionSupport.SessionManager
 }
 
-func NewOrchestrationHandler(orchestratorUrl string, client Client) OrchestrationHandler {
-	return orchestrationHandler{orchestratorUrl, client}
+func NewOrchestrationHandler(orchestratorUrl string, client Client, sessionHandler sessionSupport.SessionManager) OrchestrationHandler {
+	return orchestrationHandler{orchestratorUrl, client, sessionHandler}
 }
 
-func (p orchestrationHandler) New(w http.ResponseWriter, _ *http.Request) {
+func (p orchestrationHandler) New(w http.ResponseWriter, r *http.Request) {
 	foundApplications, clientErr := p.client.Applications(false)
+	sessionInfo, err := p.session.Session(r)
+	if err != nil {
+		sessionInfo = &sessionSupport.SessionInfo{}
+	}
 	if clientErr != nil {
-		model := websupport.Model{Map: map[string]interface{}{"resource": "orchestration", "message": clientErr.Error()}}
+
+		model := websupport.Model{Map: map[string]interface{}{"resource": "orchestration", "message": clientErr.Error(), "session": sessionInfo}}
 		_ = websupport.ModelAndView(w, &resources, "orchestration_new", model)
 		log.Println(clientErr)
 		return
@@ -39,7 +46,7 @@ func (p orchestrationHandler) New(w http.ResponseWriter, _ *http.Request) {
 	  	}
 	  }*/
 
-	model := websupport.Model{Map: map[string]interface{}{"resource": "orchestration", "applications": foundApplications}}
+	model := websupport.Model{Map: map[string]interface{}{"resource": "orchestration", "applications": foundApplications, "session": sessionInfo}}
 	_ = websupport.ModelAndView(w, &resources, "orchestration_new", model)
 }
 

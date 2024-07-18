@@ -14,8 +14,8 @@ import (
 	"testing"
 
 	"github.com/hexa-org/policy-mapper/api/policyprovider"
+	"github.com/hexa-org/policy-mapper/pkg/mockOidcSupport"
 	"github.com/hexa-org/policy-mapper/pkg/oauth2support"
-	"github.com/hexa-org/policy-mapper/pkg/oidctestsupport"
 	"github.com/hexa-org/policy-mapper/sdk"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/orchestrator/test"
@@ -40,7 +40,7 @@ type orchestrationHandlerData struct {
 	Data       *dataConfigGateway.ConfigData
 	appGateway dataConfigGateway.ApplicationsDataGateway
 
-	MockOauth       *oidctestsupport.MockAuthServer
+	MockOauth       *mockOidcSupport.MockAuthServer
 	oauthHttpClient *http.Client
 }
 
@@ -59,7 +59,7 @@ func (data *orchestrationHandlerData) SetUp() {
 	   `)
 
 	*/
-	data.MockOauth = oidctestsupport.NewMockAuthServer("clientId", "secret", map[string]interface{}{})
+	data.MockOauth = mockOidcSupport.NewMockAuthServer("clientId", "secret", map[string]interface{}{})
 	mockUrlJwks, _ := url.JoinPath(data.MockOauth.Server.URL, "/jwks")
 	// Set Env for Jwt Token Validation by Orchestrator handlers
 	_ = os.Setenv(oauth2support.EnvOAuthJwksUrl, mockUrlJwks)
