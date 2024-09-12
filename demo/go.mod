@@ -8,7 +8,7 @@ require (
 	github.com/MicahParks/keyfunc/v3 v3.3.3
 	github.com/aws/aws-sdk-go-v2 v1.30.5
 	github.com/gorilla/mux v1.8.1
-	github.com/hexa-org/policy-mapper v0.7.0-alpha.2
+	github.com/hexa-org/policy-mapper v0.7.0-beta.1
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	golang.org/x/oauth2 v0.23.0

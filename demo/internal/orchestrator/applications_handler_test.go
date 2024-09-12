@@ -196,7 +196,7 @@ func TestGetPolicies(t *testing.T) {
 
 		policy := policies.Policies[0]
 		assert.Equal(t, "anAction", policy.Actions[0].String())
-		assert.Equal(t, "aVersion", policy.Meta.Version)
+		assert.Equal(t, hexapolicy.IdqlVersion, policy.Meta.Version)
 		assert.Equal(t, []string{"user:aUser"}, policy.Subjects.String())
 		assert.Equal(t, "anId", policy.Object.String())
 	})
