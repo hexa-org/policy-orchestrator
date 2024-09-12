@@ -19,11 +19,11 @@ import (
 
 type StatusData struct {
 	server *http.Server
-	client admin_test.MockClient
+	client adminMock.MockClient
 }
 
 func (data *StatusData) SetUp() {
-	data.client = admin_test.MockClient{}
+	data.client = adminMock.MockClient{}
 	handler := admin.NewStatusHandler("http://noop", &data.client)
 	listener, _ := net.Listen("tcp", "localhost:0")
 	data.server = websupport.Create(listener.Addr().String(), func(router *mux.Router) {

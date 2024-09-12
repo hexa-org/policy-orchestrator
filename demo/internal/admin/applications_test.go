@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/hexa-org/policy-mapper/pkg/hexapolicy"
+	"github.com/hexa-org/policy-mapper/pkg/hexapolicy/conditions"
 	"github.com/hexa-org/policy-mapper/pkg/oidcSupport"
 	"github.com/hexa-org/policy-mapper/pkg/sessionSupport"
 	"github.com/hexa-org/policy-orchestrator/demo/internal/admin"
@@ -24,7 +25,7 @@ import (
 type ApplicationsSuite struct {
 	suite.Suite
 	server *http.Server
-	client *admin_test.MockClient
+	client *adminMock.MockClient
 }
 
 func TestApplications(t *testing.T) {
@@ -33,7 +34,7 @@ func TestApplications(t *testing.T) {
 
 func (suite *ApplicationsSuite) SetupTest() {
 	listener, _ := net.Listen("tcp", "localhost:0")
-	suite.client = &admin_test.MockClient{Url: "http://noop"}
+	suite.client = &adminMock.MockClient{Url: "http://noop"}
 	_ = os.Setenv(oidcSupport.EnvOidcEnabled, "false")
 	sessionHandler := sessionSupport.NewSessionManager()
 	suite.server = websupport.Create(
@@ -82,17 +83,36 @@ func (suite *ApplicationsSuite) TestApplications_with_error() {
 	assert.Contains(suite.T(), string(body), "Something went wrong.")
 }
 
+var testScopeFilter = "subject.co eq ca"
+var testPid = "abc123"
 var testPolicies = []hexapolicy.PolicyInfo{
+
 	{
-		Meta:    hexapolicy.MetaInfo{Version: "aVersion"},
-		Actions: []hexapolicy.ActionInfo{{"anAction"}},
-		Subject: hexapolicy.SubjectInfo{Members: []string{"aUser"}},
-		Object:  hexapolicy.ObjectInfo{ResourceID: "aResourceId"}},
+		Meta: hexapolicy.MetaInfo{
+			Version:     "aVersion",
+			PolicyId:    &testPid,
+			Description: "Just another test policy",
+		},
+		Actions:  []hexapolicy.ActionInfo{"anAction"},
+		Subjects: hexapolicy.SubjectInfo{"aUser"},
+		Object:   "aResourceId",
+		Scope: &hexapolicy.ScopeInfo{
+			Filter:     &testScopeFilter,
+			Attributes: []string{"name", "emails"},
+		},
+		Condition: &conditions.ConditionInfo{
+			Rule:   "subject.email co example.com and level gt 4",
+			Action: "deny",
+		}},
+
 	{
-		Meta:    hexapolicy.MetaInfo{Version: "anotherVersion"},
-		Actions: []hexapolicy.ActionInfo{{"anotherAction"}},
-		Subject: hexapolicy.SubjectInfo{Members: []string{"anotherUser"}},
-		Object:  hexapolicy.ObjectInfo{ResourceID: "anotherResourceId"}},
+		Meta:     hexapolicy.MetaInfo{Version: "anotherVersion"},
+		Actions:  []hexapolicy.ActionInfo{"anotherAction"},
+		Subjects: hexapolicy.SubjectInfo{"anotherUser"},
+		Object:   "anotherResourceId",
+		Condition: &conditions.ConditionInfo{
+			Rule: "subject.email co example.com and level gt 4",
+		}},
 }
 
 func (suite *ApplicationsSuite) TestApplication() {
@@ -187,20 +207,26 @@ func (suite *ApplicationsSuite) TestApplication_Update() {
 	suite.client.DesiredApplications = []admin.Application{
 		{ID: "anId", IntegrationId: "anIntegrationId", ObjectId: "anObjectId", Name: "aName", Description: "aDescription", ProviderName: "google_cloud"},
 	}
-	suite.client.DesiredPolicies = []hexapolicy.PolicyInfo{testPolicies[0]}
+	suite.client.DesiredPolicies = []hexapolicy.PolicyInfo{testPolicies[0], testPolicies[1]}
 
 	identifier := "anId"
 	resp, _ := http.Post(fmt.Sprintf("http://%s/applications/%s", suite.server.Addr, identifier), "application/json", nil)
 	body, _ := io.ReadAll(resp.Body)
-	assert.Contains(suite.T(), string(body), "Applications")
-	assert.Contains(suite.T(), string(body), "anObjectId")
-	assert.Contains(suite.T(), string(body), "aName")
-	assert.Contains(suite.T(), string(body), "aDescription")
+	sbody := string(body)
+	assert.Contains(suite.T(), sbody, "Applications")
+	assert.Contains(suite.T(), sbody, "anObjectId")
+	assert.Contains(suite.T(), sbody, "aName")
+	assert.Contains(suite.T(), sbody, "aDescription")
+	assert.Contains(suite.T(), sbody, "DENY if")
+	assert.Contains(suite.T(), sbody, "ALLOW if")
+	assert.Contains(suite.T(), sbody, "subject.co eq ca")
+	assert.Contains(suite.T(), sbody, "Filter:")
+	assert.Contains(suite.T(), sbody, "[name emails]")
 
-	assert.Contains(suite.T(), string(body), "aVersion")
-	assert.Contains(suite.T(), string(body), "anAction")
-	assert.Contains(suite.T(), string(body), "aUser")
-	assert.Contains(suite.T(), string(body), "aResourceId")
+	assert.Contains(suite.T(), sbody, "aVersion")
+	assert.Contains(suite.T(), sbody, "anAction")
+	assert.Contains(suite.T(), sbody, "aUser")
+	assert.Contains(suite.T(), sbody, "aResourceId")
 }
 
 func (suite *ApplicationsSuite) TestApplication_Update_withErroneousGet() {

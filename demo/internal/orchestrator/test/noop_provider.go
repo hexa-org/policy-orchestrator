@@ -1,4 +1,4 @@
-package orchestrator_test
+package orchestratorNoopProvider
 
 import (
 	"net/http"
@@ -36,12 +36,8 @@ func (n *NoopProvider) DiscoverApplications(info policyprovider.IntegrationInfo)
 func (n *NoopProvider) GetPolicyInfo(_ policyprovider.IntegrationInfo, _ policyprovider.ApplicationInfo) ([]hexapolicy.PolicyInfo, error) {
 
 	return []hexapolicy.PolicyInfo{
-		{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"anAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"user:aUser"}}, Object: hexapolicy.ObjectInfo{
-			ResourceID: "anId",
-		}},
-		{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"anotherAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"user:anotherUser"}}, Object: hexapolicy.ObjectInfo{
-			ResourceID: "anId",
-		}},
+		{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{"anAction"}, Subjects: []string{"user:aUser"}, Object: "anId"},
+		{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{"anotherAction"}, Subjects: []string{"user:anotherUser"}, Object: "anId"},
 	}, n.Err
 }
 

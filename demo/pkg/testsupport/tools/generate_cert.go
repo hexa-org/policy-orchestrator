@@ -15,7 +15,7 @@ USAGE:
 This will generate a CA cert/key pair and use that to sign Server cert/key pair
 and Client cert/key pair.
 
-Use these certs for tests such as websupport_test and orchestrator_test.
+Use these certs for tests such as websupport_test and orchestratorNoopProvider.
 */
 package main
 

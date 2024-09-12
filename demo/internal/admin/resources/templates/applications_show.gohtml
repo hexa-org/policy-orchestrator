@@ -31,11 +31,10 @@
         <table>
             <thead>
             <tr class="strong">
-                <th>Subject</th>
+                <th>Subjects</th>
                 <th>With these actions</th>
                 <th>Object</th>
-                <th>Within this scope</th>
-                <th>Version</th>
+                <th>Meta Info</th>
             </tr>
             </thead>
             <tbody>
@@ -43,10 +42,7 @@
                 <tr>
                     <td class="compact">
                         <table class="no-margin">
-                            <tr class="no-border">
-                                <td>Members</td>
-                            </tr>
-                            {{- range $user := $policy.Subject.Members}}
+                            {{- range $user := $policy.Subjects}}
                                 <tr class="no-border">
                                     <td>{{$user}}</td>
                                 </tr>
@@ -55,30 +51,70 @@
                     </td>
                     <td class="compact">
                         <table class="no-margin">
-                            <tr class="no-border">
-                                <td>Actions</td>
-                            </tr>
                             {{- range $action := $policy.Actions}}
                                 <tr class="no-border">
-                                    <td>{{$action.ActionUri}}</td>
+                                    <td>{{$action}}</td>
                                 </tr>
                             {{- end}}
                         </table>
                     </td>
                     <td class="compact">
                         <table class="no-margin">
-                            <tr class="no-border">
-                                <td>Resource</td>
-                            </tr>
-                            {{- $resource := $policy.Object.ResourceID}}
+                            {{- $resource := $policy.Object}}
                             <tr class="no-border">
                                 <td>{{$resource}}</td>
                             </tr>
                         </table>
                     </td>
-                    <td></td>
-                    <td>{{$policy.Meta.Version}}</td>
+                    <td class="compact">
+                        <table class="compact">
+                            {{- if $policy.Meta.Version}}
+                                <tr><th class="desc">Ver</th><td class="detail">{{$policy.Meta.Version}}</td></tr>
+                            {{- end }}
+                            {{- if $policy.Meta.PolicyId}}
+                                <tr><th class="desc">Id</th><td class="detail">{{$policy.Meta.PolicyId}}</td></tr>
+                            {{- end }}
+                            {{- if $policy.Meta.Description}}
+                                <tr><th class="desc">Desc</th><td class="detail">{{$policy.Meta.Description}}</td></tr>
+                            {{- end }}
+                        </table>
+                    </td>
                 </tr>
+                {{- if $policy.Condition }}
+                    <tr>
+                        <td class="no-margin" colspan="4">
+                            Condition:
+                            <table class="no-margin">
+                                <tr>
+                                    <th class="desc">
+                                        {{- if (eq $policy.Condition.Action "deny") }}
+                                            DENY if
+                                        {{- else }}
+                                            ALLOW if
+                                        {{- end }}
+                                    </th>
+                                    <td class="detail">{{$policy.Condition.Rule}}</td>
+                                </tr>
+                            </table>
+                    </tr>
+                {{- end }}
+
+                {{- if $policy.Scope}}
+                    <tr>
+                        <td class="no-margin" colspan="4">
+                            Scope:
+                            <table class="no-margin">
+                                {{- if $policy.Scope.Filter}}
+                                    <tr><th class="desc">Filter:</th><td class="detail">{{$policy.Scope.Filter}}</td></tr>
+                                {{- end }}
+                                {{- if $policy.Scope.Attributes}}
+                                    <tr><th class="desc">Attrs:</th><td class="detail">{{$policy.Scope.Attributes}}</td></tr>
+                                {{- end }}
+                            </table>
+                        </td>
+                    </tr>
+                {{- end }}
+
             {{- end}}
             </tbody>
         </table>

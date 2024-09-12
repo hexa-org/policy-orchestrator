@@ -115,7 +115,7 @@ func (data *orchestrationHandlerData) SetUp() {
 	data.key = hex.EncodeToString(hash[:])
 
 	data.providers = make(map[string]policyprovider.Provider)
-	data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e7"] = &orchestrator_test.NoopProvider{}
+	data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e7"] = &orchestratorNoopProvider.NoopProvider{}
 	// data.providers["azure"] = microsoftazure.NewAzureProvider() This will auto load
 	handlers := orchestrator.LoadHandlers(data.Data, data.providers)
 	data.server = websupport.Create(addr, handlers, websupport.Options{})
