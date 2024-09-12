@@ -1,8 +1,21 @@
 {{- template "base" .}}
+
 {{- define "main"}}
+    {{- $errortext := index .Map "error"}}
+    {{- $humanerr := index .Map "humanerror"}}
+    {{- $authUrl := index .Map "authurl"}}
     <div class="content">
 
-            <a href="/login" class="login">Login using OIDC</a>
+        <a href="{{$authUrl}}" class="login">Login using OIDC</a>
 
     </div>
-{{- end}}
+
+    {{- if $humanerr }}
+        <div class="gray">
+            <table>
+                <tr><td>Error </td><td>{{ $humanerr }}</td></tr>
+                <tr><td>Details&nbsp;</td><td>{{ $errortext }}</td></tr>
+            </table>
+        </div>
+    {{- end }}
+{{- end }}
