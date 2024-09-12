@@ -218,7 +218,7 @@ func TestOrchestratorClient_GetPolicy(t *testing.T) {
 
 	resp, raw, _ := client.GetPolicies("anId")
 	assert.Equal(t, rawJson, raw)
-	assert.Equal(t, "aVersion", resp[0].Meta.Version)
+	assert.Equal(t, hexapolicy.IdqlVersion, resp[0].Meta.Version)
 	assert.Equal(t, "anAction", resp[0].Actions[0].String())
 	assert.Equal(t, []string{"aUser"}, resp[0].Subjects.String())
 	assert.Equal(t, "aResourceId", resp[0].Object.String())
