@@ -83,10 +83,10 @@ func (data *applicationsServiceData) SetUp() {
 
 	_, _ = data.Data.Create("50e00619-9f15-4e85-a7e9-f26d87ea12e8", "noop", []byte("aKey"))
 	integration = data.Data.Integrations["50e00619-9f15-4e85-a7e9-f26d87ea12e8"]
-	integration.Apps["6409776a-367a-483a-a194-5ccf9c4ff212"] = policyprovider.ApplicationInfo{"andAnotherObjectId", "andAnotherName", "andAnotherDescription", "andAnotherService"}
+	integration.Apps["6409776a-367a-483a-a194-5ccf9c4ff212"] = policyprovider.ApplicationInfo{ObjectID: "andAnotherObjectId", Name: "andAnotherName", Description: "andAnotherDescription", Service: "andAnotherService"}
 	_, _ = data.Data.Create("50e00619-9f15-4e85-a7e9-f26d87ea12e9", "noop", []byte("aKey"))
 	integration = data.Data.Integrations["50e00619-9f15-4e85-a7e9-f26d87ea12e8"]
-	integration.Apps["6409776a-367a-483a-a194-5ccf9c4ff213"] = policyprovider.ApplicationInfo{"yetAnotherObjectId", "yetAnotherName", "yetAnotherDescription", "yetAnotherService"}
+	integration.Apps["6409776a-367a-483a-a194-5ccf9c4ff213"] = policyprovider.ApplicationInfo{ObjectID: "yetAnotherObjectId", Name: "yetAnotherName", Description: "yetAnotherDescription", Service: "yetAnotherService"}
 
 	data.fromNoopApp = "6409776a-367a-483a-a194-5ccf9c4ff210"
 	data.toNoopApp = "6409776a-367a-483a-a194-5ccf9c4ff210"
@@ -94,9 +94,9 @@ func (data *applicationsServiceData) SetUp() {
 	data.googleApp = "6409776a-367a-483a-a194-5ccf9c4ff213"
 
 	data.providers = make(map[string]policyprovider.Provider)
-	data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e7"] = &orchestrator_test.NoopProvider{}
-	data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e8"] = &orchestrator_test.NoopProvider{OverrideName: "azure_legacy"}
-	data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e9"] = &orchestrator_test.NoopProvider{OverrideName: "google_cloud"}
+	data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e7"] = &orchestratorNoopProvider.NoopProvider{}
+	data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e8"] = &orchestratorNoopProvider.NoopProvider{OverrideName: "azure_legacy"}
+	data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e9"] = &orchestratorNoopProvider.NoopProvider{OverrideName: "google_cloud"}
 }
 
 func (data *applicationsServiceData) TearDown() {
@@ -125,7 +125,7 @@ func TestApplicationsService_Apply(t *testing.T) {
 		badToApp := applicationsService.Apply(orchestrator.Orchestration{From: data.fromNoopApp, To: ""})
 		assert.Error(t, badToApp)
 
-		noopProvider := data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e7"].(*orchestrator_test.NoopProvider)
+		noopProvider := data.providers["50e00619-9f15-4e85-a7e9-f26d87ea12e7"].(*orchestratorNoopProvider.NoopProvider)
 		noopProvider.SetTestErr(errors.New("oops"))
 
 		providerError := applicationsService.Apply(orchestrator.Orchestration{From: data.fromNoopApp, To: data.toNoopApp})
@@ -142,37 +142,25 @@ func TestApplicationsService_RetainResource(t *testing.T) {
 		applicationsService := orchestrator.ApplicationsService{ApplicationsGateway: data.appGateway, IntegrationsGateway: data.intGateway, ProviderBuilder: nil}
 
 		from := []hexapolicy.PolicyInfo{
-			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"fromAnAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"fromAUser"}}, Object: hexapolicy.ObjectInfo{
-				ResourceID: "fromAnId",
-			}},
-			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"fromAnotherAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"fromAnotherUser"}}, Object: hexapolicy.ObjectInfo{
-				ResourceID: "fromAnId",
-			}},
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{"fromAnAction"}, Subjects: hexapolicy.SubjectInfo{"fromAUser"}, Object: "fromAnId"},
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{"fromAnotherAction"}, Subjects: hexapolicy.SubjectInfo{"fromAnotherUser"}, Object: "fromAnId"},
 		}
 
 		to := []hexapolicy.PolicyInfo{
-			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"toAnAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"toAUser"}}, Object: hexapolicy.ObjectInfo{
-				ResourceID: "toAnId",
-			}},
-			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"toAnotherAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"toAnotherUser"}}, Object: hexapolicy.ObjectInfo{
-				ResourceID: "toAnId",
-			}},
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{"toAnAction"}, Subjects: hexapolicy.SubjectInfo{"toAUser"}, Object: "toAnId"},
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{"toAnotherAction"}, Subjects: hexapolicy.SubjectInfo{"toAnotherUser"}, Object: "toAnId"},
 		}
 
 		modified, _ := applicationsService.RetainResource(from, to)
-		assert.Equal(t, "toAnId", modified[0].Object.ResourceID)
-		assert.Equal(t, "fromAUser", modified[0].Subject.Members[0])
+		assert.Equal(t, "toAnId", modified[0].Object.String())
+		assert.Equal(t, "fromAUser", modified[0].Subjects[0])
 
-		assert.Equal(t, "toAnId", modified[1].Object.ResourceID)
-		assert.Equal(t, "fromAnotherUser", modified[1].Subject.Members[0])
+		assert.Equal(t, "toAnId", modified[1].Object.String())
+		assert.Equal(t, "fromAnotherUser", modified[1].Subjects[0])
 
 		toWithDifferentResources := []hexapolicy.PolicyInfo{
-			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"anotherAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"anotherUser"}}, Object: hexapolicy.ObjectInfo{
-				ResourceID: "anotherId",
-			}},
-			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"anotherAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"anotherUser"}}, Object: hexapolicy.ObjectInfo{
-				ResourceID: "andAnotherId",
-			}},
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{"anotherAction"}, Subjects: hexapolicy.SubjectInfo{"anotherUser"}, Object: "anotherId"},
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{"anotherAction"}, Subjects: hexapolicy.SubjectInfo{"anotherUser"}, Object: "andAnotherId"},
 		}
 		_, err := applicationsService.RetainResource(from, toWithDifferentResources)
 		assert.Error(t, err)
@@ -185,27 +173,19 @@ func TestApplicationsService_RetainAction(t *testing.T) {
 		applicationsService := orchestrator.ApplicationsService{ApplicationsGateway: data.appGateway, IntegrationsGateway: data.intGateway, ProviderBuilder: nil}
 
 		from := []hexapolicy.PolicyInfo{
-			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"fromAnAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"fromAUser"}}, Object: hexapolicy.ObjectInfo{
-				ResourceID: "fromAnId",
-			}},
-			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"fromAnotherAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"fromAnotherUser"}}, Object: hexapolicy.ObjectInfo{
-				ResourceID: "fromAnId",
-			}},
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{"fromAnAction"}, Subjects: hexapolicy.SubjectInfo{"fromAUser"}, Object: "fromAnId"},
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{"fromAnotherAction"}, Subjects: hexapolicy.SubjectInfo{"fromAnotherUser"}, Object: "fromAnId"},
 		}
 
 		to := []hexapolicy.PolicyInfo{
-			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"toAnAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"toAUser"}}, Object: hexapolicy.ObjectInfo{
-				ResourceID: "toAnId",
-			}},
-			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{{"toAnotherAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"toAnotherUser"}}, Object: hexapolicy.ObjectInfo{
-				ResourceID: "toAnId",
-			}},
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{"toAnAction"}, Subjects: hexapolicy.SubjectInfo{"toAUser"}, Object: "toAnId"},
+			{Meta: hexapolicy.MetaInfo{Version: "aVersion"}, Actions: []hexapolicy.ActionInfo{"toAnotherAction"}, Subjects: hexapolicy.SubjectInfo{"toAnotherUser"}, Object: "toAnId"},
 		}
 
 		modified, _ := applicationsService.RetainAction(from, to)
 
-		assert.Equal(t, "toAnAction", modified[0].Actions[0].ActionUri)
+		assert.Equal(t, "toAnAction", modified[0].Actions[0].String())
 
-		assert.Equal(t, "toAnAction", modified[1].Actions[0].ActionUri)
+		assert.Equal(t, "toAnAction", modified[1].Actions[0].String())
 	})
 }

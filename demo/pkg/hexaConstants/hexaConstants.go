@@ -1,5 +1,5 @@
 package hexaConstants
 
 const (
-	HexaOrchestratorVersion string = "v0.6.15"
+	HexaOrchestratorVersion string = "v0.7.0-alpha.1"
 )

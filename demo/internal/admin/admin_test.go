@@ -18,7 +18,7 @@ import (
 func TestAdminHandlers(t *testing.T) {
 	sessionHandler := sessionSupport.NewSessionManager()
 	listener, _ := net.Listen("tcp", "localhost:0")
-	handlers := admin.LoadHandlers("localhost:8885", new(admin_test.MockClient), sessionHandler)
+	handlers := admin.LoadHandlers("localhost:8885", new(adminMock.MockClient), sessionHandler)
 	server := websupport.Create(listener.Addr().String(), handlers, websupport.Options{})
 	go websupport.Start(server, listener)
 	healthsupport.WaitForHealthy(server)

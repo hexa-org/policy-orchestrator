@@ -108,9 +108,9 @@ func (service ApplicationsService) RetainResource(fromPolicies, toPolicies []hex
 	resourceIds := make([]string, 0)
 	for _, policy := range toPolicies {
 		if firstResourceId == "" {
-			firstResourceId = policy.Object.ResourceID
+			firstResourceId = policy.Object.String()
 		}
-		resourceIds = append(resourceIds, policy.Object.ResourceID)
+		resourceIds = append(resourceIds, policy.Object.String())
 	}
 
 	for _, foundResourceId := range resourceIds {
@@ -121,19 +121,19 @@ func (service ApplicationsService) RetainResource(fromPolicies, toPolicies []hex
 
 	modified := make([]hexapolicy.PolicyInfo, 0)
 	for _, policy := range fromPolicies {
-		policy.Object.ResourceID = firstResourceId
+		policy.Object = hexapolicy.ObjectInfo(firstResourceId)
 		modified = append(modified, policy)
 	}
 	return modified, nil
 }
 
 func (service ApplicationsService) RetainAction(fromPolicies, toPolicies []hexapolicy.PolicyInfo) ([]hexapolicy.PolicyInfo, error) {
-	firstActionUri := toPolicies[0].Actions[0].ActionUri // todo update to handle all action uris from toProvider
+	firstActionUri := toPolicies[0].Actions[0] // todo update to handle all action uris from toProvider
 
 	modified := make([]hexapolicy.PolicyInfo, 0)
 	for _, policy := range fromPolicies {
 		policy.Actions = make([]hexapolicy.ActionInfo, 1)
-		policy.Actions[0].ActionUri = firstActionUri
+		policy.Actions[0] = firstActionUri
 		modified = append(modified, policy)
 	}
 	return modified, nil
@@ -142,7 +142,7 @@ func (service ApplicationsService) RetainAction(fromPolicies, toPolicies []hexap
 func verifyAllMembersAreUsers(policies []hexapolicy.PolicyInfo) bool {
 	var areMembersUsers bool
 	for _, policy := range policies {
-		for _, member := range policy.Subject.Members {
+		for _, member := range policy.Subjects {
 			areMembersUsers = strings.Contains(member, "user:")
 		}
 	}

@@ -25,7 +25,7 @@ import (
 type IntegrationsSuite struct {
 	suite.Suite
 	server *http.Server
-	client *admin_test.MockClient
+	client *adminMock.MockClient
 }
 
 func TestIntegrations(t *testing.T) {
@@ -34,7 +34,7 @@ func TestIntegrations(t *testing.T) {
 
 func (suite *IntegrationsSuite) SetupTest() {
 	listener, _ := net.Listen("tcp", "localhost:0")
-	suite.client = &admin_test.MockClient{Url: "http://noop"}
+	suite.client = &adminMock.MockClient{Url: "http://noop"}
 	sessionHandler := sessionSupport.NewSessionManager()
 	suite.server = websupport.Create(
 		listener.Addr().String(),

@@ -85,8 +85,8 @@ func (data *applicationsHandlerData) SetUp() {
 	data.key = hex.EncodeToString(hash[:])
 
 	data.providers = make(map[string]policyprovider.Provider)
-	data.providers["yetAnotherName"] = &orchestrator_test.NoopProvider{}
-	data.providers["aName"] = &orchestrator_test.NoopProvider{}
+	data.providers["yetAnotherName"] = &orchestratorNoopProvider.NoopProvider{}
+	data.providers["aName"] = &orchestratorNoopProvider.NoopProvider{}
 
 	handlers := orchestrator.LoadHandlers(data.Data, data.providers)
 	data.server = websupport.Create(addr, handlers, websupport.Options{})
@@ -195,10 +195,10 @@ func TestGetPolicies(t *testing.T) {
 		assert.Equal(t, 2, len(policies.Policies))
 
 		policy := policies.Policies[0]
-		assert.Equal(t, "anAction", policy.Actions[0].ActionUri)
+		assert.Equal(t, "anAction", policy.Actions[0].String())
 		assert.Equal(t, "aVersion", policy.Meta.Version)
-		assert.Equal(t, []string{"user:aUser"}, policy.Subject.Members)
-		assert.Equal(t, "anId", policy.Object.ResourceID)
+		assert.Equal(t, []string{"user:aUser"}, policy.Subjects.String())
+		assert.Equal(t, "anId", policy.Object.String())
 	})
 }
 
@@ -206,10 +206,10 @@ func TestGetPolicies_withFailedRequest(t *testing.T) {
 	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
 
 		provider := data.providers["aName"]
-		noop := provider.(*orchestrator_test.NoopProvider)
+		noop := provider.(*orchestratorNoopProvider.NoopProvider)
 		noop.SetTestErr(errors.New("oops"))
 		provider = data.providers["yetAnotherName"]
-		noop = provider.(*orchestrator_test.NoopProvider)
+		noop = provider.(*orchestratorNoopProvider.NoopProvider)
 		noop.SetTestErr(errors.New("oops"))
 		reqUrl := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)
 
@@ -225,12 +225,10 @@ func TestSetPolicies(t *testing.T) {
 	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
 		var buf bytes.Buffer
 		policy := hexapolicy.PolicyInfo{
-			Meta:    hexapolicy.MetaInfo{Version: "v0.5"},
-			Actions: []hexapolicy.ActionInfo{{"anAction"}},
-			Subject: hexapolicy.SubjectInfo{Members: []string{"anEmail", "anotherEmail"}},
-			Object: hexapolicy.ObjectInfo{
-				ResourceID: "aResourceId",
-			},
+			Meta:     hexapolicy.MetaInfo{Version: "0.7"},
+			Actions:  []hexapolicy.ActionInfo{"anAction"},
+			Subjects: []string{"anEmail", "anotherEmail"},
+			Object:   "aResourceId",
 		}
 		_ = json.NewEncoder(&buf).Encode(hexapolicy.Policies{Policies: []hexapolicy.PolicyInfo{policy}})
 
@@ -244,11 +242,11 @@ func TestSetPolicies(t *testing.T) {
 func TestSetPolicies_withErroneousProvider(t *testing.T) {
 	testsupport.WithSetUp(&applicationsHandlerData{}, func(data *applicationsHandlerData) {
 		provider := data.providers["aName"]
-		noop := provider.(*orchestrator_test.NoopProvider)
+		noop := provider.(*orchestratorNoopProvider.NoopProvider)
 		noop.SetTestErr(errors.New("oops"))
 
 		var buf bytes.Buffer
-		policy := hexapolicy.PolicyInfo{Meta: hexapolicy.MetaInfo{Version: "v0.5"}, Actions: []hexapolicy.ActionInfo{{"anAction"}}, Subject: hexapolicy.SubjectInfo{Members: []string{"anEmail", "anotherEmail"}}, Object: hexapolicy.ObjectInfo{ResourceID: "aResourceId"}}
+		policy := hexapolicy.PolicyInfo{Meta: hexapolicy.MetaInfo{Version: "0.7"}, Actions: []hexapolicy.ActionInfo{"anAction"}, Subjects: []string{"user:anEmail", "user:anotherEmail"}, Object: "aResourceId"}
 		_ = json.NewEncoder(&buf).Encode(policy)
 
 		reqUrl := fmt.Sprintf("http://%s/applications/%s/policies", data.server.Addr, data.applicationTestId)

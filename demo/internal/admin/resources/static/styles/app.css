@@ -204,6 +204,17 @@ td.first {
     width: 25rem;
 }
 
+td.desc {
+    width: 20%;
+    text-align: right;
+    padding: 0.5em;
+}
+
+td.detail {
+    width: 80%;
+    padding: 0;
+}
+
 td.compact {
     padding: 0;
 }
