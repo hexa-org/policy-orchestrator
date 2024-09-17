@@ -5,16 +5,14 @@ go 1.23
 toolchain go1.23.1
 
 require (
-	github.com/MicahParks/keyfunc/v3 v3.3.3
+	github.com/MicahParks/keyfunc/v3 v3.3.5
 	github.com/aws/aws-sdk-go-v2 v1.30.5
 	github.com/gorilla/mux v1.8.1
-	github.com/hexa-org/policy-mapper v0.7.0-beta.1
+	github.com/hexa-org/policy-mapper v0.7.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	golang.org/x/oauth2 v0.23.0
 )
-
-require github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 
 require (
 	cloud.google.com/go/auth v0.9.4 // indirect
@@ -24,7 +22,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.7.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.10.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2 // indirect
-	github.com/MicahParks/jwkset v0.5.18 // indirect
+	github.com/MicahParks/jwkset v0.5.19 // indirect
 	github.com/alecthomas/participle/v2 v2.1.1 // indirect
 	github.com/alexedwards/scs/v2 v2.8.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
@@ -79,6 +77,7 @@ require (
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
+	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.20.3 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect

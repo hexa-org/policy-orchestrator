@@ -64,6 +64,7 @@ services:
   # demo-app is the Hexa Industries test application used for demoing OPA policy services. From: github.com/hexa-org/policy-opa
   hexa-industry-demo-app:
     image: independentid/hexaopa:latest
+    pull_policy: always
     container_name: hexa-demo
     hostname: demo.hexa.org
     ports:
@@ -125,6 +126,7 @@ services:
   # From: github.com/hexa-org/policy-opa
   hexa-opa-agent:
     image: independentid/hexaopa:latest
+    pull_policy: always
     container_name: hexa-opa-server
     expose:
       - "8887"
