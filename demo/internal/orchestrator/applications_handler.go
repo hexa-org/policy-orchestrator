@@ -110,6 +110,7 @@ func (handler ApplicationsHandler) GetPolicies(w http.ResponseWriter, r *http.Re
 
 	records, err := provider.GetPolicyInfo(integration, application)
 	if err != nil {
+		log.Error(fmt.Sprintf("Error retrieving policies: %s", err.Error()), "alias", mux.Vars(r)["id"], "objectid", application.ObjectID)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
