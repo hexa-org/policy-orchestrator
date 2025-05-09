@@ -43,7 +43,7 @@ git clone git@github.com:hexa-org/policy-orchestrator.git
 
 Install the following dependencies.
 
-- [Go 1.22](https://go.dev) - Needed to compile and install
+- [Go 1.23](https://go.dev) - Needed to compile and install
 - [Docker Desktop](https://www.docker.com/products/docker-desktop) - Needed to run docker-compose configuration
 
 ### Task: Build the Hexa Orchestrator image
@@ -65,11 +65,11 @@ Start the shared KeyCloak and Postgres Server instance.
 > once for both projects.
 
 ```bash
-docker-compose -f docker-compose.shared.yml
+docker-compose -f docker-compose.shared.yml up
 ```
 
 When Keycloak is up and running docker will also create a network called `hexa_network` which enables services in
-docker-compose.yml to talk to services in the shared docker-compose.
+docker-compose.yml to talk to services in the shared docker-compose. You may need to update local hostname mappings in `/etc/hosts` for dns resolution on the docker host.
 
 ```bash
 docker-compose up
